@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Zikru</title>
+    <meta name="description" content="Zikru — prière, qibla, tasbih et dhikr, hors-ligne." />
+    <meta name="theme-color" content="#0E1A17" />
+    <link rel="manifest" href="/zikru/manifest.json" />
+    <link rel="apple-touch-icon" href="/zikru/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Zikru" />
+    <style id="expo-reset">
+      html, body { height: 100%; background: #0E1A17; }
+      body { overflow: hidden; -webkit-tap-highlight-color: transparent; }
+      #root { display: flex; height: 100%; flex: 1; }
+    </style>
+  </head>
+  <body>
+    <noscript>Activez JavaScript pour utiliser Zikru.</noscript>
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/zikru/sw.js', { scope: '/zikru/' }).catch(function (e) { console.warn('SW', e); });
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Zikru",
+    "slug": "zikru",
+    "scheme": "zikru",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "description": "Zikru — prière, qibla, tasbih et dhikr, hors-ligne.",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E1A17"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ch.bissabi.zikru"
+    },
+    "android": {
+      "package": "ch.bissabi.zikru",
+      "adaptiveIcon": {
+        "backgroundColor": "#0E1A17",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "bundler": "metro",
+      "name": "Zikru",
+      "shortName": "Zikru",
+      "themeColor": "#0E1A17",
+      "backgroundColor": "#0E1A17",
+      "lang": "fr"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-audio"
+    ],
+    "experiments": {
+      "baseUrl": "/zikru"
+    }
+  }
+}

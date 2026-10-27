@@ -1,0 +1,31 @@
+{
+  "name": "Zikru",
+  "short_name": "Zikru",
+  "description": "Zikru — prière, qibla, tasbih et dhikr, hors-ligne.",
+  "lang": "fr",
+  "id": "/zikru/",
+  "start_url": "/zikru/",
+  "scope": "/zikru/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0E1A17",
+  "background_color": "#0E1A17",
+  "icons": [
+    {
+      "src": "/zikru/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/zikru/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/zikru/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
