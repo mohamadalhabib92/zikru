@@ -6,6 +6,12 @@ import { DataProvider } from '@/lib/data';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { theme as t } from '@/ui/theme';
+import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
+
+// Écran d'erreur Expo Router pour les erreurs de rendu des routes.
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
+  return <ErrorScreen error={error} retry={() => void retry()} />;
+}
 
 function Root() {
   const { s, t: tr } = useSettings();
@@ -41,12 +47,14 @@ function Root() {
 
 export default function Layout() {
   return (
-    <SafeAreaProvider>
-      <SettingsProvider>
-        <DataProvider>
-          <Root />
-        </DataProvider>
-      </SettingsProvider>
-    </SafeAreaProvider>
+    <AppErrorBoundary>
+      <SafeAreaProvider>
+        <SettingsProvider>
+          <DataProvider>
+            <Root />
+          </DataProvider>
+        </SettingsProvider>
+      </SafeAreaProvider>
+    </AppErrorBoundary>
   );
 }
