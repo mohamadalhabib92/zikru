@@ -4,7 +4,7 @@
  * Même code pour web et natif : seule la couche `transport` change (transport.ts / transport.native.ts).
  */
 import { useSyncExternalStore } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform, type AppStateStatus } from 'react-native';
 import { loadJSON, saveJSON } from '../storage';
 import {
   analyzeLearn,
@@ -17,9 +17,10 @@ import {
   likelyCounter,
   isCounterKey,
   isValidUuid,
+  keeperDelay,
+  matchKnown,
   normUuid,
   profileById,
-  reconnectDelay,
   sameUuid,
   servicesToRequest,
   STD,
@@ -36,7 +37,10 @@ import type { Availability, BleLink, ScanResult } from './types';
 export type Status = 'déconnecté' | 'connexion' | 'connecté' | 'reconnexion' | 'erreur';
 export type ClickSourceBle = 'bluetooth' | 'clavier' | 'simulation';
 export type Prefs = { profileId: DeviceProfile['id']; customService: string; hidEnabled: boolean; hidKeys: string[]; sound: boolean; haptics: boolean; autoReconnect: boolean };
-export type KnownDevice = { id: string; name: string | null; lastSeen: string };
+/** auto : reconnexion automatique de cet appareil (par défaut activée). services : vus au scan (repli si l'identifiant change). */
+export type KnownDevice = { id: string; name: string | null; lastSeen: string; auto?: boolean; services?: string[] };
+/** État de la reconnexion automatique aux appareils mémorisés (puce d'état). */
+export type AutoState = 'inactif' | 'recherche' | 'bt-off' | 'action' | 'indisponible' | 'connecté';
 type Persisted = { prefs: Prefs; lastDevice: { id: string; name: string | null } | null; mappings: Record<string, Mapping>; lastValues?: Record<string, number>; devices?: KnownDevice[] };
 
 export type BleState = {
@@ -66,6 +70,9 @@ export type BleState = {
   lastSync: { added: number; at: number } | null;
   /** Correspondance absente ou détectée automatiquement : proposer l'apprentissage « 3 appuis ». */
   needsConfirm: boolean;
+  auto: AutoState;
+  /** Nom de l'appareil recherché (puce « Recherche du compteur… »). */
+  autoTarget: string | null;
 };
 
 const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: Platform.OS === 'web', hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
@@ -98,6 +105,8 @@ class BleCounterManager {
     devices: [],
     lastSync: null,
     needsConfirm: false,
+    auto: 'inactif',
+    autoTarget: null,
   };
   private lastValues: Record<string, number> = {};
   private autoFrames = new Map<string, Bytes[]>();
@@ -110,7 +119,22 @@ class BleCounterManager {
   private decoder: ClickDecoder | null = null;
   private learnSamples: LearnSample[] = [];
   private manualDisconnect = false;
-  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  // reconnexion automatique (« gardien »)
+  private keeperOn = false;
+  private keeperTimer: ReturnType<typeof setTimeout> | null = null;
+  private keeperAttempt = 0;
+  private ensuring = false;
+  private keeperOffs: (() => void)[] = [];
+  /** Appareils déconnectés à la main : pas de reconnexion automatique pendant cette session. */
+  private paused = new Set<string>();
+  /** Jeton de connexion : ignore le résultat d'une tentative devenue obsolète. */
+  private connectSeq = 0;
+  /** Incrémenté à chaque action manuelle : interrompt un cycle automatique en cours. */
+  private manualEpoch = 0;
+  /** Connexion « en attente » (iOS/Android) vers cet appareil, active en arrière-plan. */
+  private pendingId: string | null = null;
+  private appState: AppStateStatus = (AppState.currentState as AppStateStatus | null) ?? 'active';
+  private pendingSeq = 0;
   private stopScan: (() => void) | null = null;
   private keyHandler: ((e: KeyboardEvent) => void) | null = null;
   private loaded = false;
@@ -151,19 +175,18 @@ class BleCounterManager {
     if (p) {
       this.mappings = p.mappings ?? {};
       this.lastValues = p.lastValues ?? {};
-      this.set({ prefs: { ...DEFAULT_PREFS, ...p.prefs }, lastDevice: p.lastDevice ?? null, devices: p.devices ?? (p.lastDevice ? [{ ...p.lastDevice, lastSeen: '' }] : []) });
+      // Migration : l'ancien réglage global « Reconnexion automatique » devient un réglage par appareil.
+      const legacyOff = p.prefs?.autoReconnect === false;
+      const devices = (p.devices ?? (p.lastDevice ? [{ ...p.lastDevice, lastSeen: '' }] : [])).map((d) => ({ ...d, auto: d.auto ?? !legacyOff }));
+      this.set({ prefs: { ...DEFAULT_PREFS, ...p.prefs, autoReconnect: true }, lastDevice: p.lastDevice ?? null, devices });
     }
     this.applyHid();
-    const availability = await transport.availability().catch((e: unknown) => ({ ok: false as const, kind: 'unsupported' as const, reason: String(e) }));
-    this.set({ availability });
-    // Reconnexion silencieuse au lancement (natif, ou web si le navigateur a mémorisé l'autorisation)
-    const last = this.s.lastDevice;
-    if (availability.ok && last && this.s.prefs.autoReconnect && (await transport.canReconnect(last.id).catch(() => false))) {
-      void this.connectTo(last.id, true);
-    }
+    // Aucun travail Bluetooth natif tant qu'aucun appareil n'est mémorisé (démarrage sûr, aucune demande d'autorisation).
+    if (this.autoDevices().length > 0) this.startKeeper();
+    else if (Platform.OS === 'web') this.set({ availability: await transport.availability({ prompt: false }).catch(() => null) });
   }
   async refreshAvailability() {
-    const availability = await transport.availability();
+    const availability = await transport.availability().catch((e: unknown) => ({ ok: false as const, kind: 'unsupported' as const, reason: String(e) }));
     this.set({ availability });
     return availability;
   }
@@ -225,39 +248,70 @@ class BleCounterManager {
   }
 
   // ------------------------------------------------ connexion
-  async connectTo(id: string, silent = false) {
+  async connectTo(id: string, silent = false, opts: { timeoutMs?: number; wait?: boolean } = {}): Promise<boolean> {
+    if (!silent) {
+      this.manualEpoch++;
+      this.paused.delete(id);
+      this.clearKeeperTimer();
+      this.cancelPending();
+    }
     this.stopScanning();
-    this.clearReconnect();
     await this.teardown();
     this.manualDisconnect = false;
+    const seq = ++this.connectSeq;
     this.set({ status: silent ? 'reconnexion' : 'connexion', error: null });
+    if (opts.wait) {
+      this.pendingId = id;
+      this.pendingSeq = seq;
+    }
     try {
-      const link = await transport.connect(id, { services: this.requestedServices() });
+      const link = await transport.connect(id, { services: this.requestedServices(), timeoutMs: opts.timeoutMs, wait: opts.wait });
+      if (seq !== this.connectSeq) {
+        // tentative obsolète (action manuelle ou autre appareil entre-temps)
+        await link.disconnect().catch(() => {});
+        return false;
+      }
       this.link = link;
-      this.unsub.push(link.onDisconnect(() => this.handleDisconnect()));
+      this.unsub.push(link.onDisconnect(() => this.handleDisconnect(link)));
       const chosen = profileById(this.s.prefs.profileId);
       const profile = chosen.id === 'auto' ? detectProfile(link.name, link.chars) : chosen;
       const mapping = this.mappings[link.id] ?? defaultMapping(profile, link.chars);
-      const device = { id: link.id, name: link.name };
-      const devices = [{ ...device, lastSeen: new Date().toISOString() }, ...this.s.devices.filter((d) => d.id !== link.id)].slice(0, 8);
+      const prev = this.s.devices.find((d) => d.id === link.id);
+      const name = link.name ?? prev?.name ?? null;
+      const device = { id: link.id, name };
+      const services = this.s.scanResults.find((r) => r.id === link.id)?.services ?? prev?.services;
+      const known: KnownDevice = { ...device, lastSeen: new Date().toISOString(), auto: prev?.auto ?? true, ...(services?.length ? { services } : {}) };
+      const devices = [known, ...this.s.devices.filter((d) => d.id !== link.id)].slice(0, 8);
       const needsConfirm = !this.mappings[link.id]?.learnedAt && (!mapping || profile.id === 'generic' || profile.id === 'auto');
       this.autoFrames.clear();
-      this.set({ status: 'connecté', device, lastDevice: device, devices, profile, mapping, attempt: 0, clicksThisConnection: 0, notifyCount: 0, lastHex: null, needsConfirm });
+      this.keeperAttempt = 0;
+      this.set({ status: 'connecté', device, lastDevice: device, devices, profile, mapping, attempt: 0, clicksThisConnection: 0, notifyCount: 0, lastHex: null, needsConfirm, auto: 'connecté', autoTarget: null });
       this.persist();
       this.decoder = mapping ? this.makeDecoder(mapping, profile, link.id) : null;
+      // Réabonnement immédiat à la caractéristique apprise (et aux autres candidates).
       await this.subscribeAll(link, profile);
       await this.readBattery(link);
       // Synchronisation : lit le total stocké dans l'appareil (si lisible) et n'ajoute que la différence.
       const mc = mapping && link.chars.find((c) => sameUuid(c.service, mapping.service) && sameUuid(c.uuid, mapping.characteristic));
-      if (mapping?.mode === 'absolute' && mc?.read) {
+      if (mapping?.mode === 'absolute' && mc?.read && this.link === link) {
         const v = await link.read(mc.service, mc.uuid);
-        if (v && v.length) this.onNotify(mc.service, mc.uuid, v, profile);
+        if (v && v.length && this.link === link) this.onNotify(mc.service, mc.uuid, v, profile);
       }
+      this.startKeeper();
+      return true;
     } catch (e) {
+      if (seq !== this.connectSeq) return false;
       const msg = e instanceof Error ? e.message : String(e);
       await this.teardown();
-      if (silent && this.s.prefs.autoReconnect && !this.manualDisconnect) return this.scheduleReconnect(id);
+      if (silent) {
+        this.set({ status: 'reconnexion' });
+        return false;
+      }
       this.set({ status: 'erreur', error: `Connexion impossible : ${msg}` });
+      this.scheduleKeeper();
+      return false;
+    } finally {
+      if (opts.wait && this.pendingSeq === seq) this.pendingId = null;
     }
   }
   private makeDecoder(m: Mapping, profile: DeviceProfile, deviceId: string) {
@@ -270,7 +324,7 @@ class BleCounterManager {
     if (!id || v == null || this.lastValues[id] === v) return;
     this.lastValues[id] = v;
     if (this.persistTimer) clearTimeout(this.persistTimer);
-    this.persistTimer = setTimeout(() => this.persist(), 800);
+    this.persistTimer = setTimeout(() => this.persist(), 200);
   }
   private async subscribeAll(link: BleLink, profile: DeviceProfile) {
     const targets = candidateChars(link.chars);
@@ -340,21 +394,21 @@ class BleCounterManager {
     this.emitClicks(n, 'bluetooth');
     this.rememberValue();
   }
-  private handleDisconnect() {
-    const id = this.s.device?.id;
+  private handleDisconnect(link: BleLink) {
+    if (this.link !== link) return; // ancienne liaison
+    const id = link.id;
     void this.teardown();
-    if (!this.manualDisconnect && this.s.prefs.autoReconnect && id) return this.scheduleReconnect(id);
-    this.set({ status: 'déconnecté', battery: null });
-  }
-  private scheduleReconnect(id: string) {
-    const delay = reconnectDelay(this.s.attempt);
-    if (delay == null) return this.set({ status: 'erreur', error: 'Appareil hors de portée : reconnexion abandonnée. Appuyez sur « Reconnecter ».', attempt: 0 });
-    this.set({ status: 'reconnexion', attempt: this.s.attempt + 1 });
-    this.reconnectTimer = setTimeout(() => void this.connectTo(id, true), delay);
-  }
-  private clearReconnect() {
-    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    this.reconnectTimer = null;
+    this.set({ battery: null });
+    if (this.manualDisconnect || !this.isAuto(id)) {
+      this.set({ status: 'déconnecté' });
+      this.refreshAutoIdle();
+      return;
+    }
+    // Hors de portée / éteint : on continue de chercher (sans limite), y compris en arrière-plan.
+    this.set({ status: 'reconnexion', auto: 'recherche', autoTarget: link.name ?? this.s.device?.name ?? null });
+    this.keeperAttempt = 0;
+    if (this.inBackground()) this.waitFor(id);
+    else this.kick();
   }
   private async teardown() {
     this.unsub.splice(0).forEach((f) => {
@@ -369,27 +423,217 @@ class BleCounterManager {
     this.decoder = null;
     if (l) await l.disconnect().catch(() => {});
   }
-  async reconnect() {
-    const id = this.s.device?.id ?? this.s.lastDevice?.id;
-    if (!id) return;
+  /** Bouton « Reconnecter » (web : rouvre le sélecteur si l'autorisation a été perdue). */
+  async reconnect(id?: string) {
+    const target = id ?? this.s.device?.id ?? this.s.lastDevice?.id ?? this.autoDevices()[0]?.id;
+    if (!target) return;
     this.set({ attempt: 0 });
-    if (!(await transport.canReconnect(id))) return this.choose(true);
-    await this.connectTo(id);
+    if (!(await transport.canReconnect(target).catch(() => false))) return this.choose(true);
+    await this.connectTo(target);
   }
   async disconnect() {
+    this.manualEpoch++;
     this.manualDisconnect = true;
-    this.clearReconnect();
+    const id = this.s.device?.id;
+    if (id) this.paused.add(id);
+    this.clearKeeperTimer();
+    this.cancelPending();
+    this.connectSeq++;
     await this.teardown();
-    this.set({ status: 'déconnecté', battery: null, attempt: 0 });
+    this.set({ status: 'déconnecté', battery: null, attempt: 0, auto: 'inactif', autoTarget: null });
   }
-  forget() {
-    const id = this.s.device?.id ?? this.s.lastDevice?.id;
-    if (id) {
-      delete this.mappings[id];
-      delete this.lastValues[id];
+  /** Oublie un appareil mémorisé (par défaut l'appareil courant). */
+  forget(id?: string) {
+    const target = id ?? this.s.device?.id ?? this.s.lastDevice?.id;
+    if (!target) return;
+    delete this.mappings[target];
+    delete this.lastValues[target];
+    if (this.pendingId === target) this.cancelPending();
+    const isCurrent = this.s.device?.id === target;
+    if (isCurrent) void this.disconnect();
+    this.paused.delete(target);
+    this.set({
+      devices: this.s.devices.filter((d) => d.id !== target),
+      ...(isCurrent ? { device: null, mapping: null, profile: null, needsConfirm: false } : {}),
+      ...(this.s.lastDevice?.id === target ? { lastDevice: null } : {}),
+    });
+    this.persist();
+    if (!isCurrent) this.refreshAutoIdle();
+  }
+  /** Interrupteur « Reconnexion automatique » d'un appareil. */
+  setDeviceAuto(id: string, auto: boolean) {
+    this.set({ devices: this.s.devices.map((d) => (d.id === id ? { ...d, auto } : d)) });
+    this.persist();
+    if (auto) {
+      this.paused.delete(id);
+      this.startKeeper();
+      this.kick();
+    } else {
+      if (this.pendingId === id) this.cancelPending();
+      this.refreshAutoIdle();
     }
-    void this.disconnect();
-    this.set({ device: null, lastDevice: null, mapping: null, profile: null, devices: this.s.devices.filter((d) => d.id !== id), needsConfirm: false });
+  }
+
+  // ------------------------------------------------ reconnexion automatique aux appareils mémorisés
+  private isAuto(id: string) {
+    return this.s.devices.some((d) => d.id === id && d.auto !== false);
+  }
+  /** Appareils à reconnecter, du plus récent au plus ancien (hors appareils mis en pause). */
+  private autoDevices() {
+    return this.s.devices.filter((d) => d.auto !== false && !this.paused.has(d.id));
+  }
+  private inBackground() {
+    return Platform.OS !== 'web' && this.appState !== 'active';
+  }
+  private startKeeper() {
+    if (this.keeperOn) return;
+    this.keeperOn = true;
+    const app = AppState.addEventListener('change', (st) => this.onAppState(st));
+    this.keeperOffs.push(() => app.remove());
+    if (transport.onStateChange) {
+      this.keeperOffs.push(
+        transport.onStateChange((on) => {
+          if (on) {
+            this.set({ availability: { ok: true } });
+            this.keeperAttempt = 0;
+            this.kick();
+          } else if (!this.link) {
+            this.clearKeeperTimer();
+            this.set({ availability: { ok: false, kind: 'disabled', reason: 'Bluetooth désactivé' }, auto: this.autoDevices().length ? 'bt-off' : 'inactif' });
+          }
+        }),
+      );
+    }
+    // iOS : relance en arrière-plan par CoreBluetooth (restauration d'état) → reprise immédiate.
+    if (transport.onRestore) this.keeperOffs.push(transport.onRestore((ids) => ids.length && this.kick()));
+    this.kick();
+  }
+  private onAppState(st: AppStateStatus) {
+    const prev = this.appState;
+    this.appState = st;
+    if (st === 'active' && prev !== 'active') {
+      // retour au premier plan : nouvelle recherche immédiate
+      if (this.link) return;
+      this.cancelPending();
+      this.keeperAttempt = 0;
+      this.kick();
+    } else if (st !== 'active') {
+      if (this.persistTimer) {
+        clearTimeout(this.persistTimer);
+        this.persist();
+      }
+      if (Platform.OS !== 'web' && !this.link && !this.ensuring) {
+        // les minuteries JS sont suspendues en arrière-plan : connexion en attente gérée par le système
+        this.clearKeeperTimer();
+        const top = this.autoDevices()[0];
+        if (top) this.waitFor(top.id);
+      }
+    }
+  }
+  /** Relance une recherche immédiatement. */
+  kick() {
+    this.clearKeeperTimer();
+    void this.ensure();
+  }
+  private clearKeeperTimer() {
+    if (this.keeperTimer) clearTimeout(this.keeperTimer);
+    this.keeperTimer = null;
+  }
+  private cancelPending() {
+    const id = this.pendingId;
+    if (!id) return;
+    this.pendingId = null;
+    this.connectSeq++;
+    void transport.cancel?.(id);
+  }
+  /** Connexion « en attente » (sans délai) : aboutit dès que l'appareil revient à portée, même app en arrière-plan. */
+  private waitFor(id: string) {
+    if (this.pendingId || this.link || !this.keeperOn) return;
+    this.set({ auto: 'recherche', autoTarget: this.s.devices.find((d) => d.id === id)?.name ?? null });
+    void this.connectTo(id, true, { wait: true });
+  }
+  private scheduleKeeper() {
+    if (!this.keeperOn || this.link) return;
+    const cands = this.autoDevices();
+    if (!cands.length) return this.refreshAutoIdle();
+    this.clearKeeperTimer();
+    if (this.inBackground()) return this.waitFor(cands[0].id);
+    const delay = keeperDelay(this.keeperAttempt++);
+    this.keeperTimer = setTimeout(() => {
+      this.keeperTimer = null;
+      void this.ensure();
+    }, delay);
+  }
+  private refreshAutoIdle() {
+    if (this.link) return;
+    if (!this.autoDevices().length) this.set({ auto: 'inactif', autoTarget: null });
+  }
+  /** Un cycle : vérifie le Bluetooth, tente chaque appareil mémorisé par identifiant, puis une courte recherche par nom/service. */
+  private async ensure() {
+    if (!this.keeperOn || this.ensuring || this.link || this.pendingId || this.s.status === 'connexion' || this.s.scanning) {
+      if (this.s.scanning) this.scheduleKeeper();
+      return;
+    }
+    const cands = this.autoDevices();
+    if (!cands.length) return this.refreshAutoIdle();
+    const epoch = this.manualEpoch;
+    const stale = () => epoch !== this.manualEpoch || !!this.link || !this.keeperOn;
+    this.ensuring = true;
+    try {
+      const av = await transport.availability({ prompt: false }).catch((e: unknown) => ({ ok: false as const, kind: 'unsupported' as const, reason: String(e) }));
+      this.set({ availability: av });
+      if (!av.ok) {
+        if (av.kind === 'disabled') {
+          this.set({ auto: 'bt-off', autoTarget: cands[0].name });
+          // reprise automatique via onStateChange ; vérification lente en secours
+          this.clearKeeperTimer();
+          if (!this.inBackground()) this.keeperTimer = setTimeout(() => void this.ensure(), 15000);
+        } else {
+          this.set({ auto: 'indisponible', autoTarget: null });
+        }
+        return;
+      }
+      // Web : sans getDevices(), seule une action de l'utilisateur peut reconnecter.
+      const usable: KnownDevice[] = [];
+      for (const c of cands) if (await transport.canReconnect(c.id).catch(() => false)) usable.push(c);
+      if (!transport.silentReconnectSupported() || !usable.length) {
+        this.set({ auto: Platform.OS === 'web' ? 'action' : 'indisponible', autoTarget: cands[0].name });
+        return;
+      }
+      this.set({ auto: 'recherche', autoTarget: usable[0].name, status: 'reconnexion' });
+      for (const c of usable) {
+        if (stale()) return;
+        if (await this.connectTo(c.id, true, { timeoutMs: 8000 })) return;
+      }
+      if (stale()) return;
+      // Identifiant changé (réinitialisation, autre téléphone) : courte recherche par nom ou service mémorisé.
+      if (transport.findKnown) {
+        const hit = await transport.findKnown((r) => matchKnown(r, cands) != null, 8000).catch(() => null);
+        if (stale()) return;
+        const m = hit && matchKnown(hit, cands);
+        if (hit && m) {
+          if (m.by !== 'id') this.migrateDevice(m.device.id, hit.id, hit.name);
+          if (await this.connectTo(hit.id, true, { timeoutMs: 10000 })) return;
+        }
+      }
+      if (stale()) return;
+      this.set({ status: 'reconnexion', auto: 'recherche' });
+      this.scheduleKeeper();
+    } finally {
+      this.ensuring = false;
+    }
+  }
+  /** Reporte correspondance apprise et dernier total d'un ancien identifiant vers le nouveau. */
+  private migrateDevice(oldId: string, newId: string, name: string | null) {
+    if (oldId === newId) return;
+    if (this.mappings[oldId] && !this.mappings[newId]) this.mappings[newId] = this.mappings[oldId];
+    if (this.lastValues[oldId] != null && this.lastValues[newId] == null) this.lastValues[newId] = this.lastValues[oldId];
+    delete this.mappings[oldId];
+    delete this.lastValues[oldId];
+    this.set({
+      devices: this.s.devices.map((d) => (d.id === oldId ? { ...d, id: newId, name: name ?? d.name } : d)),
+      ...(this.s.lastDevice?.id === oldId ? { lastDevice: { id: newId, name: name ?? this.s.lastDevice.name } } : {}),
+    });
     this.persist();
   }
   /** Fait vibrer l'anneau BSTWSH (commande documentée AA 05 01 / AA 05 00). */

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Text, TextInput, View } from 'react-native';
+import { BleStatusChip } from '@/components/BleStatusChip';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
 import { fieldLabel, isValidUuid, keyLabel, PROFILES, shortUuid } from '@/lib/ble/core';
 import { useData } from '@/lib/data';
@@ -11,7 +12,7 @@ const STATUS_TONE = { connecté: 'success', connexion: 'info', reconnexion: 'war
 const STATUS_HELP = {
   connecté: 'Connecté : chaque appui compte.',
   connexion: 'Connexion en cours…',
-  reconnexion: 'Reconnexion automatique en cours…',
+  reconnexion: 'Recherche automatique du compteur (il se reconnecte dès qu’il est allumé et à portée)…',
   déconnecté: 'Aucun appareil connecté.',
   erreur: 'Problème de connexion.',
 } as const;
@@ -27,15 +28,21 @@ export default function BluetoothCounterScreen() {
   const av = s.availability;
   const custom = s.prefs.customService.trim();
   const [capture, setCapture] = useState('');
+  // Ouverture de l'écran : état du Bluetooth (et autorisations Android, demandées ici seulement).
+  useEffect(() => {
+    void bleCounter.refreshAvailability();
+  }, []);
 
   return (
     <Screen>
       <Row style={{ justifyContent: 'space-between' }}>
         <H1>{tr.ring}</H1>
-        <Badge label={s.status === 'reconnexion' ? `reconnexion (${s.attempt})` : s.status} tone={STATUS_TONE[s.status]} />
+        <Badge label={s.status === 'reconnexion' ? 'recherche…' : s.status} tone={STATUS_TONE[s.status]} />
       </Row>
       <Muted>Tasbih électronique, anneau de dhikr ou télécommande : chaque appui ajoute +1 au compteur de session ({tasbih.count}{tasbih.target ? ` / ${tasbih.target}` : ''}).</Muted>
       <Muted>{STATUS_HELP[s.status]}</Muted>
+      <Spacer h={8} />
+      <BleStatusChip />
       <Spacer />
       {s.lastSync && Date.now() - s.lastSync.at < 10 * 60 * 1000 ? (
         <>
@@ -63,7 +70,12 @@ export default function BluetoothCounterScreen() {
 
       {av && !av.ok ? (
         <>
-          <Notice tone={av.kind === 'unsupported' ? 'warning' : 'danger'} title={av.kind === 'expo-go' ? 'Build natif requis' : 'Bluetooth indisponible'} text={av.reason} icon="bluetooth-outline" />
+          <Notice
+            tone={av.kind === 'disabled' ? 'info' : av.kind === 'unsupported' ? 'warning' : 'danger'}
+            title={av.kind === 'expo-go' ? 'Build natif requis' : av.kind === 'disabled' ? 'Bluetooth désactivé' : 'Bluetooth indisponible'}
+            text={av.kind === 'disabled' && s.devices.length ? 'Activez le Bluetooth : vos compteurs mémorisés se reconnecteront automatiquement.' : av.reason}
+            icon="bluetooth-outline"
+          />
           <Spacer />
         </>
       ) : null}
@@ -109,7 +121,7 @@ export default function BluetoothCounterScreen() {
               <Button title={s.scanning ? 'Recherche…' : 'Rechercher'} icon="search-outline" loading={s.scanning} disabled={!!av && !av.ok && av.kind !== 'disabled' && av.kind !== 'denied'} onPress={() => void bleCounter.startScan()} />
             )}
             {s.lastDevice ? <Button title="Reconnecter" icon="refresh" variant="ghost" loading={busy} onPress={() => void bleCounter.reconnect()} /> : null}
-            {s.status === 'reconnexion' ? <Button title="Arrêter" variant="ghost" small onPress={() => void bleCounter.disconnect()} /> : null}
+            {s.status === 'reconnexion' ? <Button title="Arrêter la recherche" variant="ghost" small onPress={() => void bleCounter.disconnect()} /> : null}
           </Row>
         )}
       </Card>
@@ -138,17 +150,29 @@ export default function BluetoothCounterScreen() {
         <>
           <Spacer />
           <H2>Appareils mémorisés</H2>
-          <Muted>{web ? 'Reconnexion automatique si le navigateur a gardé l’autorisation (sinon, choisissez-le à nouveau).' : 'Reconnexion automatique à l’ouverture de l’app quand l’appareil est à portée.'}</Muted>
+          <Muted>
+            {web
+              ? 'Chrome : reconnexion automatique dès que l’appareil émet (autorisation déjà donnée). Ailleurs : touchez « Reconnecter ».'
+              : 'Reconnexion automatique, sans action : au lancement, au retour dans l’app, et dès que l’appareil revient à portée ou est rallumé — même écran verrouillé.'}
+          </Muted>
           <Spacer h={8} />
-          {s.devices.map((d) => (
-            <ListItem
-              key={d.id}
-              title={d.name ?? 'Appareil sans nom'}
-              subtitle={`${s.device?.id === d.id && connected ? 'Connecté' : 'Hors connexion'}${d.lastSeen ? ` · vu le ${new Date(d.lastSeen).toLocaleDateString('fr-CH')}` : ''}`}
-              icon="watch-outline"
-              onPress={s.device?.id === d.id && connected ? undefined : () => void bleCounter.connectTo(d.id)}
-            />
-          ))}
+          {s.devices.map((d) => {
+            const isCur = s.device?.id === d.id && connected;
+            return (
+              <Card key={d.id} style={{ marginBottom: 8 }}>
+                <Row style={{ justifyContent: 'space-between' }}>
+                  <Body style={{ flex: 1 }}>{d.name ?? 'Appareil sans nom'}</Body>
+                  <Badge label={isCur ? 'connecté' : s.autoTarget === d.name && s.auto === 'recherche' && d.auto !== false ? 'recherche…' : 'hors connexion'} tone={isCur ? 'success' : 'neutral'} />
+                </Row>
+                <Muted>{d.lastSeen ? `Vu le ${new Date(d.lastSeen).toLocaleString('fr-CH')}` : 'Jamais vu'}</Muted>
+                <Toggle label="Reconnexion automatique" value={d.auto !== false} onChange={(v) => bleCounter.setDeviceAuto(d.id, v)} />
+                <Row wrap>
+                  {!isCur ? <Button title="Connecter" icon="bluetooth-outline" small variant="ghost" onPress={() => void bleCounter.reconnect(d.id)} /> : null}
+                  <Button title="Oublier cet appareil" icon="trash-outline" small variant="danger" onPress={() => bleCounter.forget(d.id)} />
+                </Row>
+              </Card>
+            );
+          })}
         </>
       ) : null}
 
@@ -274,7 +298,6 @@ export default function BluetoothCounterScreen() {
       <H2>Retour à chaque appui</H2>
       <Toggle label="Vibration" value={s.prefs.haptics} onChange={(v) => bleCounter.setPrefs({ haptics: v })} />
       <Toggle label="Son" value={s.prefs.sound} onChange={(v) => bleCounter.setPrefs({ sound: v })} />
-      <Toggle label="Reconnexion automatique" value={s.prefs.autoReconnect} onChange={(v) => bleCounter.setPrefs({ autoReconnect: v })} hint="Reconnecte l’appareil après une coupure et au lancement de l’app." />
 
       {/* -------- Appareils */}
       <Spacer />

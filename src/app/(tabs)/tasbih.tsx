@@ -1,3 +1,4 @@
+import { BleStatusChip } from '@/components/BleStatusChip';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Animated, Platform, Pressable, Text, View } from 'react-native';
@@ -5,7 +6,7 @@ import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
 import { useBleCounter } from '@/lib/ble/manager';
 import { useSettings } from '@/lib/settings';
-import { Badge, Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 
 export default function TasbihScreen() {
@@ -32,13 +33,7 @@ export default function TasbihScreen() {
     <Screen>
       <Row style={{ justifyContent: 'space-between' }}>
         <Eyebrow>{tr.tasbih_title}</Eyebrow>
-        {bleOn ? (
-          <Badge label={`${ble.device?.name ?? tr.ring}${ble.battery != null ? ` · ${ble.battery} %` : ''}`} tone={ble.mapping ? 'success' : 'warning'} />
-        ) : ble.status === 'reconnexion' ? (
-          <Badge label="Reconnexion…" tone="warning" />
-        ) : ble.prefs.hidEnabled && ble.hidSupported ? (
-          <Badge label="Clavier / télécommande actif" tone="info" />
-        ) : null}
+        <BleStatusChip showIdle />
       </Row>
       {current ? (
         <View style={{ alignItems: 'center', marginVertical: 8 }}>

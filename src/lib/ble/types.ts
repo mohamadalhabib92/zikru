@@ -15,17 +15,39 @@ export interface BleLink {
   disconnect(): Promise<void>;
 }
 
+export type ConnectOpts = {
+  services: string[];
+  /** Délai max (ms) d'une tentative directe. */
+  timeoutMs?: number;
+  /**
+   * Connexion « en attente » sans délai : iOS garde la demande CoreBluetooth active (y compris en
+   * arrière-plan, mode bluetooth-central) et connecte dès que l'appareil réapparaît ; Android : autoConnect.
+   */
+  wait?: boolean;
+};
+
 /** Abstraction commune : Web Bluetooth (sélecteur du navigateur) ou react-native-ble-plx (scan). */
 export interface BleTransport {
   platform: 'web' | 'native';
   /** web = le navigateur affiche son propre sélecteur ; native = scan dans l'app. */
   mode: 'chooser' | 'scan';
-  availability(): Promise<Availability>;
+  /** prompt=false : ne déclenche aucune demande d'autorisation (reconnexion silencieuse). */
+  availability(opts?: { prompt?: boolean }): Promise<Availability>;
   /** Web : ouvre le sélecteur du navigateur, puis connecte. */
   choose?(opts: { services: string[]; namePrefixes: string[]; acceptAll: boolean }): Promise<string>;
   /** Natif : scan BLE ; renvoie une fonction d'arrêt. */
   scan?(onResult: (r: ScanResult) => void, onError: (e: Error) => void): Promise<() => void>;
-  connect(id: string, opts: { services: string[] }): Promise<BleLink>;
+  connect(id: string, opts: ConnectOpts): Promise<BleLink>;
+  /** Annule une connexion en cours / en attente. */
+  cancel?(id: string): Promise<void>;
   /** Peut-on se reconnecter sans geste utilisateur (web : appareil déjà autorisé) ? */
   canReconnect(id: string): Promise<boolean>;
+  /** Le transport sait-il reconnecter sans geste utilisateur ? (web : navigator.bluetooth.getDevices) */
+  silentReconnectSupported(): boolean;
+  /** Bluetooth activé / désactivé (natif : état CoreBluetooth / Android ; web : availabilitychanged). */
+  onStateChange?(cb: (on: boolean) => void): () => void;
+  /** Recherche courte d'un appareil mémorisé (natif : scan ; web : watchAdvertisements). */
+  findKnown?(match: (r: ScanResult) => boolean, ms: number): Promise<ScanResult | null>;
+  /** iOS : appareils restaurés par CoreBluetooth (restauration d'état) au relancement en arrière-plan. */
+  onRestore?(cb: (ids: string[]) => void): () => void;
 }

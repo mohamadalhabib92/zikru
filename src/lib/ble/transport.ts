@@ -5,14 +5,14 @@
  * est sur la liste de blocage (les anneaux-télécommandes passent par le mode clavier).
  */
 import { normUuid, type Bytes, type GattChar } from './core';
-import type { Availability, BleLink, BleTransport } from './types';
+import type { Availability, BleLink, BleTransport, ScanResult } from './types';
 
 // Types minimaux (lib.dom n'inclut pas Web Bluetooth)
 type BtChar = EventTarget & { uuid: string; properties: { notify: boolean; indicate: boolean; read: boolean; write: boolean; writeWithoutResponse: boolean }; value?: DataView; startNotifications(): Promise<BtChar>; stopNotifications(): Promise<BtChar>; readValue(): Promise<DataView>; writeValue(v: BufferSource): Promise<void> };
 type BtService = { uuid: string; getCharacteristics(): Promise<BtChar[]>; getCharacteristic(u: string): Promise<BtChar> };
 type BtServer = { connected: boolean; connect(): Promise<BtServer>; disconnect(): void; getPrimaryServices(): Promise<BtService[]>; getPrimaryService(u: string): Promise<BtService> };
-type BtDevice = EventTarget & { id: string; name?: string; gatt?: BtServer };
-type Bt = {
+type BtDevice = EventTarget & { id: string; name?: string; gatt?: BtServer; watchAdvertisements?(o?: { signal?: AbortSignal }): Promise<void> };
+type Bt = EventTarget & {
   getAvailability?(): Promise<boolean>;
   requestDevice(o: { filters?: { namePrefix?: string; services?: string[] }[]; optionalServices?: string[]; acceptAllDevices?: boolean }): Promise<BtDevice>;
   getDevices?(): Promise<BtDevice[]>;
@@ -78,10 +78,73 @@ export const transport: BleTransport = {
   async canReconnect(id) {
     return !!(await findDevice(id));
   },
-  async connect(id) {
+  silentReconnectSupported() {
+    return typeof bt()?.getDevices === 'function';
+  },
+  onStateChange(cb) {
+    const b = bt();
+    if (!b?.addEventListener) return () => {};
+    const h = (e: Event) => cb(!!(e as Event & { value?: boolean }).value);
+    b.addEventListener('availabilitychanged', h);
+    return () => b.removeEventListener('availabilitychanged', h);
+  },
+  /** Chrome : getDevices() + watchAdvertisements() sur les appareils déjà autorisés. */
+  async findKnown(match, ms) {
+    const b = bt();
+    if (!b?.getDevices) return null;
+    let list: BtDevice[] = [];
+    try {
+      list = await b.getDevices();
+    } catch {
+      return null;
+    }
+    list.forEach((d) => known.set(d.id, d));
+    const cands = list.filter((d) => typeof d.watchAdvertisements === 'function' && match({ id: d.id, name: d.name ?? null, rssi: null }));
+    if (!cands.length) return null;
+    return new Promise<ScanResult | null>((resolve) => {
+      const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const offs: (() => void)[] = [];
+      let done = false;
+      const finish = (r: ScanResult | null) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        offs.forEach((f) => f());
+        ac?.abort();
+        resolve(r);
+      };
+      const timer = setTimeout(() => finish(null), ms);
+      for (const d of cands) {
+        const h = (e: Event) => finish({ id: d.id, name: d.name ?? null, rssi: (e as Event & { rssi?: number }).rssi ?? null });
+        d.addEventListener('advertisementreceived', h);
+        offs.push(() => d.removeEventListener('advertisementreceived', h));
+        d.watchAdvertisements!(ac ? { signal: ac.signal } : undefined).catch(() => {});
+      }
+    });
+  },
+  async cancel(id) {
+    const d = known.get(id);
+    if (d?.gatt?.connected) d.gatt.disconnect();
+  },
+  async connect(id, opts) {
     const d = await findDevice(id);
     if (!d?.gatt) throw new Error('Appareil non autorisé dans ce navigateur : choisissez-le à nouveau.');
-    const server = await d.gatt.connect();
+    const gatt = d.gatt;
+    const ms = opts?.timeoutMs ?? 12000;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const server = await Promise.race([
+      gatt.connect(),
+      new Promise<never>((_, rej) => {
+        timer = setTimeout(() => {
+          try {
+            gatt.disconnect();
+          } catch {
+            /* ignoré */
+          }
+          rej(new Error('Appareil hors de portée (délai dépassé)'));
+        }, ms);
+      }),
+    ]).finally(() => timer && clearTimeout(timer));
     const chars: GattChar[] = [];
     const handles = new Map<string, BtChar>();
     let services: BtService[] = [];

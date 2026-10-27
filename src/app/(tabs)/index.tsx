@@ -1,3 +1,4 @@
+import { BleStatusChip } from '@/components/BleStatusChip';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -110,6 +111,9 @@ export default function Home() {
       <Eyebrow>{greg}</Eyebrow>
       <H1>As-salāmu ‘alaykum</H1>
       <Text style={{ color: t.primary, fontSize: 16, marginTop: 4 }}>{formatHijri(now, s.lang, s.hijriOffset)}</Text>
+      <View style={{ marginTop: 8 }}>
+        <BleStatusChip />
+      </View>
       <Spacer />
 
       {/* Prochaine prière */}

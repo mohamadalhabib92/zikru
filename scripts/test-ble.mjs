@@ -195,6 +195,30 @@ test('reconnexion : délais croissants puis abandon', () => {
   assert.ok(c.reconnectDelay(3) > c.reconnectDelay(2));
   assert.equal(c.reconnectDelay(99), null);
 });
+test('reconnexion automatique : délais plafonnés, jamais d’abandon', () => {
+  assert.equal(c.keeperDelay(0), 2000);
+  assert.ok(c.keeperDelay(2) > c.keeperDelay(1));
+  assert.equal(c.keeperDelay(99), 60000);
+  assert.equal(c.keeperDelay(1e6), 60000);
+  assert.equal(c.keeperDelay(-1), 2000);
+});
+test('appareils mémorisés : correspondance id, nom, service', () => {
+  const known = [
+    { id: 'AA', name: 'BSTWSH-01', services: ['ae30'] },
+    { id: 'BB', name: null, services: [c.normUuid('fff0'), c.normUuid('180f')] },
+  ];
+  assert.equal(c.matchKnown({ id: 'AA', name: null }, known).by, 'id');
+  const byName = c.matchKnown({ id: 'ZZ', name: ' BSTWSH-01 ' }, known);
+  assert.equal(byName.by, 'nom');
+  assert.equal(byName.device.id, 'AA');
+  const bySvc = c.matchKnown({ id: 'YY', name: null, services: ['0000fff0-0000-1000-8000-00805f9b34fb'] }, known);
+  assert.equal(bySvc.by, 'service');
+  assert.equal(bySvc.device.id, 'BB');
+  // services génériques (batterie…) : aucune correspondance
+  assert.equal(c.matchKnown({ id: 'XX', name: null, services: ['180f', '1800'] }, known), null);
+  // nom différent : aucune correspondance, même service (seuls les appareils sans nom sont associés par service)
+  assert.equal(c.matchKnown({ id: 'WW', name: 'Autre', services: ['ae30'] }, known), null);
+});
 test('tasbih : appuis, cycles 33/99/100, sessions', () => {
   let t = { count: 0, target: 33, dhikrId: 'subhanallah', total: 5, sessions: [] };
   let r = tc.applyClicks(t, 32, 'manuel');

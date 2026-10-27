@@ -48,10 +48,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   });
 
   // Pont compteur Bluetooth / clavier → compteur de session (actif sur tous les écrans).
+  useEffect(() => bleCounter.onClicks((n, src) => addRef.current(n, src === 'clavier' ? 'clavier' : src === 'simulation' ? 'manuel' : 'bluetooth')), []);
+  // Reconnexion automatique seulement une fois le compteur chargé (aucun appui rattrapé ne peut être perdu).
   useEffect(() => {
-    void bleCounter.init();
-    return bleCounter.onClicks((n, src) => addRef.current(n, src === 'clavier' ? 'clavier' : src === 'simulation' ? 'manuel' : 'bluetooth'));
-  }, []);
+    if (r2) void bleCounter.init();
+  }, [r2]);
 
   const increment = () => addClicks(1, 'manuel');
   const saveSession = () => setTasbih((t) => closeSession(t, uid('s'), new Date().toISOString()));

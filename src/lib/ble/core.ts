@@ -465,3 +465,32 @@ export const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 15000, 30000];
 export function reconnectDelay(attempt: number): number | null {
   return attempt < RECONNECT_DELAYS_MS.length ? RECONNECT_DELAYS_MS[attempt] : null;
 }
+
+// ---------------------------------------------------------------- Reconnexion automatique (appareils mémorisés)
+/** Délais entre deux cycles de recherche : croissants puis plafonnés à 60 s, sans jamais abandonner. */
+export const KEEPER_DELAYS_MS = [2000, 5000, 10000, 20000, 30000, 60000];
+export function keeperDelay(attempt: number): number {
+  return KEEPER_DELAYS_MS[Math.max(0, Math.min(attempt, KEEPER_DELAYS_MS.length - 1))];
+}
+/** Services trop génériques pour identifier un appareil (GAP, GATT, infos appareil, batterie, HID). */
+const IDENTITY_NEUTRAL_SERVICES = ['1800', '1801', '180a', '180f', '1812'].map((s) => normUuid(s));
+export type KnownLike = { id: string; name: string | null; services?: string[] };
+/**
+ * Associe un appareil vu en scan à un appareil mémorisé : d'abord par identifiant, sinon par nom exact
+ * (l'identifiant peut changer après une réinitialisation), sinon — appareil sans nom uniquement — par service spécifique.
+ */
+export function matchKnown(r: { id: string; name: string | null; services?: string[] }, known: KnownLike[]): { device: KnownLike; by: 'id' | 'nom' | 'service' } | null {
+  const byId = known.find((k) => k.id === r.id);
+  if (byId) return { device: byId, by: 'id' };
+  const name = r.name?.trim();
+  if (name) {
+    const byName = known.find((k) => k.name && k.name.trim() === name);
+    if (byName) return { device: byName, by: 'nom' };
+  }
+  const rs = (r.services ?? []).map((s) => normUuid(s)).filter((s) => !IDENTITY_NEUTRAL_SERVICES.includes(s));
+  if (rs.length) {
+    const bySvc = known.find((k) => !k.name && (k.services ?? []).some((s) => rs.includes(normUuid(s))));
+    if (bySvc) return { device: bySvc, by: 'service' };
+  }
+  return null;
+}
