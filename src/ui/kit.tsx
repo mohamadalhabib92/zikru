@@ -21,13 +21,13 @@ export type IconName = ComponentProps<typeof Ionicons>['name'];
 export { Ionicons };
 
 /** Conteneur d'écran défilant, largeur max sur desktop (PWA). */
-export function Screen({ children, scroll = true, padded = true }: { children: ReactNode; scroll?: boolean; padded?: boolean }) {
+export function Screen({ children, scroll = true, padded = true, bg }: { children: ReactNode; scroll?: boolean; padded?: boolean; bg?: string }) {
   const insets = useSafeAreaInsets();
   const inner = (
     <View style={[styles.inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom }]}>{children}</View>
   );
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, bg ? { backgroundColor: bg } : null]}>
       {scroll ? (
         <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
           {inner}

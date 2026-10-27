@@ -7,7 +7,8 @@ import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
-import { theme as t } from '@/ui/theme';
+import { brand, theme as t } from '@/ui/theme';
+import { GrowthProvider } from '@/lib/growth';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
@@ -22,8 +23,8 @@ function Root() {
       <StatusBar style="light" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: t.bg },
-          headerTintColor: t.text,
+          headerStyle: { backgroundColor: brand.brown },
+          headerTintColor: '#FFF7EA',
           headerTitleStyle: { fontWeight: '700' },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: t.bg },
@@ -33,8 +34,8 @@ function Root() {
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
         <Stack.Screen name="ring" options={{ title: tr.ring }} />
-        <Stack.Screen name="prayers" options={{ title: tr.prayer_times }} />
-        <Stack.Screen name="tijani" options={{ title: tr.tijani }} />
+        <Stack.Screen name="prayers" options={{ title: tr.prayer_times, contentStyle: { backgroundColor: brand.cream } }} />
+        <Stack.Screen name="tijani" options={{ title: 'Tijaniyya', contentStyle: { backgroundColor: brand.cream } }} />
         <Stack.Screen name="sahw" options={{ title: tr.sahw }} />
         <Stack.Screen name="kahf" options={{ title: tr.kahf }} />
         <Stack.Screen name="songs" options={{ title: tr.songs }} />
@@ -42,6 +43,15 @@ function Root() {
         <Stack.Screen name="config" options={{ title: tr.config_missing }} />
         <Stack.Screen name="content-admin" options={{ title: tr.content_admin }} />
         <Stack.Screen name="audit" options={{ title: tr.audit }} />
+        <Stack.Screen name="quran/index" options={{ title: 'Qur’an' }} />
+        <Stack.Screen name="quran/[n]" options={{ title: 'Sourate' }} />
+        <Stack.Screen name="hadiths" options={{ title: 'Hadiths' }} />
+        <Stack.Screen name="duas" options={{ title: 'Du‘as' }} />
+        <Stack.Screen name="fiqh" options={{ title: 'Fiqh' }} />
+        <Stack.Screen name="journey" options={{ title: 'Mon parcours spirituel' }} />
+        <Stack.Screen name="habits" options={{ title: 'Jardin des habitudes' }} />
+        <Stack.Screen name="bilal" options={{ title: 'El Ghaly Bilal' }} />
+        <Stack.Screen name="planner" options={{ title: 'Planificateur du jour' }} />
         <Stack.Screen name="auth" options={{ title: 'Connexion' }} />
         <Stack.Screen name="join" options={{ title: 'Rejoindre' }} />
         <Stack.Screen name="family/[id]" options={{ title: 'Ma famille' }} />
@@ -60,7 +70,9 @@ export default function Layout() {
           <DataProvider>
             <AuthProvider>
               <CommunityProvider>
-                <Root />
+                <GrowthProvider>
+                  <Root />
+                </GrowthProvider>
               </CommunityProvider>
             </AuthProvider>
           </DataProvider>

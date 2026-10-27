@@ -4,7 +4,7 @@
  */
 import { loadJSON, saveJSON } from './storage';
 
-export type Weather = { temp: number; code: number; isDay: boolean; wind: number; max: number | null; min: number | null; city: string | null; at: number; lat: number; lng: number };
+export type Weather = { temp: number; code: number; isDay: boolean; wind: number; feels?: number | null; max: number | null; min: number | null; city: string | null; at: number; lat: number; lng: number };
 
 const KEY = 'weather-cache';
 const TTL = 30 * 60 * 1000;
@@ -41,15 +41,15 @@ async function cityFor(lat: number, lng: number): Promise<string | null> {
 export async function getWeather(lat: number, lng: number, fallbackCity: string, force = false): Promise<Weather> {
   const cached = await loadJSON<Weather | null>(KEY, null);
   const near = cached && Math.abs(cached.lat - lat) < 0.05 && Math.abs(cached.lng - lng) < 0.05;
-  if (cached && near && !force && Date.now() - cached.at < TTL) return cached;
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code,is_day,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`;
+  if (cached && near && !force && cached.feels !== undefined && Date.now() - cached.at < TTL) return cached;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`;
   const r = await fetch(url);
   if (!r.ok) {
     if (cached) return cached;
     throw new Error(`Open-Meteo ${r.status}`);
   }
   const j = (await r.json()) as {
-    current: { temperature_2m: number; weather_code: number; is_day: number; wind_speed_10m: number };
+    current: { temperature_2m: number; apparent_temperature?: number; weather_code: number; is_day: number; wind_speed_10m: number };
     daily?: { temperature_2m_max?: number[]; temperature_2m_min?: number[] };
   };
   const city = (near && cached?.city) || (await cityFor(lat, lng)) || fallbackCity;
@@ -58,6 +58,7 @@ export async function getWeather(lat: number, lng: number, fallbackCity: string,
     code: j.current.weather_code,
     isDay: j.current.is_day === 1,
     wind: j.current.wind_speed_10m,
+    feels: j.current.apparent_temperature ?? null,
     max: j.daily?.temperature_2m_max?.[0] ?? null,
     min: j.daily?.temperature_2m_min?.[0] ?? null,
     city,

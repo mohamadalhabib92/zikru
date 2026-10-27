@@ -8,3 +8,12 @@ export const theme = {
   displayFont: undefined as string | undefined,
 };
 export type Theme = typeof theme;
+
+/** Palette « Zikru original » (en-tête brun, vert/or tijani, cartes claires). */
+export const brand = {
+  brown: '#6B4426', brownDark: '#4A2E19', brownSoft: '#8A5F3C',
+  cream: '#F7F1E6', paper: '#FFFFFF', ink: '#2B1D12', inkMuted: '#7A6A5C', line: '#E8DFD2',
+  gold: '#F2C94C', goldDeep: '#C9A227', green: '#1F4A35', greenDeep: '#14301F', greenSoft: '#2F6B4C',
+  purple: '#3A2FA8', purpleDeep: '#2A1F86', indigo: '#4338CA', blue: '#2F7FD0', teal: '#3E9E78',
+  violet: '#8A55E6', rust: '#A3501E', wazifa: '#C99A2E', hailala: '#6B3FB5', wirdGreen: '#2F7D4F',
+};

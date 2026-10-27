@@ -151,3 +151,47 @@ export const ADILLA: Evidence[] = [
 
 export const MUQADDAM_NOTE =
   'Ces textes sont donnés pour aider la mémorisation. Le wird de la Tijaniyya se reçoit d’un muqaddam habilité : suivez son enseignement pour les horaires, les nombres, les conditions et les rattrapages.';
+
+/** Présentation des trois pratiques (écran Programme Tijaniyya). */
+export type Practice = { id: 'wird' | 'wazifa' | 'hailala'; ar: string; name: string; timing: string; timingAr: string; desc: string; steps: Step[]; uncounted?: boolean };
+export const PRACTICES: Practice[] = [
+  {
+    id: 'wird',
+    ar: 'الوِرْدُ اللَّازِم',
+    name: 'Al-Wird al-Lazim',
+    timing: 'Après Fajr et après ‘Asr',
+    timingAr: 'بعد الفجر وبعد العصر',
+    desc: 'Le wird obligatoire du tijani, récité deux fois par jour : le matin (après la prière de l’aube, jusqu’à la mi-journée) et le soir (après ‘Asr, jusqu’à ‘Isha), selon ce qui est couramment enseigné. C’est l’engagement central de la voie.',
+    steps: WIRD.steps,
+  },
+  {
+    id: 'wazifa',
+    ar: 'الوَظِيفَة',
+    name: 'Al-Wazifa',
+    timing: 'Une fois par jour, matin ou soir',
+    timingAr: 'مرة في اليوم صباحاً أو مساءً',
+    desc: 'La wazifa se récite au moins une fois par jour, de préférence en groupe (halqa) et en état de pureté rituelle, souvent après ‘Asr ou après Maghrib. Elle contient la Jawharat al-Kamal.',
+    steps: WAZIFA.steps,
+  },
+  {
+    id: 'hailala',
+    ar: 'هَيْلَلَة الجُمُعَة',
+    name: 'Hailala al-Jumu‘a',
+    timing: 'Vendredi, de ‘Asr au Maghrib',
+    timingAr: 'يوم الجمعة من العصر إلى المغرب',
+    desc: HAILALA_FRIDAY.text,
+    steps: [{ formula: 'hailala', count: 0, extra: 'Sans compter précisément, jusqu’au coucher du soleil.' }],
+    uncounted: true,
+  },
+];
+
+export const SHAYKH = {
+  ar: 'الشيخ أحمد بن محمد التجاني',
+  name: 'Shaykh Ahmad ibn Muhammad al-Tijani',
+  born: 'Né en 1150 H / 1737 à ‘Aïn Madhi (Algérie)',
+  died: 'Décédé en 1230 H / 1815 à Fès (Maroc)',
+  silsila: 'Selon la tradition de la voie, le wird lui a été transmis directement par le Prophète ﷺ, à l’état de veille, en 1196 H / 1781-1782 (Abu Samghun).',
+  shrine: 'Mausolée : Zaouïa tijaniyya, Fès',
+  desc: 'Savant malikite et maître soufi, il fonda la Tariqa Tijaniyya, aujourd’hui l’une des voies les plus répandues, de l’Afrique du Nord et de l’Ouest jusqu’au monde entier. Sa voie repose sur trois piliers :',
+  pillars: ['Le repentir sincère (tawba)', 'L’éloignement de l’interdit', 'L’accomplissement fidèle du wird'],
+};

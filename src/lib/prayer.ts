@@ -79,3 +79,5 @@ export function countdown(ms: number): string {
   const h = Math.floor(m / 60);
   return h > 0 ? `${h} h ${String(m % 60).padStart(2, '0')}` : `${m} min`;
 }
+
+export const AR_NAMES: Record<PrayerKey, string> = { fajr: 'الفجر', sunrise: 'الشروق', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
