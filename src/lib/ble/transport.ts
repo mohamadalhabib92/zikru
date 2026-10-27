@@ -1,0 +1,146 @@
+/**
+ * Transport Web Bluetooth (Chrome, Edge, Opera, Chrome Android ; pas Safari ni iOS).
+ * Spécification : https://webbluetoothcg.github.io/web-bluetooth/
+ * Rappels : les services doivent être listés dans optionalServices ; le service HID 0x1812
+ * est sur la liste de blocage (les anneaux-télécommandes passent par le mode clavier).
+ */
+import { normUuid, type Bytes, type GattChar } from './core';
+import type { Availability, BleLink, BleTransport } from './types';
+
+// Types minimaux (lib.dom n'inclut pas Web Bluetooth)
+type BtChar = EventTarget & { uuid: string; properties: { notify: boolean; indicate: boolean; read: boolean; write: boolean; writeWithoutResponse: boolean }; value?: DataView; startNotifications(): Promise<BtChar>; stopNotifications(): Promise<BtChar>; readValue(): Promise<DataView>; writeValue(v: BufferSource): Promise<void> };
+type BtService = { uuid: string; getCharacteristics(): Promise<BtChar[]>; getCharacteristic(u: string): Promise<BtChar> };
+type BtServer = { connected: boolean; connect(): Promise<BtServer>; disconnect(): void; getPrimaryServices(): Promise<BtService[]>; getPrimaryService(u: string): Promise<BtService> };
+type BtDevice = EventTarget & { id: string; name?: string; gatt?: BtServer };
+type Bt = {
+  getAvailability?(): Promise<boolean>;
+  requestDevice(o: { filters?: { namePrefix?: string; services?: string[] }[]; optionalServices?: string[]; acceptAllDevices?: boolean }): Promise<BtDevice>;
+  getDevices?(): Promise<BtDevice[]>;
+};
+
+function bt(): Bt | null {
+  if (typeof navigator === 'undefined') return null;
+  return ((navigator as unknown as { bluetooth?: Bt }).bluetooth ?? null) as Bt | null;
+}
+const known = new Map<string, BtDevice>();
+const toBytes = (v: DataView | undefined | null): Bytes => (v ? new Uint8Array(v.buffer.slice(v.byteOffset, v.byteOffset + v.byteLength)) : new Uint8Array(0));
+
+function isIos(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in (globalThis as object));
+}
+
+async function findDevice(id: string): Promise<BtDevice | null> {
+  if (known.has(id)) return known.get(id)!;
+  const b = bt();
+  if (b?.getDevices) {
+    try {
+      const list = await b.getDevices();
+      for (const d of list) known.set(d.id, d);
+      return known.get(id) ?? null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+export const transport: BleTransport = {
+  platform: 'web',
+  mode: 'chooser',
+  async availability(): Promise<Availability> {
+    const b = bt();
+    if (!b) {
+      if (typeof window !== 'undefined' && !window.isSecureContext) return { ok: false, kind: 'unsupported', reason: 'Le Bluetooth web exige une page sécurisée (https).' };
+      return {
+        ok: false,
+        kind: 'unsupported',
+        reason: isIos()
+          ? 'Safari et tous les navigateurs iOS/iPadOS ne prennent pas en charge le Bluetooth web. Utilisez l’app Zikru installée (build natif), ou un anneau-télécommande en mode clavier.'
+          : 'Ce navigateur ne prend pas en charge le Bluetooth web (Safari, Firefox). Utilisez Chrome ou Edge sur ordinateur ou Android, ou l’app native.',
+      };
+    }
+    try {
+      if (b.getAvailability && !(await b.getAvailability())) return { ok: false, kind: 'disabled', reason: 'Bluetooth désactivé ou absent sur cet appareil.' };
+    } catch {
+      /* certains navigateurs n'implémentent pas getAvailability */
+    }
+    return { ok: true };
+  },
+  async choose({ services, namePrefixes, acceptAll }) {
+    const b = bt();
+    if (!b) throw new Error('Bluetooth web indisponible');
+    const filters = namePrefixes.map((namePrefix) => ({ namePrefix }));
+    const d = await b.requestDevice(acceptAll || filters.length === 0 ? { acceptAllDevices: true, optionalServices: services } : { filters, optionalServices: services });
+    known.set(d.id, d);
+    return d.id;
+  },
+  async canReconnect(id) {
+    return !!(await findDevice(id));
+  },
+  async connect(id) {
+    const d = await findDevice(id);
+    if (!d?.gatt) throw new Error('Appareil non autorisé dans ce navigateur : choisissez-le à nouveau.');
+    const server = await d.gatt.connect();
+    const chars: GattChar[] = [];
+    const handles = new Map<string, BtChar>();
+    let services: BtService[] = [];
+    try {
+      services = await server.getPrimaryServices();
+    } catch {
+      services = [];
+    }
+    for (const s of services) {
+      let cs: BtChar[] = [];
+      try {
+        cs = await s.getCharacteristics();
+      } catch {
+        continue;
+      }
+      for (const c of cs) {
+        const key = normUuid(s.uuid) + '|' + normUuid(c.uuid);
+        handles.set(key, c);
+        chars.push({ service: normUuid(s.uuid), uuid: normUuid(c.uuid), notify: c.properties.notify || c.properties.indicate, read: c.properties.read });
+      }
+    }
+    const get = (s: string, c: string) => handles.get(normUuid(s) + '|' + normUuid(c));
+    const link: BleLink = {
+      id: d.id,
+      name: d.name ?? null,
+      chars,
+      async subscribe(s, c, cb) {
+        const ch = get(s, c);
+        if (!ch) throw new Error('Caractéristique introuvable');
+        const h = (e: Event) => cb(toBytes((e.target as BtChar).value));
+        ch.addEventListener('characteristicvaluechanged', h);
+        await ch.startNotifications();
+        return () => {
+          ch.removeEventListener('characteristicvaluechanged', h);
+          if (server.connected) void ch.stopNotifications().catch(() => {});
+        };
+      },
+      async read(s, c) {
+        const ch = get(s, c);
+        if (!ch || !ch.properties.read) return null;
+        try {
+          return toBytes(await ch.readValue());
+        } catch {
+          return null;
+        }
+      },
+      async write(s, c, data) {
+        const ch = get(s, c);
+        if (ch) await ch.writeValue(data as unknown as BufferSource);
+      },
+      onDisconnect(cb) {
+        const h = () => cb();
+        d.addEventListener('gattserverdisconnected', h);
+        return () => d.removeEventListener('gattserverdisconnected', h);
+      },
+      async disconnect() {
+        if (server.connected) server.disconnect();
+      },
+    };
+    return link;
+  },
+};

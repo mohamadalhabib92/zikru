@@ -8,7 +8,7 @@ const ITEMS: [string, string][] = [
   ['Appels payants (402)', 'Aucun appel réseau sur le chemin core. Prières/qibla calculés localement ; Supabase optionnel.'],
   ['Persistance', 'Tasbih écrit à chaque appui (AsyncStorage / localStorage). MMKV non utilisé (build natif requis, incompatible PWA).'],
   ['Audio Bilal', 'Fichier non fourni : lecteur désactivé proprement, aucune exception.'],
-  ['BLE', 'RingService abstrait + mock badgé « Simulation ». Aucune fausse connexion.'],
+  ['BLE', 'Compteur Bluetooth réel : Web Bluetooth (Chrome/Edge) et react-native-ble-plx (build natif), profils BSTWSH / iQibla (partiel) / générique, mode apprentissage, mode clavier HID.'],
   ['Langues', '7 langues branchées ; Pulaar et Wolof : repli FR avec mention « en attente de validation ».'],
   ['Notifications', 'Non implémentées dans cette passe (à ajouter avec expo-notifications).'],
   ['Dead code', 'Aucun écran orphelin ; aucun flag de démo hors contenu d’exemple étiqueté.'],

@@ -30,7 +30,7 @@ const fr = {
   tasbih_title: 'Tasbih', tap_to_count: 'Touchez pour compter', reset: 'Réinitialiser', target: 'Objectif', save_session: 'Enregistrer la session', history: 'Historique', no_history: 'Aucune session enregistrée.', cycle_done: 'Objectif atteint',
   dhikr_title: 'Dhikr', source: 'Source', no_content: 'Aucun contenu approuvé pour le moment.', translation_pending: 'Traduction en attente de validation',
   settings_title: 'Réglages', language: 'Langue', hijri_offset: 'Ajustement hégirien (jours)', audio: 'Voix (adhan / Bilal)', play: 'Écouter', pause: 'Pause', audio_missing: 'Fichier audio non fourni : lecture désactivée (aucun crash).',
-  sources_title: 'Sources & Méthodologie', ring: 'Anneau connecté', simulation: 'Simulation', config_missing: 'Configuration manquante', content_admin: 'Workflow de contenu', audit: 'Audit (Phase 0)', reset_data: 'Effacer les données locales',
+  sources_title: 'Sources & Méthodologie', ring: 'Compteur Bluetooth', simulation: 'Simulation', config_missing: 'Configuration manquante', content_admin: 'Workflow de contenu', audit: 'Audit (Phase 0)', reset_data: 'Effacer les données locales',
   onboarding_welcome: 'Bienvenue sur Zikru', onboarding_sub: 'Prière, qibla et dhikr — calme, hors-ligne, sans publicité.', continue: 'Continuer', start: 'Commencer',
   offline_ready: 'Fonctionne hors-ligne', cancel: 'Annuler', save: 'Enregistrer', close: 'Fermer',
 };
@@ -47,7 +47,7 @@ const en: Dict = {
   tasbih_title: 'Tasbih', tap_to_count: 'Tap to count', reset: 'Reset', target: 'Target', save_session: 'Save session', history: 'History', no_history: 'No saved session yet.', cycle_done: 'Target reached',
   dhikr_title: 'Dhikr', source: 'Source', no_content: 'No approved content yet.', translation_pending: 'Translation pending approval',
   settings_title: 'Settings', language: 'Language', hijri_offset: 'Hijri adjustment (days)', audio: 'Voice (adhan / Bilal)', play: 'Play', pause: 'Pause', audio_missing: 'Audio file not provided: playback disabled (no crash).',
-  sources_title: 'Sources & Methodology', ring: 'Smart ring', simulation: 'Simulation', config_missing: 'Missing configuration', content_admin: 'Content workflow', audit: 'Audit (Phase 0)', reset_data: 'Erase local data',
+  sources_title: 'Sources & Methodology', ring: 'Bluetooth counter', simulation: 'Simulation', config_missing: 'Missing configuration', content_admin: 'Content workflow', audit: 'Audit (Phase 0)', reset_data: 'Erase local data',
   onboarding_welcome: 'Welcome to Zikru', onboarding_sub: 'Prayer, qibla and dhikr — calm, offline, ad-free.', continue: 'Continue', start: 'Start',
   offline_ready: 'Works offline', cancel: 'Cancel', save: 'Save', close: 'Close',
 };
@@ -63,7 +63,7 @@ const de: Dict = {
   tasbih_title: 'Tasbih', tap_to_count: 'Tippen zum Zählen', reset: 'Zurücksetzen', target: 'Ziel', save_session: 'Sitzung speichern', history: 'Verlauf', no_history: 'Noch keine Sitzung gespeichert.', cycle_done: 'Ziel erreicht',
   dhikr_title: 'Dhikr', source: 'Quelle', no_content: 'Noch keine freigegebenen Inhalte.', translation_pending: 'Übersetzung wartet auf Freigabe',
   settings_title: 'Einstellungen', language: 'Sprache', hijri_offset: 'Hidschri-Anpassung (Tage)', audio: 'Stimme (Adhan / Bilal)', play: 'Abspielen', pause: 'Pause', audio_missing: 'Audiodatei fehlt: Wiedergabe deaktiviert (kein Absturz).',
-  sources_title: 'Quellen & Methodik', ring: 'Smart-Ring', simulation: 'Simulation', config_missing: 'Fehlende Konfiguration', content_admin: 'Inhalts-Workflow', audit: 'Audit (Phase 0)', reset_data: 'Lokale Daten löschen',
+  sources_title: 'Quellen & Methodik', ring: 'Bluetooth-Zähler', simulation: 'Simulation', config_missing: 'Fehlende Konfiguration', content_admin: 'Inhalts-Workflow', audit: 'Audit (Phase 0)', reset_data: 'Lokale Daten löschen',
   onboarding_welcome: 'Willkommen bei Zikru', onboarding_sub: 'Gebet, Qibla und Dhikr — ruhig, offline, werbefrei.', continue: 'Weiter', start: 'Los geht’s',
   offline_ready: 'Funktioniert offline', cancel: 'Abbrechen', save: 'Speichern', close: 'Schliessen',
 };
@@ -79,7 +79,7 @@ const ar: Dict = {
   tasbih_title: 'التسبيح', tap_to_count: 'المس للعد', reset: 'إعادة', target: 'الهدف', save_session: 'حفظ الجلسة', history: 'السجل', no_history: 'لا توجد جلسات محفوظة.', cycle_done: 'تم بلوغ الهدف',
   dhikr_title: 'الأذكار', source: 'المصدر', no_content: 'لا يوجد محتوى معتمد بعد.', translation_pending: 'الترجمة بانتظار الاعتماد',
   settings_title: 'الإعدادات', language: 'اللغة', hijri_offset: 'تعديل التاريخ الهجري (أيام)', audio: 'الصوت (الأذان)', play: 'تشغيل', pause: 'إيقاف مؤقت', audio_missing: 'الملف الصوتي غير متوفر: التشغيل معطّل.',
-  sources_title: 'المصادر والمنهجية', ring: 'الخاتم الذكي', simulation: 'محاكاة', config_missing: 'الإعداد ناقص', content_admin: 'سير عمل المحتوى', audit: 'التدقيق (المرحلة 0)', reset_data: 'مسح البيانات المحلية',
+  sources_title: 'المصادر والمنهجية', ring: 'عداد بلوتوث', simulation: 'محاكاة', config_missing: 'الإعداد ناقص', content_admin: 'سير عمل المحتوى', audit: 'التدقيق (المرحلة 0)', reset_data: 'مسح البيانات المحلية',
   onboarding_welcome: 'مرحبًا بك في ذكرُ', onboarding_sub: 'الصلاة والقبلة والذكر — بهدوء، دون اتصال، دون إعلانات.', continue: 'متابعة', start: 'ابدأ',
   offline_ready: 'يعمل دون اتصال', cancel: 'إلغاء', save: 'حفظ', close: 'إغلاق',
 };

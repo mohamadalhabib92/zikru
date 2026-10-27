@@ -1,10 +1,9 @@
-import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Animated, Platform, Pressable, Text, View } from 'react-native';
 import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
-import { ring } from '@/lib/ring';
+import { useBleCounter } from '@/lib/ble/manager';
 import { useSettings } from '@/lib/settings';
 import { Badge, Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
@@ -15,7 +14,9 @@ export default function TasbihScreen() {
   const router = useRouter();
   const approved = approvedOnly(content);
   const current = approved.find((c) => c.id === tasbih.dhikrId) ?? approved[0];
-  const scale = useRef(new Animated.Value(1)).current;
+  const ble = useBleCounter();
+  const bleOn = ble.status === 'connecté';
+  const [scale] = useState(() => new Animated.Value(1));
   const done = tasbih.target > 0 && tasbih.count > 0 && tasbih.count % tasbih.target === 0;
 
   const tap = () => {
@@ -24,21 +25,20 @@ export default function TasbihScreen() {
       Animated.timing(scale, { toValue: 0.96, duration: 60, useNativeDriver: Platform.OS !== 'web' }),
       Animated.spring(scale, { toValue: 1, useNativeDriver: Platform.OS !== 'web', speed: 40 }),
     ]).start();
-    if (Platform.OS !== 'web') {
-      const next = tasbih.count + 1;
-      void (tasbih.target > 0 && next % tasbih.target === 0 ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success) : Haptics.selectionAsync()).catch(() => {});
-    }
   };
-  // Appui anneau (simulation) → +1
-  const tapRef = useRef(tap);
-  tapRef.current = tap;
-  useEffect(() => ring.subscribe((e) => e.type === 'tap' && tapRef.current()), []);
+  // Les appuis du compteur Bluetooth / clavier arrivent via DataProvider (aucun double comptage ici).
 
   return (
     <Screen>
       <Row style={{ justifyContent: 'space-between' }}>
         <Eyebrow>{tr.tasbih_title}</Eyebrow>
-        {ring.isConnected ? <Badge label={`${tr.ring} · ${tr.simulation}`} tone="warning" /> : null}
+        {bleOn ? (
+          <Badge label={`${ble.device?.name ?? tr.ring}${ble.battery != null ? ` · ${ble.battery} %` : ''}`} tone={ble.mapping ? 'success' : 'warning'} />
+        ) : ble.status === 'reconnexion' ? (
+          <Badge label="Reconnexion…" tone="warning" />
+        ) : ble.prefs.hidEnabled && ble.hidSupported ? (
+          <Badge label="Clavier / télécommande actif" tone="info" />
+        ) : null}
       </Row>
       {current ? (
         <View style={{ alignItems: 'center', marginVertical: 8 }}>
@@ -75,7 +75,7 @@ export default function TasbihScreen() {
       <Spacer />
       <Row>
         <Button title={tr.save_session} icon="bookmark-outline" onPress={saveSession} disabled={tasbih.count === 0} style={{ flex: 1 }} />
-        <Button title={tr.reset} icon="refresh" variant="ghost" onPress={() => setTasbih((x) => ({ ...x, count: 0 }))} disabled={tasbih.count === 0} />
+        <Button title={tr.reset} icon="refresh" variant="ghost" onPress={() => setTasbih((x) => ({ ...x, count: 0, deviceCount: 0 }))} disabled={tasbih.count === 0} />
       </Row>
       <Spacer h={20} />
       <H2>{tr.history}</H2>
@@ -92,13 +92,16 @@ export default function TasbihScreen() {
                 <Text style={{ color: t.text, fontWeight: '600' }}>{c?.transliteration ?? s.dhikrId}</Text>
                 <Text style={{ color: t.primary, fontWeight: '700' }}>{s.count}</Text>
               </Row>
-              <Muted>{new Date(s.at).toLocaleString('fr-CH')}</Muted>
+              <Muted>
+                {new Date(s.at).toLocaleString('fr-CH')}
+                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? 'compteur Bluetooth' : `mixte (${s.deviceCount ?? 0} via compteur)`}` : ''}
+              </Muted>
             </Card>
           );
         })
       )}
       <Spacer />
-      <Button title={`${tr.ring} (${tr.simulation})`} variant="ghost" icon="radio-outline" onPress={() => router.push('/ring')} />
+      <Button title={bleOn ? `${tr.ring} : connecté` : tr.ring} variant="ghost" icon="bluetooth-outline" onPress={() => router.push('/ring')} />
     </Screen>
   );
 }
