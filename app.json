@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ch.mohamadba.zikru",
+      "bundleIdentifier": "com.vibecode.zikru-76mpdv",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "Zikru utilise le Bluetooth pour se connecter à votre compteur de tasbih ou anneau de dhikr et compter chaque appui.",
         "ITSAppUsesNonExemptEncryption": false,
