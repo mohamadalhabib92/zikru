@@ -6,7 +6,7 @@
 |---|---|
 | Nom (≤ 30) | Zikru – Prière, Qibla, Tasbih (29 car.) |
 | Sous-titre (≤ 30) | Prière, qibla et tasbih (23 car.) |
-| Bundle ID | `ch.mohamadba.zikru` |
+| Bundle ID | `com.vibecode.zikru-76mpdv` |
 | SKU proposé | `zikru-ios-001` |
 | Projet EAS | `92e1bb51-c48f-41ed-9131-13a6ed6bdb22` (compte habib548) |
 | Version / build | 1.0.0 / numéro de build géré par EAS (remote, autoIncrement) |
