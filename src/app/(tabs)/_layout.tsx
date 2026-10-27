@@ -32,7 +32,7 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: t.bg },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: tr.tab_prayers, tabBarIcon: icon('time-outline') }} />
+      <Tabs.Screen name="index" options={{ title: tr.tab_home, tabBarIcon: icon('home-outline') }} />
       <Tabs.Screen name="qibla" options={{ title: tr.tab_qibla, tabBarIcon: icon('compass-outline') }} />
       <Tabs.Screen name="tasbih" options={{ title: tr.tab_tasbih, tabBarIcon: icon('ellipse-outline') }} />
       <Tabs.Screen name="dhikr" options={{ title: tr.tab_dhikr, tabBarIcon: icon('book-outline') }} />

@@ -25,6 +25,12 @@ function Root() {
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
         <Stack.Screen name="ring" options={{ title: tr.ring }} />
+        <Stack.Screen name="prayers" options={{ title: tr.prayer_times }} />
+        <Stack.Screen name="tijani" options={{ title: tr.tijani }} />
+        <Stack.Screen name="sahw" options={{ title: tr.sahw }} />
+        <Stack.Screen name="kahf" options={{ title: tr.kahf }} />
+        <Stack.Screen name="songs" options={{ title: tr.songs }} />
+        <Stack.Screen name="community" options={{ title: tr.community }} />
         <Stack.Screen name="config" options={{ title: tr.config_missing }} />
         <Stack.Screen name="content-admin" options={{ title: tr.content_admin }} />
         <Stack.Screen name="audit" options={{ title: tr.audit }} />

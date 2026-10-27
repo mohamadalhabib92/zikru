@@ -197,6 +197,10 @@ export type Mapping = {
   mode: 'absolute' | 'pulse';
   /** absolu : position de l'octet compteur (ou -1 = décodeur du profil). */
   byteIndex?: number;
+  /** absolu : champ compteur détecté automatiquement (entier 1–4 octets LE/BE, ou nombre en ASCII). */
+  field?: CounterField;
+  /** true = détecté automatiquement, pas encore confirmé par l'apprentissage. */
+  auto?: boolean;
   /** impulsion : ne compter que les trames égales à cette signature (appui) — ignore les relâchements. */
   pressSignature?: string;
   /** impulsion sans signature : nombre de notifications par appui. */
@@ -233,33 +237,56 @@ export const BASELINE_GRACE_MS = 1500;
 export class ClickDecoder {
   private last: number | null = null;
   private pulses = 0;
+  /** true si le dernier appel à feed() a rattrapé des appuis faits hors connexion. */
+  lastWasSync = false;
   constructor(
     private mapping: Mapping,
     private parse: (b: Bytes) => Parsed,
     private subscribedAt = 0,
+    /** Dernier total connu de l'appareil (mémorisé localement) : sert à la synchronisation à la reconnexion. */
+    private stored: number | null = null,
   ) {}
+  get lastValue(): number | null {
+    return this.last;
+  }
   /** Valeur absolue lue dans la trame selon la correspondance. */
-  private absoluteValue(b: Bytes): number | null {
+  absoluteValue(b: Bytes): number | null {
+    if (this.mapping.field) return readField(b, this.mapping.field);
     if (this.mapping.byteIndex != null && this.mapping.byteIndex >= 0) return b.length > this.mapping.byteIndex ? b[this.mapping.byteIndex] : null;
     const p = this.parse(b);
     return p && p.kind === 'absolute' ? p.value : null;
   }
+  private maxValue(): number {
+    if (this.mapping.field && 'len' in this.mapping.field) return 2 ** (8 * this.mapping.field.len) - 1;
+    if (this.mapping.byteIndex != null && this.mapping.byteIndex >= 0) return 255;
+    return Number.MAX_SAFE_INTEGER;
+  }
   feed(b: Bytes, now = Date.now()): number {
+    this.lastWasSync = false;
     if (this.mapping.mode === 'absolute') {
       const v = this.absoluteValue(b);
       if (v == null) return 0;
       const prev = this.last;
       this.last = v;
-      if (prev == null) return now - this.subscribedAt < BASELINE_GRACE_MS ? 0 : v === 0 ? 0 : 1;
+      if (prev == null) {
+        // Première valeur de la connexion : synchronisation avec le total mémorisé (sans double comptage).
+        if (this.stored != null) {
+          const d = syncDelta(this.stored, v);
+          this.stored = null;
+          this.lastWasSync = d > 0;
+          return d;
+        }
+        return now - this.subscribedAt < BASELINE_GRACE_MS ? 0 : v === 0 ? 0 : 1;
+      }
       const d = v - prev;
       if (d === 0) return 0;
       if (d > 0) return d <= MAX_JUMP ? d : 1;
-      // compteur revenu en arrière : remise à zéro de l'appareil (ou débordement d'un octet)
-      if (this.mapping.byteIndex != null && this.mapping.byteIndex >= 0 && prev >= 250 && v <= 5) return v + 256 - prev;
+      // compteur revenu en arrière : débordement du champ, ou remise à zéro de l'appareil
+      const max = this.maxValue();
+      if (max < Number.MAX_SAFE_INTEGER && prev >= max - 5 && v <= 5) return v + max + 1 - prev;
       return v === 0 ? 0 : Math.min(v, MAX_JUMP);
     }
     if (this.mapping.pressSignature) return toHex(b) === this.mapping.pressSignature ? 1 : 0;
-    // impulsion sans signature : un décodeur de profil peut quand même fournir un compteur absolu
     const per = Math.max(1, this.mapping.notifsPerClick ?? 1);
     this.pulses++;
     if (this.pulses >= per) {
@@ -270,21 +297,99 @@ export class ClickDecoder {
   }
 }
 
+/** Plafond de rattrapage (appuis hors connexion) : au-delà, on considère la valeur aberrante. */
+export const SYNC_MAX = 100000;
+/**
+ * Appuis faits hors connexion : total actuel de l'appareil − dernier total mémorisé.
+ * Si l'appareil a été remis à zéro entre-temps (valeur plus petite), seuls les appuis
+ * depuis la remise à zéro sont ajoutés. Jamais de double comptage : delta 0 si identique.
+ */
+export function syncDelta(stored: number, current: number): number {
+  const d = current >= stored ? current - stored : current;
+  return d > SYNC_MAX ? 0 : d;
+}
+
+// ---------------------------------------------------------------- Détection automatique du champ compteur
+export type CounterField = { offset: number; len: 1 | 2 | 3 | 4; endian: 'le' | 'be' } | { ascii: number };
+
+/** Lit un champ compteur dans une trame. ascii = index du n-ième groupe de chiffres. */
+export function readField(b: Bytes, f: CounterField): number | null {
+  if ('ascii' in f) {
+    const runs = ascii(b).match(/\d+/g);
+    return runs && runs.length > f.ascii && runs[f.ascii].length <= 9 ? parseInt(runs[f.ascii], 10) : null;
+  }
+  if (b.length < f.offset + f.len) return null;
+  let v = 0;
+  for (let i = 0; i < f.len; i++) {
+    const byte = f.endian === 'le' ? b[f.offset + f.len - 1 - i] : b[f.offset + i];
+    v = v * 256 + byte;
+  }
+  return v;
+}
+
+/** Les valeurs augmentent-elles de 1 à chaque trame (une trame par appui) ? */
+function stepsByOne(vals: (number | null)[]): boolean {
+  if (vals.length < 2 || vals.some((v) => v == null)) return false;
+  for (let k = 1; k < vals.length; k++) if ((vals[k] as number) - (vals[k - 1] as number) !== 1) return false;
+  return true;
+}
+
+/**
+ * Cherche dans une suite de trames (une par appui) le champ qui s'incrémente de 1 :
+ * nombre ASCII d'abord (format texte), puis entier binaire de 1 à 4 octets, little puis big endian.
+ * Ignore les champs constants ; préfère le champ le plus large qui contient la séquence.
+ */
+export function detectCounterField(frames: Bytes[]): CounterField | null {
+  if (frames.length < 2) return null;
+  const nAscii = Math.min(...frames.map((f) => (ascii(f).match(/\d+/g) ?? []).length));
+  const printable = frames.every((f) => f.length > 0 && Array.from(f).every((x) => (x >= 32 && x < 127) || x === 10 || x === 13 || x === 0));
+  if (printable) for (let i = 0; i < nAscii; i++) if (stepsByOne(frames.map((f) => readField(f, { ascii: i })))) return { ascii: i };
+  const len = Math.min(...frames.map((f) => f.length));
+  const zeroAt = (i: number) => i >= 0 && i < len && frames.every((f) => f[i] === 0);
+  // 1) octet de poids faible qui s'incrémente de 1 ; on l'élargit aux octets voisins nuls (compteur 16/24/32 bits)
+  for (let o = len - 1; o >= 0; o--) {
+    if (!stepsByOne(frames.map((f) => f[o]))) continue;
+    let be = 1;
+    while (be < 4 && zeroAt(o - be)) be++;
+    let le = 1;
+    while (le < 4 && zeroAt(o + le)) le++;
+    if (be >= le && be > 1) return { offset: o - be + 1, len: be as 1 | 2 | 3 | 4, endian: 'be' };
+    if (le > 1) return { offset: o, len: le as 1 | 2 | 3 | 4, endian: 'le' };
+    return { offset: o, len: 1, endian: 'le' };
+  }
+  // 2) la séquence franchit une frontière d'octet (ex. 255 → 256) : champ multi-octets
+  for (const L of [2, 3, 4] as const) {
+    for (const endian of ['le', 'be'] as const) {
+      for (let o = 0; o + L <= len; o++) {
+        const f: CounterField = { offset: o, len: L, endian };
+        const vals = frames.map((x) => readField(x, f));
+        if (stepsByOne(vals) && (vals[0] as number) < 2 ** 24) return f;
+      }
+    }
+  }
+  return null;
+}
+export function fieldLabel(f: CounterField | undefined): string {
+  if (!f) return '';
+  return 'ascii' in f ? `nombre texte n° ${f.ascii + 1}` : `${f.len} octet${f.len > 1 ? 's' : ''} à la position ${f.offset}${f.len > 1 ? (f.endian === 'le' ? ' (little-endian)' : ' (big-endian)') : ''}`;
+}
+
+// ---------------------------------------------------------------- Reconnaissance au scan
+/** Motifs de nom fréquents des compteurs de dhikr, anneaux et tasbih électroniques (indice, pas une garantie). */
+export const COUNTER_NAME_RE = /tasbi|tasbe|tesbi|tesbe|zikr|dhikr|thikr|zekr|subha|misbaha|masbaha|iqibla|qibla|bstwsh|ring|counter|compteur|clicker|tally|noor|jood|^bw/i;
+/** Services de profils connus (documentés) et services génériques fréquents sur ces accessoires. */
+export function likelyCounter(name: string | null | undefined, services: string[] = []): { likely: boolean; reason: string | null } {
+  const n = (name ?? '').trim();
+  if (n && COUNTER_NAME_RE.test(n)) return { likely: true, reason: 'nom' };
+  const svc = services.map(normUuid);
+  if (svc.some((u) => u === normUuid('ae30'))) return { likely: true, reason: 'service BSTWSH (0xAE30)' };
+  if (svc.some((u) => u === STD.hid)) return { likely: true, reason: 'télécommande / clavier (HID)' };
+  return { likely: false, reason: null };
+}
+
 // ---------------------------------------------------------------- Mode apprentissage
 export type LearnSample = { service: string; characteristic: string; bytes: Bytes };
 export type LearnResult = { ok: true; mapping: Mapping; confidence: 'haute' | 'moyenne'; detail: string } | { ok: false; reason: string };
-
-/** Index d'octet qui augmente de 1 à chaque trame (compteur absolu), sinon -1. */
-function counterByteIndex(frames: Bytes[]): number {
-  if (frames.length < 2) return -1;
-  const len = Math.min(...frames.map((f) => f.length));
-  for (let i = len - 1; i >= 0; i--) {
-    let ok = true;
-    for (let k = 1; k < frames.length; k++) if (((frames[k][i] - frames[k - 1][i] + 256) & 0xff) !== 1) ok = false;
-    if (ok) return i;
-  }
-  return -1;
-}
 
 /**
  * Analyse les trames reçues pendant que l'utilisateur appuyait `presses` fois.
@@ -310,7 +415,7 @@ export function analyzeLearn(samples: LearnSample[], presses: number, parse: (b:
       const span = decoded[c - 1].value - decoded[0].value;
       if (span === presses - 1 || span === presses) score = 100;
     }
-    if (!score && c === presses) score = counterByteIndex(frames) >= 0 ? 90 : 80;
+    if (!score && c === presses) score = detectCounterField(frames) ? 90 : 80;
     if (!score && c === presses * 2) score = 70;
     if (!score && Math.abs(c - presses) <= 1) score = 40;
     if (score) cands.push({ key, frames, score });
@@ -327,8 +432,8 @@ export function analyzeLearn(samples: LearnSample[], presses: number, parse: (b:
   const base = { service, characteristic, learnedAt: new Date().toISOString() };
   if (best.score === 100) return { ok: true, confidence, mapping: { ...base, mode: 'absolute', byteIndex: -1 }, detail: 'Compteur absolu reconnu (format connu).' };
   if (best.score === 90) {
-    const i = counterByteIndex(best.frames);
-    return { ok: true, confidence, mapping: { ...base, mode: 'absolute', byteIndex: i }, detail: `Compteur absolu dans l’octet ${i}.` };
+    const field = detectCounterField(best.frames)!;
+    return { ok: true, confidence, mapping: { ...base, mode: 'absolute', field }, detail: `Compteur absolu détecté (${fieldLabel(field)}).` };
   }
   if (best.score === 70) {
     const hex = best.frames.map(toHex);

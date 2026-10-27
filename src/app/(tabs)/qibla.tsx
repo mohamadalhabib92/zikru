@@ -50,7 +50,9 @@ export default function Qibla() {
   const [busy, setBusy] = useState(false);
   const bearing = qiblaBearing(s.place);
   const rot = heading == null ? 0 : -heading;
-  const aligned = heading != null && Math.abs(((bearing - heading + 540) % 360) - 180) < 5;
+  // diff > 0 : tourner à droite (sens horaire), diff < 0 : à gauche
+  const diff = heading == null ? 0 : ((bearing - heading + 540) % 360) - 180;
+  const aligned = heading != null && Math.abs(diff) < 5;
 
   return (
     <Screen>
@@ -81,7 +83,18 @@ export default function Qibla() {
         </Svg>
       </View>
       <Spacer />
-      <Row style={{ justifyContent: 'center' }}>{heading != null ? <Badge label={aligned ? '✓ Qibla' : tr.compass_live} tone={aligned ? 'success' : 'info'} /> : null}</Row>
+      {heading != null ? (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{ alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 14, backgroundColor: aligned ? t.success : t.surfaceAlt, borderWidth: 1, borderColor: aligned ? t.success : t.border }}
+        >
+          <Text style={{ color: aligned ? '#fff' : t.text, fontSize: 18, fontWeight: '800', textAlign: 'center' }}>
+            {aligned ? `✓ ${tr.qibla_aligned}` : `${tr.qibla_turn} ${Math.round(Math.abs(diff))}° ${diff > 0 ? tr.qibla_right : tr.qibla_left}`}
+          </Text>
+        </View>
+      ) : null}
+      <Spacer h={8} />
+      <Row style={{ justifyContent: 'center' }}>{heading != null ? <Badge label={tr.compass_live} tone="info" /> : null}</Row>
       {heading == null ? <Notice tone="info" title={tr.compass_unavailable} icon="compass-outline" /> : null}
       <Spacer />
       <Card>

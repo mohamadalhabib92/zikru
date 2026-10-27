@@ -121,7 +121,47 @@ test('apprentissage : octet compteur détecté', () => {
   const r = c.analyzeLearn(samples, 5);
   assert.ok(r.ok);
   assert.equal(r.mapping.mode, 'absolute');
-  assert.equal(r.mapping.byteIndex, 1);
+  assert.deepEqual(r.mapping.field, { offset: 1, len: 1, endian: 'le' });
+});
+test('détection auto : entier 16 bits little-endian', () => {
+  const f = c.detectCounterField([0x1fe, 0x1ff, 0x200].map((n) => B(0x55, n & 0xff, n >> 8, 0x00, 0x09)));
+  assert.equal(f.len >= 2, true);
+  assert.equal(f.endian, 'le');
+  assert.equal(c.readField(B(0x55, 0x2c, 0x01, 0, 9), f), 300);
+});
+test('détection auto : entier 32 bits big-endian (octets de poids fort nuls)', () => {
+  const f = c.detectCounterField([5, 6, 7].map((n) => B(0xaa, 0, 0, 0, n)));
+  assert.deepEqual(f, { offset: 1, len: 4, endian: 'be' });
+  assert.equal(c.readField(B(0xaa, 0, 1, 0, 0), f), 65536);
+});
+test('détection auto : nombre en ASCII (format iQibla Q07,0012,…)', () => {
+  const f = c.detectCounterField(['Q07,0012,59759507,0,0', 'Q07,0013,59759507,0,0', 'Q07,0014,59759507,0,0'].map(A));
+  assert.deepEqual(f, { ascii: 1 });
+  assert.equal(c.readField(A('Q07,0120,1,0,0'), f), 120);
+});
+test('détection auto : 3 appuis suffisent (apprentissage court)', () => {
+  const r = c.analyzeLearn([3, 4, 5].map((n) => S('fff1', B(0, 0, n))), 3);
+  assert.ok(r.ok);
+  assert.equal(r.mapping.mode, 'absolute');
+});
+test('synchronisation : seul le delta hors connexion est ajouté', () => {
+  assert.equal(c.syncDelta(100, 130), 30);
+  assert.equal(c.syncDelta(100, 100), 0);
+  assert.equal(c.syncDelta(100, 7), 7); // remis à zéro puis 7 appuis
+  const m = { service: 'x', characteristic: 'y', mode: 'absolute', field: { offset: 0, len: 2, endian: 'be' } };
+  const d = new c.ClickDecoder(m, () => null, 0, 100);
+  assert.equal(d.feed(B(0, 130), 10_000), 30);
+  assert.equal(d.lastWasSync, true);
+  assert.equal(d.feed(B(0, 130), 10_001), 0); // même valeur relue : pas de double comptage
+  assert.equal(d.feed(B(0, 131), 10_002), 1);
+  assert.equal(d.lastWasSync, false);
+});
+test('scan : compteurs probables reconnus par nom ou service', () => {
+  assert.equal(c.likelyCounter('iQIBLA Zikr Ring').likely, true);
+  assert.equal(c.likelyCounter('BW-1234').likely, true);
+  assert.equal(c.likelyCounter('Smart Tasbih').likely, true);
+  assert.equal(c.likelyCounter('JBL Flip 5').likely, false);
+  assert.equal(c.likelyCounter(null, ['0000ae30-0000-1000-8000-00805f9b34fb']).likely, true);
 });
 test('apprentissage : appui + relâchement → signature', () => {
   const samples = [];

@@ -60,9 +60,10 @@ export const transport: BleTransport = {
   async scan(onResult, onError) {
     const m = getManager();
     if (!m) throw new Error(loadError ?? 'BLE indisponible');
+    // Aucun filtre de service : tous les appareils BLE à proximité sont listés (les compteurs probables sont mis en avant par l'écran).
     await m.startDeviceScan(null, { allowDuplicates: false }, (err, d) => {
       if (err) return onError(new Error(err.message));
-      if (d) onResult({ id: d.id, name: d.name ?? d.localName ?? null, rssi: d.rssi ?? null });
+      if (d) onResult({ id: d.id, name: d.name ?? d.localName ?? null, rssi: d.rssi ?? null, services: (d.serviceUUIDs ?? []).map(normUuid) });
     });
     return () => {
       void m.stopDeviceScan();

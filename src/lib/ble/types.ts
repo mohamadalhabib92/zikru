@@ -1,7 +1,7 @@
 import type { Bytes, GattChar } from './core';
 
 export type Availability = { ok: true } | { ok: false; reason: string; kind: 'unsupported' | 'disabled' | 'denied' | 'expo-go' };
-export type ScanResult = { id: string; name: string | null; rssi: number | null };
+export type ScanResult = { id: string; name: string | null; rssi: number | null; services?: string[]; likely?: boolean; reason?: string | null };
 
 /** Liaison active avec un appareil (identique sur web et natif). */
 export interface BleLink {

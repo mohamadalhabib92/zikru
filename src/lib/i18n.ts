@@ -20,6 +20,7 @@ export const LANGS: { code: Lang; label: string; pending?: boolean }[] = [
 ];
 
 const fr = {
+  tab_home: 'Accueil', prayer_times: 'Horaires de prière', sec_growth: 'PLATEFORME DE PROGRESSION', sec_knowledge: 'SAVOIR ISLAMIQUE', sec_prayer: 'PRIÈRE & DHIKR', sec_songs: 'CHANTS SOUFIS', sec_community: 'CALENDRIER & COMMUNAUTÉ', tijani: 'Voie Tijani', wird: 'Wird quotidien', sahw: 'Correction de la prière', adilla: 'Adilla (preuves)', kahf: 'Sourate al-Kahf', songs: 'Chants soufis', community: 'Communauté', weather: 'Météo', qibla_aligned: 'Face à la Qibla', qibla_turn: 'Tournez de', qibla_right: 'vers la droite', qibla_left: 'vers la gauche', reflection: 'Réflexion',
   tab_prayers: 'Prières', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Réglages',
   today: "Aujourd'hui", next_prayer: 'Prochaine prière', in: 'dans', now: 'En cours', past: 'Passée', upcoming: 'À venir', current: 'Actuelle',
   fajr: 'Fajr', sunrise: 'Lever du soleil', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha',
@@ -37,6 +38,7 @@ const fr = {
 export type Dict = typeof fr;
 
 const en: Dict = {
+  tab_home: 'Home', prayer_times: 'Prayer times', sec_growth: 'GROWTH PLATFORM', sec_knowledge: 'ISLAMIC KNOWLEDGE', sec_prayer: 'PRAYER & DHIKR', sec_songs: 'SUFI SONGS', sec_community: 'CALENDAR & COMMUNITY', tijani: 'Tijani Path', wird: 'Daily Wird', sahw: 'Prayer correction', adilla: 'Adilla (evidence)', kahf: 'Surah al-Kahf', songs: 'Sufi songs', community: 'Community', weather: 'Weather', qibla_aligned: 'Facing the Qibla', qibla_turn: 'Turn by', qibla_right: 'to the right', qibla_left: 'to the left', reflection: 'Reflection',
   tab_prayers: 'Prayers', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Settings',
   today: 'Today', next_prayer: 'Next prayer', in: 'in', now: 'Now', past: 'Past', upcoming: 'Upcoming', current: 'Current',
   fajr: 'Fajr', sunrise: 'Sunrise', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha',
@@ -53,6 +55,7 @@ const en: Dict = {
 };
 
 const de: Dict = {
+  tab_home: 'Start', prayer_times: 'Gebetszeiten', sec_growth: 'WACHSTUM', sec_knowledge: 'ISLAMISCHES WISSEN', sec_prayer: 'GEBET & DHIKR', sec_songs: 'SUFI-GESÄNGE', sec_community: 'KALENDER & GEMEINSCHAFT', tijani: 'Tijani-Weg', wird: 'Tägliches Wird', sahw: 'Gebetskorrektur', adilla: 'Adilla (Belege)', kahf: 'Sure al-Kahf', songs: 'Sufi-Gesänge', community: 'Gemeinschaft', weather: 'Wetter', qibla_aligned: 'Zur Qibla ausgerichtet', qibla_turn: 'Drehen Sie um', qibla_right: 'nach rechts', qibla_left: 'nach links', reflection: 'Besinnung',
   tab_prayers: 'Gebete', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Einstellungen',
   today: 'Heute', next_prayer: 'Nächstes Gebet', in: 'in', now: 'Jetzt', past: 'Vorbei', upcoming: 'Bevorstehend', current: 'Aktuell',
   fajr: 'Fajr', sunrise: 'Sonnenaufgang', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha',
@@ -69,6 +72,7 @@ const de: Dict = {
 };
 
 const ar: Dict = {
+  tab_home: 'الرئيسية', prayer_times: 'مواقيت الصلاة', sec_growth: 'منصة الترقي', sec_knowledge: 'العلم الشرعي', sec_prayer: 'الصلاة والذكر', sec_songs: 'الأناشيد الصوفية', sec_community: 'التقويم والجماعة', tijani: 'الطريقة التجانية', wird: 'الورد اليومي', sahw: 'سجود السهو', adilla: 'الأدلة', kahf: 'سورة الكهف', songs: 'الأناشيد', community: 'الجماعة', weather: 'الطقس', qibla_aligned: 'أنت مستقبل القبلة', qibla_turn: 'استدر بمقدار', qibla_right: 'نحو اليمين', qibla_left: 'نحو اليسار', reflection: 'تأمل',
   tab_prayers: 'الصلوات', tab_qibla: 'القبلة', tab_tasbih: 'التسبيح', tab_dhikr: 'الأذكار', tab_settings: 'الإعدادات',
   today: 'اليوم', next_prayer: 'الصلاة القادمة', in: 'بعد', now: 'الآن', past: 'مضت', upcoming: 'قادمة', current: 'الحالية',
   fajr: 'الفجر', sunrise: 'الشروق', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء',
