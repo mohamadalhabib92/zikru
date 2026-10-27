@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
+import { emitClicks } from './community/clicks';
 import { bleCounter } from './ble/manager';
 import { SEED_CONTENT, type ContentItem } from './content';
 import { feedback } from './feedback';
@@ -41,6 +42,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const p = bleCounter.state.prefs;
     feedback(cycleCompleted ? 'cycle' : 'tap', { sound: p.sound, haptics: p.haptics });
     if (cycleCompleted && source !== 'manuel') void bleCounter.vibrate();
+    emitClicks(n, source);
   };
   const addRef = useRef(addClicks);
   useEffect(() => {

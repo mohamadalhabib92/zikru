@@ -2,6 +2,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from '@/lib/community/auth';
+import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
@@ -40,6 +42,11 @@ function Root() {
         <Stack.Screen name="config" options={{ title: tr.config_missing }} />
         <Stack.Screen name="content-admin" options={{ title: tr.content_admin }} />
         <Stack.Screen name="audit" options={{ title: tr.audit }} />
+        <Stack.Screen name="auth" options={{ title: 'Connexion' }} />
+        <Stack.Screen name="join" options={{ title: 'Rejoindre' }} />
+        <Stack.Screen name="family/[id]" options={{ title: 'Ma famille' }} />
+        <Stack.Screen name="circle/[id]" options={{ title: 'Mon cercle' }} />
+        <Stack.Screen name="live/[id]" options={{ title: 'Zikr en direct' }} />
       </Stack>
     </View>
   );
@@ -51,7 +58,11 @@ export default function Layout() {
       <SafeAreaProvider>
         <SettingsProvider>
           <DataProvider>
-            <Root />
+            <AuthProvider>
+              <CommunityProvider>
+                <Root />
+              </CommunityProvider>
+            </AuthProvider>
           </DataProvider>
         </SettingsProvider>
       </SafeAreaProvider>
