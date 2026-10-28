@@ -57,6 +57,12 @@ export function NotifSettings() {
             <Toggle label={tr.notif_friday} value={n.friday} onChange={(v) => patch({ friday: v })} />
             <Toggle label={tr.notif_adhkar} value={n.adhkar} onChange={(v) => patch({ adhkar: v })} />
             <Toggle label={tr.notif_wird} value={n.wird} onChange={(v) => patch({ wird: v })} />
+            <Segmented
+              label={tr.notif_quran}
+              options={[{ label: tr.notif_off, value: 'off' as const }, { label: tr.notif_quran_fajr, value: 'fajr' as const }, { label: tr.notif_quran_isha, value: 'isha' as const }]}
+              value={n.quran ?? 'off'}
+              onChange={(v) => patch({ quran: v })}
+            />
             <Divider />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               {remindersNative && count != null ? <Muted style={{ flex: 1 }}>{tr.notif_scheduled.replace('{n}', String(count))}</Muted> : <View style={{ flex: 1 }} />}

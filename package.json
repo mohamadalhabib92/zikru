@@ -19,6 +19,7 @@
     "expo-file-system": "~58.0.12",
     "expo-font": "~58.0.10",
     "expo-haptics": "~58.0.7",
+    "expo-keep-awake": "~58.0.3",
     "expo-linking": "~58.0.14",
     "expo-location": "~58.0.19",
     "expo-notifications": "~58.1.7",
@@ -48,7 +49,7 @@
     "typecheck": "tsc --noEmit",
     "build:web": "expo export -p web && node scripts/pwa-postbuild.mjs",
     "icons": "python3 scripts/make-icons.py",
-    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs && node scripts/test-zikr.mjs && node scripts/test-notify.mjs && node scripts/test-quran.mjs",
+    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs && node scripts/test-zikr.mjs && node scripts/test-notify.mjs && node scripts/test-quran.mjs && node scripts/test-pages.mjs && node scripts/test-srs.mjs && node scripts/test-khatma.mjs",
     "lint": "expo lint"
   },
   "private": true

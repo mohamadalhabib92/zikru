@@ -70,6 +70,11 @@ function Root() {
         <Stack.Screen name="audit" options={{ title: tr.audit }} />
         <Stack.Screen name="quran/index" options={{ title: 'Qur’an' }} />
         <Stack.Screen name="quran/[n]" options={{ title: 'Sourate' }} />
+        <Stack.Screen name="quran/mushaf" options={{ title: 'Mushaf' }} />
+        <Stack.Screen name="quran/hifz" options={{ title: 'Mémorisation' }} />
+        <Stack.Screen name="quran/hifz-session" options={{ title: 'Session de mémorisation' }} />
+        <Stack.Screen name="quran/bookmarks" options={{ title: 'Marque-pages et notes' }} />
+        <Stack.Screen name="quran/khatma" options={{ title: 'Khatma' }} />
         <Stack.Screen name="hadiths" options={{ title: 'Hadiths' }} />
         <Stack.Screen name="duas" options={{ title: 'Du‘as prophétiques' }} />
         <Stack.Screen name="abjad" options={{ title: 'Calculateur abjad' }} />

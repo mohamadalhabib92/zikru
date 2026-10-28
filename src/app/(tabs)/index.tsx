@@ -19,6 +19,11 @@ import { SURAHS } from '@/lib/surahs';
 import { PRACTICES } from '@/lib/tijani';
 import { getWeather, wmo, type Weather } from '@/lib/weather';
 import { useZikrs } from '@/lib/zikrs';
+import { khatmaStatus, streak as readStreak } from '@/lib/khatma';
+import { pageOf } from '@/lib/quran-nav';
+import { hifzCards, khatma as khatmaStore, lastRead, readDays } from '@/lib/quran-store';
+import { useShared } from '@/lib/shared-state';
+import { dailyQueue, queueSize } from '@/lib/srs';
 import { Container, FadeIn, Grid, IconBadge, ProgressRing, SectionHeader, Skeleton, tapHaptic, useLayout } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted } from '@/ui/light';
@@ -44,7 +49,10 @@ export default function Home() {
   const [wErr, setWErr] = useState(false);
   const [unit] = usePersistentState<'C' | 'F'>('temp-unit', 'C');
   const [kahfReminder] = usePersistentState('kahf-reminder', true);
-  const [quranLast] = usePersistentState<{ n: number; ayah: number } | null>('quran-last', null);
+  const [quranLast] = useShared(lastRead);
+  const [qKhatma] = useShared(khatmaStore);
+  const [qCards] = useShared(hifzCards);
+  const [qDays] = useShared(readDays);
   const [tijaniDone] = usePersistentState<Record<string, number[]>>('tijani-done', {});
   const [reflIdx, setReflIdx] = useState(() => new Date().getDate());
   const [aiText, setAiText] = usePersistentState<{ key: string; text: string } | null>('bilal-reflection', null);
@@ -232,8 +240,65 @@ export default function Home() {
 
   const resume: { icon: IconName; title: string; sub: string; href: Href; color: string }[] = [];
   if (lastZikr) resume.push({ icon: 'albums', title: lastZikr.name, sub: `${tr.my_zikrs} · ${totalReps(lastZikr.items)} rép.`, href: { pathname: '/zikrs/practice', params: { id: lastZikr.id } }, color: b.violet });
-  if (surah) resume.push({ icon: 'book', title: `${surah[2]} · v. ${quranLast!.ayah}`, sub: `${tr.last_read} · Qur’an`, href: `/quran/${surah[0]}`, color: b.green });
   resume.push({ icon: 'radio-button-on', title: currentDhikr?.transliteration ?? tr.tasbih_title, sub: `${tr.tasbih_title} · ${tasbih.count}${tasbih.target ? ` / ${tasbih.target}` : ''} · ${dhikrToday} aujourd’hui`, href: '/tasbih', color: b.teal });
+
+  // Coran : reprise de lecture (et khatma) + révision de mémorisation du jour
+  const kst = qKhatma ? khatmaStatus(qKhatma, today) : null;
+  const hq = dailyQueue(qCards, today);
+  const hqN = queueSize(hq);
+  const tracked = Object.keys(qCards).length;
+  const qStreak = readStreak(qDays, today);
+  const lastHref: Href = quranLast ? (quranLast.mode === 'page' ? { pathname: '/quran/mushaf', params: { p: String(quranLast.page ?? pageOf(quranLast.n, quranLast.ayah)) } } : { pathname: '/quran/[n]', params: { n: String(quranLast.n), a: String(quranLast.ayah) } }) : '/quran';
+  const quranCard = (
+    <FadeIn delay={80}>
+      <SectionHeader title="Qur’an" action="Ouvrir" onAction={go('/quran')} />
+      <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={surah ? `Continuer la lecture : ${surah[2]}, verset ${quranLast!.ayah}` : 'Commencer la lecture du Coran'}
+          onPress={go(lastHref)}
+          style={({ pressed }) => ({ flex: 1, minWidth: 150, backgroundColor: b.hero, borderRadius: 18, padding: 14, gap: 6, opacity: pressed ? 0.92 : 1 })}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ionicons name="book" size={18} color={b.gold} />
+            <Text style={{ color: b.heroMuted, fontSize: 12, fontWeight: '700', flex: 1 }} numberOfLines={1}>
+              Continuer la lecture
+            </Text>
+          </View>
+          <Text style={{ color: b.heroText, fontWeight: '800', fontSize: 16 }} numberOfLines={1}>
+            {surah ? `${surah[2]} · ${quranLast!.n}:${quranLast!.ayah}` : 'Al-Fātiḥa'}
+          </Text>
+          <Text style={{ color: b.heroMuted, fontSize: 12 }} numberOfLines={1}>
+            {kst && !kst.finished ? `Khatma ${Math.round(kst.progress * 100)} % · ${kst.today ? `p. ${kst.today.from}–${kst.today.to}` : ''}` : surah ? `Page ${quranLast!.page ?? pageOf(quranLast!.n, quranLast!.ayah)} · ${qStreak.current} j de suite` : 'Mushaf, récitation, tafsir'}
+          </Text>
+          {kst && !kst.finished ? (
+            <View style={{ height: 4, borderRadius: 2, backgroundColor: alpha(b.heroText, 0.15), overflow: 'hidden' }}>
+              <View style={{ width: `${Math.round(kst.progress * 100)}%`, height: 4, backgroundColor: b.gold }} />
+            </View>
+          ) : null}
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={tracked ? `Révision du jour : ${hqN} versets` : 'Commencer la mémorisation'}
+          onPress={go(tracked && hqN ? { pathname: '/quran/hifz-session', params: { mode: 'review' } } : '/quran/hifz')}
+          style={({ pressed }) => ({ flex: 1, minWidth: 150, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line, borderRadius: 18, padding: 14, gap: 6, opacity: pressed ? 0.92 : 1 })}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ionicons name="school" size={18} color={b.green} />
+            <Text style={{ color: b.inkMuted, fontSize: 12, fontWeight: '700', flex: 1 }} numberOfLines={1}>
+              Révision du jour
+            </Text>
+          </View>
+          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }} numberOfLines={1}>
+            {tracked ? (hqN ? `${hqN} verset${hqN > 1 ? 's' : ''} à réviser` : 'À jour ✓') : 'Mémoriser le Coran'}
+          </Text>
+          <Text style={{ color: b.inkMuted, fontSize: 12 }} numberOfLines={1}>
+            {tracked ? `Sabaq ${hq.sabaq.length} · Sabqi ${hq.sabqi.length} · Manzil ${hq.manzil.length}` : 'Répétition, masquage, révision espacée'}
+          </Text>
+        </Pressable>
+      </View>
+    </FadeIn>
+  );
 
   const resumeCard = (
     <FadeIn delay={100}>
@@ -454,6 +519,7 @@ export default function Home() {
               <View style={{ flex: 1.1 }}>
                 {hero}
                 {practiceCard}
+                {quranCard}
                 {resumeCard}
                 {extras}
               </View>
@@ -467,6 +533,7 @@ export default function Home() {
             <>
               {hero}
               {practiceCard}
+              {quranCard}
               {resumeCard}
               {zikrsCard}
               {exploreCard}

@@ -10,7 +10,6 @@ import { Ionicons, type IconName } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 
-export const ZCOLOR = '#7A4F9E';
 const SYSC = {
   get mashriqi() {
     return b.green;
@@ -22,7 +21,7 @@ const SYSC = {
 export const fmt = (n: number) => n.toLocaleString('fr-CH');
 
 /** Bouton clair (thème crème). */
-export function LBtn({ icon, label, onPress, active, color = ZCOLOR, solid, disabled }: { icon?: IconName; label: string; onPress: () => void; active?: boolean; color?: string; solid?: boolean; disabled?: boolean }) {
+export function LBtn({ icon, label, onPress, active, color = b.green, solid, disabled }: { icon?: IconName; label: string; onPress: () => void; active?: boolean; color?: string; solid?: boolean; disabled?: boolean }) {
   const fg = solid ? '#fff' : active ? color : b.ink;
   return (
     <Pressable
@@ -232,12 +231,12 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
                     opacity: pressed ? 0.8 : 1,
                   })}
                 >
-                  <Ionicons name="albums-outline" size={20} color={ZCOLOR} />
+                  <Ionicons name="albums-outline" size={20} color={b.green} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: b.ink, fontWeight: '800' }}>{z.name}</Text>
                     <LMuted style={{ fontSize: 12 }}>{`${z.items.length} élément${z.items.length > 1 ? 's' : ''}`}</LMuted>
                   </View>
-                  <Ionicons name="add-circle" size={22} color={ZCOLOR} />
+                  <Ionicons name="add-circle" size={22} color={b.green} />
                 </Pressable>
               ))}
               <Text

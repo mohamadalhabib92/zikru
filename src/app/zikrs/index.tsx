@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, Text, View } from 'react-native';
-import { LBtn, ZCOLOR, fmt, shareZikr } from '@/components/zikr/parts';
+import { LBtn, fmt, shareZikr } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { compositionTotals, dayKey, exportText, type Zikr } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
@@ -36,7 +36,7 @@ export default function Zikrs() {
 
   return (
     <Screen padded={false} bg={b.cream}>
-      <PatternBg color={ZCOLOR} style={{ padding: 20, alignItems: 'center' }}>
+      <PatternBg color={b.green} style={{ padding: 20, alignItems: 'center' }}>
         <Ionicons name="albums" size={26} color="#fff" />
         <Text
           style={{

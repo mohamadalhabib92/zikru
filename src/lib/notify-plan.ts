@@ -17,8 +17,11 @@ export type NotifPrefs = {
   adhkar: boolean;
   /** Wird al-Lazim matin et soir, Wazifa après le Maghrib, Hailala le vendredi. */
   wird: boolean;
+  /** Lecture du Coran (khatma / révision hifz) : après le Fajr, après le ‘Isha, ou désactivé. */
+  quran?: QuranSlot;
 };
-export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false };
+export type QuranSlot = 'off' | 'fajr' | 'isha';
+export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off' };
 export const BEFORE_OPTIONS = [0, 5, 10, 15, 30];
 
 export type PlanLabels = {
@@ -38,11 +41,13 @@ export type PlanLabels = {
   wazifa: string;
   hailala: string;
   wirdBody: string;
+  quranTitle: string;
+  quranBody: string;
   pausedTitle: string;
   pausedBody: string;
 };
 
-export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'paused' };
+export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'paused' };
 type DayTimes = { key: string; time: Date }[];
 export type ComputeDay = (d: Date) => DayTimes;
 
@@ -76,6 +81,9 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
     if (friday && asr) out.push({ id: `${dk}-hailala`, date: new Date(asr.getTime() + 45 * MIN), title: L.hailala, body: L.wirdBody, url: '/tijani?tab=hailala', kind: 'wird' });
     if (maghrib) out.push({ id: `${dk}-wazifa`, date: new Date(maghrib.getTime() + 30 * MIN), title: L.wazifa, body: L.wirdBody, url: '/tijani?tab=wazifa', kind: 'wird' });
   }
+  const isha = at('isha');
+  if (prefs.quran === 'fajr' && fajr) out.push({ id: `${dk}-quran`, date: new Date(fajr.getTime() + 45 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
+  if (prefs.quran === 'isha' && isha) out.push({ id: `${dk}-quran`, date: new Date(isha.getTime() + 30 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
   return out.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 

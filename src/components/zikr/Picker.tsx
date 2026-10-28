@@ -13,7 +13,7 @@ import { useZikrs } from '@/lib/zikrs';
 import { Ionicons } from '@/ui/kit';
 import { Arabic, LMuted, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
-import { AbjadBadge, LBtn, ZCOLOR, nameItem, type DraftItem } from './parts';
+import { AbjadBadge, LBtn, nameItem, type DraftItem } from './parts';
 
 type Tab = 'names' | 'quran' | 'verse' | 'dua' | 'salat' | 'free';
 const TABS: { id: Tab; label: string }[] = [
@@ -61,7 +61,7 @@ function Row({ title, sub, ar, abjadAr, onAdd }: { title: string; sub?: string; 
           <Text style={{ color: b.ink, fontWeight: '800' }}>{title}</Text>
           {sub ? <LMuted style={{ fontSize: 12 }}>{sub}</LMuted> : null}
         </View>
-        <Ionicons name="add-circle" size={24} color={ZCOLOR} />
+        <Ionicons name="add-circle" size={24} color={b.green} />
       </View>
       <Arabic size={19} style={{ marginTop: 6 }}>
         {ar.length > 220 ? ar.slice(0, 220) + '…' : ar}
@@ -131,7 +131,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
                 onPress={() => pick(v)}
                 style={({ pressed }) => ({ paddingVertical: 10, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: b.line, opacity: pressed ? 0.7 : 1 })}
               >
-                <Text style={{ color: ZCOLOR, fontWeight: '800', fontSize: 12 }}>{`${SURAHS[v.s - 1][2]} ${v.s}:${v.a}`}</Text>
+                <Text style={{ color: b.green, fontWeight: '800', fontSize: 12 }}>{`${SURAHS[v.s - 1][2]} ${v.s}:${v.a}`}</Text>
                 <Arabic size={18} numberOfLines={3} style={{ marginTop: 4 }}>
                   {v.ar}
                 </Arabic>
@@ -162,7 +162,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              <Text style={{ color: ZCOLOR, fontWeight: '900', width: 32 }}>{m[0]}</Text>
+              <Text style={{ color: b.green, fontWeight: '900', width: 32 }}>{m[0]}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: b.ink, fontWeight: '700' }}>{m[2]}</Text>
                 <LMuted style={{ fontSize: 12 }}>{`${m[4]} versets`}</LMuted>
@@ -203,7 +203,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
       </View>
       <LMuted style={{ fontSize: 11, marginTop: 4 }}>Jusqu’à 20 versets consécutifs.</LMuted>
       {!data ? (
-        <View style={{ padding: 20, alignItems: 'center' }}>{err ? <LMuted>Impossible de charger la sourate (connexion requise la première fois).</LMuted> : <ActivityIndicator color={ZCOLOR} />}</View>
+        <View style={{ padding: 20, alignItems: 'center' }}>{err ? <LMuted>Impossible de charger la sourate (connexion requise la première fois).</LMuted> : <ActivityIndicator color={b.green} />}</View>
       ) : (
         <View
           style={{
@@ -215,7 +215,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
             marginTop: 10,
           }}
         >
-          <Text style={{ color: ZCOLOR, fontWeight: '800' }}>{`Coran ${ref}`}</Text>
+          <Text style={{ color: b.green, fontWeight: '800' }}>{`Coran ${ref}`}</Text>
           <Arabic size={21} style={{ marginTop: 6 }}>
             {ar}
           </Arabic>
@@ -328,10 +328,12 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
             alignItems: 'center',
             padding: 14,
             gap: 10,
-            backgroundColor: ZCOLOR,
+            backgroundColor: b.hero,
+            borderBottomWidth: 2,
+            borderBottomColor: b.gold,
           }}
         >
-          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 18, flex: 1 }}>Ajouter un élément</Text>
+          <Text style={{ color: b.heroText, fontWeight: '900', fontSize: 18, flex: 1 }}>Ajouter un élément</Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Terminer"
@@ -341,11 +343,11 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
               paddingHorizontal: 12,
               minHeight: 36,
               borderRadius: 18,
-              backgroundColor: 'rgba(255,255,255,0.2)',
+              backgroundColor: b.gold,
               justifyContent: 'center',
             }}
           >
-            <Text style={{ color: '#fff', fontWeight: '800' }}>Terminé</Text>
+            <Text style={{ color: '#1B1405', fontWeight: '800' }}>Terminé</Text>
           </Pressable>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, padding: 12 }}>
@@ -358,7 +360,7 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
                 setTab(t.id);
                 setQ('');
               }}
-              color={ZCOLOR}
+              color={b.green}
             />
           ))}
         </ScrollView>

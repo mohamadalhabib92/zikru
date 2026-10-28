@@ -20,6 +20,8 @@ export function planLabels(tr: Dict, place: string): PlanLabels {
     wazifa: tr.wazifa_t,
     hailala: tr.hailala_t,
     wirdBody: tr.wird_b,
+    quranTitle: tr.quran_rem_t,
+    quranBody: tr.quran_rem_b,
     pausedTitle: tr.paused_t,
     pausedBody: tr.paused_b,
   };

@@ -2,7 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { BleStatusChip } from '@/components/BleStatusChip';
-import { LBtn, ZCOLOR, fmt } from '@/components/zikr/parts';
+import { LBtn, fmt } from '@/components/zikr/parts';
 import { useData } from '@/lib/data';
 import { uid } from '@/lib/storage';
 import { closeSession, type Tasbih } from '@/lib/tasbih-core';
@@ -193,12 +193,12 @@ export default function Practice() {
           flexWrap: 'wrap',
         }}
       >
-        <Text style={{ color: ZCOLOR, fontWeight: '900' }}>{finished ? 'Terminé' : `Étape ${st.step + 1} / ${items.length}`}</Text>
+        <Text style={{ color: b.green, fontWeight: '900' }}>{finished ? 'Terminé' : `Étape ${st.step + 1} / ${items.length}`}</Text>
         <BleStatusChip showIdle />
       </View>
       {z.niyya ? <LMuted style={{ fontStyle: 'italic', marginTop: 4 }}>{`Intention : ${z.niyya}`}</LMuted> : null}
       <View style={{ marginTop: 10, gap: 4 }}>
-        <Bar ratio={g.ratio} color={ZCOLOR} />
+        <Bar ratio={g.ratio} color={b.green} />
         <LMuted style={{ fontSize: 11 }}>{`${fmt(g.done)} / ${fmt(g.total)} au total`}</LMuted>
       </View>
 
@@ -268,7 +268,7 @@ export default function Practice() {
               width: 210,
               height: 210,
               borderRadius: 105,
-              backgroundColor: ZCOLOR,
+              backgroundColor: b.green,
               alignItems: 'center',
               justifyContent: 'center',
               transform: [{ scale: pressed ? 0.96 : 1 }],
@@ -315,12 +315,12 @@ export default function Practice() {
                 gap: 10,
                 padding: 10,
                 borderRadius: 12,
-                backgroundColor: isCur ? ZCOLOR + '14' : b.paper,
+                backgroundColor: isCur ? b.green + '14' : b.paper,
                 borderWidth: 1,
-                borderColor: isCur ? ZCOLOR : b.line,
+                borderColor: isCur ? b.green : b.line,
               }}
             >
-              <Ionicons name={done ? 'checkmark-circle' : isCur ? 'radio-button-on' : 'ellipse-outline'} size={18} color={done ? b.green : isCur ? ZCOLOR : b.inkMuted} />
+              <Ionicons name={done ? 'checkmark-circle' : isCur ? 'radio-button-on' : 'ellipse-outline'} size={18} color={done ? b.green : isCur ? b.green : b.inkMuted} />
               <Text
                 style={{
                   flex: 1,

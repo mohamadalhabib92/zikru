@@ -2,7 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { ItemPicker } from '@/components/zikr/Picker';
-import { LBtn, ZCOLOR, fmt, shareZikr } from '@/components/zikr/parts';
+import { LBtn, fmt, shareZikr } from '@/components/zikr/parts';
 import type { AbjadSystem } from '@/lib/abjad';
 import { uid } from '@/lib/storage';
 import { KIND_LABEL, MOMENTS, abjadAsReps, clampReps, compositionTotals, duplicateItem, exportText, itemAbjad, moveItem, removeItem, type ZikrItem } from '@/lib/zikr';
@@ -114,7 +114,7 @@ export default function EditZikr() {
   return (
     <Screen bg={b.cream}>
       <Stack.Screen options={{ title: z.name || 'Composer un zikr' }} />
-      <SectionLabel color={ZCOLOR}>Composition</SectionLabel>
+      <SectionLabel color={b.green}>Composition</SectionLabel>
       <LCard>
         <LMuted style={{ fontWeight: '700', marginBottom: 4 }}>Nom</LMuted>
         <TextInput value={z.name} onChangeText={(name) => set({ name })} placeholder="Ex. Wird du matin" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Nom de la composition" />
@@ -137,7 +137,7 @@ export default function EditZikr() {
           }}
         >
           <LMuted style={{ fontWeight: '700' }}>Objectif quotidien</LMuted>
-          <Pill label={z.goal ? 'Activé' : 'Aucun'} active={!!z.goal} onPress={() => set({ goal: z.goal ? undefined : { perDay: 1, moment: 'Libre' } })} color={ZCOLOR} />
+          <Pill label={z.goal ? 'Activé' : 'Aucun'} active={!!z.goal} onPress={() => set({ goal: z.goal ? undefined : { perDay: 1, moment: 'Libre' } })} color={b.green} />
         </View>
         {z.goal ? (
           <View style={{ marginTop: 8, gap: 8 }}>
@@ -147,7 +147,7 @@ export default function EditZikr() {
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {MOMENTS.map((m) => (
-                <Pill key={m} label={m} active={(z.goal?.moment ?? 'Libre') === m} onPress={() => set({ goal: { ...z.goal!, moment: m } })} color={ZCOLOR} />
+                <Pill key={m} label={m} active={(z.goal?.moment ?? 'Libre') === m} onPress={() => set({ goal: { ...z.goal!, moment: m } })} color={b.green} />
               ))}
             </View>
           </View>
@@ -162,9 +162,9 @@ export default function EditZikr() {
           marginTop: 16,
         }}
       >
-        <SectionLabel color={ZCOLOR}>{`Éléments (${z.items.length})`}</SectionLabel>
+        <SectionLabel color={b.green}>{`Éléments (${z.items.length})`}</SectionLabel>
         <View style={{ flexDirection: 'row', gap: 6 }}>
-          <Pill label="Les deux" active={prefs.view === 'both'} onPress={() => setPrefs({ view: 'both' })} color={ZCOLOR} />
+          <Pill label="Les deux" active={prefs.view === 'both'} onPress={() => setPrefs({ view: 'both' })} color={b.green} />
           <Pill label="Mch" active={prefs.view === 'mashriqi'} onPress={() => setPrefs({ view: 'mashriqi' })} color={SYSC.mashriqi} />
           <Pill label="Mgh" active={prefs.view === 'maghribi'} onPress={() => setPrefs({ view: 'maghribi' })} color={SYSC.maghribi} />
         </View>
@@ -184,7 +184,7 @@ export default function EditZikr() {
                   width: 28,
                   height: 28,
                   borderRadius: 14,
-                  backgroundColor: ZCOLOR,
+                  backgroundColor: b.green,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -194,7 +194,7 @@ export default function EditZikr() {
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    color: ZCOLOR,
+                    color: b.green,
                     fontWeight: '800',
                     fontSize: 11,
                     letterSpacing: 0.5,
@@ -250,7 +250,7 @@ export default function EditZikr() {
               }}
             >
               {PRESETS.map((p) => (
-                <Pill key={p} label={`× ${p}`} active={it.reps === p} onPress={() => setItems((l) => l.map((x) => (x.id === it.id ? { ...x, reps: p } : x)))} color={ZCOLOR} />
+                <Pill key={p} label={`× ${p}`} active={it.reps === p} onPress={() => setItems((l) => l.map((x) => (x.id === it.id ? { ...x, reps: p } : x)))} color={b.green} />
               ))}
             </View>
             <View
@@ -273,7 +273,7 @@ export default function EditZikr() {
 
       {z.items.length ? (
         <>
-          <SectionLabel color={ZCOLOR}>Abjad de la composition</SectionLabel>
+          <SectionLabel color={b.green}>Abjad de la composition</SectionLabel>
           <LCard>
             {totals.map((t) => (
               <View key={t.s} style={{ marginBottom: 8 }}>
