@@ -21,6 +21,7 @@
     "expo-haptics": "~58.0.7",
     "expo-linking": "~58.0.14",
     "expo-location": "~58.0.19",
+    "expo-notifications": "~58.1.7",
     "expo-router": "~58.0.27",
     "expo-status-bar": "~58.0.4",
     "react": "19.3.0",
@@ -47,7 +48,7 @@
     "typecheck": "tsc --noEmit",
     "build:web": "expo export -p web && node scripts/pwa-postbuild.mjs",
     "icons": "python3 scripts/make-icons.py",
-    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs && node scripts/test-zikr.mjs",
+    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs && node scripts/test-zikr.mjs && node scripts/test-notify.mjs && node scripts/test-quran.mjs",
     "lint": "expo lint"
   },
   "private": true

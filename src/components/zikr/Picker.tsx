@@ -5,6 +5,7 @@ import { computeAbjad } from '@/lib/abjad';
 import { DUAS_LIST, duaCatLabel } from '@/lib/duas';
 import { NAMES, nameBare, nameCallTr } from '@/lib/names';
 import { getSurah, translationFor, type SurahText } from '@/lib/quran';
+import { searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { SALAWAT } from '@/lib/salawat';
 import { SURAHS } from '@/lib/surahs';
@@ -96,12 +97,53 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
     const q = norm(sq.trim());
     if (!q) return SURAHS;
     const k = parseInt(q, 10);
-    return SURAHS.filter((m) => (Number.isFinite(k) ? m[0] === k : norm(`${m[2]} ${m[3]} ${m[1]}`).includes(q)));
+    return SURAHS.filter((m) => (/^\d+$/.test(q) ? m[0] === k : norm(`${m[2]} ${m[3]} ${m[1]}`).includes(q)));
   }, [sq]);
+  // Recherche de versets hors-ligne (arabe sans diacritiques, « 2:255 », ou traduction si téléchargée).
+  const [vh, setVh] = useState<VerseHit[]>([]);
+  useEffect(() => {
+    const q = sq.trim();
+    if (q.length < 3 || /^\d+$/.test(q)) return setVh([]);
+    let alive = true;
+    const h = setTimeout(() => searchVerses(q, fr.id, 12).then((r) => alive && setVh(r.hits)).catch(() => {}), 200);
+    return () => {
+      alive = false;
+      clearTimeout(h);
+    };
+  }, [sq]);
+  const pick = (v: VerseHit) => {
+    setN(v.s);
+    setFrom(String(v.a));
+    setTo('');
+  };
   if (!n) {
     return (
       <View>
-        <TextInput value={sq} onChangeText={setSq} placeholder="Sourate : numéro ou nom (ex. 2, Baqara)" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Rechercher une sourate" autoCorrect={false} />
+        <TextInput value={sq} onChangeText={setSq} placeholder="Sourate, verset (2:255) ou mots en arabe" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Rechercher une sourate ou un verset" autoCorrect={false} />
+        {vh.length ? (
+          <View style={{ marginTop: 8 }}>
+            <LMuted style={{ fontSize: 12, fontWeight: '700' }}>Versets (hors-ligne)</LMuted>
+            {vh.map((v) => (
+              <Pressable
+                key={`${v.s}:${v.a}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Verset ${v.s}:${v.a}`}
+                onPress={() => pick(v)}
+                style={({ pressed }) => ({ paddingVertical: 10, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: b.line, opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text style={{ color: ZCOLOR, fontWeight: '800', fontSize: 12 }}>{`${SURAHS[v.s - 1][2]} ${v.s}:${v.a}`}</Text>
+                <Arabic size={18} numberOfLines={3} style={{ marginTop: 4 }}>
+                  {v.ar}
+                </Arabic>
+                {v.tr ? (
+                  <LMuted style={{ fontSize: 12 }} numberOfLines={2}>
+                    {v.tr}
+                  </LMuted>
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         <View style={{ marginTop: 8 }}>
           {surahs.map((m) => (
             <Pressable
@@ -198,7 +240,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
               }
             />
           </View>
-          <LMuted style={{ fontSize: 11, marginTop: 6 }}>{`Texte : api.alquran.cloud · traduction ${fr.label}`}</LMuted>
+          <LMuted style={{ fontSize: 11, marginTop: 6 }}>{`Texte : Tanzil / api.alquran.cloud · traduction ${fr.label}`}</LMuted>
         </View>
       )}
     </View>

@@ -10,7 +10,7 @@ import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
 import { Container, FadeIn, IconBadge, tapHaptic } from '@/ui/ds';
-import { Button, Ionicons, type IconName } from '@/ui/kit';
+import { Button, Ionicons, Toggle, type IconName } from '@/ui/kit';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { brand as b } from '@/ui/theme';
 
@@ -141,6 +141,10 @@ export default function Onboarding() {
             if (ok) next();
           }}
         />
+        <View style={{ marginTop: 14 }}>
+          <Toggle label={tr.notif_friday} value={s.notif.friday} onChange={(v) => set({ notif: { ...s.notif, friday: v } })} />
+          <Toggle label={tr.notif_adhkar} value={s.notif.adhkar} onChange={(v) => set({ notif: { ...s.notif, adhkar: v } })} />
+        </View>
       </>
     );
   else if (step === 'ble')

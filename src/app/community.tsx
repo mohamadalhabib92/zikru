@@ -1,13 +1,14 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { LocalGroups } from '@/components/LocalGroups';
 import { confirmAsk, ErrorNote, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
-import { Button, Card, Eyebrow, Field, H1, H2, ListItem, Muted, Notice, Row, Screen, Spacer } from '@/ui/kit';
-import { theme as t } from '@/ui/theme';
+import { HeroHeader } from '@/ui/ds';
+import { Button, Card, Field, H2, Ionicons, ListItem, Muted, Notice, Row, Screen, Spacer, type IconName } from '@/ui/kit';
+import { alpha, brand as b, theme as t } from '@/ui/theme';
 
 /**
  * Communauté : « Ma famille » (niveau 1, Usra) et « Mes cercles » (niveau 2, Ahbab).
@@ -20,9 +21,7 @@ export default function Community() {
   if (!auth.enabled || !auth.session) {
     return (
       <Screen>
-        <Eyebrow>Communauté</Eyebrow>
-        <H1>Ma famille · Mes cercles</H1>
-        <Muted>Faites du dhikr ensemble : objectifs communs, zikr du soir à distance, encouragements privés. Votre famille et vos proches uniquement, jamais d’annuaire public.</Muted>
+        <CommunityHero title="Ma famille · Mes cercles" sub="Faites du dhikr ensemble, avec vos proches uniquement. Jamais d’annuaire public." features />
         <Spacer />
         {auth.enabled ? (
           <Card>
@@ -42,8 +41,7 @@ export default function Community() {
   }
   return (
     <Screen>
-      <Eyebrow>Communauté</Eyebrow>
-      <H1>Salām, {auth.displayName}</H1>
+      <CommunityHero title={`Salām, ${auth.displayName}`} sub="Vos familles et cercles de dhikr." />
       <SyncStatus />
       <MyFamilies />
       <Spacer />
@@ -56,6 +54,38 @@ export default function Community() {
       <Button variant="ghost" icon="phone-portrait-outline" title={showLocal ? 'Masquer les groupes locaux' : 'Groupes locaux (hors-ligne)'} onPress={() => setShowLocal(!showLocal)} />
       {showLocal ? <LocalGroups /> : null}
     </Screen>
+  );
+}
+
+const FEATURES: { icon: IconName; label: string }[] = [
+  { icon: 'flag', label: 'Objectifs communs' },
+  { icon: 'moon', label: 'Zikr du soir à distance' },
+  { icon: 'heart', label: 'Encouragements privés' },
+];
+function CommunityHero({ title, sub, features }: { title: string; sub: string; features?: boolean }) {
+  return (
+    <HeroHeader>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: alpha(b.gold, 0.18), alignItems: 'center', justifyContent: 'center' }}>
+          <Ionicons name="people" size={24} color={b.gold} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: b.heroMuted, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' }}>Communauté</Text>
+          <Text style={{ color: b.heroText, fontSize: 22, fontWeight: '800' }}>{title}</Text>
+        </View>
+      </View>
+      <Text style={{ color: b.heroMuted, marginTop: 10, lineHeight: 20 }}>{sub}</Text>
+      {features ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+          {FEATURES.map((f) => (
+            <View key={f.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: alpha('#FFFFFF', 0.1), borderWidth: 1, borderColor: alpha(b.gold, 0.35) }}>
+              <Ionicons name={f.icon} size={14} color={b.gold} />
+              <Text style={{ color: b.heroText, fontSize: 12, fontWeight: '700' }}>{f.label}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </HeroHeader>
   );
 }
 

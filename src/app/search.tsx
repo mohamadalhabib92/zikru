@@ -6,6 +6,8 @@ import { NAMES } from '@/lib/names';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { SALAWAT } from '@/lib/salawat';
 import { useSettings } from '@/lib/settings';
+import { translationFor } from '@/lib/quran';
+import { cachedTranslation, downloadTranslation, hasArabic, searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { SURAHS } from '@/lib/surahs';
 import { useZikrs } from '@/lib/zikrs';
 import { Container, IconBadge, SectionHeader, tapHaptic } from '@/ui/ds';
@@ -39,10 +41,11 @@ const SECTIONS: { title: string; kw: string; href: Href; icon: IconName }[] = [
   { title: 'Mes zikrs', kw: 'mes zikrs composer', href: '/zikrs', icon: 'albums' },
 ];
 
-/** Recherche globale : Noms, du‘as, versets-du‘as, salawat, sourates, zikrs, sections ; + versets en ligne. */
+/** Recherche globale : Noms, du‘as, versets-du‘as, salawat, sourates, zikrs, sections ; + tous les versets (hors-ligne). */
 export default function Search() {
   const router = useRouter();
-  const { t: tr } = useSettings();
+  const { s: st, t: tr } = useSettings();
+  const ed = translationFor(st.lang);
   const { zikrs } = useZikrs();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
@@ -83,11 +86,44 @@ export default function Search() {
     return out;
   }, [nq, zikrs, tr.my_zikrs]);
 
+  // Versets : recherche hors-ligne (arabe embarqué + traduction en cache), avec léger anti-rebond.
+  const [vr, setVr] = useState<{ q: string; hits: VerseHit[]; total: number; translated: boolean } | null>(null);
+  const [hasTr, setHasTr] = useState<boolean | null>(null);
+  const [dl, setDl] = useState<'idle' | 'busy' | 'err'>('idle');
+  useEffect(() => {
+    cachedTranslation(ed.id).then((x) => setHasTr(!!x));
+  }, [ed.id]);
+  useEffect(() => {
+    const qq = q.trim();
+    if (qq.length < 2) return setVr(null);
+    let alive = true;
+    const h = setTimeout(() => {
+      searchVerses(qq, ed.id, 30)
+        .then((r) => alive && setVr({ q: qq, ...r }))
+        .catch(() => alive && setVr({ q: qq, hits: [], total: 0, translated: false }));
+    }, 180);
+    return () => {
+      alive = false;
+      clearTimeout(h);
+    };
+  }, [q, ed.id, hasTr]);
+  const getTranslation = async () => {
+    setDl('busy');
+    try {
+      await downloadTranslation(ed.id);
+      setHasTr(true);
+      setDl('idle');
+    } catch {
+      setDl('err');
+    }
+  };
+  const latin = !hasArabic(q) && !/^\d/.test(q.trim());
+
   useEffect(() => setOnline(null), [nq]);
   const searchOnline = async () => {
     setBusy(true);
     try {
-      const r = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q.trim())}/all/fr.hamidullah`);
+      const r = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q.trim())}/all/${ed.id}`);
       const j = await r.json();
       const m = (j?.data?.matches ?? []) as { text: string; surah: { number: number; englishName: string }; numberInSurah: number }[];
       setOnline(m.slice(0, 30).map((x) => ({ n: x.surah.number, ref: `${x.surah.englishName} ${x.surah.number}:${x.numberInSurah}`, text: x.text })));
@@ -128,7 +164,7 @@ export default function Search() {
             <View style={{ marginTop: 18 }}>
               <SectionHeader title="Suggestions" />
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {['Ar-Rahman', 'matin', 'voyage', 'Yasin', 'istighfar', 'Ibrahimiyya', 'pardon', 'Kahf'].map((x) => (
+                {['Ar-Rahman', 'matin', 'voyage', 'Yasin', 'istighfar', 'Ibrahimiyya', 'pardon', 'Kahf', 'الحي القيوم', '2:255'].map((x) => (
                   <Pressable key={x} accessibilityRole="button" onPress={() => setQ(x)} style={{ paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 20, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line }}>
                     <Text style={{ color: b.ink, fontWeight: '600' }}>{x}</Text>
                   </Pressable>
@@ -137,7 +173,7 @@ export default function Search() {
             </View>
           ) : (
             <>
-              {total === 0 ? (
+              {total === 0 && !vr?.total ? (
                 <View style={{ alignItems: 'center', paddingVertical: 28, gap: 8 }}>
                   <Ionicons name="search-outline" size={34} color={b.inkMuted} />
                   <Text style={{ color: b.ink, fontWeight: '700' }}>{tr.no_results}</Text>
@@ -184,8 +220,63 @@ export default function Search() {
                   </View>
                 </View>
               ))}
-              <SectionHeader title="Versets du Coran (en ligne)" />
-              {online === null ? (
+              {vr?.hits.length ? (
+                <View>
+                  <SectionHeader title={`${tr.verses} · ${vr.total > vr.hits.length ? `${vr.hits.length} / ${vr.total}` : vr.total}`} />
+                  <View style={{ backgroundColor: b.paper, borderRadius: 16, borderWidth: 1, borderColor: b.line, overflow: 'hidden' }}>
+                    {vr.hits.map((v, i) => (
+                      <Pressable
+                        key={`${v.s}:${v.a}`}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${SURAHS[v.s - 1][2]} ${v.s}:${v.a}`}
+                        onPress={() => {
+                          tapHaptic();
+                          router.push(`/quran/${v.s}`);
+                        }}
+                        style={({ pressed }) => ({ padding: 12, borderTopWidth: i ? 1 : 0, borderTopColor: b.line, backgroundColor: pressed ? b.greenTint : 'transparent' })}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: b.goldSoft }}>
+                            <Text style={{ color: b.goldDeep, fontWeight: '800', fontSize: 12 }}>{`${v.s}:${v.a}`}</Text>
+                          </View>
+                          <Text style={{ color: b.inkMuted, fontWeight: '700', fontSize: 12, flex: 1 }}>{SURAHS[v.s - 1][2]}</Text>
+                        </View>
+                        <Arabic size={20} style={{ marginTop: 6 }}>
+                          {v.ar}
+                        </Arabic>
+                        {v.tr ? (
+                          <Text style={{ color: b.ink, lineHeight: 21, marginTop: 4 }} numberOfLines={4}>
+                            {v.tr}
+                          </Text>
+                        ) : null}
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+              {latin && hasTr === false ? (
+                <View style={{ marginTop: 14, padding: 14, borderRadius: 16, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line, gap: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <IconBadge icon="cloud-download-outline" color={b.green} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: b.ink, fontWeight: '800' }}>{tr.offline_q}</Text>
+                      <LMuted style={{ fontSize: 12 }}>{tr.offline_q_ar}</LMuted>
+                    </View>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={getTranslation}
+                    disabled={dl === 'busy'}
+                    style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 46, borderRadius: 12, backgroundColor: b.green, opacity: pressed ? 0.85 : 1 })}
+                  >
+                    {dl === 'busy' ? <ActivityIndicator color="#fff" /> : <Ionicons name="download-outline" size={18} color="#fff" />}
+                    <Text style={{ color: '#fff', fontWeight: '800' }}>{`${tr.offline_q_dl} · ${ed.label}`}</Text>
+                  </Pressable>
+                  {dl === 'err' ? <LMuted style={{ fontSize: 12 }}>{tr.no_results} (hors ligne).</LMuted> : null}
+                </View>
+              ) : null}
+              {latin && hasTr === false ? <SectionHeader title="Versets du Coran (en ligne)" /> : null}
+              {!(latin && hasTr === false) ? null : online === null ? (
                 <Pressable
                   accessibilityRole="button"
                   onPress={searchOnline}
@@ -193,7 +284,7 @@ export default function Search() {
                   style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, borderRadius: 14, backgroundColor: b.greenTint, opacity: pressed ? 0.8 : 1 })}
                 >
                   {busy ? <ActivityIndicator color={b.green} /> : <Ionicons name="globe-outline" size={18} color={b.green} />}
-                  <Text style={{ color: b.green, fontWeight: '700' }}>Chercher « {q.trim()} » dans la traduction Hamidullah</Text>
+                  <Text style={{ color: b.green, fontWeight: '700' }}>Chercher « {q.trim()} » en ligne · {ed.label}</Text>
                 </Pressable>
               ) : online.length === 0 ? (
                 <LMuted>{tr.no_results} (ou hors ligne).</LMuted>

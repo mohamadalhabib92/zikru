@@ -11,7 +11,14 @@ import { LMuted } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 
 export const ZCOLOR = '#7A4F9E';
-const SYSC = { mashriqi: '#2F7FD0', maghribi: '#2E8B57' } as const;
+const SYSC = {
+  get mashriqi() {
+    return b.green;
+  },
+  get maghribi() {
+    return b.goldDeep;
+  },
+};
 export const fmt = (n: number) => n.toLocaleString('fr-CH');
 
 /** Bouton clair (thème crème). */

@@ -7,7 +7,7 @@ import { getGpsPlace } from '@/lib/location';
 import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
 import Constants from 'expo-constants';
 import type { Madhab } from '@/lib/fiqh';
-import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
+import { NotifSettings } from '@/components/NotifSettings';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
@@ -38,20 +38,6 @@ export default function SettingsScreen() {
           setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
         }}
       />
-      {remindersSupported() ? (
-        <>
-          <Segmented
-            label={tr.reminders}
-            options={[
-              { label: 'Off', value: 0 },
-              { label: 'On', value: 1 },
-            ]}
-            value={s.reminders ? 1 : 0}
-            onChange={async (v) => set({ reminders: v === 1 ? await requestReminderPermission() : false })}
-          />
-          <Muted style={{ marginTop: -8, marginBottom: 12 }}>{tr.reminders_hint}</Muted>
-        </>
-      ) : null}
       <H2>{tr.language}</H2>
       <Row wrap>
         {LANGS.map((l) => (
@@ -61,6 +47,7 @@ export default function SettingsScreen() {
       <Muted>⏳ = {tr.translation_pending} (repli : français).</Muted>
       <Spacer h={20} />
 
+      <NotifSettings />
       <H2>{tr.location}</H2>
       <Muted>
         {s.place.label}

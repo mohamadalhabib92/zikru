@@ -27,9 +27,18 @@ export async function getSurah(n: number, edition: string): Promise<SurahText> {
   const key = `quran3-${n}-${edition}`;
   const cached = await loadJSON<SurahText | null>(key, null);
   if (cached?.ayahs?.length) return cached;
-  const r = await fetch(`https://api.alquran.cloud/v1/surah/${n}/editions/quran-simple-enhanced,${edition}`);
-  if (!r.ok) throw new Error(`alquran.cloud ${r.status}`);
-  const j = (await r.json()) as { data: { ayahs: { numberInSurah: number; text: string }[] }[] };
+  let j: { data: { ayahs: { numberInSurah: number; text: string }[] }[] };
+  try {
+    const r = await fetch(`https://api.alquran.cloud/v1/surah/${n}/editions/quran-simple-enhanced,${edition}`);
+    if (!r.ok) throw new Error(`alquran.cloud ${r.status}`);
+    j = await r.json();
+  } catch (e) {
+    // Hors connexion : texte arabe embarqué (Tanzil) + traduction si elle a été téléchargée.
+    const { offlineSurah } = await import('./quran-offline');
+    const ayahs = await offlineSurah(n, edition).catch(() => null);
+    if (ayahs?.length) return { n, edition, ayahs };
+    throw e;
+  }
   const [ar, tr] = j.data;
   const ayahs = ar.ayahs.map((a, i) => {
     let t = a.text.replace(/^\ufeff/, '');

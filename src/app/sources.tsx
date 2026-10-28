@@ -33,6 +33,13 @@ export default function Sources() {
         <Muted>Auto-tests (dates limites 29/30, années abondantes, passage d’année) : {ok}/{tests.length} réussis.</Muted>
       </Card>
       <Spacer />
+      <H2>Coran</H2>
+      <Card>
+        <Body>Texte arabe embarqué pour la lecture et la recherche hors-ligne : Tanzil Quran Text (Simple, version 1.1), © 2007-2026 Tanzil Project, licence Creative Commons Attribution 3.0, reproduit sans modification. Source et mises à jour : tanzil.net.</Body>
+        <Muted>Lecture en ligne et traductions (Muhammad Hamidullah, Bubenheim & Elyas, Saheeh International) : api.alquran.cloud. La traduction n’est pas incluse dans l’app : elle est téléchargée à votre demande puis conservée sur l’appareil.</Muted>
+        <Muted>La recherche ignore les voyelles et signes (tashkīl), le tatwīl et les variantes de alif, hamza, yā’ et tā’ marbūṭa.</Muted>
+      </Card>
+      <Spacer />
       <H2>Textes et traductions</H2>
       <Card>
         <Body>Seuls les contenus au statut « approuvé » sont affichés ; chacun cite sa source. Les textes arabes conservent leurs diacritiques. Aucune traduction religieuse n’est générée par l’app.</Body>

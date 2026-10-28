@@ -6,13 +6,38 @@ import { ABJAD_EXAMPLES, DIFF_LETTERS, MAGHRIBI, MASHRIQI, ORDER_MASHRIQI, compu
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, LTitle, Pill, SectionLabel } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { alpha, brand as b, isDark } from '@/ui/theme';
 
-const COLOR = '#8A5A2B';
-const SYS: Record<AbjadSystem, { label: string; ar: string; color: string }> = {
-  mashriqi: { label: 'Mashriqi (oriental)', ar: 'المشرقي', color: '#2F7FD0' },
-  maghribi: { label: 'Maghribi (occidental)', ar: 'المغربي', color: '#2E8B57' },
+// Jetons émeraude / or (clair et sombre) : lus au rendu, car `brand` est réécrit par applyScheme.
+const SYS: Record<AbjadSystem, { label: string; ar: string; color: string; fill: string; ink: string }> = {
+  mashriqi: {
+    label: 'Mashriqi (oriental)',
+    ar: 'المشرقي',
+    get color() {
+      return b.green;
+    },
+    get fill() {
+      return b.green;
+    },
+    get ink() {
+      return '#FFFFFF';
+    },
+  },
+  maghribi: {
+    label: 'Maghribi (occidental)',
+    ar: 'المغربي',
+    get color() {
+      return b.goldDeep;
+    },
+    get fill() {
+      return b.hero;
+    },
+    get ink() {
+      return b.gold;
+    },
+  },
 };
+const goldFill = () => (isDark() ? '#A8841F' : b.goldDeep);
 const NORM_RULES: [string, string, string][] = [
   ['أ إ آ ٱ', 'ا', '= 1'],
   ['ى', 'ي', '= 10'],
@@ -59,7 +84,7 @@ export default function Abjad() {
 
   return (
     <Screen padded={false} bg={b.cream}>
-      <PatternBg color={COLOR} style={{ padding: 20, alignItems: 'center' }}>
+      <PatternBg style={{ padding: 20, alignItems: 'center' }}>
         <Ionicons name="calculator" size={28} color="#fff" />
         <Text style={{ color: '#fff', fontSize: 26, writingDirection: 'rtl', marginTop: 4 }}>حساب الجُمَّل</Text>
         <Text style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>Calculateur abjad</Text>
@@ -81,7 +106,7 @@ export default function Abjad() {
           />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
             {ABJAD_EXAMPLES.map((ex) => (
-              <Pressable key={ex} accessibilityRole="button" accessibilityLabel={`Exemple ${ex}`} onPress={() => setText(ex)} style={({ pressed }) => ({ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: text === ex ? COLOR + '22' : b.paper, opacity: pressed ? 0.8 : 1 })}>
+              <Pressable key={ex} accessibilityRole="button" accessibilityLabel={`Exemple ${ex}`} onPress={() => setText(ex)} style={({ pressed }) => ({ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: text === ex ? alpha(b.gold, 0.22) : b.paper, opacity: pressed ? 0.8 : 1 })}>
                 <Text style={{ color: b.ink, fontSize: 16, writingDirection: 'rtl' }}>{ex}</Text>
               </Pressable>
             ))}
@@ -96,20 +121,20 @@ export default function Abjad() {
         <LCard>
           <LTitle style={{ fontSize: 16 }}>Système et règles</LTitle>
           <Row label="Affichage">
-            <Pill label="Les deux" active={p.view === 'both'} onPress={() => set({ view: 'both' })} color={COLOR} />
+            <Pill label="Les deux" active={p.view === 'both'} onPress={() => set({ view: 'both' })} color={b.hero} />
             <Pill label="Mashriqi" active={p.view === 'mashriqi'} onPress={() => set({ view: 'mashriqi' })} color={SYS.mashriqi.color} />
-            <Pill label="Maghribi" active={p.view === 'maghribi'} onPress={() => set({ view: 'maghribi' })} color={SYS.maghribi.color} />
+            <Pill label="Maghribi" active={p.view === 'maghribi'} onPress={() => set({ view: 'maghribi' })} color={goldFill()} />
           </Row>
           <Row label="Tā’ marbūṭa (ة)">
-            <Pill label="5 · comme ه" active={p.ta === 'ha'} onPress={() => set({ ta: 'ha' })} color={COLOR} />
-            <Pill label="400 · comme ت" active={p.ta === 'ta'} onPress={() => set({ ta: 'ta' })} color={COLOR} />
+            <Pill label="5 · comme ه" active={p.ta === 'ha'} onPress={() => set({ ta: 'ha' })} color={b.green} />
+            <Pill label="400 · comme ت" active={p.ta === 'ta'} onPress={() => set({ ta: 'ta' })} color={b.green} />
           </Row>
           <Row label="Hamza isolée (ء)">
-            <Pill label="= 1" active={p.hamza === 1} onPress={() => set({ hamza: 1 })} color={COLOR} />
-            <Pill label="= 0" active={p.hamza === 0} onPress={() => set({ hamza: 0 })} color={COLOR} />
+            <Pill label="= 1" active={p.hamza === 1} onPress={() => set({ hamza: 1 })} color={b.green} />
+            <Pill label="= 0" active={p.hamza === 0} onPress={() => set({ hamza: 0 })} color={b.green} />
           </Row>
           <Row label="Détail">
-            <Pill label="Somme par mot" active={p.words} onPress={() => set({ words: !p.words })} color={COLOR} />
+            <Pill label="Somme par mot" active={p.words} onPress={() => set({ words: !p.words })} color={b.green} />
           </Row>
           <LMuted style={{ marginTop: 10, fontSize: 12 }}>Normalisation appliquée avant le calcul : voyelles (tashkīl), shadda, sukūn, alif suscrit et tatwīl sont ignorés (une lettre avec shadda compte une fois, comme dans l’usage classique).</LMuted>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
@@ -126,10 +151,10 @@ export default function Abjad() {
 
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
           {shown.map((s) => (
-            <View key={s} style={{ flex: 1, backgroundColor: SYS[s].color, borderRadius: 18, padding: 14 }}>
+            <View key={s} style={{ flex: 1, backgroundColor: SYS[s].fill, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: s === 'maghribi' ? alpha(b.gold, 0.5) : SYS[s].fill }}>
               <Text style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '800', fontSize: 12 }}>{SYS[s].label.toUpperCase()}</Text>
               <Text style={{ color: '#fff', fontSize: 14, writingDirection: 'rtl' }}>{SYS[s].ar}</Text>
-              <Text accessibilityLabel={`Total ${SYS[s].label} : ${res[s].total}`} style={{ color: '#fff', fontSize: 38, fontWeight: '900', marginTop: 4 }}>
+              <Text accessibilityLabel={`Total ${SYS[s].label} : ${res[s].total}`} style={{ color: SYS[s].ink, fontSize: 38, fontWeight: '900', marginTop: 4, fontVariant: ['tabular-nums'] }}>
                 {fmt(res[s].total)}
               </Text>
               <Text style={{ color: 'rgba(255,255,255,0.9)' }}>{`Racine numérique : ${res[s].root}`}</Text>
@@ -148,7 +173,7 @@ export default function Abjad() {
 
         {p.words && m.words.length ? (
           <>
-            <SectionLabel color={COLOR}>SOMME PAR MOT</SectionLabel>
+            <SectionLabel color={b.gold}>SOMME PAR MOT</SectionLabel>
             <LCard>
               {m.words.map((w, i) => (
                 <View key={i} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: i < m.words.length - 1 ? 1 : 0, borderBottomColor: b.line }}>
@@ -168,7 +193,7 @@ export default function Abjad() {
 
         {m.letters.length ? (
           <>
-            <SectionLabel color={COLOR}>DÉTAIL PAR LETTRE</SectionLabel>
+            <SectionLabel color={b.gold}>DÉTAIL PAR LETTRE</SectionLabel>
             <LCard>
               <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 }}>
                 {m.letters.map((l, i) => {
@@ -190,7 +215,7 @@ export default function Abjad() {
           </>
         ) : null}
 
-        <SectionLabel color={COLOR}>TABLE DES VALEURS</SectionLabel>
+        <SectionLabel color={b.gold}>TABLE DES VALEURS</SectionLabel>
         <LCard>
           <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 }}>
             {ORDER_MASHRIQI.map((ch) => {
@@ -209,7 +234,7 @@ export default function Abjad() {
           </LMuted>
         </LCard>
 
-        <SectionLabel color={COLOR}>REPÈRE HISTORIQUE</SectionLabel>
+        <SectionLabel color={b.gold}>REPÈRE HISTORIQUE</SectionLabel>
         <LCard>
           <Arabic size={18}>أَبْجَدْ هَوَّزْ حُطِّي كَلَمَنْ</Arabic>
           <LText style={{ marginTop: 6 }}>

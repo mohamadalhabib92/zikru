@@ -8,9 +8,9 @@ import { NAMES, NAMES_REF, nameBare, nameCallTr } from '@/lib/names';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, Pill } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { useLayout } from '@/ui/ds';
+import { alpha, brand as b, isDark } from '@/ui/theme';
 
-const COLOR = '#B07D1A';
 const norm = (s: string) =>
   s
     .normalize('NFD')
@@ -23,6 +23,8 @@ export default function Names() {
   const qp = useLocalSearchParams<{ q?: string }>();
   const [q, setQ] = useState(typeof qp.q === 'string' ? qp.q : '');
   const [draft, setDraft] = useState<DraftItem | null>(null);
+  const { cols } = useLayout();
+  const goldFill = isDark() ? '#A8841F' : b.goldDeep;
   const list = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return NAMES;
@@ -32,12 +34,13 @@ export default function Names() {
 
   return (
     <Screen padded={false} bg={b.cream}>
-      <PatternBg color={COLOR} style={{ padding: 20, alignItems: 'center' }}>
-        <Ionicons name="sparkles" size={26} color="#fff" />
+      <PatternBg style={{ padding: 20, alignItems: 'center' }}>
+        <Ionicons name="sparkles" size={26} color={b.gold} />
         <Text
           style={{
-            color: '#fff',
-            fontSize: 26,
+            color: b.gold,
+            fontSize: 30,
+            fontFamily: 'Amiri_700Bold',
             writingDirection: 'rtl',
             marginTop: 4,
           }}
@@ -92,33 +95,29 @@ export default function Names() {
             marginBottom: 10,
           }}
         >
-          <Pill label="Les deux" active={prefs.view === 'both'} onPress={() => setPrefs({ view: 'both' })} color={COLOR} />
-          <Pill label="Mashriqi" active={prefs.view === 'mashriqi'} onPress={() => setPrefs({ view: 'mashriqi' })} color="#2F7FD0" />
-          <Pill label="Maghribi" active={prefs.view === 'maghribi'} onPress={() => setPrefs({ view: 'maghribi' })} color="#2E8B57" />
+          <Pill label="Les deux" active={prefs.view === 'both'} onPress={() => setPrefs({ view: 'both' })} color={b.hero} />
+          <Pill label="Mashriqi" active={prefs.view === 'mashriqi'} onPress={() => setPrefs({ view: 'mashriqi' })} color={b.green} />
+          <Pill label="Maghribi" active={prefs.view === 'maghribi'} onPress={() => setPrefs({ view: 'maghribi' })} color={goldFill} />
         </View>
         <LMuted style={{ marginBottom: 10, fontSize: 12 }}>Abjad calculé sur le Nom sans l’article ni « yā » (Laṭīf = 129), selon les options de l’écran Abjad.</LMuted>
+        {q.trim() ? <LMuted style={{ marginBottom: 8, fontSize: 12, fontWeight: '700' }}>{`${list.length} / 99`}</LMuted> : null}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {list.map((x) => {
           const v = computeAbjad(nameBare(x.ar), repSys, opts).total;
           return (
-            <LCard key={x.n} style={{ marginBottom: 10 }}>
+            <LCard key={x.n} style={{ marginBottom: 0, width: cols > 1 ? `${100 / cols - 1.5}%` : '100%' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: COLOR + '1C',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ color: COLOR, fontWeight: '900' }}>{x.n}</Text>
+                <View style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ position: 'absolute', width: 30, height: 30, borderRadius: 7, transform: [{ rotate: '45deg' }], backgroundColor: b.goldSoft, borderWidth: 1, borderColor: alpha(b.gold, 0.6) }} />
+                  <Text style={{ color: b.goldDeep, fontWeight: '900', fontSize: 13 }}>{x.n}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{x.tr}</Text>
                   <LMuted style={{ fontSize: 13 }}>{x.fr}</LMuted>
                 </View>
-                <Arabic size={26}>{x.ar}</Arabic>
+                <Arabic size={28} style={{ color: b.green }}>
+                  {x.ar}
+                </Arabic>
               </View>
               <View
                 style={{
@@ -164,7 +163,7 @@ export default function Names() {
                         paddingHorizontal: 10,
                         minHeight: 34,
                         borderRadius: 17,
-                        backgroundColor: COLOR,
+                        backgroundColor: b.green,
                         opacity: pressed ? 0.8 : 1,
                       })}
                     >
@@ -183,6 +182,7 @@ export default function Names() {
             </LCard>
           );
         })}
+        </View>
         {!list.length ? <LMuted>Aucun résultat.</LMuted> : null}
         <LMuted
           style={{ marginTop: 8, fontSize: 12 }}
