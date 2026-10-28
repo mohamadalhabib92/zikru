@@ -46,7 +46,8 @@ function Root() {
         <Stack.Screen name="quran/index" options={{ title: 'Qur’an' }} />
         <Stack.Screen name="quran/[n]" options={{ title: 'Sourate' }} />
         <Stack.Screen name="hadiths" options={{ title: 'Hadiths' }} />
-        <Stack.Screen name="duas" options={{ title: 'Du‘as' }} />
+        <Stack.Screen name="duas" options={{ title: 'Du‘as prophétiques', contentStyle: { backgroundColor: brand.cream } }} />
+        <Stack.Screen name="abjad" options={{ title: 'Calculateur abjad', contentStyle: { backgroundColor: brand.cream } }} />
         <Stack.Screen name="fiqh" options={{ title: 'Fiqh' }} />
         <Stack.Screen name="journey" options={{ title: 'Mon parcours spirituel' }} />
         <Stack.Screen name="habits" options={{ title: 'Jardin des habitudes' }} />

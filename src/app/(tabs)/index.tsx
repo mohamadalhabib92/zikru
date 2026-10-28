@@ -139,8 +139,9 @@ export default function Home() {
   const knowledge: Tile[] = [
     { label: "Qur'an", sub: '114 sourates', icon: 'book', href: '/quran', color: '#2E8B57' },
     { label: 'Hadiths', sub: 'Collection choisie', icon: 'library', href: '/hadiths', color: '#7C4DDB' },
-    { label: "Du'as", sub: 'Invocations prophétiques', icon: 'hand-left', href: '/duas', color: '#2F7FD0' },
+    { label: "Du'as", sub: 'Prophétiques · 96 invocations', icon: 'hand-left', href: '/duas', color: '#2F7FD0' },
     { label: 'Fiqh', sub: 'Maliki & Shafi‘i', icon: 'scale', href: '/fiqh', color: '#A0522D' },
+    { label: 'Abjad', sub: 'Mashriqi & Maghribi', icon: 'calculator', href: '/abjad', color: '#8A5A2B' },
   ];
 
   return (
