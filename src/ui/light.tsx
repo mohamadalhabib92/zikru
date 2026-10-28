@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { Pressable, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
-import { brand as b } from './theme';
+import { brand as b, elevation, fonts } from './theme';
 
 /** Composants « cartes claires » de la palette Zikru originale. */
 export function LCard({ children, style, onPress, label }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; label?: string }) {
-  const base: ViewStyle = { backgroundColor: b.paper, borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: b.line, shadowColor: '#5A3A1E', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2 };
+  const base: ViewStyle = { backgroundColor: b.paper, borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: b.line, ...elevation(1) };
   if (onPress)
     return (
-      <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [base, pressed && { opacity: 0.85 }, style]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [base, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, style]}>
         {children}
       </Pressable>
     );
@@ -23,11 +23,23 @@ export function LTitle({ children, style }: { children: ReactNode; style?: Style
 export function LText({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
   return <Text style={[{ color: b.ink, fontSize: 15, lineHeight: 22 }, style]}>{children}</Text>;
 }
-export function LMuted({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
-  return <Text style={[{ color: b.inkMuted, fontSize: 13, lineHeight: 19 }, style]}>{children}</Text>;
+export function LMuted({ children, style, numberOfLines }: { children: ReactNode; style?: StyleProp<TextStyle>; numberOfLines?: number }) {
+  return (
+    <Text numberOfLines={numberOfLines} style={[{ color: b.inkMuted, fontSize: 13, lineHeight: 19 }, style]}>
+      {children}
+    </Text>
+  );
 }
-export function Arabic({ children, size = 24, style }: { children: ReactNode; size?: number; style?: StyleProp<TextStyle> }) {
-  return <Text style={[{ color: b.ink, fontSize: size, lineHeight: size * 1.8, textAlign: 'right', writingDirection: 'rtl' }, style]}>{children}</Text>;
+/** Texte arabe : police Amiri (ou Amiri Quran pour les versets), RTL, interligne généreux. */
+export function Arabic({ children, size = 24, style, quran, numberOfLines }: { children: ReactNode; size?: number; style?: StyleProp<TextStyle>; quran?: boolean; numberOfLines?: number }) {
+  return (
+    <Text
+      numberOfLines={numberOfLines}
+      style={[{ color: b.ink, fontSize: size, lineHeight: Math.round(size * (quran ? 2.1 : 1.85)), textAlign: 'right', writingDirection: 'rtl', fontFamily: quran ? fonts.quran : fonts.arabic }, style]}
+    >
+      {children}
+    </Text>
+  );
 }
 export function SectionLabel({ children, color = b.teal }: { children: ReactNode; color?: string }) {
   return (
@@ -43,9 +55,9 @@ export function Pill({ label, active, onPress, color = b.green }: { label: strin
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      style={{ paddingHorizontal: 14, minHeight: 38, justifyContent: 'center', borderRadius: 19, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
+      style={{ paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 19, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
     >
-      <Text style={{ color: active ? '#fff' : b.ink, fontWeight: '700', fontSize: 14 }}>{label}</Text>
+      <Text style={{ color: active ? '#FFFFFF' : b.ink, fontWeight: '700', fontSize: 14 }}>{label}</Text>
     </Pressable>
   );
 }

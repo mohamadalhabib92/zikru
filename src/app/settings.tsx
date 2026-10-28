@@ -5,7 +5,12 @@ import { backendConfigured } from '@/lib/backend';
 import { LANGS } from '@/lib/i18n';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
+import Constants from 'expo-constants';
+import type { Madhab } from '@/lib/fiqh';
+import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
+import { usePersistentState } from '@/lib/storage';
+import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll } from '@/lib/storage';
 import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 
@@ -14,9 +19,39 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [gpsErr, setGpsErr] = useState(false);
+  const [fiqh, setFiqh] = usePersistentState<Madhab>('fiqh-madhab', 'maliki');
   return (
     <Screen>
       <Eyebrow>{tr.settings_title}</Eyebrow>
+      <Segmented
+        label={tr.appearance}
+        options={[
+          { label: tr.app_system, value: 'system' as const },
+          { label: tr.app_light, value: 'light' as const },
+          { label: tr.app_dark, value: 'dark' as const },
+        ]}
+        value={s.appearance}
+        onChange={(v) => {
+          if (v === s.appearance) return;
+          setPendingRoute('/settings');
+          set({ appearance: v });
+          setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
+        }}
+      />
+      {remindersSupported() ? (
+        <>
+          <Segmented
+            label={tr.reminders}
+            options={[
+              { label: 'Off', value: 0 },
+              { label: 'On', value: 1 },
+            ]}
+            value={s.reminders ? 1 : 0}
+            onChange={async (v) => set({ reminders: v === 1 ? await requestReminderPermission() : false })}
+          />
+          <Muted style={{ marginTop: -8, marginBottom: 12 }}>{tr.reminders_hint}</Muted>
+        </>
+      ) : null}
       <H2>{tr.language}</H2>
       <Row wrap>
         {LANGS.map((l) => (
@@ -61,6 +96,15 @@ export default function SettingsScreen() {
       </Card>
       <Spacer />
       <Segmented label={tr.madhab} options={[{ label: tr.shafi, value: 'shafi' as const }, { label: tr.hanafi, value: 'hanafi' as const }]} value={s.madhab} onChange={(v) => set({ madhab: v })} />
+      <Segmented
+        label={tr.onb_madhab}
+        options={[
+          { label: tr.maliki, value: 'maliki' as const },
+          { label: tr.shafii, value: 'shafii' as const },
+        ]}
+        value={fiqh}
+        onChange={setFiqh}
+      />
       <Spacer />
       <Segmented label={tr.hijri_offset} options={[-2, -1, 0, 1, 2].map((n) => ({ label: n > 0 ? `+${n}` : String(n), value: n }))} value={s.hijriOffset} onChange={(v) => set({ hijriOffset: v })} />
       <Spacer h={20} />
@@ -93,7 +137,7 @@ export default function SettingsScreen() {
         }}
       />
       <Spacer />
-      <Muted>Zikru 1.0.0 · données stockées uniquement sur cet appareil.</Muted>
+      <Muted>Zikru {Constants.expoConfig?.version ?? '1.0.19'} · données stockées uniquement sur cet appareil.</Muted>
     </Screen>
   );
 }

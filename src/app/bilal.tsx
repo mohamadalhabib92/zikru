@@ -67,7 +67,7 @@ export default function Bilal() {
           </Text>
         </View>
         {unavailable ? (
-          <View style={{ backgroundColor: '#FFF6DD', borderRadius: 16, borderWidth: 1, borderColor: b.gold, padding: 14, marginBottom: 12 }}>
+          <View style={{ backgroundColor: b.goldSoft, borderRadius: 16, borderWidth: 1, borderColor: b.gold, padding: 14, marginBottom: 12 }}>
             <Text style={{ color: b.ink, fontWeight: '800' }}>Bientôt disponible, inch’Allah</Text>
             <Text style={{ color: b.ink, marginTop: 6 }}>{PERIODS[p].title}</Text>
             <Text style={{ color: b.ink, marginTop: 4, lineHeight: 20 }}>{fallback}</Text>

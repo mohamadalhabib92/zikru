@@ -10,8 +10,12 @@ export type Settings = {
   madhab: 'shafi' | 'hanafi';
   hijriOffset: number;
   onboarded: boolean;
+  /** Apparence : suit le système par défaut. */
+  appearance: 'system' | 'light' | 'dark';
+  /** Rappels de prière (notifications web / préférence). */
+  reminders: boolean;
 };
-const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: 'MuslimWorldLeague', madhab: 'shafi', hijriOffset: 0, onboarded: false };
+const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: 'MuslimWorldLeague', madhab: 'shafi', hijriOffset: 0, onboarded: false, appearance: 'system', reminders: false };
 
 type Ctx = { s: Settings; set: (p: Partial<Settings>) => void; t: Dict; ready: boolean };
 const C = createContext<Ctx | null>(null);

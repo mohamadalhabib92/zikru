@@ -1,39 +1,51 @@
-import { BleStatusChip } from '@/components/BleStatusChip';
-import { PatternBg } from '@/components/zikru/Pattern';
 import { useRouter, type Href } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import type { ReactNode } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BleStatusChip } from '@/components/BleStatusChip';
+import { SkyArc } from '@/components/zikru/SkyArc';
 import { askBilal, BilalError } from '@/lib/bilal';
 import { useData } from '@/lib/data';
-import { dayKey, levelFor, streak, useGrowth } from '@/lib/growth';
+import { DUAS_LIST } from '@/lib/duas';
+import { dayKey, streak, useGrowth } from '@/lib/growth';
 import { formatHijri } from '@/lib/hijri';
 import { isKahfTime } from '@/lib/kahf';
+import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } from '@/lib/prayer';
+import { QURAN_DUAS } from '@/lib/quran-duas';
 import { periodFor, PERIODS, REFLECTIONS } from '@/lib/reflections';
-import { usePersistentState } from '@/lib/storage';
-import { computeDay, countdown, hhmm, withStates } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
+import { usePersistentState } from '@/lib/storage';
+import { SURAHS } from '@/lib/surahs';
+import { PRACTICES } from '@/lib/tijani';
 import { getWeather, wmo, type Weather } from '@/lib/weather';
+import { useZikrs } from '@/lib/zikrs';
+import { Container, FadeIn, Grid, IconBadge, ProgressRing, SectionHeader, Skeleton, tapHaptic, useLayout } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
-import { LCard, LMuted, SectionLabel } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { Arabic, LCard, LMuted } from '@/ui/light';
+import { alpha, brand as b } from '@/ui/theme';
 
 const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
-type Tile = { label: string; icon: IconName; href: Href; color?: string; sub?: string };
 let aiUnavailable = false; // évite d'appeler la fonction à chaque rendu si l'IA n'est pas configurée
+const FARD: PrayerKey[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+const totalReps = (items: { reps: number }[]) => items.reduce((a, it) => a + it.reps, 0);
+const dayOfYear = (d: Date) => Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
 
+/** Accueil : tableau de bord personnel. */
 export default function Home() {
   const { s, t: tr } = useSettings();
-  const { tasbih } = useData();
+  const { tasbih, content } = useData();
+  const { zikrs } = useZikrs();
   const g = useGrowth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { tablet, width } = useLayout();
   const [now, setNow] = useState(() => new Date());
   const [weather, setWeather] = useState<Weather | null>(null);
   const [wErr, setWErr] = useState(false);
-  const [unit, setUnit] = usePersistentState<'C' | 'F'>('temp-unit', 'C');
+  const [unit] = usePersistentState<'C' | 'F'>('temp-unit', 'C');
   const [kahfReminder] = usePersistentState('kahf-reminder', true);
+  const [quranLast] = usePersistentState<{ n: number; ayah: number } | null>('quran-last', null);
+  const [tijaniDone] = usePersistentState<Record<string, number[]>>('tijani-done', {});
   const [reflIdx, setReflIdx] = useState(() => new Date().getDate());
   const [aiText, setAiText] = usePersistentState<{ key: string; text: string } | null>('bilal-reflection', null);
   const [aiBusy, setAiBusy] = useState(false);
@@ -53,10 +65,10 @@ export default function Home() {
     };
   }, [s.place.lat, s.place.lng, s.place.label]);
 
-  const { next, maghrib } = useMemo(() => {
+  const { next, list, maghrib } = useMemo(() => {
     const today = computeDay(now, s.place, s.method, s.madhab);
     const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab);
-    return { next: withStates(today, now, tomorrow[0].time).next, maghrib: today.find((x) => x.key === 'maghrib')?.time };
+    return { next: withStates(today, now, tomorrow[0].time).next, list: today, maghrib: today.find((x) => x.key === 'maghrib')?.time };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab]);
 
@@ -64,7 +76,6 @@ export default function Home() {
   const pool = REFLECTIONS[period];
   const aiKey = `${dayKey(now)}-${period}`;
   const reflection = aiText?.key === aiKey ? aiText.text : pool[reflIdx % pool.length];
-
   const refresh = async (force = true) => {
     if (aiUnavailable || aiBusy) {
       setReflIdx((i) => i + 1);
@@ -90,278 +101,394 @@ export default function Home() {
   try {
     greg = now.toLocaleDateString(LOCALE[s.lang] ?? 'fr-CH', { weekday: 'long', day: 'numeric', month: 'long' });
   } catch {}
-  const kahfTime = kahfReminder && isKahfTime(now, maghrib);
-  const todayCount = g.days[dayKey(now)] ?? 0;
-  const lvl = levelFor(tasbih.total);
+  const hijri = formatHijri(now, s.lang, s.hijriOffset);
+  const today = dayKey(now);
+  const prayedToday = g.prayed[today] ?? [];
+  const names = Object.fromEntries(list.map((p) => [p.key, tr[p.key]])) as Record<PrayerKey, string>;
+  const dhikrToday = g.days[today] ?? 0;
   const st = streak((k) => (g.days[k] ?? 0) > 0);
-  const habitsToday = g.habits.filter((h) => h.done.includes(dayKey(now))).length;
-  const tasksToday = g.tasks[dayKey(now)] ?? [];
-
-  const temp = (c: number) => Math.round(unit === 'C' ? c : (c * 9) / 5 + 32);
+  const kahfTime = kahfReminder && isKahfTime(now, maghrib);
+  const greet = now.getHours() < 17 ? tr.greet_morning : tr.greet_evening;
+  const doy = dayOfYear(now);
+  const verse = QURAN_DUAS[doy % QURAN_DUAS.length];
+  const dua = DUAS_LIST[(doy * 7) % DUAS_LIST.length];
   const wm = weather ? wmo(weather.code, weather.isDay) : null;
+  const temp = (c: number) => Math.round(unit === 'C' ? c : (c * 9) / 5 + 32);
 
-  const more: { title: string; tiles: Tile[] }[] = [
-    {
-      title: 'TARIQA TIJANIYYA',
-      tiles: [
-        { label: tr.tijani, icon: 'leaf-outline', href: '/tijani', color: b.green },
-        { label: tr.wird, icon: 'repeat-outline', href: '/tijani?tab=wird', color: b.wirdGreen },
-        { label: tr.adilla, icon: 'document-text-outline', href: '/tijani?tab=adilla', color: b.goldDeep },
-      ],
-    },
-    {
-      title: tr.sec_prayer,
-      tiles: [
-        { label: tr.prayer_times, icon: 'time-outline', href: '/prayers', color: b.brown },
-        { label: tr.tab_qibla, icon: 'compass-outline', href: '/qibla', color: b.teal },
-        { label: tr.tab_tasbih, icon: 'ellipse-outline', href: '/tasbih', color: b.green },
-        { label: tr.ring, icon: 'bluetooth-outline', href: '/ring', color: b.blue },
-        { label: tr.tab_dhikr, icon: 'book-outline', href: '/dhikr', color: b.violet },
-        { label: tr.sahw, icon: 'construct-outline', href: '/sahw', color: b.rust },
-      ],
-    },
-    {
-      title: tr.sec_songs,
-      tiles: [
-        { label: tr.songs, icon: 'musical-notes-outline', href: '/songs', color: b.purple },
-        { label: tr.kahf, icon: 'headset-outline', href: '/kahf', color: b.greenSoft },
-      ],
-    },
-    {
-      title: tr.sec_community,
-      tiles: [
-        { label: tr.community, icon: 'people-outline', href: '/community', color: b.brownSoft },
-        { label: tr.sources_title, icon: 'library-outline', href: '/sources', color: b.inkMuted },
-      ],
-    },
-  ];
+  // Pratique tijanie du jour (clé `tijani-done` : `${jour}-${id}` → étapes cochées)
+  const practice = PRACTICES.filter((p) => p.id !== 'hailala' || now.getDay() === 5).map((p) => ({ p, done: (tijaniDone[`${today}-${p.id}`] ?? []).length, total: p.steps.length }));
 
-  const knowledge: Tile[] = [
-    { label: 'Mes zikrs', sub: 'Composer · abjad · pratique', icon: 'albums', href: '/zikrs', color: '#7A4F9E' },
-    { label: 'Noms d’Allah', sub: 'Les 99 Noms · abjad', icon: 'sparkles', href: '/names', color: '#B07D1A' },
-    { label: "Qur'an", sub: '114 sourates', icon: 'book', href: '/quran', color: '#2E8B57' },
-    { label: 'Hadiths', sub: 'Collection choisie', icon: 'library', href: '/hadiths', color: '#7C4DDB' },
-    { label: "Du'as", sub: 'Prophétiques · 96 invocations', icon: 'hand-left', href: '/duas', color: '#2F7FD0' },
-    { label: 'Fiqh', sub: 'Maliki & Shafi‘i', icon: 'scale', href: '/fiqh', color: '#A0522D' },
-    { label: 'Abjad', sub: 'Mashriqi & Maghribi', icon: 'calculator', href: '/abjad', color: '#8A5A2B' },
-  ];
+  // Reprendre
+  const lastZikr = [...zikrs].filter((z) => z.items.length).sort((a, c) => (a.updatedAt < c.updatedAt ? 1 : -1))[0];
+  const surah = quranLast ? SURAHS.find((x) => x[0] === quranLast.n) : undefined;
+  const currentDhikr = content.find((c) => c.id === tasbih.dhikrId);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: b.cream }}>
-      <ScrollContainer>
-        {/* En-tête brun à motif */}
-        <PatternBg color={b.brown} style={{ paddingTop: insets.top + 14, paddingHorizontal: 20, paddingBottom: 34 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="moon" size={20} color={b.gold} />
+  const go = (h: Href) => () => {
+    tapHaptic('select');
+    router.push(h);
+  };
+
+  const hero = (
+    <FadeIn>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${tr.next_prayer} : ${tr[next.key]} ${hhmm(next.time)}, ${tr.in} ${countdown(next.time.getTime() - now.getTime())}`}
+        onPress={go('/prayers')}
+        style={({ pressed }) => ({ backgroundColor: b.hero, borderRadius: 24, overflow: 'hidden', transform: [{ scale: pressed ? 0.99 : 1 }] })}
+      >
+        <View style={{ padding: 18, paddingBottom: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: b.gold, fontSize: 11, fontWeight: '800', letterSpacing: 1.4 }}>{tr.next_prayer.toUpperCase()}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 2 }}>
+                <Text style={{ color: b.heroText, fontSize: 30, fontWeight: '800', letterSpacing: -0.5 }}>{tr[next.key]}</Text>
+                <Arabic size={22} style={{ color: b.gold, textAlign: 'left', lineHeight: 34 }}>
+                  {AR_NAMES[next.key]}
+                </Arabic>
               </View>
-              <View>
-                <Text style={{ color: '#FFF7EA', fontSize: 26, fontWeight: '900' }}>Zikru</Text>
-                <Text style={{ color: '#E9D9C3', fontSize: 13 }}>
-                  {todayCount.toLocaleString('fr-CH')} dhikr aujourd’hui · {tasbih.total.toLocaleString('fr-CH')} au total
+              <Text style={{ color: b.heroMuted, fontSize: 14 }}>
+                <Ionicons name="location-outline" size={13} color={b.heroMuted} /> {s.place.label}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
+              <View style={{ backgroundColor: alpha(b.gold, 0.18), borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
+                <Text style={{ color: b.gold, fontWeight: '800', fontSize: 13 }}>
+                  {tr.in} {countdown(next.time.getTime() - now.getTime())}
                 </Text>
               </View>
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel={tr.tab_settings} onPress={() => router.push('/settings')} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="settings-outline" size={22} color="#FFF7EA" />
-            </Pressable>
           </View>
-          <Text style={{ color: '#F3E6D2', marginTop: 12, fontSize: 13 }}>
-            {greg} · <Text style={{ color: b.gold }}>{formatHijri(now, s.lang, s.hijriOffset)}</Text>
-          </Text>
-          <View style={{ marginTop: 8, alignSelf: 'flex-start' }}>
-            <BleStatusChip />
-          </View>
-        </PatternBg>
+        </View>
+        <View style={{ paddingHorizontal: 12 }}>
+          <SkyArc list={list} now={now} names={names} />
+        </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 14 }}>
+          {FARD.map((k) => {
+            const done = prayedToday.includes(k);
+            const isNext = next.key === k;
+            return (
+              <View key={k} style={{ alignItems: 'center', gap: 4, minWidth: 48 }} accessibilityLabel={`${tr[k]} ${done ? '✓' : ''}`}>
+                <View
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: done ? b.gold : 'transparent',
+                    borderWidth: 1.5,
+                    borderColor: done ? b.gold : isNext ? b.gold : alpha('#FFFFFF', 0.35),
+                  }}
+                >
+                  {done ? <Ionicons name="checkmark" size={15} color={b.greenDeep} /> : null}
+                </View>
+                <Text style={{ color: isNext ? b.gold : b.heroMuted, fontSize: 12, fontWeight: isNext ? '800' : '600' }}>{tr[k]}</Text>
+              </View>
+            );
+          })}
+        </View>
+      </Pressable>
+    </FadeIn>
+  );
 
-        <View style={{ marginTop: -20, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: b.cream, padding: 16, paddingTop: 18 }}>
-          {/* Prochaine prière */}
+  const practiceCard = (
+    <FadeIn delay={60}>
+      <SectionHeader title={tr.today_practice} action={tr.see_all} onAction={go('/tijani')} />
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        {practice.map(({ p, done, total }) => (
+          <Pressable
+            key={p.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${p.name} : ${done} / ${total}`}
+            onPress={go(`/tijani?tab=${p.id}`)}
+            style={({ pressed }) => ({ flex: 1, backgroundColor: b.paper, borderRadius: 18, borderWidth: 1, borderColor: b.line, padding: 12, alignItems: 'center', gap: 6, opacity: pressed ? 0.9 : 1 })}
+          >
+            <ProgressRing size={58} progress={total ? done / total : 0} color={p.id === 'wazifa' ? b.wazifa : p.id === 'hailala' ? b.hailala : b.green}>
+              <Text style={{ color: b.ink, fontWeight: '800', fontSize: 14 }}>
+                {done}/{total}
+              </Text>
+            </ProgressRing>
+            <Text style={{ color: b.ink, fontWeight: '700', fontSize: 14 }} numberOfLines={1}>
+              {p.name}
+            </Text>
+          </Pressable>
+        ))}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${tr.streak} : ${st} ${tr.days}. ${dhikrToday} dhikr`}
+          onPress={go('/journey')}
+          style={({ pressed }) => ({ flex: 1, backgroundColor: b.goldSoft, borderRadius: 18, padding: 12, alignItems: 'center', justifyContent: 'center', gap: 2, opacity: pressed ? 0.9 : 1 })}
+        >
+          <Ionicons name="flame" size={24} color={b.goldDeep} />
+          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 22 }}>{st}</Text>
+          <Text style={{ color: b.inkMuted, fontSize: 12, textAlign: 'center' }}>
+            {tr.streak} · {tr.days}
+          </Text>
+        </Pressable>
+      </View>
+    </FadeIn>
+  );
+
+  const resume: { icon: IconName; title: string; sub: string; href: Href; color: string }[] = [];
+  if (lastZikr) resume.push({ icon: 'albums', title: lastZikr.name, sub: `${tr.my_zikrs} · ${totalReps(lastZikr.items)} rép.`, href: { pathname: '/zikrs/practice', params: { id: lastZikr.id } }, color: b.violet });
+  if (surah) resume.push({ icon: 'book', title: `${surah[2]} · v. ${quranLast!.ayah}`, sub: `${tr.last_read} · Qur’an`, href: `/quran/${surah[0]}`, color: b.green });
+  resume.push({ icon: 'radio-button-on', title: currentDhikr?.transliteration ?? tr.tasbih_title, sub: `${tr.tasbih_title} · ${tasbih.count}${tasbih.target ? ` / ${tasbih.target}` : ''} · ${dhikrToday} aujourd’hui`, href: '/tasbih', color: b.teal });
+
+  const resumeCard = (
+    <FadeIn delay={100}>
+      <SectionHeader title={tr.continue_where} />
+      <LCard style={{ paddingVertical: 6 }}>
+        {resume.map((r, i) => (
+          <Pressable
+            key={r.title + i}
+            accessibilityRole="button"
+            accessibilityLabel={`${r.title}. ${r.sub}`}
+            onPress={go(r.href)}
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, borderTopWidth: i ? 1 : 0, borderTopColor: b.line, opacity: pressed ? 0.7 : 1 })}
+          >
+            <IconBadge icon={r.icon} color={r.color} size={38} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
+                {r.title}
+              </Text>
+              <LMuted numberOfLines={1}>{r.sub}</LMuted>
+            </View>
+            <Ionicons name="play-circle" size={28} color={r.color} />
+          </Pressable>
+        ))}
+      </LCard>
+    </FadeIn>
+  );
+
+  const myZikrs = [...zikrs].sort((a, c) => (a.updatedAt < c.updatedAt ? 1 : -1)).slice(0, 6);
+  const zikrsCard = (
+    <FadeIn delay={140}>
+      <SectionHeader title={tr.my_zikrs} action={zikrs.length ? tr.see_all : undefined} onAction={go('/zikrs')} />
+      {myZikrs.length ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 4 }}>
+          {myZikrs.map((z) => (
+            <Pressable
+              key={z.id}
+              accessibilityRole="button"
+              accessibilityLabel={`${z.name}, ${z.items.length} formules`}
+              onPress={go(z.items.length ? { pathname: '/zikrs/practice', params: { id: z.id } } : { pathname: '/zikrs/edit', params: { id: z.id } })}
+              style={({ pressed }) => ({ width: 168, backgroundColor: b.paper, borderRadius: 18, borderWidth: 1, borderColor: b.line, padding: 14, gap: 8, opacity: pressed ? 0.9 : 1 })}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <IconBadge icon="albums" color={b.violet} size={34} />
+                <Ionicons name="play" size={18} color={b.green} />
+              </View>
+              <Text style={{ color: b.ink, fontWeight: '700' }} numberOfLines={2}>
+                {z.name}
+              </Text>
+              <LMuted>
+                {z.items.length} formule{z.items.length > 1 ? 's' : ''} · {totalReps(z.items)} rép.
+              </LMuted>
+            </Pressable>
+          ))}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${tr.next_prayer} ${tr[next.key]} ${hhmm(next.time)}`}
-            onPress={() => router.push('/prayers')}
-            style={({ pressed }) => ({ backgroundColor: b.gold, borderRadius: 18, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? 0.9 : 1, marginBottom: 12 })}
+            accessibilityLabel="Composer un zikr"
+            onPress={go('/zikrs/edit')}
+            style={({ pressed }) => ({ width: 120, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: b.line, alignItems: 'center', justifyContent: 'center', gap: 6, opacity: pressed ? 0.8 : 1 })}
           >
-            <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(74,46,25,0.12)', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="time" size={24} color={b.brownDark} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: b.brownDark, fontSize: 12, fontWeight: '800', letterSpacing: 1 }}>{tr.next_prayer.toUpperCase()}</Text>
-              <Text style={{ color: b.ink, fontSize: 24, fontWeight: '900' }}>
-                {tr[next.key]} {hhmm(next.time)}
-              </Text>
-              <Text style={{ color: b.brownDark }}>
-                {tr.in} {countdown(next.time.getTime() - now.getTime())} · {s.place.label}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color={b.brownDark} />
+            <Ionicons name="add-circle" size={30} color={b.green} />
+            <Text style={{ color: b.green, fontWeight: '700' }}>Composer</Text>
           </Pressable>
-
-          {/* Météo */}
-          <LCard label={tr.weather}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: '#EAF3FB', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name={(wm?.icon?.replace('-outline', '') ?? 'cloud') as IconName} size={30} color={weather?.isDay === false ? '#5B6BB5' : '#E8A317'} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: b.ink, fontSize: 28, fontWeight: '800' }}>{weather ? `${temp(weather.temp)}°${unit}` : wErr ? '—' : '…'}</Text>
-                <LMuted>
-                  {weather
-                    ? `${wm?.label} · ${weather.city ?? s.place.label}${weather.feels != null ? ` · ressenti ${temp(weather.feels)}°` : ''}`
-                    : wErr
-                      ? 'Météo indisponible hors ligne'
-                      : 'Chargement…'}
-                </LMuted>
-              </View>
-              <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                <View style={{ flexDirection: 'row', borderRadius: 10, borderWidth: 1, borderColor: b.line, overflow: 'hidden' }}>
-                  {(['C', 'F'] as const).map((u) => (
-                    <Pressable key={u} accessibilityRole="button" accessibilityLabel={`°${u}`} onPress={() => setUnit(u)} style={{ paddingHorizontal: 10, paddingVertical: 5, backgroundColor: unit === u ? b.brown : b.paper }}>
-                      <Text style={{ color: unit === u ? '#fff' : b.ink, fontWeight: '700', fontSize: 12 }}>°{u}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-                {weather && weather.max != null && weather.min != null ? (
-                  <Text style={{ color: b.inkMuted, fontSize: 13 }}>
-                    <Text style={{ color: '#D9534F' }}>↑{temp(weather.max)}°</Text> <Text style={{ color: '#2F7FD0' }}>↓{temp(weather.min)}°</Text>
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-            {s.place.source === 'example' ? <LMuted style={{ marginTop: 6 }}>Lieu par défaut : {s.place.label}. Activez la localisation dans les réglages.</LMuted> : null}
-          </LCard>
-
-          {/* Réflexion — Bilal */}
-          <View style={{ backgroundColor: b.purple, borderRadius: 18, padding: 16, marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>{PERIODS[period].title}</Text>
-                <Text style={{ color: '#C9C3F5', fontSize: 12, marginTop: 2 }}>Un mot de Bilal · El Ghaly Bilal</Text>
-              </View>
-              <Pressable accessibilityRole="button" accessibilityLabel="Nouvelle réflexion" onPress={() => void refresh(true)} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                {aiBusy ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="refresh" size={20} color="#fff" />}
-              </Pressable>
-            </View>
-            <Text style={{ color: '#F1EEFF', fontSize: 15, lineHeight: 23, marginTop: 10 }}>{reflection}</Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push('/bilal')}
-              style={{ marginTop: 12, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="chatbubbles" size={18} color={b.gold} />
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Parler avec Bilal</Text>
-              </View>
-              <Text style={{ color: b.gold, fontWeight: '800' }}>Discuter →</Text>
-            </Pressable>
+        </ScrollView>
+      ) : (
+        <LCard onPress={go('/zikrs/edit')} label="Composer mon premier zikr" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <IconBadge icon="add" color={b.green} size={44} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15 }}>Composez votre premier zikr</Text>
+            <LMuted>Assemblez Noms d’Allah, du‘as, versets et salawat, avec le calcul abjad.</LMuted>
           </View>
+          <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+        </LCard>
+      )}
+    </FadeIn>
+  );
 
-          {kahfTime ? (
-            <LCard onPress={() => router.push('/kahf')} label={tr.kahf} style={{ borderColor: b.teal }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Ionicons name="book" size={22} color={b.teal} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: b.ink, fontWeight: '800' }}>Jumu‘a mubaraka</Text>
-                  <LMuted>Pensez à la sourate al-Kahf et à multiplier les salawat.</LMuted>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
-              </View>
-            </LCard>
-          ) : null}
+  const dailyCards = (
+    <FadeIn delay={180}>
+      <SectionHeader title={tr.verse_of_day} />
+      <LCard onPress={go(`/quran/${verse.surah}`)} label={`${tr.verse_of_day} : ${verse.title}, ${verse.ref}`}>
+        <Arabic size={24} quran style={{ color: b.ink }}>
+          {verse.ar}
+        </Arabic>
+        <Text style={{ color: b.ink, fontSize: 15, lineHeight: 22, marginTop: 6 }}>{verse.fr}</Text>
+        <Text style={{ color: b.goldDeep, fontWeight: '700', fontSize: 12, marginTop: 8 }}>
+          {verse.title} · {verse.ref} · trad. Hamidullah
+        </Text>
+      </LCard>
+      <SectionHeader title={tr.dua_of_day} action={tr.see_all} onAction={go('/duas')} />
+      <LCard onPress={go({ pathname: '/duas', params: { q: dua.title } })} label={`${tr.dua_of_day} : ${dua.title}`}>
+        <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15, marginBottom: 4 }}>{dua.title}</Text>
+        <Arabic size={21} numberOfLines={3}>
+          {dua.ar}
+        </Arabic>
+        <LMuted style={{ marginTop: 4 }} numberOfLines={3}>
+          {dua.fr}
+        </LMuted>
+        <Text style={{ color: b.goldDeep, fontWeight: '700', fontSize: 12, marginTop: 8 }}>{dua.ref}</Text>
+      </LCard>
+    </FadeIn>
+  );
 
-          {/* Plateforme de progression */}
-          <SectionLabel color={b.green}>{tr.sec_growth}</SectionLabel>
-          <GrowthRow icon="trending-up" title="Mon parcours spirituel" sub={`${lvl.name} (${lvl.fr}) · ${tasbih.total.toLocaleString('fr-CH')} dhikr · série ${st} j`} badge={`NIV ${lvl.index}`} onPress={() => router.push('/journey')} />
-          <GrowthRow icon="flower" title="Jardin des habitudes" sub={g.habits.length ? `${habitsToday}/${g.habits.length} aujourd’hui · séries & petites habitudes` : 'Habitudes islamiques · séries · méthode des petites habitudes'} onPress={() => router.push('/habits')} />
-          <GrowthRow icon="sparkles" title="El Ghaly Bilal" sub="Coach comportemental islamique" badge="NOUVEAU" badgeColor={b.gold} onPress={() => router.push('/bilal')} />
-          <GrowthRow icon="calendar" title="Planificateur du jour" sub={tasksToday.length ? `${tasksToday.filter((x) => x.done).length}/${tasksToday.length} tâches · entre les prières` : 'Productivité ancrée sur les prières · organiser sa vie entre les salat'} color={b.purpleDeep} onPress={() => router.push('/planner')} />
+  const cols = width >= 1200 ? 8 : tablet ? 4 : 4;
+  const explore: { icon: IconName; label: string; href: Href; color: string }[] = [
+    { icon: 'book', label: 'Qur’an', href: '/quran', color: b.green },
+    { icon: 'hand-left', label: 'Du‘as', href: '/duas', color: b.blue },
+    { icon: 'sparkles', label: '99 Noms', href: '/names', color: b.goldDeep },
+    { icon: 'compass', label: tr.tab_qibla, href: '/qibla', color: b.teal },
+    { icon: 'leaf', label: 'Tijaniyya', href: '/tijani', color: b.wirdGreen },
+    { icon: 'calculator', label: 'Abjad', href: '/abjad', color: b.rust },
+    { icon: 'people', label: tr.community, href: '/community', color: b.violet },
+    { icon: 'grid', label: tr.tab_more, href: '/more', color: b.inkMuted },
+  ];
+  const exploreCard = (
+    <FadeIn delay={220}>
+      <SectionHeader title={tr.explore} />
+      <Grid cols={cols} gap={8}>
+        {explore.map((x) => (
+          <Pressable
+            key={x.label}
+            accessibilityRole="button"
+            accessibilityLabel={x.label}
+            onPress={go(x.href)}
+            style={({ pressed }) => ({ alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 16, backgroundColor: pressed ? alpha(x.color, 0.08) : 'transparent' })}
+          >
+            <IconBadge icon={x.icon} color={x.color} size={50} />
+            <Text style={{ color: b.ink, fontSize: 12, fontWeight: '600', textAlign: 'center' }} numberOfLines={1}>
+              {x.label}
+            </Text>
+          </Pressable>
+        ))}
+      </Grid>
+    </FadeIn>
+  );
 
-          {/* Savoir : 4 tuiles colorées */}
-          <SectionLabel color={b.goldDeep}>{tr.sec_knowledge}</SectionLabel>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {knowledge.map((x) => (
-              <Pressable
-                key={x.label}
-                accessibilityRole="button"
-                accessibilityLabel={x.label}
-                onPress={() => router.push(x.href)}
-                style={({ pressed }) => ({ width: '47%', flexGrow: 1, minHeight: 112, borderRadius: 18, backgroundColor: x.color, padding: 14, justifyContent: 'space-between', opacity: pressed ? 0.88 : 1 })}
-              >
-                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name={x.icon} size={22} color="#fff" />
-                </View>
-                <View>
-                  <Text style={{ color: '#fff', fontWeight: '800', fontSize: 17 }}>{x.label}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>{x.sub}</Text>
-                </View>
-              </Pressable>
-            ))}
+  const extras = (
+    <FadeIn delay={260}>
+      {kahfTime ? (
+        <LCard onPress={go('/kahf')} label={tr.kahf} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: b.greenTint, borderColor: b.greenTint, marginTop: 12 }}>
+          <IconBadge icon="book" color={b.green} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: b.ink, fontWeight: '800' }}>Jumu‘a mubaraka</Text>
+            <LMuted>Pensez à la sourate al-Kahf et à multiplier les salawat.</LMuted>
           </View>
-
-          {more.map((sec) => (
-            <View key={sec.title}>
-              <SectionLabel>{sec.title}</SectionLabel>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                {sec.tiles.map((x) => (
-                  <Pressable
-                    key={x.label}
-                    accessibilityRole="button"
-                    accessibilityLabel={x.label}
-                    onPress={() => router.push(x.href)}
-                    style={({ pressed }) => ({ width: '31%', flexGrow: 1, minHeight: 88, borderRadius: 16, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line, padding: 12, justifyContent: 'space-between', opacity: pressed ? 0.85 : 1 })}
-                  >
-                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: (x.color ?? b.green) + '1F', alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name={x.icon} size={20} color={x.color ?? b.green} />
-                    </View>
-                    <Text style={{ color: b.ink, fontWeight: '700', fontSize: 14, marginTop: 8 }} numberOfLines={2}>
-                      {x.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          ))}
-          <View style={{ height: 24 + insets.bottom }} />
+          <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+        </LCard>
+      ) : null}
+      <SectionHeader title={PERIODS[period].title} action="Parler avec Bilal" onAction={go('/bilal')} />
+      <LCard>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <IconBadge icon="sparkles" color={b.purple} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: b.ink, fontSize: 15, lineHeight: 23 }}>{reflection}</Text>
+            <LMuted style={{ marginTop: 6 }}>Un mot de Bilal · {tr.reflection}</LMuted>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel="Nouvelle réflexion" onPress={() => void refresh(true)} hitSlop={8} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+            {aiBusy ? <ActivityIndicator color={b.inkMuted} size="small" /> : <Ionicons name="refresh" size={20} color={b.inkMuted} />}
+          </Pressable>
         </View>
-      </ScrollContainer>
+      </LCard>
+      <LCard style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }} label={tr.weather}>
+        <IconBadge icon={((wm?.icon?.replace('-outline', '') ?? 'cloud') as IconName)} color={weather?.isDay === false ? b.indigo : b.wazifa} />
+        <View style={{ flex: 1 }}>
+          {weather ? (
+            <>
+              <Text style={{ color: b.ink, fontWeight: '800', fontSize: 18 }}>
+                {temp(weather.temp)}°{unit} <Text style={{ color: b.inkMuted, fontWeight: '500', fontSize: 14 }}>· {wm?.label}</Text>
+              </Text>
+              <LMuted>
+                {weather.city ?? s.place.label}
+                {weather.max != null && weather.min != null ? ` · ↑${temp(weather.max)}° ↓${temp(weather.min)}°` : ''}
+              </LMuted>
+            </>
+          ) : wErr ? (
+            <LMuted>Météo indisponible hors ligne</LMuted>
+          ) : (
+            <View style={{ gap: 6 }}>
+              <Skeleton w={120} h={16} />
+              <Skeleton w={180} h={12} />
+            </View>
+          )}
+        </View>
+      </LCard>
+      {s.place.source === 'example' ? (
+        <LCard onPress={go('/settings')} label="Régler mon lieu" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: b.goldSoft, borderColor: b.goldSoft }}>
+          <IconBadge icon="location" color={b.goldDeep} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: b.ink, fontWeight: '800' }}>{tr.example_location}</Text>
+            <LMuted>Pour des horaires et une qibla exacts.</LMuted>
+          </View>
+        </LCard>
+      ) : null}
+    </FadeIn>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: b.cream }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 40 + insets.bottom }}>
+        <Container max={tablet ? 1180 : 720} style={{ paddingHorizontal: tablet ? 28 : 16 }}>
+          {/* Barre du haut */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: b.inkMuted, fontSize: 13, fontWeight: '600' }} numberOfLines={1}>
+                {greg} · {hijri}
+              </Text>
+              <Text accessibilityRole="header" style={{ color: b.ink, fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }}>
+                {greet} <Text style={{ color: b.goldDeep }}>·</Text> <Text style={{ fontFamily: 'Amiri_400Regular', fontWeight: '400', color: b.green }}>السلام عليكم</Text>
+              </Text>
+            </View>
+            <RoundBtn icon="search" label={tr.search} onPress={go('/search')} />
+            <RoundBtn icon="settings-outline" label={tr.settings_title} onPress={go('/settings')} />
+          </View>
+          <View style={{ marginBottom: 12, flexDirection: 'row' }}>
+            <BleStatusChip />
+          </View>
+          {tablet ? (
+            <View style={{ flexDirection: 'row', gap: 24, alignItems: 'flex-start' }}>
+              <View style={{ flex: 1.1 }}>
+                {hero}
+                {practiceCard}
+                {resumeCard}
+                {extras}
+              </View>
+              <View style={{ flex: 1 }}>
+                {exploreCard}
+                {zikrsCard}
+                {dailyCards}
+              </View>
+            </View>
+          ) : (
+            <>
+              {hero}
+              {practiceCard}
+              {resumeCard}
+              {zikrsCard}
+              {exploreCard}
+              {dailyCards}
+              {extras}
+            </>
+          )}
+        </Container>
+      </ScrollView>
     </View>
   );
 }
 
-function ScrollContainer({ children }: { children: ReactNode }) {
-  return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-      {children}
-    </ScrollView>
-  );
-}
-
-function GrowthRow({ icon, title, sub, badge, badgeColor, color = b.green, onPress }: { icon: IconName; title: string; sub: string; badge?: string; badgeColor?: string; color?: string; onPress: () => void }) {
+function RoundBtn({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }): ReactNode {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => ({ backgroundColor: color, borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, opacity: pressed ? 0.9 : 1 })}
+      style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.7 : 1 })}
     >
-      <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name={icon} size={22} color={b.gold} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800', flexShrink: 1 }}>{title}</Text>
-          {badge ? (
-            <View style={{ backgroundColor: badgeColor ?? 'rgba(255,255,255,0.18)', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2 }}>
-              <Text style={{ color: badgeColor ? b.ink : '#fff', fontSize: 10, fontWeight: '900' }}>{badge}</Text>
-            </View>
-          ) : null}
-        </View>
-        <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12, marginTop: 2 }}>{sub}</Text>
-      </View>
-      <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name="arrow-forward" size={16} color="#fff" />
-      </View>
+      <Ionicons name={icon} size={20} color={b.ink} />
     </Pressable>
   );
 }

@@ -30,8 +30,8 @@ export default function Tijani() {
     <Screen padded={false} bg={b.cream}>
       <PatternBg color={b.green} style={{ padding: 20, paddingBottom: 24, alignItems: 'center' }}>
         <Text style={{ color: b.gold, fontSize: 30, writingDirection: 'rtl' }}>الطريقة التجانية</Text>
-        <Text style={{ color: '#FFF7EA', fontSize: 24, fontWeight: '900', marginTop: 2 }}>Programme Tijaniyya</Text>
-        <Text style={{ color: '#CFE3D6', marginTop: 2 }}>Wird · Wazifa · Hailala</Text>
+        <Text style={{ color: b.heroText, fontSize: 24, fontWeight: '900', marginTop: 2 }}>Programme Tijaniyya</Text>
+        <Text style={{ color: b.heroMuted, marginTop: 2 }}>Wird · Wazifa · Hailala</Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
         <ShaykhCard />
@@ -61,7 +61,7 @@ export default function Tijani() {
         ) : null}
         {tab === 'path' ? <PathTab /> : null}
         {tab === 'adilla' ? <AdillaTab /> : null}
-        <LCard style={{ backgroundColor: '#EEF4FB', borderColor: '#CFE0F2' }}>
+        <LCard style={{ backgroundColor: b.blueSoft, borderColor: b.blueSoft }}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Ionicons name="person-circle-outline" size={22} color={b.blue} />
             <View style={{ flex: 1 }}>
@@ -87,7 +87,7 @@ function ShaykhCard() {
           <Text style={{ color: b.gold, fontSize: 18, writingDirection: 'rtl', textAlign: 'left' }}>{SHAYKH.ar}</Text>
           <Text style={{ color: '#fff', fontWeight: '800' }}>{SHAYKH.name}</Text>
         </View>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color="#CFE3D6" />
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={b.heroMuted} />
       </Pressable>
       {open ? (
         <View style={{ marginTop: 12, gap: 8 }}>
@@ -99,10 +99,10 @@ function ShaykhCard() {
           ].map(([ic, txt]) => (
             <View key={txt} style={{ flexDirection: 'row', gap: 10 }}>
               <Ionicons name={ic as IconName} size={16} color={b.gold} style={{ marginTop: 2 }} />
-              <Text style={{ color: '#E7F0EA', flex: 1, lineHeight: 20 }}>{txt}</Text>
+              <Text style={{ color: b.heroText, flex: 1, lineHeight: 20 }}>{txt}</Text>
             </View>
           ))}
-          <Text style={{ color: '#CFE3D6', fontStyle: 'italic', lineHeight: 21, marginTop: 4 }}>{SHAYKH.desc}</Text>
+          <Text style={{ color: b.heroMuted, fontStyle: 'italic', lineHeight: 21, marginTop: 4 }}>{SHAYKH.desc}</Text>
           {SHAYKH.pillars.map((x, i) => (
             <View key={x} style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
               <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: b.gold, alignItems: 'center', justifyContent: 'center' }}>
@@ -149,7 +149,7 @@ function DaySchedule() {
       <View onLayout={(e) => setW(Math.max(260, e.nativeEvent.layout.width))} style={{ marginTop: 8 }}>
         <Svg width={w} height={H}>
           {[0, 1, 2].map((r) => (
-            <Rect key={r} x={pad} y={44 + r * 14} width={w - pad * 2} height={10} rx={5} fill="#F1ECE2" />
+            <Rect key={r} x={pad} y={44 + r * 14} width={w - pad * 2} height={10} rx={5} fill={b.line} />
           ))}
           {windows.map((x, i) => (
             <Rect key={i} x={X(mins(x.from))} y={44 + x.row * 14} width={Math.max(4, X(mins(x.to)) - X(mins(x.from)))} height={10} rx={5} fill={x.color} opacity={x.op} />
@@ -161,7 +161,7 @@ function DaySchedule() {
             </SvgText>
           ))}
           {list.map((p, i) => (
-            <Circle key={p.key} cx={X(mins(p.time))} cy={axisY} r={4.5} fill={p.key === 'sunrise' ? '#E8A317' : b.brown} />
+            <Circle key={p.key} cx={X(mins(p.time))} cy={axisY} r={4.5} fill={p.key === 'sunrise' ? b.goldDeep : b.brown} />
           ))}
           {list.map((p, i) => (
             <SvgText key={p.key + 't'} x={X(mins(p.time))} y={i % 2 ? 26 : 12} fontSize={10} fontWeight="700" fill={b.ink} textAnchor="middle">
@@ -222,12 +222,12 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
         ].map(([l, v], i) => (
           <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 12, borderLeftWidth: i ? 1 : 0, borderLeftColor: 'rgba(255,255,255,0.15)' }}>
             <Text style={{ color: b.gold, fontSize: 22, fontWeight: '900' }}>{v}</Text>
-            <Text style={{ color: '#CFE3D6', fontSize: 12 }}>{l}</Text>
+            <Text style={{ color: b.heroMuted, fontSize: 12 }}>{l}</Text>
           </View>
         ))}
       </View>
       <View style={{ padding: 16 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFF6DD', borderRadius: 12, padding: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: b.goldSoft, borderRadius: 12, padding: 10 }}>
           <Ionicons name="time-outline" size={18} color={b.goldDeep} />
           <Text style={{ color: b.ink, fontWeight: '700', flex: 1 }}>{p.timing}</Text>
           <Text style={{ color: b.brownSoft, writingDirection: 'rtl' }}>{p.timingAr}</Text>
@@ -239,7 +239,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
             const isOn = checked.includes(i);
             const isOpen = open === i;
             return (
-              <View key={i} style={{ borderRadius: 14, borderWidth: 1, borderColor: isOn ? b.wirdGreen : b.line, backgroundColor: isOn ? '#EEF6F0' : b.paper }}>
+              <View key={i} style={{ borderRadius: 14, borderWidth: 1, borderColor: isOn ? b.wirdGreen : b.line, backgroundColor: isOn ? b.greenTint : b.paper }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 10 }}>
                   <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isOn }} accessibilityLabel={`${f.title} — ${isOn ? 'fait' : 'marquer comme fait'}`} onPress={() => toggle(i)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                     {isOn ? (

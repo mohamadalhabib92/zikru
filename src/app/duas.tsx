@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
@@ -88,7 +88,8 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
 export default function Duas() {
   const router = useRouter();
   const { tasbih, setTasbih, saveSession } = useData();
-  const [q, setQ] = useState('');
+  const qp = useLocalSearchParams<{ q?: string }>();
+  const [q, setQ] = useState(typeof qp.q === 'string' ? qp.q : '');
   const [cat, setCat] = useState<string | null>(null);
   const [favs, setFavs] = usePersistentState<string[]>('duas_favs', []);
   const [copied, setCopied] = useState<string | null>(null);

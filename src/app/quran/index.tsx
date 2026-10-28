@@ -50,7 +50,7 @@ export default function QuranList() {
             accessibilityRole="button"
             accessibilityLabel={`Sourate ${s[0]}, ${s[2]}`}
             onPress={() => router.push(`/quran/${s[0]}`)}
-            style={({ pressed }) => ({ marginHorizontal: 16, marginTop: 8, backgroundColor: pressed ? '#F3EEE4' : b.paper, borderRadius: 14, borderWidth: 1, borderColor: b.line, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 })}
+            style={({ pressed }) => ({ marginHorizontal: 16, marginTop: 8, backgroundColor: pressed ? b.cream : b.paper, borderRadius: 14, borderWidth: 1, borderColor: b.line, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 })}
           >
             <View style={{ width: 38, height: 38, borderRadius: 10, transform: [{ rotate: '45deg' }], borderWidth: 2, borderColor: GREEN, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: GREEN, fontWeight: '900', transform: [{ rotate: '-45deg' }] }}>{s[0]}</Text>

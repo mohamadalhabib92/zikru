@@ -3,15 +3,15 @@
     "name": "Zikru",
     "slug": "zikru",
     "scheme": "zikru",
-    "version": "1.0.18",
+    "version": "1.0.19",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "description": "Zikru — prière, qibla, tasbih et dhikr, hors-ligne.",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0E1A17"
+      "backgroundColor": "#0F3D30"
     },
     "ios": {
       "supportsTablet": true,
@@ -65,7 +65,7 @@
     "android": {
       "package": "ch.mohamadba.zikru",
       "adaptiveIcon": {
-        "backgroundColor": "#0E1A17",
+        "backgroundColor": "#0F3D30",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -88,8 +88,8 @@
       "bundler": "metro",
       "name": "Zikru",
       "shortName": "Zikru",
-      "themeColor": "#0E1A17",
-      "backgroundColor": "#0E1A17",
+      "themeColor": "#0F3D30",
+      "backgroundColor": "#0F3D30",
       "lang": "fr"
     },
     "plugins": [

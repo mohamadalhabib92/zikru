@@ -9,8 +9,9 @@ import { formatHijri } from '@/lib/hijri';
 import { AR_NAMES, computeDay, countdown, hhmm, METHODS, withStates, type PrayerKey, type PrayerState } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { Button, Ionicons, Screen, Spacer } from '@/ui/kit';
-import { LCard, LMuted, LTitle } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { Arabic, LCard, LMuted, LTitle } from '@/ui/light';
+import { tapHaptic, useLayout } from '@/ui/ds';
+import { alpha, brand as b } from '@/ui/theme';
 
 const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
 const ICONS: Record<PrayerKey, string> = { fajr: 'partly-sunny', sunrise: 'sunny', dhuhr: 'sunny', asr: 'partly-sunny', maghrib: 'cloudy-night', isha: 'moon' };
@@ -19,6 +20,7 @@ export default function Prayers() {
   const { s, t: tr } = useSettings();
   const g = useGrowth();
   const router = useRouter();
+  const { tablet } = useLayout();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -44,27 +46,49 @@ export default function Prayers() {
 
   return (
     <Screen padded={false} bg={b.cream}>
-      <PatternBg color={b.brown} style={{ padding: 20, paddingBottom: 26 }}>
-        <Text style={{ color: '#E9D9C3', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 }}>{tr.next_prayer.toUpperCase()}</Text>
+      <PatternBg style={{ padding: 20, paddingBottom: 26 }}>
+        <Text style={{ color: b.gold, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 }}>{tr.next_prayer.toUpperCase()}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ color: '#FFF7EA', fontSize: 34, fontWeight: '900' }}>{tr[next.key]}</Text>
-            <Text style={{ color: b.gold, fontSize: 22 }}>{AR_NAMES[next.key]}</Text>
+            <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '800', letterSpacing: -0.5 }}>{tr[next.key]}</Text>
+            <Arabic size={24} style={{ color: b.gold, textAlign: 'left', lineHeight: 38 }}>
+              {AR_NAMES[next.key]}
+            </Arabic>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ color: '#FFF7EA', fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
-            <Text style={{ color: '#F3E6D2' }}>
+            <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
+            <Text style={{ color: b.gold, fontWeight: '700' }}>
               {tr.in} {countdown(next.time.getTime() - now.getTime())}
             </Text>
           </View>
         </View>
-        <Text style={{ color: '#E9D9C3', marginTop: 10, fontSize: 13 }}>
+        <Text style={{ color: b.heroMuted, marginTop: 10, fontSize: 13 }}>
           {greg} · <Text style={{ color: b.gold }}>{formatHijri(now, s.lang, s.hijriOffset)}</Text> · {s.place.label}
           {s.place.source === 'example' ? ' (exemple)' : ''}
         </Text>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+          {[
+            { icon: 'compass-outline' as const, label: tr.tab_qibla, href: '/qibla' as const },
+            { icon: 'location-outline' as const, label: tr.location, href: '/settings' as const },
+          ].map((x) => (
+            <Pressable
+              key={x.href}
+              accessibilityRole="button"
+              accessibilityLabel={x.label}
+              onPress={() => {
+                tapHaptic('select');
+                router.push(x.href);
+              }}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40, paddingHorizontal: 14, borderRadius: 20, backgroundColor: alpha('#FFFFFF', pressed ? 0.2 : 0.12) })}
+            >
+              <Ionicons name={x.icon} size={16} color={b.gold} />
+              <Text style={{ color: b.heroText, fontWeight: '700' }}>{x.label}</Text>
+            </Pressable>
+          ))}
+        </View>
       </PatternBg>
 
-      <View style={{ padding: 16 }}>
+      <View style={{ padding: 16, width: '100%', maxWidth: tablet ? 820 : undefined, alignSelf: 'center' }}>
         <SkyArc list={list} now={now} names={names} />
         <Spacer />
         {/* Grille de 6 horaires */}
@@ -73,9 +97,9 @@ export default function Prayers() {
             const hi = p.state === 'current' || p.state === 'next';
             return (
               <View key={p.key} style={{ width: '31%', flexGrow: 1, borderRadius: 14, padding: 10, alignItems: 'center', backgroundColor: hi ? b.gold : b.paper, borderWidth: 1, borderColor: hi ? b.goldDeep : b.line }}>
-                <Ionicons name={ICONS[p.key] as 'sunny'} size={18} color={hi ? b.brownDark : b.brownSoft} />
-                <Text style={{ color: b.ink, fontWeight: '800', marginTop: 4 }}>{tr[p.key]}</Text>
-                <Text style={{ color: b.ink, fontVariant: ['tabular-nums'] }}>{hhmm(p.time)}</Text>
+                <Ionicons name={ICONS[p.key] as 'sunny'} size={18} color={hi ? '#13261F' : b.goldDeep} />
+                <Text style={{ color: hi ? '#13261F' : b.ink, fontWeight: '800', marginTop: 4 }}>{tr[p.key]}</Text>
+                <Text style={{ color: hi ? '#13261F' : b.ink, fontVariant: ['tabular-nums'] }}>{hhmm(p.time)}</Text>
               </View>
             );
           })}
@@ -95,18 +119,21 @@ export default function Prayers() {
                 key={p.key}
                 accessible={isSun}
                 accessibilityLabel={`${tr[p.key]}, ${hhmm(p.time)}, ${stateLabel[p.state]}`}
-                style={{ flexDirection: 'row', alignItems: 'center', minHeight: 54, paddingHorizontal: 10, borderRadius: 12, marginTop: i ? 4 : 0, backgroundColor: isSun ? '#FFF4D6' : hi ? '#EEF6F0' : 'transparent' }}
+                style={{ flexDirection: 'row', alignItems: 'center', minHeight: 54, paddingHorizontal: 10, borderRadius: 12, marginTop: i ? 4 : 0, backgroundColor: isSun ? b.goldSoft : hi ? b.greenTint : 'transparent' }}
               >
                 {isSun ? (
                   <View style={{ width: 44, alignItems: 'center' }}>
-                    <Ionicons name="sunny" size={22} color="#E8A317" />
+                    <Ionicons name="sunny" size={22} color={b.goldDeep} />
                   </View>
                 ) : (
                   <Pressable
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: done }}
                     accessibilityLabel={`${tr[p.key]} ${hhmm(p.time)} — ${done ? 'priée' : 'marquer comme priée'}`}
-                    onPress={() => g.togglePrayed(p.key)}
+                    onPress={() => {
+                      tapHaptic(done ? 'light' : 'success');
+                      g.togglePrayed(p.key);
+                    }}
                     style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
                   >
                     <Ionicons name={done ? 'checkmark-circle' : 'ellipse-outline'} size={26} color={done ? b.wirdGreen : b.inkMuted} />
@@ -116,7 +143,9 @@ export default function Prayers() {
                   <Text style={{ color: b.ink, fontSize: 16, fontWeight: hi ? '800' : '600' }}>{tr[p.key]}</Text>
                   {p.state === 'current' ? <Text style={{ color: b.wirdGreen, fontSize: 12, fontWeight: '700' }}>{tr.current}</Text> : p.state === 'next' ? <Text style={{ color: b.goldDeep, fontSize: 12, fontWeight: '700' }}>{tr.next_prayer}</Text> : null}
                 </View>
-                <Text style={{ color: b.brownSoft, fontSize: 18, marginRight: 12 }}>{AR_NAMES[p.key]}</Text>
+                <Arabic size={18} style={{ color: b.goldDeep, marginRight: 12, lineHeight: 30 }}>
+                  {AR_NAMES[p.key]}
+                </Arabic>
                 <Text style={{ color: b.ink, fontSize: 17, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{hhmm(p.time)}</Text>
               </View>
             );

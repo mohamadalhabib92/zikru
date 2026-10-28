@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { AbjadBadge, AddToZikrSheet, nameItem, type DraftItem } from '@/components/zikr/parts';
@@ -19,7 +20,8 @@ const norm = (s: string) =>
 
 export default function Names() {
   const { prefs, setPrefs, opts, repSys } = useZikrs();
-  const [q, setQ] = useState('');
+  const qp = useLocalSearchParams<{ q?: string }>();
+  const [q, setQ] = useState(typeof qp.q === 'string' ? qp.q : '');
   const [draft, setDraft] = useState<DraftItem | null>(null);
   const list = useMemo(() => {
     const nq = norm(q.trim());

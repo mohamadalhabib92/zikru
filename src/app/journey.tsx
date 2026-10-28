@@ -4,7 +4,7 @@ import { useData } from '@/lib/data';
 import { bestStreak, dayKey, LEVELS, levelFor, streak, useGrowth } from '@/lib/growth';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LTitle, SectionLabel } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { alpha, brand as b } from '@/ui/theme';
 
 export default function Journey() {
   const { tasbih } = useData();
@@ -84,7 +84,7 @@ export default function Journey() {
           <LTitle>30 derniers jours</LTitle>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
             {month.map((x) => (
-              <View key={x.d.toISOString()} accessibilityLabel={`${x.d.toLocaleDateString('fr-CH')} : ${x.v} dhikr`} style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: x.v === 0 ? b.line : x.v < 100 ? '#A7D3B5' : x.v < 500 ? '#5FA77B' : b.green }} />
+              <View key={x.d.toISOString()} accessibilityLabel={`${x.d.toLocaleDateString('fr-CH')} : ${x.v} dhikr`} style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: x.v === 0 ? b.line : x.v < 100 ? alpha(b.green, 0.35) : x.v < 500 ? alpha(b.green, 0.65) : b.green }} />
             ))}
           </View>
           <LMuted style={{ marginTop: 8 }}>
@@ -95,7 +95,7 @@ export default function Journey() {
         <SectionLabel color={b.brown}>JALONS</SectionLabel>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
           {milestones.map((m) => (
-            <View key={m.title} style={{ width: '31%', flexGrow: 1, backgroundColor: m.ok ? '#FFF6DD' : b.paper, borderRadius: 14, borderWidth: 1, borderColor: m.ok ? b.gold : b.line, padding: 10, alignItems: 'center', opacity: m.ok ? 1 : 0.6 }}>
+            <View key={m.title} style={{ width: '31%', flexGrow: 1, backgroundColor: m.ok ? b.goldSoft : b.paper, borderRadius: 14, borderWidth: 1, borderColor: m.ok ? b.gold : b.line, padding: 10, alignItems: 'center', opacity: m.ok ? 1 : 0.6 }}>
               <Ionicons name={m.ok ? m.icon : 'lock-closed'} size={22} color={m.ok ? b.goldDeep : b.inkMuted} />
               <Text style={{ color: b.ink, fontWeight: '700', fontSize: 12, textAlign: 'center', marginTop: 4 }}>{m.title}</Text>
             </View>

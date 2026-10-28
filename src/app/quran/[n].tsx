@@ -80,7 +80,7 @@ export default function SurahReader() {
           renderItem={({ item: a }) => {
             const marked = last?.n === n && last.ayah === a.n;
             return (
-              <Pressable accessibilityRole="button" accessibilityLabel={`Verset ${a.n}, marquer comme dernière lecture`} onLongPress={() => setLast({ n, ayah: a.n })} onPress={() => setLast({ n, ayah: a.n })} style={{ backgroundColor: marked ? '#FFF6DD' : b.paper, borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: marked ? b.gold : b.line }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={`Verset ${a.n}, marquer comme dernière lecture`} onLongPress={() => setLast({ n, ayah: a.n })} onPress={() => setLast({ n, ayah: a.n })} style={{ backgroundColor: marked ? b.goldSoft : b.paper, borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: marked ? b.gold : b.line }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View style={{ backgroundColor: GREEN + '1F', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
                     <Text style={{ color: GREEN, fontWeight: '800' }}>

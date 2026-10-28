@@ -51,7 +51,7 @@ export function SkyArc({ list, now, names }: { list: P[]; now: Date; names: Reco
           const p = pos(get(k));
           const past = get(k) <= t;
           return (
-            <Circle key={k} cx={p.x} cy={p.y} r={5} fill={past ? '#F2C94C' : '#FFFFFF'} stroke="#4A2E19" strokeWidth={1} />
+            <Circle key={k} cx={p.x} cy={p.y} r={5} fill={past ? '#F2C94C' : '#FFFFFF'} stroke="#0F3D30" strokeWidth={1} />
           );
         })}
         {dots.map((k, i) => {
