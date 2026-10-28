@@ -9,6 +9,7 @@ import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { brand, theme as t } from '@/ui/theme';
 import { GrowthProvider } from '@/lib/growth';
+import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
@@ -48,6 +49,10 @@ function Root() {
         <Stack.Screen name="hadiths" options={{ title: 'Hadiths' }} />
         <Stack.Screen name="duas" options={{ title: 'Du‘as prophétiques', contentStyle: { backgroundColor: brand.cream } }} />
         <Stack.Screen name="abjad" options={{ title: 'Calculateur abjad', contentStyle: { backgroundColor: brand.cream } }} />
+        <Stack.Screen name="names" options={{ title: 'Les 99 Noms d’Allah', contentStyle: { backgroundColor: brand.cream } }} />
+        <Stack.Screen name="zikrs/index" options={{ title: 'Mes zikrs', contentStyle: { backgroundColor: brand.cream } }} />
+        <Stack.Screen name="zikrs/edit" options={{ title: 'Composer un zikr', contentStyle: { backgroundColor: brand.cream } }} />
+        <Stack.Screen name="zikrs/practice" options={{ title: 'Pratique', contentStyle: { backgroundColor: brand.cream } }} />
         <Stack.Screen name="fiqh" options={{ title: 'Fiqh' }} />
         <Stack.Screen name="journey" options={{ title: 'Mon parcours spirituel' }} />
         <Stack.Screen name="habits" options={{ title: 'Jardin des habitudes' }} />
@@ -69,13 +74,15 @@ export default function Layout() {
       <SafeAreaProvider>
         <SettingsProvider>
           <DataProvider>
-            <AuthProvider>
-              <CommunityProvider>
-                <GrowthProvider>
-                  <Root />
-                </GrowthProvider>
-              </CommunityProvider>
-            </AuthProvider>
+            <ZikrProvider>
+              <AuthProvider>
+                <CommunityProvider>
+                  <GrowthProvider>
+                    <Root />
+                  </GrowthProvider>
+                </CommunityProvider>
+              </AuthProvider>
+            </ZikrProvider>
           </DataProvider>
         </SettingsProvider>
       </SafeAreaProvider>

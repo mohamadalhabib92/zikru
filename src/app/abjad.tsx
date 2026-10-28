@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { ABJAD_EXAMPLES, DIFF_LETTERS, MAGHRIBI, MASHRIQI, ORDER_MASHRIQI, computeAbjad, type AbjadOptions, type AbjadSystem } from '@/lib/abjad';
-import { usePersistentState } from '@/lib/storage';
+import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, LTitle, Pill, SectionLabel } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
@@ -23,7 +23,6 @@ const NORM_RULES: [string, string, string][] = [
 ];
 type View3 = 'both' | AbjadSystem;
 type Prefs = { view: View3; ta: 'ha' | 'ta'; hamza: 1 | 0; words: boolean };
-const PREFS0: Prefs = { view: 'both', ta: 'ha', hamza: 1, words: true };
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -36,12 +35,12 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 export default function Abjad() {
   const [text, setText] = useState(ABJAD_EXAMPLES[0]);
-  const [p, setP] = usePersistentState<Prefs>('abjad_prefs', PREFS0);
+  const { prefs: p, setPrefs } = useZikrs();
   const [copied, setCopied] = useState(false);
   const opts: AbjadOptions = { taMarbuta: p.ta, hamza: p.hamza };
   const res = useMemo(() => ({ mashriqi: computeAbjad(text, 'mashriqi', opts), maghribi: computeAbjad(text, 'maghribi', opts) }), [text, p.ta, p.hamza]);
   const shown: AbjadSystem[] = p.view === 'both' ? ['mashriqi', 'maghribi'] : [p.view];
-  const set = (patch: Partial<Prefs>) => setP((x) => ({ ...x, ...patch }));
+  const set = (patch: Partial<Prefs>) => setPrefs(patch);
   const fmt = (n: number) => n.toLocaleString('fr-CH');
 
   const copy = async () => {

@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
+import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
 import { BASMALA, getSurah, translationFor, type SurahText } from '@/lib/quran';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
@@ -23,6 +24,7 @@ export default function SurahReader() {
   const [size, setSize] = usePersistentState('quran-size', 26);
   const [last, setLast] = usePersistentState<{ n: number; ayah: number } | null>('quran-last', null);
   const [attempt, setAttempt] = useState(0);
+  const [draft, setDraft] = useState<DraftItem | null>(null);
   useEffect(() => {
     let alive = true;
     setData(null);
@@ -91,6 +93,19 @@ export default function SurahReader() {
                   {a.ar}
                 </Arabic>
                 {showTr ? <LText style={{ marginTop: 6 }}>{a.tr}</LText> : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
+                  <AbjadBadge ar={a.ar} compact />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ajouter le verset ${n}:${a.n} à un zikr`}
+                    hitSlop={6}
+                    onPress={() => setDraft({ kind: 'verse', ref: `Coran ${n}:${a.n}`, label: `${meta[2]} ${n}:${a.n}`, ar: a.ar, fr: a.tr, reps: 1 })}
+                    style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, minHeight: 30, borderRadius: 15, borderWidth: 1, borderColor: b.line, opacity: pressed ? 0.7 : 1 })}
+                  >
+                    <Ionicons name="albums-outline" size={14} color={b.inkMuted} />
+                    <Text style={{ color: b.ink, fontSize: 12, fontWeight: '700' }}>Zikr</Text>
+                  </Pressable>
+                </View>
               </Pressable>
             );
           }}
@@ -105,6 +120,7 @@ export default function SurahReader() {
         />
       )}
       {data ? <LMuted style={{ textAlign: 'center', padding: 6, fontSize: 11 }}>Traduction : {tr.label} · api.alquran.cloud · touchez un verset pour le marquer</LMuted> : null}
+      <AddToZikrSheet item={draft} onClose={() => setDraft(null)} />
     </View>
   );
 }

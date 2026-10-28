@@ -137,6 +137,8 @@ export default function Home() {
   ];
 
   const knowledge: Tile[] = [
+    { label: 'Mes zikrs', sub: 'Composer · abjad · pratique', icon: 'albums', href: '/zikrs', color: '#7A4F9E' },
+    { label: 'Noms d’Allah', sub: 'Les 99 Noms · abjad', icon: 'sparkles', href: '/names', color: '#B07D1A' },
     { label: "Qur'an", sub: '114 sourates', icon: 'book', href: '/quran', color: '#2E8B57' },
     { label: 'Hadiths', sub: 'Collection choisie', icon: 'library', href: '/hadiths', color: '#7C4DDB' },
     { label: "Du'as", sub: 'Prophétiques · 96 invocations', icon: 'hand-left', href: '/duas', color: '#2F7FD0' },

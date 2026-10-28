@@ -2,6 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { useData } from '@/lib/data';
 import { DUA_CATS, DUAS_LIST, duaCatLabel, type Dua } from '@/lib/duas';
@@ -32,7 +33,7 @@ function Action({ icon, label, onPress, active, color = COLOR }: { icon: IconNam
   );
 }
 
-function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih }: { d: Dua; fav: boolean; onFav: () => void; onCopy: () => void; copied: boolean; onTasbih: () => void }) {
+function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; fav: boolean; onFav: () => void; onCopy: () => void; copied: boolean; onTasbih: () => void; onZikr: () => void }) {
   const [n, setN] = useState(0);
   const reps = d.reps ?? 0;
   const done = reps > 0 && n >= reps;
@@ -55,8 +56,12 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih }: { d: Dua; fav: boo
       <LText style={{ marginTop: 6 }}>{d.fr}</LText>
       {d.note ? <LMuted style={{ marginTop: 6 }}>{d.note}</LMuted> : null}
       <Text style={{ color: b.brown, fontWeight: '800', marginTop: 8, fontSize: 13 }}>{d.ref}</Text>
+      <View style={{ marginTop: 8 }}>
+        <AbjadBadge ar={d.ar} />
+      </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, alignItems: 'center' }}>
         <Action icon={copied ? 'checkmark' : 'copy-outline'} label={copied ? 'Copié' : 'Copier'} onPress={onCopy} active={copied} color={b.green} />
+        <Action icon="albums-outline" label="Ajouter à un zikr" onPress={onZikr} />
         {reps > 0 ? (
           <>
             <Pressable
@@ -87,6 +92,7 @@ export default function Duas() {
   const [cat, setCat] = useState<string | null>(null);
   const [favs, setFavs] = usePersistentState<string[]>('duas_favs', []);
   const [copied, setCopied] = useState<string | null>(null);
+  const [draft, setDraft] = useState<DraftItem | null>(null);
 
   const list = useMemo(() => {
     const nq = norm(q.trim());
@@ -142,13 +148,14 @@ export default function Duas() {
         </ScrollView>
         <LMuted style={{ marginBottom: 8 }}>{`${list.length} invocation${list.length > 1 ? 's' : ''}`}</LMuted>
         {list.map((d) => (
-          <DuaCard key={d.id} d={d} fav={favs.includes(d.id)} onFav={() => toggleFav(d.id)} onCopy={() => copy(d)} copied={copied === d.id} onTasbih={() => toTasbih(d)} />
+          <DuaCard key={d.id} d={d} fav={favs.includes(d.id)} onFav={() => toggleFav(d.id)} onCopy={() => copy(d)} copied={copied === d.id} onTasbih={() => toTasbih(d)} onZikr={() => setDraft({ kind: 'dua', ref: d.ref, label: d.title, ar: d.ar, tr: d.tr, fr: d.fr, reps: d.reps ?? 1 })} />
         ))}
         {!list.length ? <LMuted>{cat === 'favs' ? 'Aucun favori pour l’instant : touchez l’étoile d’une invocation pour l’ajouter.' : 'Aucun résultat.'}</LMuted> : null}
         <LMuted style={{ marginTop: 8 }}>
           Invocations tirées du Coran et des recueils authentiques (al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, Ibn Majah, Ahmad), numérotation de sunnah.com. Les textes jugés faibles ont été écartés. Traductions et translittérations indicatives : en cas de doute, se référer à un savant.
         </LMuted>
       </View>
+      <AddToZikrSheet item={draft} onClose={() => setDraft(null)} />
     </Screen>
   );
 }

@@ -44,7 +44,7 @@
     "typecheck": "tsc --noEmit",
     "build:web": "expo export -p web && node scripts/pwa-postbuild.mjs",
     "icons": "python3 scripts/make-icons.py",
-    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs",
+    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs && node scripts/test-zikr.mjs",
     "lint": "expo lint"
   },
   "private": true
