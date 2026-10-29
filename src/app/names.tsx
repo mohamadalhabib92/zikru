@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, nameItem, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { computeAbjad } from '@/lib/abjad';
@@ -11,6 +12,7 @@ import { Arabic, LCard, LMuted, Pill } from '@/ui/light';
 import { useLayout } from '@/ui/ds';
 import { alpha, brand as b, isDark } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
+import { L } from '@/lib/l10n';
 
 const norm = (s: string) =>
   s
@@ -76,14 +78,14 @@ export default function Names() {
           <TextInput
             value={q}
             onChangeText={setQ}
-            placeholder="Nom, sens, n° ou valeur abjad…"
+            placeholder={L("Nom, sens, n° ou valeur abjad…")}
             placeholderTextColor={b.inkMuted}
             style={{ flex: 1, minHeight: 44, color: b.ink, marginLeft: 8 }}
-            accessibilityLabel="Rechercher un Nom"
+            accessibilityLabel={L("Rechercher un Nom")}
             autoCorrect={false}
           />
           {q ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="Effacer la recherche" onPress={() => setQ('')} hitSlop={8}>
+            <Pressable accessibilityRole="button" accessibilityLabel={L("Effacer la recherche")} onPress={() => setQ('')} hitSlop={8}>
               <Ionicons name="close-circle" size={18} color={b.inkMuted} />
             </Pressable>
           ) : null}
@@ -134,7 +136,7 @@ export default function Names() {
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Ajouter ${nameCallTr(x.tr)} à un zikr, 1 fois`}
+                    accessibilityLabel={L('Ajouter {x} à un zikr, 1 fois', { x: nameCallTr(x.tr) })}
                     onPress={() => setDraft(nameItem(x, 1))}
                     style={({ pressed }) => ({
                       flexDirection: 'row',
@@ -155,7 +157,7 @@ export default function Names() {
                   {v > 0 ? (
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`Ajouter ${nameCallTr(x.tr)} à un zikr, ${v} fois (valeur abjad)`}
+                      accessibilityLabel={L('Ajouter {x} à un zikr, {n} fois (valeur abjad)', { x: nameCallTr(x.tr), n: v })}
                       onPress={() => setDraft(nameItem(x, v))}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
@@ -187,7 +189,7 @@ export default function Names() {
         {!list.length ? <LMuted>Aucun résultat.</LMuted> : null}
         <LMuted
           style={{ marginTop: 8, fontSize: 12 }}
-        >{`${NAMES_REF}. L’énumération des 99 Noms provient de la version d’at-Tirmidhī ; les savants en ont discuté l’authenticité (elle serait une insertion d’un rapporteur), d’autres listes existent. Sens en français indicatif.`}</LMuted>
+        >{L('{ref}. L’énumération des 99 Noms provient de la version d’at-Tirmidhī ; les savants en ont discuté l’authenticité (elle serait une insertion d’un rapporteur), d’autres listes existent. Sens en français indicatif.', { ref: NAMES_REF })}</LMuted>
         <ProvenanceBadges set="names" id="enumeration" />
       </View>
       <AddToZikrSheet item={draft} onClose={() => setDraft(null)} />

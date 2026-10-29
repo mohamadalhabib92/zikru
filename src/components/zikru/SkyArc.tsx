@@ -4,6 +4,7 @@ import { isRTL } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 import Svg, { Circle, Defs, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { hhmm, type PrayerKey } from '@/lib/prayer';
+import { L } from '@/lib/l10n';
 
 type P = { key: PrayerKey; time: Date };
 /** Illustration du ciel : dégradé selon l'heure, arc du soleil (lever → coucher), points des prières. */
@@ -34,7 +35,7 @@ export function SkyArc({ list, now, names }: { list: P[]; now: Date; names: Reco
   const rtlWeb = Platform.OS === 'web' && isRTL(lang);
   const A = rtlWeb ? ({ start: 'end', end: 'start' } as const) : ({ start: 'start', end: 'end' } as const);
   return (
-    <View onLayout={(e) => setW(Math.max(260, e.nativeEvent.layout.width))} style={{ borderRadius: 18, overflow: 'hidden' }} accessibilityLabel="Course du soleil et horaires de prière">
+    <View onLayout={(e) => setW(Math.max(260, e.nativeEvent.layout.width))} style={{ borderRadius: 18, overflow: 'hidden' }} accessibilityLabel={L("Course du soleil et horaires de prière")}>
       <Svg width={w} height={H}>
         <Defs>
           <LinearGradient id="sky" x1="0" y1="0" x2="0" y2="1">

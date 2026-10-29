@@ -1,0 +1,694 @@
+# P5 — écrans restants (en relu ; ar : traduction à relire)
+Confidentialité	Privacy	الخصوصية
+Diagnostic Bluetooth	Bluetooth diagnostics	تشخيص البلوتوث
+Sourate	Surah	السورة
+Session de mémorisation	Memorisation session	جلسة الحفظ
+Marque-pages et notes	Bookmarks and notes	العلامات والملاحظات
+Mes zikrs	My zikrs	أذكاري
+Pratique	Practice	الممارسة
+Mon parcours spirituel	My spiritual journey	مسيرتي الروحية
+Jardin des habitudes	Habit garden	حديقة العادات
+El Ghaly Bilal	El Ghaly Bilal	الغالي بلال
+Planificateur du jour	Daily planner	مخطط اليوم
+Connexion	Sign in	تسجيل الدخول
+Rejoindre	Join	انضمام
+Ma famille	My family	عائلتي
+Mon cercle	My circle	حلقتي
+Zikr en direct	Live zikr	ذكر مباشر
+Mashriqi (oriental)	Mashriqi (eastern)	المشرقي
+Maghribi (occidental)	Maghribi (western)	المغربي
+= 5 ou 400	= 5 or 400	= ٥ أو ٤٠٠
+= 1 ou 0	= 1 or 0	= ١ أو ٠
+Valeurs numériques des lettres · Mashriqi & Maghribi	Numerical values of letters · Mashriqi & Maghribi	القيم العددية للحروف · المشرقي والمغربي
+Texte arabe	Arabic text	النص العربي
+Texte arabe à calculer	Arabic text to calculate	النص العربي المراد حسابه
+Système et règles	System and rules	النظام والقواعد
+Affichage	Display	العرض
+Les deux	Both	كلاهما
+Mashriqi	Mashriqi	المشرقي
+Maghribi	Maghribi	المغربي
+Détail	Detail	التفصيل
+Somme par mot	Sum per word	المجموع لكل كلمة
+Normalisation appliquée avant le calcul : voyelles (tashkīl), shadda, sukūn, alif suscrit et tatwīl sont ignorés (une lettre avec shadda compte une fois, comme dans l’usage classique).	Normalisation applied before calculating: vowels (tashkīl), shadda, sukūn, superscript alif and tatwīl are ignored (a letter with shadda counts once, as in classical usage).	تطبيع قبل الحساب: تُهمَل الحركات (التشكيل) والشدة والسكون والألف الخنجرية والتطويل (يُحسب الحرف المشدد مرة واحدة كما في الاستعمال التقليدي).
+Copier le résultat	Copy the result	نسخ النتيجة
+SOMME PAR MOT	SUM PER WORD	المجموع لكل كلمة
+DÉTAIL PAR LETTRE	DETAIL PER LETTER	التفصيل لكل حرف
+Bleu : mashriqi · vert : maghribi · cadre doré : lettre dont la valeur diffère.	Blue: mashriqi · green: maghribi · gold frame: letter whose value differs.	الأزرق: المشرقي · الأخضر: المغربي · الإطار الذهبي: حرف تختلف قيمته.
+TABLE DES VALEURS	TABLE OF VALUES	جدول القيم
+REPÈRE HISTORIQUE	HISTORICAL NOTE	لمحة تاريخية
+Le ḥisāb al-jummal attribue à chaque lettre une valeur numérique selon l’ordre ancien de l’alphabet sémitique (abjad), que l’arabe partage avec l’araméen, l’hébreu et le grec. Avant la diffusion des chiffres indo-arabes, il servait à noter des nombres ; il est ensuite resté en usage pour numéroter des listes et composer des chronogrammes, où la somme des lettres d’un vers donne une date (construction, naissance, décès, achèvement d’un ouvrage).	Ḥisāb al-jummal gives each letter a numerical value following the ancient order of the Semitic alphabet (abjad), which Arabic shares with Aramaic, Hebrew and Greek. Before Indo-Arabic numerals spread, it was used to write numbers; it then remained in use to number lists and to compose chronograms, where the sum of the letters of a verse gives a date (a building, a birth, a death, the completion of a book).	يُعطي حسابُ الجُمَّل كلَّ حرف قيمةً عددية وفق الترتيب القديم للأبجدية السامية (أبجد)، التي تشترك فيها العربية مع الآرامية والعبرية واليونانية. وقبل انتشار الأرقام الهندية العربية كان يُستعمل لكتابة الأعداد، ثم بقي مستعملًا لترقيم القوائم ونظم التواريخ الشعرية، حيث يدل مجموع حروف بيتٍ على تاريخٍ (بناء أو ولادة أو وفاة أو إتمام كتاب).
+Deux ordres coexistent : l’ordre oriental (mashriqi), répandu du Proche-Orient à l’Asie, et l’ordre occidental (maghribi), employé au Maghreb, en al-Andalus et en Afrique de l’Ouest, qui ne diffère que sur six lettres.	Two orders coexist: the eastern order (mashriqi), common from the Near East to Asia, and the western order (maghribi), used in the Maghreb, al-Andalus and West Africa, which differs on only six letters.	يوجد ترتيبان: الترتيب المشرقي المنتشر من المشرق إلى آسيا، والترتيب المغربي المستعمل في المغرب والأندلس وغرب إفريقيا، ولا يختلف إلا في ستة أحرف.
+Outil de calcul linguistique et historique : ce calcul ne constitue ni une preuve ni une source de jugement religieux.	A linguistic and historical calculation tool: this calculation is neither a proof nor a source of religious rulings.	أداة حساب لغوية وتاريخية: ليس هذا الحساب دليلًا ولا مصدرًا للأحكام الشرعية.
+Code Vibecode d’origine indisponible : reconstruction complète. L’audit porte sur la spec et sur cette base.	Original Vibecode code unavailable: complete rebuild. The audit covers the spec and this codebase.	الشيفرة الأصلية من Vibecode غير متاحة: أُعيد البناء بالكامل. يشمل التدقيق المواصفات وهذه القاعدة.
+Hijri	Hijri	الهجري
+Risque initial : plusieurs conversions (Intl, librairies). Correctif : une seule source (src/lib/hijri.ts) + 11 auto-tests (npm test).	Initial risk: several conversions (Intl, libraries). Fix: a single source (src/lib/hijri.ts) + 11 self-tests (npm test).	الخطر الأولي: تحويلات متعددة (Intl ومكتبات). الإصلاح: مصدر واحد (src/lib/hijri.ts) و١١ اختبارًا ذاتيًا (npm test).
+Cibles tactiles	Touch targets	مناطق اللمس
+Tous les boutons, puces et icônes : ≥ 44×44 pt (kit UI), retour visuel, états disabled/loading.	All buttons, chips and icons: ≥ 44×44 pt (UI kit), visual feedback, disabled/loading states.	جميع الأزرار والشارات والأيقونات: ٤٤×٤٤ نقطة على الأقل (مكتبة الواجهة)، مع استجابة بصرية وحالات التعطيل والتحميل.
+Appels payants (402)	Paid calls (402)	الطلبات المدفوعة (402)
+Aucun appel réseau sur le chemin core. Prières/qibla calculés localement ; Supabase optionnel.	No network call on the core path. Prayers/qibla computed locally; Supabase optional.	لا طلبات شبكة في المسار الأساسي. تُحسب الصلاة والقبلة محليًا، وSupabase اختياري.
+Persistance	Persistence	الحفظ
+Tasbih écrit à chaque appui (AsyncStorage / localStorage). MMKV non utilisé (build natif requis, incompatible PWA).	Tasbih saved on every tap (AsyncStorage / localStorage). MMKV not used (native build required, incompatible with the PWA).	يُحفَظ التسبيح عند كل ضغطة (AsyncStorage / localStorage). لا يُستعمل MMKV (يتطلب بناءً أصليًا ولا يتوافق مع تطبيق الويب).
+Audio Bilal	Bilal audio	صوت بلال
+Fichier non fourni : lecteur désactivé proprement, aucune exception.	File not provided: player cleanly disabled, no exception.	الملف غير متوفر: المشغل معطَّل بسلاسة دون أي خطأ.
+Compteur Bluetooth réel : Web Bluetooth (Chrome/Edge) et react-native-ble-plx (build natif), profils BSTWSH / iQibla (partiel) / générique, mode apprentissage, mode clavier HID.	Real Bluetooth counter: Web Bluetooth (Chrome/Edge) and react-native-ble-plx (native build), BSTWSH / iQibla (partial) / generic profiles, learning mode, HID keyboard mode.	عدّاد بلوتوث حقيقي: Web Bluetooth (Chrome/Edge) وreact-native-ble-plx (بناء أصلي)، وملفات BSTWSH وiQibla (جزئي) وعام، ووضع التعلّم، ووضع لوحة المفاتيح HID.
+Langues	Languages	اللغات
+7 langues branchées ; Pulaar et Wolof : repli FR avec mention « en attente de validation ».	7 languages wired; Pulaar and Wolof: French fallback marked “awaiting validation”.	٧ لغات مفعّلة؛ البولارية والولوفية: الرجوع إلى الفرنسية مع إشارة «بانتظار المراجعة».
+Notifications	Notifications	الإشعارات
+Non implémentées dans cette passe (à ajouter avec expo-notifications).	Not implemented in this pass (to be added with expo-notifications).	غير منفَّذة في هذه المرحلة (تُضاف عبر expo-notifications).
+Dead code	Dead code	شيفرة غير مستعملة
+Aucun écran orphelin ; aucun flag de démo hors contenu d’exemple étiqueté.	No orphan screen; no demo flag outside labelled sample content.	لا شاشات يتيمة، ولا أعلام تجريبية خارج المحتوى التوضيحي الموسوم.
+Audit — Phase 0	Audit — Phase 0	التدقيق — المرحلة ٠
+Problèmes → correctifs appliqués	Problems → fixes applied	المشكلات ← الإصلاحات المطبقة
+Pour votre famille et vos cercles. Sans mot de passe : nous vous envoyons un code par e-mail.	For your family and your circles. No password: we send you a code by email.	لعائلتك وحلقاتك. دون كلمة مرور: نرسل إليك رمزًا بالبريد الإلكتروني.
+Lien de connexion	Sign-in link	رابط تسجيل الدخول
+Adresse e-mail	Email address	البريد الإلكتروني
+Recevoir un code	Get a code	استلام رمز
+E-mail envoyé	Email sent	تم إرسال البريد
+Saisissez le code reçu, ou touchez le lien dans l’e-mail depuis cet appareil. Pensez aux indésirables.	Enter the code you received, or tap the link in the email on this device. Check your spam folder.	أدخل الرمز الذي وصلك، أو اضغط على الرابط في البريد من هذا الجهاز. تحقق من مجلد الرسائل غير المرغوب فيها.
+Code reçu	Code received	الرمز المستلَم
+Valider	Confirm	تأكيد
+Renvoyer le code	Resend the code	إعادة إرسال الرمز
+Les enfants n’ont pas besoin d’adresse : un parent peut les ajouter comme « enfant géré » dans la famille.	Children don’t need an address: a parent can add them as a “managed child” in the family.	لا يحتاج الأطفال إلى بريد: يمكن لأحد الوالدين إضافتهم «طفلًا مُدارًا» في العائلة.
+Comment être plus régulier dans mon wird ?	How can I be more regular in my wird?	كيف أكون أكثر مواظبة على وردي؟
+Je me sens loin de la prière ces jours-ci…	I feel far from prayer these days…	أشعر بالبعد عن الصلاة هذه الأيام…
+Une petite habitude pour mieux commencer la journée ?	A small habit to start the day better?	عادة صغيرة لبداية أفضل لليوم؟
+Comment gérer la colère selon la Sunna ?	How to handle anger according to the Sunnah?	كيف أتعامل مع الغضب وفق السنة؟
+Votre compagnon de cheminement. Connectez-vous pour discuter avec lui (gratuit, limité à quelques messages par jour).	Your companion on the path. Sign in to chat with him (free, limited to a few messages a day).	رفيقك في الطريق. سجّل الدخول للتحدث معه (مجانًا، وبعدد محدود من الرسائل يوميًا).
+Se connecter	Sign in	تسجيل الدخول
+As-salamu ‘alaykum 👋	As-salamu ‘alaykum 👋	السلام عليكم 👋
+Je suis El Ghaly Bilal, un compagnon pour vos habitudes, votre régularité et votre moral. Je ne suis ni un savant ni un médecin : pour une question de fiqh, consultez un imam ou votre muqaddam.	I am El Ghaly Bilal, a companion for your habits, your regularity and your morale. I am neither a scholar nor a doctor: for a fiqh question, consult an imam or your muqaddam.	أنا الغالي بلال، رفيق لعاداتك ومواظبتك ومعنوياتك. لست عالمًا ولا طبيبًا: في مسائل الفقه استشر إمامًا أو مقدَّمك.
+Bientôt disponible, inch’Allah	Coming soon, insha’Allah	قريبًا إن شاء الله
+Pour commencer :	To get started:	للبدء:
+Effacer la conversation	Clear the conversation	مسح المحادثة
+Écrivez à Bilal…	Write to Bilal…	اكتب إلى بلال…
+Message à Bilal	Message to Bilal	رسالة إلى بلال
+Envoyer	Send	إرسال
+Cercle	Circle	الحلقة
+Mes cercles · Ahbab	My circles · Ahbab	حلقاتي · الأحباب
+Objectifs	Goals	الأهداف
+Aucun objectif pour l’instant.	No goals yet.	لا أهداف بعد.
+Règlement	Rules	القواعد
+Enregistrer	Save	حفظ
+Pas de règlement.	No rules.	لا قواعد.
+Modifier	Edit	تعديل
+Membres	Members	الأعضاء
+Retirer modérateur	Remove moderator	إزالة المشرف
+Nommer modérateur	Make moderator	تعيين مشرفًا
+Cette personne pourra revenir seulement avec une nouvelle invitation.	This person can only come back with a new invitation.	لن يستطيع هذا الشخص العودة إلا بدعوة جديدة.
+Membre	Member	عضو
+Modérateur	Moderator	مشرف
+Le cercle est complet (50 membres maximum).	The circle is full (50 members maximum).	الحلقة ممتلئة (٥٠ عضوًا كحد أقصى).
+Quitter le cercle	Leave the circle	مغادرة الحلقة
+Quitter le cercle ?	Leave the circle?	مغادرة الحلقة؟
+Le rôle de fondateur passera à un modérateur ou au membre le plus ancien.	The founder role will pass to a moderator or to the longest-standing member.	سينتقل دور المؤسس إلى مشرف أو إلى أقدم عضو.
+Vous pourrez revenir avec une nouvelle invitation.	You can come back with a new invitation.	يمكنك العودة بدعوة جديدة.
+Quitter	Leave	مغادرة
+Ma famille · Mes cercles	My family · My circles	عائلتي · حلقاتي
+Faites du dhikr ensemble, avec vos proches uniquement. Jamais d’annuaire public.	Do dhikr together, with your loved ones only. Never a public directory.	اذكروا الله معًا، مع أحبتكم فقط. لا دليل عامًّا أبدًا.
+Un code à 6 chiffres vous est envoyé par e-mail. Aucun mot de passe.	A 6-digit code is sent to you by email. No password.	يُرسَل إليك رمز من ٦ أرقام بالبريد الإلكتروني. دون كلمة مرور.
+Continuer avec mon e-mail	Continue with my email	المتابعة ببريدي الإلكتروني
+Mode local	Local mode	الوضع المحلي
+Le serveur des communautés n’est pas configuré : seuls les groupes locaux sont disponibles.	The communities server is not configured: only local groups are available.	خادم المجتمعات غير مُعَدّ: المجموعات المحلية فقط متاحة.
+Groupes locaux (sans compte)	Local groups (no account)	مجموعات محلية (دون حساب)
+Vos familles et cercles de dhikr.	Your families and dhikr circles.	عائلاتك وحلقات ذكرك.
+Masquer les groupes locaux	Hide local groups	إخفاء المجموعات المحلية
+Groupes locaux (hors-ligne)	Local groups (offline)	مجموعات محلية (دون اتصال)
+Objectifs communs	Shared goals	أهداف مشتركة
+Zikr du soir à distance	Evening zikr from afar	ذكر المساء عن بُعد
+Encouragements privés	Private encouragement	تشجيع خاص
+Communauté	Community	المجتمع
+Tasbih relié à :	Tasbih linked to:	التسبيح مرتبط بـ:
+dhikr en attente d’envoi…	dhikr waiting to be sent…	ذكر بانتظار الإرسال…
+Famille privée	Private family	عائلة خاصة
+Créez votre famille ou rejoignez-la avec le code reçu d’un parent.	Create your family or join it with the code from a parent.	أنشئ عائلتك أو انضم إليها بالرمز الذي يرسله أحد الوالدين.
+Nom de la famille	Family name	اسم العائلة
+Famille Ba	Ba family	عائلة با
+Votre nom dans la famille	Your name in the family	اسمك في العائلة
+Papa, Maman, Habib…	Dad, Mum, Habib…	بابا، ماما، حبيب…
+Vous serez parent administrateur (2 parents maximum).	You will be an admin parent (2 parents maximum).	ستكون وليَّ أمرٍ مسؤولًا (والدان كحد أقصى).
+Nom requis.	Name required.	الاسم مطلوب.
+Créer une famille	Create a family	إنشاء عائلة
+Bienveillance, discrétion et sincérité. Pas de comparaison, pas de jugement.	Kindness, discretion and sincerity. No comparison, no judgement.	لطف وتكتّم وإخلاص. لا مقارنة ولا حكم على أحد.
+Mes cercles	My circles	حلقاتي
+Vos proches (Ahbab) : 50 personnes maximum, sur invitation uniquement.	Your loved ones (Ahbab): 50 people maximum, by invitation only.	أحبابك: ٥٠ شخصًا كحد أقصى، بالدعوة فقط.
+Cercle privé	Private circle	حلقة خاصة
+Nom du cercle	Circle name	اسم الحلقة
+Cercle du jeudi	Thursday circle	حلقة الخميس
+Description (facultatif)	Description (optional)	الوصف (اختياري)
+Règlement (accepté par chaque membre)	Rules (accepted by every member)	القواعد (يقبلها كل عضو)
+Créer un cercle	Create a circle	إنشاء حلقة
+Rejoindre avec un code	Join with a code	الانضمام برمز
+Code d’invitation	Invitation code	رمز الدعوة
+Voir	View	عرض
+Mon compte	My account	حسابي
+Mon prénom (affiché à ma famille et mes cercles)	My first name (shown to my family and circles)	اسمي الأول (يظهر لعائلتي وحلقاتي)
+Enregistré ✓	Saved ✓	تم الحفظ ✓
+Se déconnecter	Sign out	تسجيل الخروج
+Supprimer mon compte	Delete my account	حذف حسابي
+Supprimer définitivement le compte ?	Permanently delete the account?	حذف الحساب نهائيًا؟
+Votre profil, vos contributions et vos appartenances sont effacés. Une famille dont vous êtes le seul adulte est supprimée. Vos données locales (tasbih, groupes locaux) restent sur cet appareil.	Your profile, contributions and memberships are erased. A family in which you are the only adult is deleted. Your local data (tasbih, local groups) stays on this device.	تُمحى بيانات ملفك ومساهماتك وعضوياتك. وتُحذف العائلة التي تكون أنت البالغ الوحيد فيها. أما بياناتك المحلية (التسبيح والمجموعات المحلية) فتبقى على هذا الجهاز.
+Supprimer	Delete	حذف
+Synchronisation	Sync	المزامنة
+Supabase configuré	Supabase configured	Supabase مُعَدّ
+Supabase non configuré — mode local	Supabase not configured — local mode	Supabase غير مُعَدّ — الوضع المحلي
+Prières, qibla, tasbih et contenu approuvé fonctionnent entièrement hors-ligne, sans compte ni API payante. La synchronisation est optionnelle.	Prayers, qibla, tasbih and approved content work fully offline, with no account and no paid API. Sync is optional.	تعمل الصلاة والقبلة والتسبيح والمحتوى المعتمد دون اتصال بالكامل، بلا حساب ولا واجهة برمجية مدفوعة. والمزامنة اختيارية.
+défini	set	مُحدَّد
+valeur YOUR_* à remplacer	YOUR_* value to replace	قيمة YOUR_* يجب استبدالها
+Manquant	Missing	مفقود
+Pour activer :	To enable:	للتفعيل:
+1. Copier .env.example vers .env et renseigner EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY.	1. Copy .env.example to .env and fill in EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.	١. انسخ ‎.env.example إلى ‎.env واملأ EXPO_PUBLIC_SUPABASE_URL وEXPO_PUBLIC_SUPABASE_ANON_KEY.
+2. Exécuter supabase/schema.sql dans le projet Supabase (tables + RLS).	2. Run supabase/schema.sql in the Supabase project (tables + RLS).	٢. نفّذ supabase/schema.sql في مشروع Supabase (الجداول وRLS).
+3. Relancer l’app (npx expo start) ou reconstruire la PWA.	3. Restart the app (npx expo start) or rebuild the PWA.	٣. أعد تشغيل التطبيق (npx expo start) أو أعد بناء تطبيق الويب.
+Workflow de contenu	Content workflow	سير عمل المحتوى
+Mode éditeur local	Local editor mode	وضع المحرر المحلي
+Seuls les éléments « Approuvé » apparaissent dans l’app. Chaque contenu doit citer sa source. Ne saisissez que des traductions déjà validées.	Only “Approved” items appear in the app. Every piece of content must cite its source. Only enter translations that have already been validated.	لا تظهر في التطبيق إلا العناصر «المعتمدة». ويجب أن يذكر كل محتوى مصدره. لا تُدخل إلا ترجمات سبق التحقق منها.
+Tous	All	الكل
+Brouillon	Draft	مسودة
+Relecture	Review	مراجعة
+Approuvé	Approved	معتمد
+Renvoyer en brouillon	Send back to draft	إعادة إلى المسودة
+Nouveau brouillon	New draft	مسودة جديدة
+Texte arabe (avec tashkīl)	Arabic text (with tashkīl)	النص العربي (مع التشكيل)
+Source (obligatoire)	Source (required)	المصدر (إلزامي)
+Ex. référence de recueil et numéro	E.g. collection reference and number	مثال: اسم المصنَّف ورقم الحديث
+Créer le brouillon	Create the draft	إنشاء المسودة
+Interface affichée en français en attendant.	Interface shown in French for now.	الواجهة معروضة بالفرنسية مؤقتًا.
+Contenu d’exemple	Sample content	محتوى توضيحي
+Formules d’amorçage à faire valider par un référent avant publication.	Starter formulas to be validated by a referent before publication.	صيغ أولية يجب أن يعتمدها مرجع قبل النشر.
+Exemple	Example	مثال
+Wird	Wird	الورد
+Zikr	Zikr	الذكر
+Fête	Celebration	مناسبة
+Cours	Lesson	درس
+Rappel	Reminder	تذكير
+Famille	Family	العائلة
+Ma famille · Usra	My family · Usra	عائلتي · الأسرة
+Temps conseillé par tes parents	Time suggested by your parents	الوقت الذي يقترحه والداك
+Mode enfant	Child mode	وضع الطفل
+Confiez le téléphone à un enfant : un grand bouton de tasbih, sans chiffres des autres ni comparaison. Ses dhikr comptent pour l’objectif familial.	Hand the phone to a child: a big tasbih button, with no one else’s numbers and no comparison. Their dhikr count towards the family goal.	أعطِ الهاتف لطفل: زر تسبيح كبير، دون أرقام الآخرين ولا مقارنة. ويُحتسب ذكره في هدف العائلة.
+Adulte	Adult	بالغ
+Enfant	Child	طفل
+Invité·e	Guest	ضيف
+Quitter la famille	Leave the family	مغادرة العائلة
+Quitter la famille ?	Leave the family?	مغادرة العائلة؟
+Wird familial	Family wird	ورد العائلة
+Ex. 100 istighfār et 100 ṣalawāt chaque soir	E.g. 100 istighfār and 100 ṣalawāt every evening	مثال: ١٠٠ استغفار و١٠٠ صلاة على النبي ﷺ كل مساء
+Pas encore de wird familial.	No family wird yet.	لا يوجد ورد للعائلة بعد.
+Géré	Managed	مُدار
+Rôle	Role	الدور
+Parent	Parent	وليّ أمر
+Contrôle parental	Parental controls	الرقابة الأبوية
+Messages	Messages	الرسائل
+Aucun	None	لا شيء
+Parents	Parents	الوالدان
+Contenu	Content	المحتوى
+Ado	Teen	مراهق
+Temps par jour (minutes, vide = libre)	Time per day (minutes, empty = unlimited)	الوقت اليومي (بالدقائق، فارغ = غير محدود)
+Les enfants ne rejoignent aucun cercle et ne sont jamais visibles hors de la famille.	Children join no circle and are never visible outside the family.	لا ينضم الأطفال إلى أي حلقة ولا يظهرون أبدًا خارج العائلة.
+Retirer de la famille	Remove from the family	إزالة من العائلة
+Ses contributions passées restent dans le total.	Their past contributions stay in the total.	تبقى مساهماته السابقة ضمن المجموع.
+Ajouter un enfant (sans compte)	Add a child (no account)	إضافة طفل (دون حساب)
+Pour un jeune enfant sans e-mail : vous comptez pour lui, ou passez en « Mode enfant ». Pour un enfant avec son propre appareil, utilisez une invitation « Enfant ».	For a young child without email: you count for them, or switch to “Child mode”. For a child with their own device, use a “Child” invitation.	لطفل صغير بلا بريد: تَعُدّ أنت عنه، أو انتقل إلى «وضع الطفل». ولطفل لديه جهازه الخاص، استعمل دعوة «طفل».
+Prénom	First name	الاسم الأول
+Ajouter	Add	إضافة
+Calendrier spirituel	Spiritual calendar	التقويم الروحي
+Autre	Other	أخرى
+Rien de prévu. Ajoutez le zikr du soir, une fête ou un cours.	Nothing planned. Add the evening zikr, a celebration or a lesson.	لا شيء مخطط. أضف ذكر المساء أو مناسبة أو درسًا.
+Titre	Title	العنوان
+Zikr du jeudi soir	Thursday evening zikr	ذكر ليلة الجمعة
+Date (AAAA-MM-JJ)	Date (YYYY-MM-DD)	التاريخ (YYYY-MM-DD)
+Heure (vide = journée)	Time (empty = all day)	الوقت (فارغ = طوال اليوم)
+Titre et date valides requis.	A valid title and date are required.	يلزم عنوان وتاريخ صالحان.
+Ajouter un moment	Add a moment	إضافة موعد
+Touche le grand bouton à chaque dhikr.	Tap the big button for each dhikr.	اضغط الزر الكبير مع كل ذكر.
+Compter un dhikr	Count a dhikr	احتساب ذكر
+Machā’Allāh ! 🌟	Mashā’Allāh! 🌟	ما شاء الله! 🌟
+Continue 🌙	Keep going 🌙	واصل 🌙
+Pas d’objectif familial	No family goal	لا يوجد هدف عائلي
+Les appuis sont comptés ici, sans être envoyés.	Taps are counted here, without being sent.	تُحتسب الضغطات هنا دون إرسالها.
+Quitter le mode enfant (appui long)	Exit child mode (long press)	الخروج من وضع الطفل (ضغط مطوَّل)
+Parent : appui long ici pour quitter	Parent: long-press here to exit	وليّ الأمر: اضغط مطولًا هنا للخروج
+Plantez de petites habitudes, attachées à un moment précis.	Plant small habits, attached to a specific moment.	ازرع عادات صغيرة مرتبطة بلحظة محددة.
+j ·	d ·	ي ·
+fois au total	times in total	مرة إجمالًا
+Nouvelle habitude	New habit	عادة جديدة
+Habitude (ex. Lire une page de Coran)	Habit (e.g. Read a page of Quran)	العادة (مثال: قراءة صفحة من القرآن)
+Après… (ex. Après la prière d’Isha)	After… (e.g. After the Isha prayer)	بعد… (مثال: بعد صلاة العشاء)
+Moment déclencheur	Trigger moment	اللحظة المحفِّزة
+Je… (version minuscule, ex. je lis un verset)	I… (tiny version, e.g. I read one verse)	أنا… (نسخة صغيرة جدًا، مثال: أقرأ آية)
+Version minuscule	Tiny version	نسخة صغيرة جدًا
+Planter	Plant	ازرع
+Créer ma propre habitude	Create my own habit	إنشاء عادتي الخاصة
+IDÉES À PLANTER	IDEAS TO PLANT	أفكار للزرع
+Astuce : « L’action la plus aimée d’Allah est la plus régulière, même si elle est petite » (Bukhari 6464, Muslim 783). Commencez minuscule, puis grandissez.	Tip: “The deeds most beloved to Allah are the most regular, even if small” (Bukhari 6464, Muslim 783). Start tiny, then grow.	نصيحة: «أحبّ الأعمال إلى الله أدومها وإن قلّ» (البخاري ٦٤٦٤، مسلم ٧٨٣). ابدأ صغيرًا ثم تدرّج.
+Invitation	Invitation	دعوة
+Code :	Code:	الرمز:
+Connexion requise	Sign-in required	يلزم تسجيل الدخول
+Connectez-vous avec votre e-mail, puis revenez saisir ce code (Communauté › Rejoindre avec un code).	Sign in with your email, then come back to enter this code (Community › Join with a code).	سجّل الدخول ببريدك ثم عُد لإدخال هذا الرمز (المجتمع › الانضمام برمز).
+Invitation non valable	Invalid invitation	دعوة غير صالحة
+Ce code est invalide, expiré, révoqué ou déjà utilisé. Demandez-en un nouveau.	This code is invalid, expired, revoked or already used. Ask for a new one.	هذا الرمز غير صالح أو منتهي الصلاحية أو ملغى أو مستعمل. اطلب رمزًا جديدًا.
+Cercle de proches	Circle of loved ones	حلقة الأحباب
+Rôle :	Role:	الدور:
+Valable jusqu’au	Valid until	صالح حتى
+Compte enfant	Child account	حساب طفل
+Vos parents gèrent vos réglages. Vous ne pourrez pas rejoindre de cercles en dehors de la famille.	Your parents manage your settings. You won’t be able to join circles outside the family.	يدير والداك إعداداتك. لن تتمكن من الانضمام إلى حلقات خارج العائلة.
+Votre nom ici	Your name here	اسمك هنا
+Règlement du cercle	Circle rules	قواعد الحلقة
+J’accepte le règlement	I accept the rules	أقبل القواعد
+100 dhikr	100 dhikr	١٠٠ ذكر
+1 000 dhikr	1,000 dhikr	١٠٠٠ ذكر
+10 000 dhikr	10,000 dhikr	١٠٠٠٠ ذكر
+Série de 7 jours	7-day streak	٧ أيام متتالية
+Série de 30 jours	30-day streak	٣٠ يومًا متتاليًا
+5 prières cochées en un jour	5 prayers checked in one day	٥ صلوات مؤشَّرة في يوم واحد
+dhikr au total	dhikr in total	ذكر إجمالًا
+Palier maximal atteint — al-hamdu lillah	Highest milestone reached — al-hamdu lillah	بلغتَ أعلى مرحلة — الحمد لله
+Aujourd’hui	Today	اليوم
+Série	Streak	التتابع
+Record	Record	الرقم القياسي
+7 derniers jours	Last 7 days	آخر ٧ أيام
+30 derniers jours	Last 30 days	آخر ٣٠ يومًا
+dhikr ·	dhikr ·	ذكر ·
+jours actifs sur 30	active days out of 30	أيام نشطة من ٣٠
+Ces paliers sont une simple motivation pour la régularité. Ils ne mesurent pas le rang spirituel, qui n’est connu que d’Allah. Les jours sont comptés depuis l’installation de cette version.	These milestones are simply an encouragement towards regularity. They do not measure spiritual rank, which is known only to Allah. Days are counted since this version was installed.	هذه المراحل مجرد تحفيز على المواظبة، ولا تقيس المقام الروحي الذي لا يعلمه إلا الله. وتُحتسب الأيام منذ تثبيت هذا الإصدار.
+Sourate al-Kahf	Surah al-Kahf	سورة الكهف
+Mishary Rashid Alafasy	Mishary Rashid Alafasy	مشاري راشد العفاسي
+Texte indisponible : vérifiez la connexion internet (il sera ensuite gardé hors ligne).	Text unavailable: check your internet connection (it will then be kept offline).	النص غير متاح: تحقق من الاتصال بالإنترنت (سيُحفظ بعدها للاستعمال دون اتصال).
+Sourate 18 · 110 versets	Surah 18 · 110 verses	السورة ١٨ · ١١٠ آيات
+C’est le moment de lire al-Kahf	It’s time to read al-Kahf	حان وقت قراءة سورة الكهف
+Du coucher du soleil jeudi jusqu’au coucher du soleil vendredi.	From sunset on Thursday until sunset on Friday.	من غروب شمس الخميس إلى غروب شمس الجمعة.
+Récitation : Mishary Rashid Alafasy (streaming)	Recitation: Mishary Rashid Alafasy (streaming)	التلاوة: مشاري راشد العفاسي (بث مباشر)
+Lecture impossible : connexion requise (audio en streaming, non stocké dans l’app).	Playback impossible: connection required (streamed audio, not stored in the app).	تعذّر التشغيل: يلزم الاتصال (الصوت يُبث ولا يُخزَّن في التطبيق).
+Audio diffusé depuis {s} — rien n’est téléchargé ni inclus dans l’app.	Audio streamed from {s} — nothing is downloaded or included in the app.	الصوت يُبث من {s} — لا يُنزَّل شيء ولا يُضمَّن في التطبيق.
+Rappel du vendredi	Friday reminder	تذكير الجمعة
+Affiche un rappel dans l’app (accueil et ici) de jeudi soir à vendredi soir.	Shows a reminder in the app (home and here) from Thursday evening to Friday evening.	يعرض تذكيرًا في التطبيق (الرئيسية وهنا) من مساء الخميس إلى مساء الجمعة.
+Lue cette semaine ✓	Read this week ✓	قُرئت هذا الأسبوع ✓
+Marquer comme lue cette semaine	Mark as read this week	تحديد كمقروءة هذا الأسبوع
+Mérites (références)	Virtues (references)	الفضائل (المراجع)
+« Celui qui mémorise dix versets du début de la sourate al-Kahf sera protégé du Dajjal. »	“Whoever memorises ten verses from the beginning of Surah al-Kahf will be protected from the Dajjal.”	«من حفظ عشر آيات من أول سورة الكهف عصم من الدجال»
+Sahih Muslim 809	Sahih Muslim 809	صحيح مسلم ٨٠٩
+« Celui qui lit la sourate al-Kahf le vendredi, une lumière l’éclairera entre les deux vendredis. »	“Whoever reads Surah al-Kahf on Friday, a light will shine for him between the two Fridays.”	«من قرأ سورة الكهف في يوم الجمعة أضاء له من النور ما بين الجمعتين»
+Rapporté par al-Hakim et al-Bayhaqi ; jugé authentique par al-Albani (Sahih al-Jami‘ 6470)	Reported by al-Hakim and al-Bayhaqi; graded authentic by al-Albani (Sahih al-Jami‘ 6470)	رواه الحاكم والبيهقي، وصححه الألباني (صحيح الجامع ٦٤٧٠)
+Texte	Text	النص
+Français	French	الفرنسية
+English	English	الإنجليزية
+Arabe seul	Arabic only	العربية فقط
+Chargement du texte…	Loading the text…	جارٍ تحميل النص…
+Afficher la suite ({n} versets)	Show the rest ({n} verses)	عرض البقية ({n} آية)
+Texte : api.alquran.cloud (Uthmani ; trad. Hamidullah / Pickthall, domaine public), mis en cache sur l’appareil.	Text: api.alquran.cloud (Uthmani; Hamidullah / Pickthall translations, public domain), cached on the device.	النص: api.alquran.cloud (الرسم العثماني؛ ترجمتا حميد الله وبكثال، ملكية عامة)، محفوظ مؤقتًا على الجهاز.
+En direct	Live	مباشر
+Session terminée	Session ended	انتهت الجلسة
+Total ensemble	Total together	المجموع معًا
+Moi	Me	أنا
+Votre bague ou compteur Bluetooth compte aussi ici.	Your Bluetooth ring or counter also counts here.	يُحتسب هنا أيضًا خاتمك أو عدّادك بالبلوتوث.
+Terminer la session	End the session	إنهاء الجلسة
+Seule la personne qui a lancé la session (ou un responsable) peut la terminer.	Only the person who started the session (or a leader) can end it.	لا يستطيع إنهاء الجلسة إلا من بدأها (أو مسؤول).
+Retour	Back	رجوع
+Valeur abjad de chaque Nom · ajout direct à vos zikrs	Abjad value of each Name · add directly to your zikrs	القيمة الأبجدية لكل اسم · إضافة مباشرة إلى أذكارك
+Nom, sens, n° ou valeur abjad…	Name, meaning, no. or abjad value…	الاسم أو المعنى أو الرقم أو القيمة الأبجدية…
+Rechercher un Nom	Search for a Name	البحث عن اسم
+Abjad calculé sur le Nom sans l’article ni « yā » (Laṭīf = 129), selon les options de l’écran Abjad.	Abjad computed on the Name without the article or “yā” (Laṭīf = 129), following the options of the Abjad screen.	تُحسب القيمة الأبجدية للاسم دون «ال» ولا «يا» (لطيف = ١٢٩)، وفق خيارات شاشة الأبجد.
+Localisation indisponible — choisissez une ville.	Location unavailable — choose a city.	الموقع غير متاح — اختر مدينة.
+Après Fajr	After Fajr	بعد الفجر
+Après Dhuhr	After Dhuhr	بعد الظهر
+Après Asr	After Asr	بعد العصر
+Après Maghrib	After Maghrib	بعد المغرب
+Après Isha	After Isha	بعد العشاء
+Organisez votre journée autour des prières ·	Organise your day around the prayers ·	نظّم يومك حول الصلوات ·
+aucune tâche	no tasks	لا مهام
+Ajouter une tâche…	Add a task…	إضافة مهمة…
+Les tâches sont enregistrées sur cet appareil, pour aujourd’hui.	Tasks are saved on this device, for today.	تُحفظ المهام على هذا الجهاز لليوم فقط.
+Aucun marque-page. Touchez un verset dans le lecteur pour en ajouter un.	No bookmarks. Tap a verse in the reader to add one.	لا علامات. اضغط على آية في القارئ لإضافة علامة.
+Aucune note. Touchez un verset pour écrire une réflexion.	No notes. Tap a verse to write a reflection.	لا ملاحظات. اضغط على آية لكتابة تأمل.
+Aucun surlignage.	No highlights.	لا تظليلات.
+Supprimer le marque-page	Remove the bookmark	حذف العلامة
+Texte visible	Text visible	النص ظاهر
+1er mot	1st word	الكلمة الأولى
+Seul le premier mot visible	Only the first word visible	الكلمة الأولى فقط ظاهرة
+1 sur 2	1 in 2	واحدة من اثنتين
+Un mot sur deux masqué	Every other word hidden	كلمة من كل اثنتين مخفية
+Masqué	Hidden	مخفي
+Tout masqué, touchez un mot pour le révéler	All hidden, tap a word to reveal it	الكل مخفي، اضغط على كلمة لإظهارها
+Flou	Blur	ضبابي
+Texte flouté	Blurred text	نص ضبابي
+Difficile	Hard	صعب
+Moyen	Medium	متوسط
+bientôt	soon	قريبًا
+Facile	Easy	سهل
+plus tard	later	لاحقًا
+en boucle	looping	تكرار مستمر
+Réglages de répétition	Repetition settings	إعدادات التكرار
+Début (A)	Start (A)	البداية (A)
+Verset de début	Start verse	آية البداية
+Fin (B)	End (B)	النهاية (B)
+Verset de fin	End verse	آية النهاية
+Masquer le texte	Hide the text	إخفاء النص
+Reprendre	Resume	استئناف
+Écouter et répéter	Listen and repeat	استمع وردّد
+Masquer	Hide	إخفاء
+Révéler	Reveal	إظهار
+· mémorisé	· memorised	· محفوظة
+· à réviser	· to review	· للمراجعة
+· en cours	· in progress	· قيد الحفظ
+Comment s’est passée la récitation de mémoire ?	How did the recitation from memory go?	كيف كانت التلاوة عن ظهر قلب؟
+Masquez tout, récitez, puis évaluez-vous honnêtement : la date de révision est calculée pour chaque verset (SM-2).	Hide everything, recite, then grade yourself honestly: the review date is calculated for each verse (SM-2).	أخفِ كل شيء، واتلُ، ثم قيّم نفسك بصدق: يُحسب موعد المراجعة لكل آية (SM-2).
+Versets suivants	Next verses	الآيات التالية
+Répétitions	Repetitions	التكرارات
+Appliquées à la prochaine lecture	Applied to the next playback	تُطبَّق في التشغيل القادم
+Répéter chaque verset	Repeat each verse	تكرار كل آية
+Répéter toute la plage	Repeat the whole range	تكرار المقطع كاملًا
+En boucle	Looping	تكرار مستمر
+Pause entre les répétitions (pour répéter soi-même)	Pause between repetitions (to repeat yourself)	توقف بين التكرارات (لتردد بنفسك)
+= verset	= verse	= الآية
+1,5× verset	1.5× verse	١٫٥× الآية
+Vitesse	Speed	السرعة
+Récitateur	Reciter	القارئ
+Comme la lecture	Same as reading	كما في القراءة
+Sabaq · leçon du jour	Sabaq · today’s lesson	السبق · درس اليوم
+Sabqi · révision récente	Sabqi · recent review	السبقي · مراجعة قريبة
+Manzil · révision ancienne	Manzil · older review	المنزل · مراجعة قديمة
+Révision terminée	Review finished	انتهت المراجعة
+Rien à réviser aujourd’hui	Nothing to review today	لا شيء للمراجعة اليوم
+Commencez une nouvelle leçon pour alimenter la révision.	Start a new lesson to feed the review.	ابدأ درسًا جديدًا لتغذية المراجعة.
+Retour à la mémorisation	Back to memorisation	العودة إلى الحفظ
+Verset précédent (indice)	Previous verse (hint)	الآية السابقة (تلميح)
+Changer le masquage	Change the masking	تغيير الإخفاء
+Récitez le verset de mémoire, révélez pour vérifier, puis évaluez-vous.	Recite the verse from memory, reveal to check, then grade yourself.	اتلُ الآية عن ظهر قلب، ثم أظهرها للتحقق، ثم قيّم نفسك.
+Pas commencé	Not started	لم يبدأ
+En cours	In progress	قيد الحفظ
+À réviser	To review	للمراجعة
+Mémorisé	Memorised	محفوظ
+Écouter, répéter, masquer, réviser au bon moment (sabaq · sabqi · manzil).	Listen, repeat, hide, review at the right time (sabaq · sabqi · manzil).	استمع، ردّد، أخفِ، وراجع في الوقت المناسب (السبق · السبقي · المنزل).
+versets suivis	verses tracked	آية متابَعة
+mémorisés	memorised	محفوظة
+sourates complètes	complete surahs	سورة كاملة
+Tout est à jour — revenez demain.	All up to date — come back tomorrow.	كل شيء محدَّث — عُد غدًا.
+Commencez une leçon ci-dessous.	Start a lesson below.	ابدأ درسًا أدناه.
+Sabaq	Sabaq	السبق
+leçon du jour	today’s lesson	درس اليوم
+Sabqi	Sabqi	السبقي
+révision récente	recent review	مراجعة قريبة
+Manzil	Manzil	المنزل
+révision ancienne	older review	مراجعة قديمة
+Nouvelle leçon	New lesson	درس جديد
+Du verset	From verse	من الآية
+Premier verset	First verse	الآية الأولى
+Au verset	To verse	إلى الآية
+Dernier verset	Last verse	الآية الأخيرة
+La page	The page	الصفحة
+5 versets	5 verses	٥ آيات
+10 versets	10 verses	١٠ آيات
+Toute la sourate	The whole surah	السورة كاملة
+Conseil : 3 à 5 versets par jour, récitateur « Al-Husary (Mu‘allim) », puis masquez progressivement le texte.	Tip: 3 to 5 verses a day, reciter “Al-Husary (Mu‘allim)”, then gradually hide the text.	نصيحة: من ٣ إلى ٥ آيات يوميًا، مع القارئ «الحصري (المعلّم)»، ثم أخفِ النص تدريجيًا.
+Carte de progression	Progress map	خريطة التقدم
+114 sourates	114 surahs	١١٤ سورة
+30 juz’	30 juz’	٣٠ جزءًا
+pas commencé	not started	لم يبدأ
+Tout reste sur cet appareil. Un verset est « mémorisé » quand son intervalle de révision dépasse 21 jours.	Everything stays on this device. A verse is “memorised” when its review interval exceeds 21 days.	يبقى كل شيء على هذا الجهاز. تُعدّ الآية «محفوظة» حين تتجاوز فترة مراجعتها ٢١ يومًا.
+Choisir une sourate	Choose a surah	اختر سورة
+7 jours	7 days	٧ أيام
+≈ 87 p./jour	≈ 87 p./day	≈ ٨٧ صفحة/يوم
+10 jours	10 days	١٠ أيام
+3 juz’/jour	3 juz’/day	٣ أجزاء/يوم
+15 jours	15 days	١٥ يومًا
+2 juz’/jour	2 juz’/day	جزءان/يوم
+1 mois	1 month	شهر واحد
+1 juz’/jour	1 juz’/day	جزء/يوم
+2 mois	2 months	شهران
+≈ 10 p./jour	≈ 10 p./day	≈ ١٠ صفحات/يوم
+4 mois	4 months	٤ أشهر
+≈ 5 p./jour	≈ 5 p./day	≈ ٥ صفحات/يوم
+Rappel quotidien du wird	Daily wird reminder	تذكير الورد اليومي
+Après ‘Isha	After ‘Isha	بعد العشاء
+Calculé selon vos horaires de prière (45 min après Fajr ou 30 min après ‘Isha).	Calculated from your prayer times (45 min after Fajr or 30 min after ‘Isha).	يُحسب وفق مواقيت صلاتك (٤٥ دقيقة بعد الفجر أو ٣٠ دقيقة بعد العشاء).
+Planifier une khatma	Plan a khatma	التخطيط لختمة
+Lire tout le Coran (604 pages du mushaf de Médine) à votre rythme, avec un wird quotidien.	Read the whole Quran (604 pages of the Medina mushaf) at your own pace, with a daily wird.	اقرأ القرآن كاملًا (٦٠٤ صفحات من مصحف المدينة) بالوتيرة التي تناسبك، مع ورد يومي.
+Durée	Duration	المدة
+Nombre de jours	Number of days	عدد الأيام
+Commencer à la page	Start at page	البدء من الصفحة
+Page de départ	Starting page	صفحة البداية
+Commencer la khatma	Start the khatma	بدء الختمة
+Khatma achevée	Khatma completed	اكتملت الختمة
+Mabrouk, khatma terminée !	Mabrouk, khatma completed!	مبارك، تمت الختمة!
+Nouvelle khatma	New khatma	ختمة جديدة
+Wird du jour	Today’s wird	ورد اليوم
+Vous êtes dans les temps.	You are on schedule.	أنت ملتزم بالجدول.
+Page suivante lue	Next page read	تمت قراءة الصفحة التالية
+Wird du jour lu	Today’s wird read	تمت قراءة ورد اليوم
+La progression avance aussi automatiquement quand vous tournez les pages du mushaf.	Progress also advances automatically when you turn the pages of the mushaf.	يتقدم الإنجاز تلقائيًا أيضًا عند تقليب صفحات المصحف.
+Confirmer : effacer ce plan	Confirm: delete this plan	تأكيد: حذف هذه الخطة
+Abandonner ce plan	Abandon this plan	التخلي عن هذه الخطة
+Mode verset par verset	Verse-by-verse mode	وضع آية بآية
+Page suivante	Next page	الصفحة التالية
+Écouter la page	Listen to the page	الاستماع إلى الصفحة
+Lue	Read	مقروءة
+Page lue	Page read	تمت قراءة الصفحة
+Page précédente	Previous page	الصفحة السابقة
+Horaires de prière	Prayer times	مواقيت الصلاة
+priere salat horaires adhan	prayer salat times adhan priere horaires	صلاة مواقيت أذان prayer salat adhan
+tasbih compteur chapelet misbaha	tasbih counter prayer beads misbaha compteur chapelet	تسبيح عداد مسبحة سبحة tasbih misbaha
+Qibla	Qibla	القبلة
+qibla boussole kaaba direction	qibla compass kaaba direction boussole	قبلة بوصلة كعبة اتجاه qibla kaaba
+abjad calcul mashriqi maghribi	abjad calculation mashriqi maghribi calcul	أبجد حساب الجمل مشرقي مغربي abjad
+tijani tijaniyya wird wazifa haylala hailala	tijani tijaniyya wird wazifa haylala hailala	تجاني تجانية ورد وظيفة هيللة tijani wird wazifa
+communaute cercle famille live	community circle family live communaute cercle famille	مجتمع حلقة عائلة مباشر community family live
+kahf vendredi jumua	kahf friday jumuah jumua vendredi	كهف جمعة kahf friday
+hadith sunna	hadith sunnah sunna	حديث سنة hadith sunnah
+fiqh maliki shafii jurisprudence	fiqh maliki shafii jurisprudence	فقه مالكي شافعي fiqh maliki shafii
+Réglages	Settings	الإعدادات
+reglages parametres langue theme sombre clair	settings preferences language theme dark light reglages parametres	إعدادات تفضيلات لغة سمة داكن فاتح settings language theme
+Compteur Bluetooth	Bluetooth counter	عدّاد البلوتوث
+bluetooth bague ring compteur	bluetooth ring counter bague compteur	بلوتوث خاتم عداد bluetooth ring
+mes zikrs composer	my zikrs compose composer	أذكاري تأليف تركيب zikrs compose
+Sections	Sections	الأقسام
+Noms d’Allah	Names of Allah	أسماء الله
+Du‘as du Coran	Du‘as from the Quran	أدعية من القرآن
+Salawat	Salawat	الصلوات على النبي ﷺ
+Suggestions	Suggestions	اقتراحات
+Yasin	Yasin	يس
+Ibrahimiyya	Ibrahimiyya	الصلاة الإبراهيمية
+Kahf	Kahf	الكهف
+(hors ligne).	(offline).	(دون اتصال).
+Versets du Coran (en ligne)	Quran verses (online)	آيات القرآن (عبر الإنترنت)
+Chercher «	Search for “	البحث عن «
+» en ligne ·	” online ·	» عبر الإنترنت ·
+(ou hors ligne).	(or offline).	(أو دون اتصال).
+Commencer par Al-Fatiha	Start with Al-Fatiha	البدء بسورة الفاتحة
+Oui	Yes	نعم
+Non	No	لا
+Ajoute la sourate Al-Fatiha (1×) comme première étape de chaque composition, sans modifier la composition enregistrée.	Adds Surah Al-Fatiha (1×) as the first step of every composition, without changing the saved composition.	تُضاف سورة الفاتحة (مرة واحدة) خطوةً أولى في كل تركيبة، دون تعديل التركيبة المحفوظة.
+Fichier introuvable sur cet appareil. Réimportez-le.	File not found on this device. Import it again.	الملف غير موجود على هذا الجهاز. أعد استيراده.
+Zikru · Chants soufis	Zikru · Sufi chants	Zikru · الأناشيد الصوفية
+Lecture impossible pour ce fichier.	This file cannot be played.	تعذّر تشغيل هذا الملف.
+Import impossible.	Import failed.	تعذّر الاستيراد.
+URL invalide (http/https).	Invalid URL (http/https).	رابط غير صالح (http/https).
+Retirer cette piste ?	Remove this track?	حذف هذا المقطع؟
+Qasa’id · madih	Qasa’id · madih	القصائد · المديح
+Votre bibliothèque personnelle de chants, stockée uniquement sur cet appareil.	Your personal library of chants, stored only on this device.	مكتبتك الشخصية من الأناشيد، محفوظة على هذا الجهاز فقط.
+Lien	Link	رابط
+Fichier local	Local file	ملف محلي
+Importer des fichiers	Import files	استيراد ملفات
+Ajouter un lien	Add a link	إضافة رابط
+URL du fichier audio	Audio file URL	رابط الملف الصوتي
+Titre (facultatif)	Title (optional)	العنوان (اختياري)
+Aucun chant pour l’instant	No chants yet	لا أناشيد بعد
+Ajoutez vos chants : « Importer des fichiers » (MP3, M4A… depuis votre ordinateur ou téléphone) ou « Ajouter un lien » vers un fichier audio. Ils restent dans ce navigateur.	Add your chants: “Import files” (MP3, M4A… from your computer or phone) or “Add a link” to an audio file. They stay in this browser.	أضف أناشيدك: «استيراد ملفات» (MP3 وM4A… من حاسوبك أو هاتفك) أو «إضافة رابط» لملف صوتي. تبقى في هذا المتصفح.
+Ajoutez vos chants : « Importer des fichiers » ouvre l’app Fichiers (iCloud Drive, AirDrop, téléchargements), ou « Ajouter un lien » vers un fichier audio. La lecture continue écran verrouillé.	Add your chants: “Import files” opens the Files app (iCloud Drive, AirDrop, downloads), or “Add a link” to an audio file. Playback continues with the screen locked.	أضف أناشيدك: «استيراد ملفات» يفتح تطبيق الملفات (iCloud Drive وAirDrop والتنزيلات)، أو «إضافة رابط» لملف صوتي. يستمر التشغيل والشاشة مقفلة.
+Ma liste ·	My list ·	قائمتي ·
+Zikru ne fournit aucun enregistrement : ajoutez uniquement des fichiers que vous avez le droit d’écouter. Rien n’est envoyé sur internet.	Zikru provides no recordings: only add files you have the right to listen to. Nothing is sent to the internet.	لا يوفّر Zikru أي تسجيلات: أضف فقط ملفات يحق لك الاستماع إليها. لا يُرسَل شيء إلى الإنترنت.
+Sources & Méthodologie	Sources & Methodology	المصادر والمنهجية
+Calcul astronomique local, sans réseau, avec la bibliothèque open-source « adhan » (Batoul Apps, licence MIT), algorithmes issus de « Astronomical Algorithms » (Jean Meeus).	Local astronomical calculation, with no network, using the open-source “adhan” library (Batoul Apps, MIT licence), with algorithms from “Astronomical Algorithms” (Jean Meeus).	حساب فلكي محلي دون شبكة، بمكتبة «adhan» مفتوحة المصدر (Batoul Apps، رخصة MIT)، بخوارزميات مأخوذة من كتاب «Astronomical Algorithms» لجان ميوس.
+Méthode active :	Active method:	الطريقة المفعّلة:
+. Asr :	. Asr:	، العصر:
+ombre ×2 (Hanafi)	shadow ×2 (Hanafi)	الظل ×٢ (الحنفي)
+ombre ×1 (majorité)	shadow ×1 (majority)	الظل ×١ (الجمهور)
+. Règle hautes latitudes : recommandée par adhan selon la latitude.	. High-latitude rule: recommended by adhan according to latitude.	، قاعدة خطوط العرض العليا: حسب توصية adhan وفق خط العرض.
+Les heures sont affichées dans le fuseau horaire de l’appareil.	Times are shown in the device’s time zone.	تُعرض الأوقات بالمنطقة الزمنية للجهاز.
+Azimut du grand cercle vers la Kaaba (21,4225° N, 39,8262° E), depuis le nord géographique.	Great-circle azimuth towards the Kaaba (21.4225° N, 39.8262° E), from true north.	سمت الدائرة العظمى نحو الكعبة (٢١٫٤٢٢٥° ش، ٣٩٫٨٢٦٢° ق)، انطلاقًا من الشمال الجغرافي.
+La boussole du téléphone peut être perturbée par des objets métalliques : calibrez-la et vérifiez l’angle.	The phone’s compass can be disturbed by metal objects: calibrate it and check the angle.	قد تتأثر بوصلة الهاتف بالأجسام المعدنية: قم بمعايرتها وتحقق من الزاوية.
+Calendrier hégirien	Hijri calendar	التقويم الهجري
+Calendrier tabulaire arithmétique (cycle de 30 ans, 11 années abondantes, époque civile du 16 juillet 622 julien). Source unique : src/lib/hijri.ts.	Arithmetic tabular calendar (30-year cycle, 11 leap years, civil epoch of 16 July 622 Julian). Single source: src/lib/hijri.ts.	تقويم حسابي جدولي (دورة ٣٠ سنة، ١١ سنة كبيسة، بداية مدنية في ١٦ يوليو ٦٢٢ يوليانيًا). مصدر واحد: src/lib/hijri.ts.
+Peut différer de ±1–2 jours de l’observation du croissant ou du calendrier Umm al-Qura : ajustez dans Réglages (actuel :	May differ by ±1–2 days from crescent sighting or the Umm al-Qura calendar: adjust in Settings (current:	قد يختلف بيوم أو يومين عن رؤية الهلال أو تقويم أم القرى: عدّله في الإعدادات (الحالي:
+Auto-tests (dates limites 29/30, années abondantes, passage d’année) :	Self-tests (29/30 boundary dates, leap years, year rollover):	الاختبارات الذاتية (تواريخ حدود ٢٩/٣٠، السنوات الكبيسة، الانتقال بين السنوات):
+réussis.	passed.	ناجحة.
+Texte arabe embarqué pour la lecture et la recherche hors-ligne : Tanzil Quran Text (Simple, version 1.1), © 2007-2026 Tanzil Project, licence Creative Commons Attribution 3.0, reproduit sans modification. Source et mises à jour : tanzil.net.	Arabic text embedded for offline reading and search: Tanzil Quran Text (Simple, version 1.1), © 2007-2026 Tanzil Project, Creative Commons Attribution 3.0 licence, reproduced without modification. Source and updates: tanzil.net.	النص العربي المضمَّن للقراءة والبحث دون اتصال: Tanzil Quran Text (الإملائي المبسط، الإصدار 1.1)، © 2007-2026 مشروع تنزيل، رخصة المشاع الإبداعي نَسب المُصنَّف 3.0، منقول دون تعديل. المصدر والتحديثات: tanzil.net.
+Lecture en ligne et traductions (Muhammad Hamidullah, Bubenheim & Elyas, Marmaduke Pickthall — domaine public) : api.alquran.cloud. La traduction n’est pas incluse dans l’app : elle est téléchargée à votre demande puis conservée sur l’appareil.	Online reading and translations (Muhammad Hamidullah, Bubenheim & Elyas, Marmaduke Pickthall — public domain): api.alquran.cloud. The translation is not included in the app: it is downloaded on request and then kept on the device.	القراءة عبر الإنترنت والترجمات (محمد حميد الله، بوبنهايم وإلياس، مارمادوك بكثال — ملكية عامة): api.alquran.cloud. الترجمة غير مضمَّنة في التطبيق: تُنزَّل عند الطلب ثم تُحفظ على الجهاز.
+La recherche ignore les voyelles et signes (tashkīl), le tatwīl et les variantes de alif, hamza, yā’ et tā’ marbūṭa.	Search ignores vowels and signs (tashkīl), tatwīl, and variants of alif, hamza, yā’ and tā’ marbūṭa.	يتجاهل البحث الحركات والعلامات (التشكيل) والتطويل وأشكال الألف والهمزة والياء والتاء المربوطة.
+Lecture en écriture uthmanie (riwaya Hafs ‘an ‘Asim) : Tanzil Quran Text (Uthmani, version 1.1), © Tanzil Project, CC BY 3.0, reproduit sans modification. Découpage en juz’, hizb, quarts, pages du mushaf de Médine (604) et sajdas : métadonnées Tanzil (CC BY 3.0).	Reading in Uthmani script (riwaya Hafs ‘an ‘Asim): Tanzil Quran Text (Uthmani, version 1.1), © Tanzil Project, CC BY 3.0, reproduced without modification. Division into juz’, hizb, quarters, Medina mushaf pages (604) and sajdas: Tanzil metadata (CC BY 3.0).	القراءة بالرسم العثماني (رواية حفص عن عاصم): Tanzil Quran Text (العثماني، الإصدار 1.1)، © مشروع تنزيل، CC BY 3.0، منقول دون تعديل. التقسيم إلى أجزاء وأحزاب وأرباع وصفحات مصحف المدينة (٦٠٤) والسجدات: بيانات تنزيل الوصفية (CC BY 3.0).
+Police : Amiri Quran (Khaled Hosny), licence SIL Open Font License 1.1.	Font: Amiri Quran (Khaled Hosny), SIL Open Font License 1.1.	الخط: Amiri Quran (خالد حسني)، رخصة SIL Open Font License 1.1.
+Récitations diffusées verset par verset à l’écoute, jamais incluses dans l’app : EveryAyah.com, avec secours cdn.islamic.network (Islamic Network). Les droits des récitations appartiennent à leurs récitateurs et éditeurs. Les récitateurs Warsh sont proposés en audio ; le texte affiché reste celui de Hafs (aucun texte Warsh sous licence libre vérifiée n’est intégré).	Recitations streamed verse by verse on listening, never included in the app: EveryAyah.com, with cdn.islamic.network (Islamic Network) as fallback. Rights to the recitations belong to their reciters and publishers. Warsh reciters are offered as audio; the displayed text remains that of Hafs (no Warsh text under a verified free licence is included).	التلاوات تُبث آيةً آيةً عند الاستماع ولا تُضمَّن في التطبيق أبدًا: EveryAyah.com، مع cdn.islamic.network (Islamic Network) احتياطًا. حقوق التلاوات لقرّائها وناشريها. يُتاح قرّاء رواية ورش صوتيًا، ويبقى النص المعروض برواية حفص (لم يُضمَّن نص لورش برخصة حرة موثَّقة).
+Translittération et tafsirs (At-Tafsir al-Muyassar, Jalalayn) : api.alquran.cloud ; Tafsir as-Sa‘di et Ibn Kathir abrégé : api.quran.com. Chargés à la demande ; un tafsir est une explication humaine, pas le texte révélé.	Transliteration and tafsirs (At-Tafsir al-Muyassar, Jalalayn): api.alquran.cloud; Tafsir as-Sa‘di and abridged Ibn Kathir: api.quran.com. Loaded on request; a tafsir is a human explanation, not the revealed text.	النقحرة والتفاسير (التفسير الميسر، الجلالين): api.alquran.cloud؛ تفسير السعدي ومختصر ابن كثير: api.quran.com. تُحمَّل عند الطلب؛ والتفسير شرح بشري وليس النص المنزَّل.
+Mémorisation : répétition espacée SM-2 (P. Wozniak, 1987) organisée en sabaq, sabqi et manzil. Toutes vos données (marque-pages, notes, khatma, mémorisation) restent sur l’appareil.	Memorisation: SM-2 spaced repetition (P. Wozniak, 1987) organised into sabaq, sabqi and manzil. All your data (bookmarks, notes, khatma, memorisation) stays on the device.	الحفظ: تكرار متباعد بطريقة SM-2 (ب. فوزنياك، ١٩٨٧) منظَّم في السبق والسبقي والمنزل. تبقى جميع بياناتك (العلامات والملاحظات والختمة والحفظ) على الجهاز.
+Textes et traductions	Texts and translations	النصوص والترجمات
+Seuls les contenus au statut « approuvé » sont affichés ; chacun cite sa source. Les textes arabes conservent leurs diacritiques. Aucune traduction religieuse n’est générée par l’app.	Only content with “approved” status is displayed; each item cites its source. Arabic texts keep their diacritics. No religious translation is generated by the app.	لا يُعرض إلا المحتوى «المعتمد»، ويذكر كلٌّ مصدره. وتحتفظ النصوص العربية بتشكيلها. لا يولّد التطبيق أي ترجمة دينية.
+Traductions approuvées : aucune pour le moment (liste à fournir).	Approved translations: none for now (list to be provided).	الترجمات المعتمدة: لا شيء حاليًا (القائمة قيد الإعداد).
+Limites et responsabilité	Limitations and responsibility	الحدود والمسؤولية
+Zikru est un outil d’aide. Les horaires et la date hégirienne sont des calculs ; en cas de doute, référez-vous à votre mosquée ou à une autorité religieuse locale. Les contenus marqués « Exemple » doivent être validés par un référent avant publication.	Zikru is a support tool. Prayer times and the Hijri date are calculations; if in doubt, refer to your mosque or a local religious authority. Content marked “Example” must be validated by a referent before publication.	Zikru أداة مساعدة. المواقيت والتاريخ الهجري حسابات؛ وعند الشك ارجع إلى مسجدك أو إلى جهة دينية محلية. ويجب أن يعتمد مرجعٌ المحتوى الموسوم «مثال» قبل نشره.
+Wazifa	Wazifa	الوظيفة
+Hailala	Hailala	الهيللة
+La Voie	The Path	الطريقة
+Adilla	Adilla	الأدلة
+Programme Tijaniyya	Tijaniyya programme	برنامج الطريقة التجانية
+Wird · Wazifa · Hailala	Wird · Wazifa · Hailala	الورد · الوظيفة · الهيللة
+Suivez votre muqaddam	Follow your muqaddam	اتّبع مقدَّمك
+Programme tijani du jour	Today’s Tijani programme	البرنامج التجاني لليوم
+Vue 24 h	24-hour view	عرض ٢٤ ساعة
+Maintenant	Now	الآن
+Wird al-Lazim	Wird al-Lazim	الورد اللازم
+Hailala (vendredi)	Hailala (Friday)	الهيللة (الجمعة)
+Créneaux indicatifs ; votre muqaddam précise les horaires exacts.	Indicative time slots; your muqaddam specifies the exact times.	أوقات تقريبية؛ يحدد مقدَّمك الأوقات الدقيقة.
+Étapes	Steps	الخطوات
+Faites	Done	تمّت
+Total	Total	المجموع
+marquer comme fait	mark as done	تحديد كمُنجَز
+Traduction indicative.	Indicative translation.	ترجمة تقريبية.
+Indicative translation.	Indicative translation.	ترجمة تقريبية.
+C’est vendredi aujourd’hui : Jumu‘a mubaraka !	It’s Friday today: Jumu‘a mubaraka!	اليوم الجمعة: جمعة مباركة!
+Prochaine hailala : vendredi, après ‘Asr.	Next hailala: Friday, after ‘Asr.	الهيللة القادمة: الجمعة بعد العصر.
+Bārak Allāhu fīk — pratique complétée aujourd’hui.	Bārak Allāhu fīk — practice completed today.	بارك الله فيك — اكتملت ممارسة اليوم.
+Conditions de la voie	Conditions of the path	شروط الطريقة
+Telles qu’elles sont couramment énoncées ; le muqaddam les explique lors de la transmission.	As they are commonly stated; the muqaddam explains them at transmission.	كما تُذكر عادةً؛ ويشرحها المقدَّم عند التلقين.
+Adilla — preuves du dhikr	Adilla — proofs of dhikr	الأدلة — أدلة الذكر
+Versets (sourate:verset, sens traduit) et hadiths (recueil + numéro).	Verses (surah:verse, translated meaning) and hadiths (collection + number).	آيات (السورة:الآية، مع المعنى المترجم) وأحاديث (المصنَّف + الرقم).
+Hadith	Hadith	الحديث
+Moins une répétition	One repetition fewer	تكرار أقل بواحد
+Nombre de répétitions	Number of repetitions	عدد التكرارات
+Plus une répétition	One repetition more	تكرار إضافي
+Composition introuvable.	Composition not found.	التركيبة غير موجودة.
+Texte copié	Text copied	تم نسخ النص
+Composition	Composition	التركيبة
+Nom	Name	الاسم
+Ex. Wird du matin	E.g. Morning wird	مثال: ورد الصباح
+Nom de la composition	Composition name	اسم التركيبة
+Intention (niyya)	Intention (niyya)	النية
+Ex. Pour la facilité dans mes affaires	E.g. For ease in my affairs	مثال: لتيسير أموري
+Intention	Intention	النية
+Objectif quotidien	Daily goal	الهدف اليومي
+Activé	On	مفعّل
+Libre	Free	حر
+fois par jour	times a day	مرة في اليوم
+Ajoutez des Noms d’Allah, des du‘as coraniques ou prophétiques, des prières sur le Prophète ﷺ, un verset ou votre propre texte.	Add Names of Allah, Quranic or Prophetic du‘as, prayers upon the Prophet ﷺ, a verse or your own text.	أضف أسماء الله، أو أدعية قرآنية أو نبوية، أو صلوات على النبي ﷺ، أو آية، أو نصك الخاص.
+Pendant la pratique, Al-Fatiha (1×) est récitée en première étape. Réglable dans Réglages › Mes zikrs.	During practice, Al-Fatiha (1×) is recited as the first step. Adjustable in Settings › My zikrs.	أثناء الممارسة تُقرأ الفاتحة (مرة واحدة) خطوةً أولى. يمكن تغيير ذلك من الإعدادات › أذكاري.
+Calcul sur le Nom sans « yā » ni article.	Calculated on the Name without “yā” or the article.	يُحسب على الاسم دون «يا» ولا «ال».
+Monter	Move up	تحريك لأعلى
+Descendre	Move down	تحريك لأسفل
+Dupliquer	Duplicate	تكرار
+Supprimer l’élément	Delete the item	حذف العنصر
+Ajouter un élément	Add an item	إضافة عنصر
+Abjad de la composition	Abjad of the composition	القيمة الأبجدية للتركيبة
+une récitation de chaque	one recitation of each	تلاوة واحدة لكل
+avec les répétitions	with the repetitions	مع التكرارات
+Pratiquer	Practise	ممارسة
+Partager / exporter	Share / export	مشاركة / تصدير
+Confirmer	Confirm	تأكيد
+Texte copié dans le presse-papiers	Text copied to the clipboard	تم نسخ النص إلى الحافظة
+Composez vos propres zikrs : Noms d’Allah, du‘as coraniques et prophétiques, ṣalawāt, texte libre — abjad calculé automatiquement.	Compose your own zikrs: Names of Allah, Quranic and Prophetic du‘as, ṣalawāt, free text — abjad calculated automatically.	ركّب أذكارك الخاصة: أسماء الله، أدعية قرآنية ونبوية، صلوات على النبي ﷺ، نص حر — مع حساب القيمة الأبجدية تلقائيًا.
+Nouvelle composition	New composition	تركيبة جديدة
+Aucune composition pour l’instant	No compositions yet	لا تركيبات بعد
+Créez un zikr puis ajoutez-y des éléments, chacun avec son nombre de répétitions. Vous pouvez aussi utiliser « Ajouter à un zikr » depuis les Noms d’Allah, les Du‘as ou le Coran.	Create a zikr, then add items to it, each with its number of repetitions. You can also use “Add to a zikr” from the Names of Allah, the Du‘as or the Quran.	أنشئ ذكرًا ثم أضف إليه عناصر، لكلٍّ منها عدد تكراراته. ويمكنك أيضًا استعمال «إضافة إلى ذكر» من أسماء الله أو الأدعية أو القرآن.
+Les 99 Noms	The 99 Names	الأسماء الحسنى التسعة والتسعون
+aujourd’hui	today	اليوم
+Vos compositions sont enregistrées sur cet appareil. Les sessions pratiquées apparaissent dans l’historique du tasbih.	Your compositions are saved on this device. Practised sessions appear in the tasbih history.	تُحفظ تركيباتك على هذا الجهاز. وتظهر الجلسات المنجزة في سجل التسبيح.
+Cette composition est vide.	This composition is empty.	هذه التركيبة فارغة.
+Composition terminée	Composition finished	اكتملت التركيبة
+Recommencer	Start again	البدء من جديد
+Touchez le cercle ou utilisez votre compteur Bluetooth ; l’étape suivante démarre automatiquement.	Tap the circle or use your Bluetooth counter; the next step starts automatically.	اضغط على الدائرة أو استعمل عدّاد البلوتوث؛ تبدأ الخطوة التالية تلقائيًا.
+Précédente	Previous	السابقة
+Passer	Skip	تخطٍّ
+Allāhu akbar	Allāhu akbar	الله أكبر
+Local uniquement	Local only	محلي فقط
+Les groupes et compteurs sont enregistrés sur cet appareil. Rien n’est envoyé en ligne : saisissez les contributions de votre cercle (ex. après une séance de dhikr) et partagez l’avancée par message.	Groups and counters are saved on this device. Nothing is sent online: enter your circle’s contributions (e.g. after a dhikr session) and share the progress by message.	تُحفظ المجموعات والعدادات على هذا الجهاز. لا يُرسَل شيء عبر الإنترنت: أدخل مساهمات حلقتك (مثلًا بعد مجلس ذكر) وشارك التقدم برسالة.
+Votre nom (pour l’historique)	Your name (for the history)	اسمك (للسجل)
+Objectif atteint	Goal reached	تحقق الهدف
+Autre nombre	Other number	عدد آخر
+Aucune contribution pour l’instant.	No contributions yet.	لا مساهمات بعد.
+Partager l’avancée	Share the progress	مشاركة التقدم
+Annuler la dernière contribution	Undo the last contribution	التراجع عن آخر مساهمة
+Nouveau groupe	New group	مجموعة جديدة
+Formule (facultatif)	Formula (optional)	الصيغة (اختياري)
+Lā ilāha illā-llāh	Lā ilāha illā-llāh	لا إله إلا الله
+Objectif	Goal	الهدف
+Créer un groupe	Create a group	إنشاء مجموعة
+Position {a} sur {b}	Position {a} of {b}	الموضع {a} من {b}
+Mise en mémoire…	Buffering…	جارٍ التخزين المؤقت…
+Précédent	Previous	السابق
+Reculer de 15 secondes	Back 15 seconds	الرجوع ١٥ ثانية
+Avancer de 15 secondes	Forward 15 seconds	التقدم ١٥ ثانية
+Suivant	Next	التالي
+Impossible de charger	Unable to load	تعذّر التحميل
+Fondateur	Founder	المؤسس
+Machā’Allāh, vous l’avez fait ensemble !	Mashā’Allāh, you did it together!	ما شاء الله، أنجزتموه معًا!
+Chaque dhikr compte. Ensemble, on avance doucement.	Every dhikr counts. Together, we move forward gently.	كل ذكر له قيمته. معًا نتقدم بهدوء.
+a participé ✓	took part ✓	شارك ✓
+Pour moi	For me	لي
+Relié à mon tasbih ✓	Linked to my tasbih ✓	مرتبط بتسبيحي ✓
+Relier à mon tasbih (et au compteur Bluetooth)	Link to my tasbih (and the Bluetooth counter)	الربط بتسبيحي (وبعدّاد البلوتوث)
+Votre choix de partage est « Rien » ici : vos appuis ne sont pas envoyés.	Your sharing choice is “Nothing” here: your taps are not sent.	اخترتَ هنا مشاركة «لا شيء»: لا تُرسَل ضغطاتك.
+Archiver l’objectif	Archive the goal	أرشفة الهدف
+Archiver cet objectif ?	Archive this goal?	أرشفة هذا الهدف؟
+Il ne sera plus affiché.	It will no longer be displayed.	لن يُعرض بعد الآن.
+Archiver	Archive	أرشفة
+Nouvel objectif commun	New shared goal	هدف مشترك جديد
+Nouvel objectif	New goal	هدف جديد
+Salāt ‘alā n-Nabī	Ṣalāt ‘alā n-Nabī	الصلاة على النبي ﷺ
+Allāhumma ṣalli ‘alā Muḥammad	Allāhumma ṣalli ‘alā Muḥammad	اللهم صل على محمد
+Titre et objectif requis.	Title and goal required.	العنوان والهدف مطلوبان.
+Inviter	Invite	دعوة
+Utilisations	Uses	مرات الاستعمال
+1 personne	1 person	شخص واحد
+Valable	Valid	صالح لمدة
+1 jour	1 day	يوم واحد
+30 jours	30 days	٣٠ يومًا
+Créer et partager le code	Create and share the code	إنشاء الرمز ومشاركته
+Invitations actives	Active invitations	الدعوات النشطة
+· jusqu’au	· until	· حتى
+Révoquer	Revoke	إلغاء
+Ce que je partage ici	What I share here	ما أشاركه هنا
+Rien	Nothing	لا شيء
+Participation	Participation	المشاركة
+Compteur	Counter	العدد
+Rien : vous n’apparaissez pas dans le détail et vos appuis reliés ne sont pas envoyés.	Nothing: you don’t appear in the details and your linked taps are not sent.	لا شيء: لا تظهر في التفاصيل ولا تُرسَل ضغطاتك المرتبطة.
+Participation : les autres voient seulement que vous avez participé, jamais votre nombre.	Participation: others only see that you took part, never your number.	المشاركة: يرى الآخرون أنك شاركت فقط، دون عددك أبدًا.
+Compteur : votre nombre de dhikr est visible des membres de ce lieu.	Counter: your dhikr count is visible to the members of this space.	العدد: عدد أذكارك ظاهر لأعضاء هذا المكان.
+Zikr du soir	Evening zikr	ذكر المساء
+Récitez ensemble à distance : chacun compte sur son téléphone ou sa bague, le total s’affiche en direct.	Recite together from afar: everyone counts on their phone or ring, and the total is shown live.	اذكروا معًا عن بُعد: يعدّ كلٌّ على هاتفه أو خاتمه، ويظهر المجموع مباشرة.
+Nouvelle session	New session	جلسة جديدة
+Lancer	Start	بدء
+Bravo	Well done	أحسنت
+Bravo, machā’Allāh ! Continue ainsi.	Well done, mashā’Allāh! Keep it up.	أحسنت، ما شاء الله! واصل هكذا.
+Qu’Allah te bénisse et facilite tes affaires.	May Allah bless you and make your affairs easy.	بارك الله فيك ويسّر أمورك.
+Petit rappel affectueux pour ton wird du jour.	A gentle reminder for your wird today.	تذكير لطيف بوردك اليوم.
+As-salāmu ‘alaykum, je pense à toi.	As-salāmu ‘alaykum, I’m thinking of you.	السلام عليكم، أنت في بالي.
+Encouragements	Encouragement	التشجيع
+Messages privés et bienveillants, visibles seulement par l’expéditeur et le destinataire (et les parents pour les enfants).	Private, kind messages, visible only to the sender and the recipient (and to parents for children).	رسائل خاصة ولطيفة، لا يراها إلا المرسل والمستقبل (والوالدان بالنسبة إلى الأطفال).
+Message	Message	رسالة
+Aucun destinataire possible pour l’instant.	No possible recipient yet.	لا يوجد مستقبل متاح بعد.
+Lettres lumineuses	Luminous letters	الحروف النورانية
+Les 14 lettres des ouvertures de sourates, en doré discret	The 14 letters of the surah openings, in subtle gold	الحروف الأربعة عشر في فواتح السور، بلون ذهبي هادئ
+Lettres isolées d’ouverture	Isolated opening letters	الحروف المقطعة
+Souligne les lettres isolées (Alif Lām Mīm…) au début de 29 sourates	Underlines the isolated letters (Alif Lām Mīm…) at the start of 29 surahs	يضع خطًّا تحت الحروف المقطعة (الم…) في أوائل ٢٩ سورة
+Masquer la fiche	Hide the sheet	إخفاء البطاقة
+En savoir plus sur les lettres lumineuses	Learn more about the luminous letters	المزيد عن الحروف النورانية
+Vingt-neuf sourates s’ouvrent par des lettres isolées (al-ḥurūf al-muqaṭṭaʿa), comme Alif Lām Mīm. Sans les répétitions, elles se ramènent à 14 lettres, soit la moitié de l’alphabet ; on les appelle souvent « lettres lumineuses » (al-ḥurūf an-nūrāniyya).	Twenty-nine surahs open with isolated letters (al-ḥurūf al-muqaṭṭaʿa), such as Alif Lām Mīm. Without repetitions, they come down to 14 letters, half the alphabet; they are often called the “luminous letters” (al-ḥurūf an-nūrāniyya).	تُفتتح تسع وعشرون سورة بحروف مقطعة مثل «الم». وإذا حُذف المكرر منها بقيت أربعة عشر حرفًا، أي نصف حروف الهجاء، وتُسمّى كثيرًا «الحروف النورانية».
+Formule mnémotechnique traditionnelle :	Traditional mnemonic phrase:	العبارة التقليدية لحفظها:
+Leur sens exact : « Allah en connaît mieux le sens » est l’avis rapporté de nombreux savants. Az-Zamakhsharī (al-Kashshāf) et Ibn Kathīr (Tafsīr, début de la sourate al-Baqara) relèvent qu’elles regroupent la moitié des lettres et y voient un signe de l’inimitabilité du Coran, composé de ces mêmes lettres.	Their exact meaning: “Allah knows best their meaning” is the view reported from many scholars. Az-Zamakhsharī (al-Kashshāf) and Ibn Kathīr (Tafsīr, beginning of Surah al-Baqara) note that they gather half the letters and see in them a sign of the inimitability of the Quran, which is composed of these very letters.	معناها الدقيق: «الله أعلم بمراده بها» هو القول المنقول عن كثير من العلماء. وقد نبّه الزمخشري (الكشاف) وابن كثير (التفسير، أول سورة البقرة) إلى أنها تجمع نصف الحروف، ورأيا فيها إشارة إلى إعجاز القرآن المؤلَّف من هذه الحروف نفسها.
+Du‘as coraniques	Quranic du‘as	أدعية قرآنية
+Ṣalawāt ﷺ	Ṣalawāt ﷺ	الصلوات على النبي ﷺ
+Verset au choix	Verse of your choice	آية تختارها
+Texte libre	Free text	نص حر
+Sourate, verset (2:255) ou mots en arabe	Surah, verse (2:255) or words in Arabic	سورة أو آية (2:255) أو كلمات بالعربية
+Rechercher une sourate ou un verset	Search for a surah or a verse	البحث عن سورة أو آية
+Versets (hors-ligne)	Verses (offline)	آيات (دون اتصال)
+Changer de sourate	Change surah	تغيير السورة
+Verset	Verse	الآية
+Dernier verset (facultatif)	Last verse (optional)	الآية الأخيرة (اختياري)
+Jusqu’à 20 versets consécutifs.	Up to 20 consecutive verses.	حتى ٢٠ آية متتالية.
+Impossible de charger la sourate (connexion requise la première fois).	Unable to load the surah (connection required the first time).	تعذّر تحميل السورة (يلزم الاتصال في المرة الأولى).
+Ajouter ce passage	Add this passage	إضافة هذا المقطع
+Titre (ex. Tahlīl)	Title (e.g. Tahlīl)	العنوان (مثال: التهليل)
+Translittération (facultatif)	Transliteration (optional)	النقحرة (اختياري)
+Traduction (facultatif)	Translation (optional)	الترجمة (اختياري)
+Votre texte n’est pas vérifié : assurez-vous de sa source.	Your text is not verified: make sure of its source.	نصك غير موثَّق: تأكد من مصدره.
+Terminer	Finish	إنهاء
+Aucun résultat pour «	No results for “	لا نتائج لـ «
+Course du soleil et horaires de prière	Sun path and prayer times	مسار الشمس ومواقيت الصلاة

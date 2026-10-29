@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import Svg, { Circle, Defs, G, Line, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { getGpsPlace } from '@/lib/location';
 import { distanceToKaabaKm, qiblaBearing } from '@/lib/prayer';
@@ -8,6 +9,7 @@ import { useSettings } from '@/lib/settings';
 import { HeroHeader, IconBadge, tapHaptic, useLayout } from '@/ui/ds';
 import { Button, Card, Muted, Notice, Screen, Spacer } from '@/ui/kit';
 import { alpha, brand as b, elevation, theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /** Cap de l'appareil : natif via expo-location, web via DeviceOrientationEvent (si disponible). */
 type Heading = { deg: number; poor: boolean };
@@ -101,7 +103,7 @@ export default function Qibla() {
         </View>
       </HeroHeader>
       <Spacer h={20} />
-      <View style={{ alignItems: 'center' }} accessible accessibilityLabel={`${tr.qibla_title} ${Math.round(bearing)} degrés ${tr.qibla_from_north}`}>
+      <View style={{ alignItems: 'center' }} accessible accessibilityLabel={L('{t} {n} degrés {f}', { t: tr.qibla_title, n: Math.round(bearing), f: tr.qibla_from_north })}>
         <View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: b.paper }, elevation(2)]}>
           <Svg width={size} height={size} viewBox="-160 -160 320 320">
             <Defs>

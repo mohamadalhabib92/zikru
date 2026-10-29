@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { alpha } from '@/ui/theme';
 import type { Pal } from './palette';
+import { L } from '@/lib/l10n';
 
 /** Feuille modale du bas, aux couleurs du lecteur. */
 export function Sheet({ visible, onClose, title, subtitle, pal, children, footer }: { visible: boolean; onClose: () => void; title: string; subtitle?: string; pal: Pal; children: ReactNode; footer?: ReactNode }) {
@@ -12,7 +14,7 @@ export function Sheet({ visible, onClose, title, subtitle, pal, children, footer
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Pressable accessibilityLabel="Fermer" onPress={onClose} style={{ flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
+        <Pressable accessibilityLabel={L("Fermer")} onPress={onClose} style={{ flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 640, maxHeight: '88%', backgroundColor: pal.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: Math.max(insets.bottom, 12) }}>
             <View style={{ alignItems: 'center', paddingTop: 8 }}>
               <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: alpha(pal.muted, 0.4) }} />
@@ -24,7 +26,7 @@ export function Sheet({ visible, onClose, title, subtitle, pal, children, footer
                 </Text>
                 {subtitle ? <Text style={{ color: pal.muted, fontSize: 13, marginTop: 2 }}>{subtitle}</Text> : null}
               </View>
-              <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={10} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.muted, 0.15) }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Fermer")} onPress={onClose} hitSlop={10} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.muted, 0.15) }}>
                 <Ionicons name="close" size={20} color={pal.ink} />
               </Pressable>
             </View>
@@ -45,7 +47,7 @@ export function QBtn({ icon, label, onPress, pal, active, solid, small, disabled
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={a11y ?? label}
+      accessibilityLabel={L(a11y ?? label ?? '')}
       accessibilityState={{ selected: !!active, disabled: !!disabled }}
       onPress={disabled ? undefined : onPress}
       hitSlop={4}
@@ -89,11 +91,11 @@ export function QChoice<T extends string | number>({ options, value, onChange, p
 export function QStepper({ value, onChange, min, max, step = 1, pal, label, format }: { value: number; onChange: (v: number) => void; min: number; max: number; step?: number; pal: Pal; label: string; format?: (v: number) => string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <QBtn icon="remove" a11y={`${label} : diminuer`} onPress={() => onChange(Math.max(min, +(value - step).toFixed(2)))} pal={pal} disabled={value <= min} small />
-      <Text style={{ color: pal.ink, fontWeight: '800', minWidth: 44, textAlign: 'center' }} accessibilityLabel={`${label} : ${value}`}>
+      <QBtn icon="remove" a11y={L('{l} : diminuer', { l: L(label) })} onPress={() => onChange(Math.max(min, +(value - step).toFixed(2)))} pal={pal} disabled={value <= min} small />
+      <Text style={{ color: pal.ink, fontWeight: '800', minWidth: 44, textAlign: 'center' }} accessibilityLabel={`${L(label)} : ${value}`}>
         {format ? format(value) : value}
       </Text>
-      <QBtn icon="add" a11y={`${label} : augmenter`} onPress={() => onChange(Math.min(max, +(value + step).toFixed(2)))} pal={pal} disabled={value >= max} small />
+      <QBtn icon="add" a11y={L('{l} : augmenter', { l: L(label) })} onPress={() => onChange(Math.min(max, +(value + step).toFixed(2)))} pal={pal} disabled={value >= max} small />
     </View>
   );
 }

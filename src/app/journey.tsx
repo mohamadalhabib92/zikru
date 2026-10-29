@@ -1,10 +1,12 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { useData } from '@/lib/data';
 import { bestStreak, dayKey, LEVELS, levelFor, streak, useGrowth } from '@/lib/growth';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LTitle, SectionLabel } from '@/ui/light';
 import { alpha, brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 export default function Journey() {
   const { tasbih } = useData();
@@ -49,7 +51,7 @@ export default function Journey() {
           <View style={{ width: `${Math.round(lvl.progress * 100)}%`, height: '100%', backgroundColor: b.gold }} />
         </View>
         <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6, fontSize: 12 }}>
-          {lvl.next ? `${(lvl.next.min - total).toLocaleString('fr-CH')} dhikr avant ${lvl.next.name} (${lvl.next.fr})` : 'Palier maximal atteint — al-hamdu lillah'}
+          {lvl.next ? L('{n} dhikr avant {name} ({fr})', { n: (lvl.next.min - total).toLocaleString('fr-CH'), name: lvl.next.name, fr: L(lvl.next.fr) }) : 'Palier maximal atteint — al-hamdu lillah'}
         </Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
@@ -84,7 +86,7 @@ export default function Journey() {
           <LTitle>30 derniers jours</LTitle>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
             {month.map((x) => (
-              <View key={x.d.toISOString()} accessibilityLabel={`${x.d.toLocaleDateString('fr-CH')} : ${x.v} dhikr`} style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: x.v === 0 ? b.line : x.v < 100 ? alpha(b.green, 0.35) : x.v < 500 ? alpha(b.green, 0.65) : b.green }} />
+              <View key={x.d.toISOString()} accessibilityLabel={L('{d} : {n} dhikr', { d: x.d.toLocaleDateString('fr-CH'), n: x.v })} style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: x.v === 0 ? b.line : x.v < 100 ? alpha(b.green, 0.35) : x.v < 500 ? alpha(b.green, 0.65) : b.green }} />
             ))}
           </View>
           <LMuted style={{ marginTop: 8 }}>

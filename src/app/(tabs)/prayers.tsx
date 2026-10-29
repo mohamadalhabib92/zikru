@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { SkyArc } from '@/components/zikru/SkyArc';
@@ -12,6 +13,7 @@ import { Button, Ionicons, Screen, Spacer } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LTitle } from '@/ui/light';
 import { tapHaptic, useLayout } from '@/ui/ds';
 import { alpha, brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
 const ICONS: Record<PrayerKey, string> = { fajr: 'partly-sunny', sunrise: 'sunny', dhuhr: 'sunny', asr: 'partly-sunny', maghrib: 'cloudy-night', isha: 'moon' };
@@ -129,7 +131,7 @@ export default function Prayers() {
                   <Pressable
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: done }}
-                    accessibilityLabel={`${tr[p.key]} ${hhmm(p.time)} — ${done ? 'priée' : 'marquer comme priée'}`}
+                    accessibilityLabel={`${tr[p.key]} ${hhmm(p.time)} — ${done ? L('priée') : L('marquer comme priée')}`}
                     onPress={() => {
                       tapHaptic(done ? 'light' : 'success');
                       g.togglePrayed(p.key);

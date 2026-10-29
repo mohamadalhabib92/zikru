@@ -16,7 +16,7 @@ const load = (name) => {
     }).outputText,
   );
 };
-for (const n of ['abjad', 'zikr', 'names', 'tijani', 'salawat', 'quran-duas', 'duas']) load(n);
+for (const n of ['abjad', 'zikr', 'fatiha', 'names', 'tijani', 'salawat', 'quran-duas', 'duas']) load(n);
 const z = await import(join(dir, 'zikr.mjs'));
 const N = await import(join(dir, 'names.mjs'));
 const S = await import(join(dir, 'salawat.mjs'));

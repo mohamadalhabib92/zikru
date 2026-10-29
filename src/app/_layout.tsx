@@ -18,6 +18,7 @@ import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
+import { L } from '@/lib/l10n';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -66,14 +67,14 @@ function Root() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
-        <Stack.Screen name="privacy" options={{ title: 'Confidentialité' }} />
+        <Stack.Screen name="privacy" options={{ title: L("Confidentialité") }} />
         <Stack.Screen name="ring" options={{ title: tr.ring }} />
-        <Stack.Screen name="ble-diag" options={{ title: 'Diagnostic Bluetooth' }} />
+        <Stack.Screen name="ble-diag" options={{ title: L("Diagnostic Bluetooth") }} />
         <Stack.Screen name="qibla" options={{ title: tr.qibla_title }} />
         <Stack.Screen name="dhikr" options={{ title: tr.dhikr_title }} />
         <Stack.Screen name="settings" options={{ title: tr.settings_title }} />
         <Stack.Screen name="search" options={{ title: tr.search }} />
-        <Stack.Screen name="tijani" options={{ title: 'Tijaniyya' }} />
+        <Stack.Screen name="tijani" options={{ title: L("Tijaniyya") }} />
         <Stack.Screen name="sahw" options={{ title: tr.sahw }} />
         <Stack.Screen name="kahf" options={{ title: tr.kahf }} />
         <Stack.Screen name="songs" options={{ title: tr.songs }} />
@@ -81,31 +82,31 @@ function Root() {
         <Stack.Screen name="config" options={{ title: tr.config_missing }} />
         <Stack.Screen name="content-admin" options={{ title: tr.content_admin }} />
         <Stack.Screen name="audit" options={{ title: tr.audit }} />
-        <Stack.Screen name="validation" options={{ title: 'Validation savante' }} />
-        <Stack.Screen name="quran/index" options={{ title: 'Qur’an' }} />
-        <Stack.Screen name="quran/[n]" options={{ title: 'Sourate' }} />
-        <Stack.Screen name="quran/mushaf" options={{ title: 'Mushaf' }} />
-        <Stack.Screen name="quran/hifz" options={{ title: 'Mémorisation' }} />
-        <Stack.Screen name="quran/hifz-session" options={{ title: 'Session de mémorisation' }} />
-        <Stack.Screen name="quran/bookmarks" options={{ title: 'Marque-pages et notes' }} />
-        <Stack.Screen name="quran/khatma" options={{ title: 'Khatma' }} />
-        <Stack.Screen name="hadiths" options={{ title: 'Hadiths' }} />
-        <Stack.Screen name="duas" options={{ title: 'Du‘as prophétiques' }} />
-        <Stack.Screen name="abjad" options={{ title: 'Calculateur abjad' }} />
-        <Stack.Screen name="names" options={{ title: 'Les 99 Noms d’Allah' }} />
-        <Stack.Screen name="zikrs/index" options={{ title: 'Mes zikrs' }} />
-        <Stack.Screen name="zikrs/edit" options={{ title: 'Composer un zikr' }} />
-        <Stack.Screen name="zikrs/practice" options={{ title: 'Pratique' }} />
-        <Stack.Screen name="fiqh" options={{ title: 'Fiqh' }} />
-        <Stack.Screen name="journey" options={{ title: 'Mon parcours spirituel' }} />
-        <Stack.Screen name="habits" options={{ title: 'Jardin des habitudes' }} />
-        <Stack.Screen name="bilal" options={{ title: 'El Ghaly Bilal' }} />
-        <Stack.Screen name="planner" options={{ title: 'Planificateur du jour' }} />
-        <Stack.Screen name="auth" options={{ title: 'Connexion' }} />
-        <Stack.Screen name="join" options={{ title: 'Rejoindre' }} />
-        <Stack.Screen name="family/[id]" options={{ title: 'Ma famille' }} />
-        <Stack.Screen name="circle/[id]" options={{ title: 'Mon cercle' }} />
-        <Stack.Screen name="live/[id]" options={{ title: 'Zikr en direct' }} />
+        <Stack.Screen name="validation" options={{ title: L("Validation savante") }} />
+        <Stack.Screen name="quran/index" options={{ title: L("Qur’an") }} />
+        <Stack.Screen name="quran/[n]" options={{ title: L("Sourate") }} />
+        <Stack.Screen name="quran/mushaf" options={{ title: L("Mushaf") }} />
+        <Stack.Screen name="quran/hifz" options={{ title: L("Mémorisation") }} />
+        <Stack.Screen name="quran/hifz-session" options={{ title: L("Session de mémorisation") }} />
+        <Stack.Screen name="quran/bookmarks" options={{ title: L("Marque-pages et notes") }} />
+        <Stack.Screen name="quran/khatma" options={{ title: L("Khatma") }} />
+        <Stack.Screen name="hadiths" options={{ title: L("Hadiths") }} />
+        <Stack.Screen name="duas" options={{ title: L("Du‘as prophétiques") }} />
+        <Stack.Screen name="abjad" options={{ title: L("Calculateur abjad") }} />
+        <Stack.Screen name="names" options={{ title: L("Les 99 Noms d’Allah") }} />
+        <Stack.Screen name="zikrs/index" options={{ title: L("Mes zikrs") }} />
+        <Stack.Screen name="zikrs/edit" options={{ title: L("Composer un zikr") }} />
+        <Stack.Screen name="zikrs/practice" options={{ title: L("Pratique") }} />
+        <Stack.Screen name="fiqh" options={{ title: L("Fiqh") }} />
+        <Stack.Screen name="journey" options={{ title: L("Mon parcours spirituel") }} />
+        <Stack.Screen name="habits" options={{ title: L("Jardin des habitudes") }} />
+        <Stack.Screen name="bilal" options={{ title: L("El Ghaly Bilal") }} />
+        <Stack.Screen name="planner" options={{ title: L("Planificateur du jour") }} />
+        <Stack.Screen name="auth" options={{ title: L("Connexion") }} />
+        <Stack.Screen name="join" options={{ title: L("Rejoindre") }} />
+        <Stack.Screen name="family/[id]" options={{ title: L("Ma famille") }} />
+        <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />
+        <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
       </Stack>
       <StorageAlert />
     </View>

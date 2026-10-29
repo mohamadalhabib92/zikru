@@ -1,11 +1,13 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { confirmAsk, EncouragementsPanel, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { Badge, Button, Card, Eyebrow, Field, H1, H2, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /** Cercle de proches (Ahbab) : 50 membres maximum, sur invitation, règlement accepté. */
 export default function CircleScreen() {
@@ -97,7 +99,7 @@ export default function CircleScreen() {
                 variant="ghost"
                 icon="person-remove-outline"
                 title="Retirer"
-                onPress={() => confirmAsk(`Retirer ${m.display_name} ?`, 'Cette personne pourra revenir seulement avec une nouvelle invitation.', 'Retirer', () => void api.removeCircleMember(cid, m.user_id).then(members.reload).catch((e) => setErr(api.frError(e))))}
+                onPress={() => confirmAsk(L('Retirer {name} ?', { name: m.display_name }), 'Cette personne pourra revenir seulement avec une nouvelle invitation.', 'Retirer', () => void api.removeCircleMember(cid, m.user_id).then(members.reload).catch((e) => setErr(api.frError(e))))}
               />
             </Row>
           ) : null}

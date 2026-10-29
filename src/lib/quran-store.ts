@@ -21,8 +21,12 @@ export type ReaderPrefs = {
   reciter: string;
   rate: number;
   follow: boolean;
+  /** Lettres lumineuses (14 lettres des ouvertures) en doré — désactivé par défaut. */
+  nurani: boolean;
+  /** Souligner les lettres isolées ouvrant 29 sourates — désactivé par défaut. */
+  muqattaat: boolean;
 };
-export const DEFAULT_READER: ReaderPrefs = { arSize: 28, trSize: 15, lineH: 2.1, theme: 'auto', showTr: true, showTl: false, keepAwake: true, reciter: 'alafasy', rate: 1, follow: true };
+export const DEFAULT_READER: ReaderPrefs = { arSize: 28, trSize: 15, lineH: 2.1, theme: 'auto', showTr: true, showTl: false, keepAwake: true, reciter: 'alafasy', rate: 1, follow: true, nurani: false, muqattaat: false };
 export const readerPrefs = shared<ReaderPrefs>('qr-prefs', DEFAULT_READER, (v) => ({ ...DEFAULT_READER, ...v }));
 
 export type Bookmark = { id: string; s: number; a: number; name: string; color: string; at: number };

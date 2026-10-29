@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 
 // Filet de sécurité : une erreur JavaScript affiche un écran explicatif au lieu de fermer l'app.
 type Props = { children: ReactNode };

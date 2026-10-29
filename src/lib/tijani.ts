@@ -5,9 +5,20 @@
  * (sourate:verset, recueil + numéro de hadith). En cas de divergence, l'enseignement du muqaddam prime.
  */
 
+import { FATIHA_AR, FATIHA_EN, FATIHA_FR, FATIHA_TR } from './fatiha';
+
 export type Formula = { id: string; title: string; ar: string; tr: string; fr: string; en: string; note?: string; indicative?: boolean };
 
 export const FORMULAS: Record<string, Formula> = {
+  fatiha: {
+    id: 'fatiha',
+    title: 'Al-Fatiha (ouverture)',
+    ar: FATIHA_AR,
+    tr: FATIHA_TR,
+    fr: FATIHA_FR,
+    en: FATIHA_EN,
+    note: 'Ouverture par la Fatiha (1×) après l’intention, telle que couramment décrite. Ordre à valider par un muqaddam : suivez l’enseignement reçu.',
+  },
   istighfar: {
     id: 'istighfar',
     title: 'Istighfar (wird)',
@@ -67,6 +78,7 @@ export const WIRD: { title: string; when: string; steps: Step[] } = {
   title: 'Wird (lazim)',
   when: 'Deux fois par jour : le matin (après la prière de l’aube) et le soir (après la prière de ‘Asr), selon ce qui est couramment décrit.',
   steps: [
+    { formula: 'fatiha', count: 1 },
     { formula: 'istighfar', count: 100 },
     { formula: 'fatih', count: 100 },
     { formula: 'hailala', count: 100, extra: 'La centième est suivie de la formule de clôture.' },
@@ -78,6 +90,7 @@ export const WAZIFA: { title: string; when: string; steps: Step[] } = {
   title: 'Wazifa',
   when: 'Une fois par jour au minimum (matin ou soir), de préférence en groupe, selon ce qui est couramment décrit.',
   steps: [
+    { formula: 'fatiha', count: 1 },
     { formula: 'istighfarWazifa', count: 30 },
     { formula: 'fatih', count: 50 },
     { formula: 'hailala', count: 100 },
@@ -152,6 +165,15 @@ export const ADILLA: Evidence[] = [
 export const MUQADDAM_NOTE =
   'Ces textes sont donnés pour aider la mémorisation. Le wird de la Tijaniyya se reçoit d’un muqaddam habilité : suivez son enseignement pour les horaires, les nombres, les conditions et les rattrapages.';
 
+/**
+ * Clé du suivi quotidien des étapes cochées. Suffixe « f » depuis l’ajout de l’étape Al-Fatiha en tête
+ * (les index d’étapes ont changé : les coches enregistrées avant ne sont pas réattribuées à une autre étape).
+ */
+export const practiceDoneKey = (day: string, id: string) => `${day}-${id}-f`;
+
+/** Ordre d’ouverture (Fatiha en tête) à faire valider par un muqaddam — repris dans la fiche de relecture. */
+export const FATIHA_ORDER_FLAG = 'Ordre à valider par un muqaddam : Al-Fatiha (1×) placée en première étape du wird, de la wazifa et de la hailala du vendredi.';
+
 /** Présentation des trois pratiques (écran Programme Tijaniyya). */
 export type Practice = { id: 'wird' | 'wazifa' | 'hailala'; ar: string; name: string; timing: string; timingAr: string; desc: string; steps: Step[]; uncounted?: boolean };
 export const PRACTICES: Practice[] = [
@@ -180,7 +202,10 @@ export const PRACTICES: Practice[] = [
     timing: 'Vendredi, de ‘Asr au Maghrib',
     timingAr: 'يوم الجمعة من العصر إلى المغرب',
     desc: HAILALA_FRIDAY.text,
-    steps: [{ formula: 'hailala', count: 0, extra: 'Sans compter précisément, jusqu’au coucher du soleil.' }],
+    steps: [
+      { formula: 'fatiha', count: 1 },
+      { formula: 'hailala', count: 0, extra: 'Sans compter précisément, jusqu’au coucher du soleil.' },
+    ],
     uncounted: true,
   },
 ];

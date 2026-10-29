@@ -1,0 +1,103 @@
+# P5 — gabarits dynamiques (en relu ; ar : traduction à relire)
+{n} à réviser	{n} to review	للمراجعة: {n}
+= abjad ({n})	= abjad ({n})	= أبجد ({n})
+Abjad {s} : {v} · × rép. {r}	Abjad {s}: {v} · × reps {r}	أبجد {s}: {v} · × التكرار {r}
+Abjad {s} : {v} × {r} = {t}	Abjad {s}: {v} × {r} = {t}	أبجد {s}: {v} × {r} = {t}
+Achevée le {d}. Il est d’usage de faire des invocations à la fin de la lecture du Coran.	Completed on {d}. It is customary to make supplications upon completing the recitation of the Quran.	خُتمت في {d}. ومن المعتاد الدعاء عند ختم القرآن.
+Ajouter une tâche {x}	Add a task: {x}	إضافة مهمة: {x}
+Ajouter {x}	Add {x}	إضافة {x}
+Ajouter {x} à un zikr, 1 fois	Add {x} to a zikr, once	إضافة {x} إلى ذكر، مرة واحدة
+Ajouter {x} à un zikr, {n} fois (valeur abjad)	Add {x} to a zikr, {n} times (abjad value)	إضافة {x} إلى ذكر، عدد المرات: {n} (القيمة الأبجدية)
+Ajouter × {n} (abjad)	Add × {n} (abjad)	إضافة × {n} (أبجد)
+Assalāmu ‘alaykum ! Rejoignez « {name} » sur Zikru.\nCode d’invitation : {code}\nDans l’app : Communauté › Rejoindre avec un code, ou ouvrez {link}	Assalāmu ‘alaykum! Join “{name}” on Zikru.\nInvitation code: {code}\nIn the app: Community › Join with a code, or open {link}	السلام عليكم! انضمّوا إلى «{name}» على تطبيق ذِكرو.\nرمز الدعوة: {code}\nفي التطبيق: المجتمع › الانضمام برمز، أو افتحوا {link}
+Caractères ignorés : {c}	Ignored characters: {c}	أحرف مُتجاهَلة: {c}
+Commencer · {s} {a}–{b}	Start · {s} {a}–{b}	ابدأ · {s} {a}–{b}
+Compter. {a} sur {b}	Count. {a} of {b}	عُدّ. {a} من {b}
+Contributions saisies : {p}	Contributions entered: {p}	المساهمات المُدخلة: {p}
+Coran {r}	Quran {r}	القرآن {r}
+Couleurs : {c}. Tout est enregistré sur cet appareil.	Colours: {c}. Everything is saved on this device.	الألوان: {c}. كل شيء محفوظ على هذا الجهاز.
+En avance de {n} page(s).	Ahead by {n} page(s).	متقدّم بعدد صفحات: {n}.
+En retard de {n} page(s) : {p} pages/jour pour finir à temps.	Behind by {n} page(s): {p} pages/day to finish on time.	متأخر بعدد صفحات: {n}. يلزم {p} صفحة يوميًا للإنهاء في الموعد.
+Enregistré ({g}). Les versets rejoignent votre révision.	Saved ({g}). The verses join your review.	حُفظ ({g}). تنضم الآيات إلى مراجعتك.
+Exemple {x}	Example {x}	مثال {x}
+Intention : {x}	Intention: {x}	النية: {x}
+Jour {a} sur {b}	Day {a} of {b}	اليوم {a} من {b}
+Juz’ {j} · Hizb {h}	Juz’ {j} · Hizb {h}	الجزء {j} · الحزب {h}
+Lire {x}	Play {x}	تشغيل {x}
+Lire à partir de la page {p}	Read from page {p}	اقرأ ابتداءً من الصفحة {p}
+Marque-pages ({n})	Bookmarks ({n})	العلامات ({n})
+Mode enfant · {name}	Child mode · {name}	وضع الطفل · {name}
+Notes ({n})	Notes ({n})	الملاحظات ({n})
+Page {p}	Page {p}	الصفحة {p}
+Pages {a} à {b} · {s}	Pages {a} to {b} · {s}	الصفحات {a} إلى {b} · {s}
+Pour {x}	For {x}	لـ {x}
+Racine numérique : {r}	Digital root: {r}	الجذر العددي: {r}
+Rejoindre : {x}	Join: {x}	انضمام: {x}
+Renvoyer le code ({n} s)	Resend code ({n} s)	إعادة إرسال الرمز ({n} ث)
+Retirer {name} ?	Remove {name}?	إزالة {name}؟
+Retirer {x}	Remove {x}	إزالة {x}
+Soleil : lever {a}, coucher {b}	Sun: rise {a}, set {b}	الشمس: الشروق {a}، الغروب {b}
+Sourate : {s}. Changer	Surah: {s}. Change	السورة: {s}. تغيير
+Sourate {n} {s}	Surah {n} {s}	السورة {n} {s}
+Supprimer {x}	Delete {x}	حذف {x}
+Supprimer « {x} » ?	Delete “{x}”?	حذف «{x}»؟
+Surlignés ({n})	Highlights ({n})	المُظلَّلة ({n})
+Série : {n} jour(s) · record {b}	Streak: {n} day(s) · best {b}	المواظبة: {n} يوم · الأفضل {b}
+Texte : Tanzil / api.alquran.cloud · traduction {t}	Text: Tanzil / api.alquran.cloud · translation {t}	النص: Tanzil / api.alquran.cloud · الترجمة {t}
+Total {sys} : {n}	Total {sys}: {n}	مجموع {sys}: {n}
+Verset {a} · répétition {r}/{e}	Verse {a} · repetition {r}/{e}	الآية {a} · التكرار {r}/{e}
+Verset {a}. Toucher pour écouter à partir d’ici	Verse {a}. Tap to listen from here	الآية {a}. المس للاستماع من هنا
+Verset {s}:{a}	Verse {s}:{a}	الآية {s}:{a}
+Wird : {w}	Wird: {w}	الوِرد: {w}
+Wird du jour : p. {a}–{b} · khatma {p} %	Today’s wird: p. {a}–{b} · khatma {p}%	وِرد اليوم: ص {a}–{b} · الختمة {p}٪
+{a} / {b} au total	{a} / {b} in total	{a} / {b} إجمالًا
+{a} / {b} pages · fin prévue le {d}	{a} / {b} pages · expected finish {d}	{a} / {b} صفحة · الختم المتوقع {d}
+{a}/{b} arrosées aujourd’hui	{a}/{b} watered today	{a}/{b} سُقيت اليوم
+{a}/{b} faites	{a}/{b} done	{a}/{b} مُنجزة
+{d} : {n} dhikr	{d}: {n} dhikr	{d}: {n} ذكر
+{l} lettres · {w} mot	{l} letters · {w} word	عدد الأحرف: {l} · عدد الكلمات: {w}
+{l} lettres · {w} mots	{l} letters · {w} words	عدد الأحرف: {l} · عدد الكلمات: {w}
+{m} · {n} versets	{m} · {n} verses	{m} · عدد الآيات: {n}
+{n} dhikr avant {name} ({fr})	{n} dhikr before {name} ({fr})	{n} ذكر قبل {name} ({fr})
+{n} minutes par jour. Pense à faire des pauses.	{n} minutes per day. Remember to take breaks.	{n} دقيقة يوميًا. تذكّر أن تأخذ استراحات.
+{n} pages par jour environ · fin le {d} · départ : {s}	About {n} pages per day · finish on {d} · start: {s}	نحو {n} صفحة يوميًا · الختم في {d} · البداية: {s}
+{n} verset(s) : {e} facile, {m} moyen, {h} difficile. Qu’Allah vous facilite la préservation de Son Livre.	{n} verse(s): {e} easy, {m} medium, {h} hard. May Allah make it easy for you to preserve His Book.	عدد الآيات: {n} — سهل {e}، متوسط {m}، صعب {h}. يسّر الله لكم حفظ كتابه.
+{n} verset(s) · environ {m} min	{n} verse(s) · about {m} min	عدد الآيات: {n} · نحو {m} دقيقة
+{n} élément(s) · {r} répétitions	{n} item(s) · {r} repetitions	عدد العناصر: {n} · التكرارات: {r}
+{n}. {s} · {v} versets	{n}. {s} · {v} verses	{n}. {s} · عدد الآيات: {v}
+{n}× aujourd’hui	{n}× today	{n}× اليوم
+{n}× la plage	{n}× the range	{n}× المقطع
+{p} % du jour	{p}% of the day	{p}٪ من النهار
+{p} % suivi	{p}% tracked	{p}٪ مُتابَع
+{ref}. L’énumération des 99 Noms provient de la version d’at-Tirmidhī ; les savants en ont discuté l’authenticité (elle serait une insertion d’un rapporteur), d’autres listes existent. Sens en français indicatif.	{ref}. The enumeration of the 99 Names comes from at-Tirmidhī’s version; scholars have discussed its authenticity (it may be a narrator’s insertion), and other lists exist. Meanings are indicative.	{ref}. سرد الأسماء التسعة والتسعين وارد في رواية الترمذي، وقد تكلّم العلماء في ثبوته (قيل إنه مُدرَج من بعض الرواة)، وتوجد قوائم أخرى. المعاني تقريبية.
+{r} · {e}× chaque verset · {p}	{r} · {e}× each verse · {p}	{r} · {e}× كل آية · {p}
+{sys} : {n} (racine {r})	{sys}: {n} (root {r})	{sys}: {n} (الجذر {r})
+{s} · p. {p}	{s} · p. {p}	{s} · ص {p}
+{s} · verset {a}	{s} · verse {a}	{s} · الآية {a}
+{s} · {n} v.	{s} · {n} v.	{s} · {n} آية
+{t} {n} degrés {f}	{t} {n} degrees {f}	{t} {n} درجة {f}
+{x} : prochaine révision {s}	{x}: next review {s}	{x}: المراجعة التالية {s}
+{x} fait aujourd’hui	{x} done today	{x} أُنجز اليوم
+{x}. Ouvrir le verset	{x}. Open the verse	{x}. فتح الآية
+objectif {g}	goal {g}	الهدف {g}
+passage {p}	pass {p}	الدورة {p}
+sessions ajoutées à l’historique du tasbih	sessions added to the tasbih history	تُضاف الجلسات إلى سجل التسبيح
+Écart entre les deux systèmes : {n} — dû aux lettres à cadre doré ci-dessous.	Difference between the two systems: {n} — due to the gold-framed letters below.	الفرق بين النظامين: {n} — بسبب الأحرف ذات الإطار الذهبي أدناه.
+Éléments ({n})	Items ({n})	العناصر ({n})
+Étape {a} / {b}	Step {a} / {b}	الخطوة {a} / {b}
+Étape {a} sur {b}	Step {a} of {b}	الخطوة {a} من {b}
+✓ Ajouté : {x}	✓ Added: {x}	✓ أُضيف: {x}
+✓ {n}× aujourd’hui	✓ {n}× today	✓ {n}× اليوم
+Confirmer	Confirm	تأكيد
+Retirer cette piste ?	Remove this track?	إزالة هذا المقطع؟
+Zikru · Chants soufis	Zikru · Sufi songs	ذِكرو · أناشيد صوفية
+Effacer toutes les données locales de Zikru ?	Erase all of Zikru’s local data?	مسح جميع بيانات ذِكرو المحلية؟
+Compteurs, réglages et contenu local seront effacés.	Counters, settings and local content will be erased.	سيتم مسح العدّادات والإعدادات والمحتوى المحلي.
+{n} rép.	{n} reps	التكرارات: {n}
+{n} aujourd’hui	{n} today	{n} اليوم
+{n} formules · {r} rép.	{n} formulas · {r} reps	عدد الصيغ: {n} · التكرارات: {r}
+{n} formule · {r} rép.	{n} formula · {r} reps	عدد الصيغ: {n} · التكرارات: {r}
+Nom d’Allah	Name of Allah	اسم من أسماء الله
+Du‘a coranique	Qur’anic du‘a	دعاء قرآني
+Du‘a prophétique	Prophetic du‘a	دعاء نبوي
+Ṣalāt sur le Prophète ﷺ	Ṣalāt upon the Prophet ﷺ	الصلاة على النبي ﷺ

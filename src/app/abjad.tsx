@@ -1,12 +1,14 @@
 import * as Clipboard from 'expo-clipboard';
 import { useMemo, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { ABJAD_EXAMPLES, DIFF_LETTERS, MAGHRIBI, MASHRIQI, ORDER_MASHRIQI, computeAbjad, type AbjadOptions, type AbjadSystem } from '@/lib/abjad';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, LTitle, Pill, SectionLabel } from '@/ui/light';
 import { alpha, brand as b, isDark } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 // Jetons émeraude / or (clair et sombre) : lus au rendu, car `brand` est réécrit par applyScheme.
 const SYS: Record<AbjadSystem, { label: string; ar: string; color: string; fill: string; ink: string }> = {
@@ -69,7 +71,7 @@ export default function Abjad() {
   const fmt = (n: number) => n.toLocaleString('fr-CH');
 
   const copy = async () => {
-    const lines = shown.map((s) => `${SYS[s].label} : ${res[s].total} (racine ${res[s].root})`);
+    const lines = shown.map((s) => L('{sys} : {n} (racine {r})', { sys: L(SYS[s].label), n: res[s].total, r: res[s].root }));
     try {
       await Clipboard.setStringAsync(`${text.trim()}\n${lines.join('\n')}`);
       setCopied(true);
@@ -100,18 +102,18 @@ export default function Abjad() {
             multiline
             placeholder="اكتب هنا…"
             placeholderTextColor={b.inkMuted}
-            accessibilityLabel="Texte arabe à calculer"
+            accessibilityLabel={L("Texte arabe à calculer")}
             autoCorrect={false}
             style={{ minHeight: 70, fontSize: 24, lineHeight: 40, color: b.ink, textAlign: 'right', writingDirection: 'rtl', backgroundColor: b.cream, borderRadius: 12, borderWidth: 1, borderColor: b.line, padding: 10 }}
           />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
             {ABJAD_EXAMPLES.map((ex) => (
-              <Pressable key={ex} accessibilityRole="button" accessibilityLabel={`Exemple ${ex}`} onPress={() => setText(ex)} style={({ pressed }) => ({ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: text === ex ? alpha(b.gold, 0.22) : b.paper, opacity: pressed ? 0.8 : 1 })}>
+              <Pressable key={ex} accessibilityRole="button" accessibilityLabel={L('Exemple {x}', { x: ex })} onPress={() => setText(ex)} style={({ pressed }) => ({ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: text === ex ? alpha(b.gold, 0.22) : b.paper, opacity: pressed ? 0.8 : 1 })}>
                 <Text style={{ color: b.ink, fontSize: 16, writingDirection: 'rtl' }}>{ex}</Text>
               </Pressable>
             ))}
             {text ? (
-              <Pressable accessibilityRole="button" accessibilityLabel="Effacer" onPress={() => setText('')} style={{ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center' }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Effacer")} onPress={() => setText('')} style={{ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center' }}>
                 <Text style={{ color: b.inkMuted, fontWeight: '700' }}>Effacer</Text>
               </Pressable>
             ) : null}
@@ -152,24 +154,24 @@ export default function Abjad() {
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
           {shown.map((s) => (
             <View key={s} style={{ flex: 1, backgroundColor: SYS[s].fill, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: s === 'maghribi' ? alpha(b.gold, 0.5) : SYS[s].fill }}>
-              <Text style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '800', fontSize: 12 }}>{SYS[s].label.toUpperCase()}</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '800', fontSize: 12 }}>{L(SYS[s].label).toUpperCase()}</Text>
               <Text style={{ color: '#fff', fontSize: 14, writingDirection: 'rtl' }}>{SYS[s].ar}</Text>
-              <Text accessibilityLabel={`Total ${SYS[s].label} : ${res[s].total}`} style={{ color: SYS[s].ink, fontSize: 38, fontWeight: '900', marginTop: 4, fontVariant: ['tabular-nums'] }}>
+              <Text accessibilityLabel={L('Total {sys} : {n}', { sys: L(SYS[s].label), n: res[s].total })} style={{ color: SYS[s].ink, fontSize: 38, fontWeight: '900', marginTop: 4, fontVariant: ['tabular-nums'] }}>
                 {fmt(res[s].total)}
               </Text>
-              <Text style={{ color: 'rgba(255,255,255,0.9)' }}>{`Racine numérique : ${res[s].root}`}</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12 }}>{`${res[s].letters.length} lettres · ${res[s].words.length} mot${res[s].words.length > 1 ? 's' : ''}`}</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.9)' }}>{L('Racine numérique : {r}', { r: res[s].root })}</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12 }}>{L(res[s].words.length > 1 ? '{l} lettres · {w} mots' : '{l} lettres · {w} mot', { l: res[s].letters.length, w: res[s].words.length })}</Text>
             </View>
           ))}
         </View>
-        {p.view === 'both' && m.total !== g.total ? <LMuted style={{ marginBottom: 10 }}>{`Écart entre les deux systèmes : ${fmt(Math.abs(g.total - m.total))} — dû aux lettres à cadre doré ci-dessous.`}</LMuted> : null}
+        {p.view === 'both' && m.total !== g.total ? <LMuted style={{ marginBottom: 10 }}>{L('Écart entre les deux systèmes : {n} — dû aux lettres à cadre doré ci-dessous.', { n: fmt(Math.abs(g.total - m.total)) })}</LMuted> : null}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Copier le résultat" onPress={copy} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, opacity: pressed ? 0.8 : 1 })}>
+          <Pressable accessibilityRole="button" accessibilityLabel={L("Copier le résultat")} onPress={copy} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, opacity: pressed ? 0.8 : 1 })}>
             <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={copied ? b.green : b.inkMuted} />
             <Text style={{ color: b.ink, fontWeight: '700', fontSize: 13 }}>{copied ? 'Copié' : 'Copier le résultat'}</Text>
           </Pressable>
         </View>
-        {m.ignored.length ? <LMuted style={{ marginTop: 6 }}>{`Caractères ignorés : ${m.ignored.join(' ')}`}</LMuted> : null}
+        {m.ignored.length ? <LMuted style={{ marginTop: 6 }}>{L('Caractères ignorés : {c}', { c: m.ignored.join(' ') })}</LMuted> : null}
 
         {p.words && m.words.length ? (
           <>

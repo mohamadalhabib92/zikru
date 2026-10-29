@@ -1,11 +1,13 @@
 import { loadJSON, saveCacheJSON } from './storage';
 
 /** Récitation de Mishary Rashid Alafasy — diffusée en streaming depuis des serveurs publics, jamais incluse dans l'app. */
-export const KAHF_AUDIO = ['https://server8.mp3quran.net/afs/018.mp3', 'https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/18.mp3'];
-export const KAHF_TEXT_URL = 'https://api.alquran.cloud/v1/surah/18/editions/quran-uthmani,fr.hamidullah,en.sahih';
+export const KAHF_AUDIO = ['https://cdn.mp3quran.net/audio/mishary-alafasy/r1/018.mp3', 'https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/18.mp3'];
+export const KAHF_TEXT_URL = 'https://api.alquran.cloud/v1/surah/18/editions/quran-uthmani,fr.hamidullah,en.pickthall';
+/** Traduction anglaise : Marmaduke Pickthall (1930), domaine public — Saheeh International est sous copyright et n’est plus utilisée. */
+export const KAHF_EN_LABEL = 'Pickthall (public domain)';
 
 export type Ayah = { n: number; ar: string; fr: string; en: string };
-const KEY = 'kahf-text-v1';
+const KEY = 'kahf-text-v2'; // v2 : anglais Pickthall (v1 contenait Saheeh International)
 
 /** Texte récupéré à l'exécution depuis api.alquran.cloud puis mis en cache sur l'appareil. */
 export async function getKahfText(force = false): Promise<{ ayahs: Ayah[]; cached: boolean }> {

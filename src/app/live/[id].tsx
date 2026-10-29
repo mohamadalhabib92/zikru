@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { ErrorNote, fmt, ProgressBar } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
@@ -9,6 +10,7 @@ import { feedback } from '@/lib/feedback';
 import { supabase } from '@/lib/supabase';
 import { Badge, Button, Card, Eyebrow, H1, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /**
  * Zikr en direct : chacun compte (écran, bague ou compteur Bluetooth) et le total
@@ -89,7 +91,7 @@ export default function LiveScreen() {
   const total = others.reduce((a, c) => a + c.count, 0) + mine;
   return (
     <Screen>
-      <Stack.Screen options={{ title: 'Zikr en direct' }} />
+      <Stack.Screen options={{ title: L("Zikr en direct") }} />
       <Eyebrow>{live ? 'En direct' : 'Session terminée'}</Eyebrow>
       <H1>{session?.title ?? '…'}</H1>
       {session?.formula ? <Muted>{session.formula}</Muted> : null}
@@ -106,7 +108,7 @@ export default function LiveScreen() {
       <Pressable
         disabled={!live}
         accessibilityRole="button"
-        accessibilityLabel="Compter un dhikr"
+        accessibilityLabel={L("Compter un dhikr")}
         onPress={() => {
           tap(1);
           feedback('tap', { sound: false, haptics: true });

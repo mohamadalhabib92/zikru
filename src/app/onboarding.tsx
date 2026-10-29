@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
@@ -14,6 +15,7 @@ import { Container, FadeIn, IconBadge, tapHaptic } from '@/ui/ds';
 import { Button, Ionicons, Toggle, type IconName } from '@/ui/kit';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 type StepId = 'lang' | 'madhab' | 'place' | 'notif' | 'ble' | 'done';
 
@@ -181,7 +183,7 @@ export default function Onboarding() {
         <Text style={{ color: b.gold, fontSize: 46, fontFamily: 'Amiri_700Bold', lineHeight: 80 }}>ذِكْر</Text>
         <Text style={{ color: b.heroText, fontSize: 20, fontWeight: '800' }}>{tr.onboarding_welcome}</Text>
         <Text style={{ color: b.heroMuted, fontSize: 14, marginTop: 2, textAlign: 'center', paddingHorizontal: 24 }}>{tr.onboarding_sub}</Text>
-        <View style={{ flexDirection: 'row', gap: 6, marginTop: 16 }} accessibilityLabel={`Étape ${i + 1} sur ${steps.length}`}>
+        <View style={{ flexDirection: 'row', gap: 6, marginTop: 16 }} accessibilityLabel={L('Étape {a} sur {b}', { a: i + 1, b: steps.length })}>
           {steps.map((x, k) => (
             <View key={x} style={{ width: k === i ? 22 : 8, height: 8, borderRadius: 4, backgroundColor: k <= i ? b.gold : 'rgba(255,255,255,0.25)' }} />
           ))}

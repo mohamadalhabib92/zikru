@@ -1,6 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { LocalGroups } from '@/components/LocalGroups';
 import { confirmAsk, ErrorNote, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
@@ -9,6 +10,7 @@ import { useCommunity } from '@/lib/community/sync';
 import { HeroHeader } from '@/ui/ds';
 import { Button, Card, Field, H2, Ionicons, ListItem, Muted, Notice, Row, Screen, Spacer, type IconName } from '@/ui/kit';
 import { alpha, brand as b, theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /**
  * Communauté : « Ma famille » (niveau 1, Usra) et « Mes cercles » (niveau 2, Ahbab).
@@ -120,13 +122,13 @@ function MyFamilies() {
       <H2>Ma famille</H2>
       <ErrorNote error={fams.error} onRetry={fams.reload} />
       {fams.data?.map((f) => (
-        <ListItem key={f.id} icon="home-outline" title={f.name} subtitle={f.wird ? `Wird : ${f.wird}` : 'Famille privée'} onPress={() => router.push(`/family/${f.id}`)} />
+        <ListItem key={f.id} icon="home-outline" title={f.name} subtitle={f.wird ? L('Wird : {w}', { w: f.wird }) : 'Famille privée'} onPress={() => router.push(`/family/${f.id}`)} />
       ))}
       {fams.data && !fams.data.length && !creating ? <Muted>Créez votre famille ou rejoignez-la avec le code reçu d’un parent.</Muted> : null}
       {profile?.is_minor ? null : creating ? (
         <Card>
-          <Field label="Nom de la famille" placeholder="Famille Ba" value={name} onChangeText={setName} />
-          <Field label="Votre nom dans la famille" placeholder="Papa, Maman, Habib…" value={me} onChangeText={setMe} error={err} />
+          <Field label="Nom de la famille" placeholder={L("Famille Ba")} value={name} onChangeText={setName} />
+          <Field label="Votre nom dans la famille" placeholder={L("Papa, Maman, Habib…")} value={me} onChangeText={setMe} error={err} />
           <Muted>Vous serez parent administrateur (2 parents maximum).</Muted>
           <Spacer h={8} />
           <Row gap={8}>
@@ -184,7 +186,7 @@ function MyCircles() {
       ))}
       {creating ? (
         <Card>
-          <Field label="Nom du cercle" placeholder="Cercle du jeudi" value={name} onChangeText={setName} />
+          <Field label="Nom du cercle" placeholder={L("Cercle du jeudi")} value={name} onChangeText={setName} />
           <Field label="Description (facultatif)" value={desc} onChangeText={setDesc} />
           <Field label="Règlement (accepté par chaque membre)" value={rules} onChangeText={setRules} multiline error={err} />
           <Row gap={8}>
@@ -223,7 +225,7 @@ function JoinWithCode() {
       <H2>Rejoindre avec un code</H2>
       <Row gap={8}>
         <View style={{ flex: 1 }}>
-          <Field label="Code d’invitation" autoCapitalize="characters" autoCorrect={false} placeholder="ABCD2345EF" value={code} onChangeText={setCode} />
+          <Field label="Code d’invitation" autoCapitalize="characters" autoCorrect={false} placeholder={L("ABCD2345EF")} value={code} onChangeText={setCode} />
         </View>
         <Button small title="Voir" disabled={code.trim().length < 6} onPress={() => router.push({ pathname: '/join', params: { code: code.trim().toUpperCase() } })} />
       </Row>

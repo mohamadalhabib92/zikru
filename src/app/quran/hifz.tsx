@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { Sheet, QStepper } from '@/components/quran/Sheet';
 import { readerPalette } from '@/components/quran/palette';
 import { dayKey } from '@/lib/dates';
@@ -12,6 +13,7 @@ import { SURAHS } from '@/lib/surahs';
 import { Container, FadeIn, HeroHeader, SectionHeader, useLayout } from '@/ui/ds';
 import { Button, Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const statusColor = (s: Status) => (s === 'memorised' ? b.green : s === 'review' ? '#D98A2B' : s === 'learning' ? b.gold : b.line);
 const STATUS_LABEL: Record<Status, string> = { none: 'Pas commencé', learning: 'En cours', review: 'À réviser', memorised: 'Mémorisé' };
@@ -107,7 +109,7 @@ export default function HifzHub() {
         <FadeIn delay={60}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Révision du jour : ${due} versets`}
+            accessibilityLabel={L('Révision du jour : {n} versets', { n: due })}
             disabled={!due}
             onPress={() => router.push({ pathname: '/quran/hifz-session', params: { mode: 'review' } })}
             style={({ pressed }) => ({ backgroundColor: b.paper, borderRadius: 20, borderWidth: 1, borderColor: due ? b.gold : b.line, padding: 16, gap: 10, opacity: pressed ? 0.92 : 1 })}
@@ -116,7 +118,7 @@ export default function HifzHub() {
               <Ionicons name={due ? 'refresh-circle' : 'checkmark-circle'} size={26} color={due ? b.goldDeep : b.green} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: b.ink, fontWeight: '900', fontSize: 17 }}>Révision du jour</Text>
-                <Text style={{ color: b.inkMuted, fontSize: 13 }}>{keys.length ? (due ? `${due} verset${due > 1 ? 's' : ''} · environ ${Math.max(1, Math.round(due * 0.4))} min` : 'Tout est à jour — revenez demain.') : 'Commencez une leçon ci-dessous.'}</Text>
+                <Text style={{ color: b.inkMuted, fontSize: 13 }}>{keys.length ? (due ? L('{n} verset(s) · environ {m} min', { n: due, m: Math.max(1, Math.round(due * 0.4)) }) : 'Tout est à jour — revenez demain.') : 'Commencez une leçon ci-dessous.'}</Text>
               </View>
               {due ? <Ionicons name="chevron-forward" size={18} color={b.inkMuted} /> : null}
             </View>
@@ -135,11 +137,11 @@ export default function HifzHub() {
         <View>
           <SectionHeader title="Nouvelle leçon" />
           <View style={{ backgroundColor: b.paper, borderRadius: 20, borderWidth: 1, borderColor: b.line, padding: 16, gap: 14 }}>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Sourate : ${meta[2]}. Changer`} onPress={() => setPick(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: b.cream, borderRadius: 14, padding: 12 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={L('Sourate : {s}. Changer', { s: meta[2] })} onPress={() => setPick(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: b.cream, borderRadius: 14, padding: 12 }}>
               <Text style={{ color: b.green, fontWeight: '900', width: 30, textAlign: 'center' }}>{s}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{meta[2]}</Text>
-                <Text style={{ color: b.inkMuted, fontSize: 12 }}>{`${meta[3]} · ${meta[4]} versets`}</Text>
+                <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('{m} · {n} versets', { m: meta[3], n: meta[4] })}</Text>
               </View>
               <Text style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18, lineHeight: 36 }}>{meta[1].replace(/^سُورَةُ\s*/, '')}</Text>
               <Ionicons name="chevron-down" size={18} color={b.inkMuted} />
@@ -161,7 +163,7 @@ export default function HifzHub() {
                 </Pressable>
               ))}
             </View>
-            <Button title={`Commencer · ${meta[2]} ${from}–${to}`} icon="play" onPress={() => router.push({ pathname: '/quran/hifz-session', params: { s: String(s), from: String(from), to: String(to) } })} />
+            <Button title={L('Commencer · {s} {a}–{b}', { s: meta[2], a: from, b: to })} icon="play" onPress={() => router.push({ pathname: '/quran/hifz-session', params: { s: String(s), from: String(from), to: String(to) } })} />
             <Text style={{ color: b.inkMuted, fontSize: 12 }}>Conseil : 3 à 5 versets par jour, récitateur « Al-Husary (Mu‘allim) », puis masquez progressivement le texte.</Text>
           </View>
         </View>
@@ -182,7 +184,7 @@ export default function HifzHub() {
                 <Pressable
                   key={t.n}
                   accessibilityRole="button"
-                  accessibilityLabel={`${t.name} : ${rs.known ? `${pct} % suivi${rs.due ? `, ${rs.due} à réviser` : ''}` : 'pas commencé'}`}
+                  accessibilityLabel={`${t.name} : ${rs.known ? L('{p} % suivi', { p: pct }) + (rs.due ? ', ' + L('{n} à réviser', { n: rs.due }) : '') : L('pas commencé')}`}
                   onPress={() => (view === 'surah' ? chooseSurah(t.n) : chooseSurah(fromIndex(t.range[0])[0]))}
                   style={{ width: size, height: size, borderRadius: 10, backgroundColor: col ? alpha(col, 0.18 + 0.6 * (rs.known / rs.total)) : b.paper, borderWidth: 1, borderColor: col ?? b.line, alignItems: 'center', justifyContent: 'center' }}
                 >
@@ -210,7 +212,7 @@ export default function HifzHub() {
           return (
             <Pressable key={x[0]} accessibilityRole="button" onPress={() => chooseSurah(x[0])} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, borderBottomWidth: 1, borderBottomColor: b.line }}>
               <Text style={{ color: b.green, fontWeight: '900', width: 30, textAlign: 'center' }}>{x[0]}</Text>
-              <Text style={{ color: b.ink, fontWeight: x[0] === s ? '900' : '600', flex: 1 }}>{`${x[2]} · ${x[4]} v.`}</Text>
+              <Text style={{ color: b.ink, fontWeight: x[0] === s ? '900' : '600', flex: 1 }}>{L('{s} · {n} v.', { s: x[2], n: x[4] })}</Text>
               {rs.known ? <Text style={{ color: statusColor(rs.status), fontSize: 12, fontWeight: '800' }}>{`${Math.round((rs.known / rs.total) * 100)} %`}</Text> : null}
             </Pressable>
           );

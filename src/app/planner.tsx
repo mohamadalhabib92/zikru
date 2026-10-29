@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey, useGrowth, type Block } from '@/lib/growth';
 import { AR_NAMES, computeDay, hhmm } from '@/lib/prayer';
@@ -7,6 +8,7 @@ import { useSettings } from '@/lib/settings';
 import { Ionicons, Screen } from '@/ui/kit';
 import { LCard, LMuted } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const PURPLE = b.violet;
 const BLOCKS: { key: Block; fr: string; until: string }[] = [
@@ -31,7 +33,7 @@ export default function Planner() {
     <Screen padded={false} bg={b.cream}>
       <PatternBg color={PURPLE} style={{ padding: 20 }}>
         <Text style={{ color: '#fff', fontSize: 24, fontWeight: '900' }}>Planificateur du jour</Text>
-        <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>Organisez votre journée autour des prières · {tasks.length ? `${done}/${tasks.length} faites` : 'aucune tâche'}</Text>
+        <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>Organisez votre journée autour des prières · {tasks.length ? L('{a}/{b} faites', { a: done, b: tasks.length }) : 'aucune tâche'}</Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
         {BLOCKS.map((bl) => {
@@ -65,14 +67,14 @@ export default function Planner() {
                     {t.done ? <Ionicons name="checkmark" size={18} color="#fff" /> : null}
                   </Pressable>
                   <Text style={{ flex: 1, color: t.done ? b.inkMuted : b.ink, textDecorationLine: t.done ? 'line-through' : 'none' }}>{t.title}</Text>
-                  <Pressable accessibilityRole="button" accessibilityLabel={`Supprimer ${t.title}`} onPress={() => g.removeTask(t.id)} style={{ padding: 6 }}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={L('Supprimer {x}', { x: t.title })} onPress={() => g.removeTask(t.id)} style={{ padding: 6 }}>
                     <Ionicons name="close" size={18} color={b.inkMuted} />
                   </Pressable>
                 </View>
               ))}
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8 }}>
-                <TextInput value={draft[bl.key] ?? ''} onChangeText={(v) => setDraft((d) => ({ ...d, [bl.key]: v }))} onSubmitEditing={add} returnKeyType="done" placeholder="Ajouter une tâche…" placeholderTextColor={b.inkMuted} accessibilityLabel={`Ajouter une tâche ${bl.fr}`} style={{ flex: 1, borderWidth: 1, borderColor: b.line, borderRadius: 10, paddingHorizontal: 10, minHeight: 40, color: b.ink, backgroundColor: b.cream }} />
-                <Pressable accessibilityRole="button" accessibilityLabel="Ajouter" onPress={add} style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: PURPLE, alignItems: 'center', justifyContent: 'center' }}>
+                <TextInput value={draft[bl.key] ?? ''} onChangeText={(v) => setDraft((d) => ({ ...d, [bl.key]: v }))} onSubmitEditing={add} returnKeyType="done" placeholder={L("Ajouter une tâche…")} placeholderTextColor={b.inkMuted} accessibilityLabel={L('Ajouter une tâche {x}', { x: L(bl.fr) })} style={{ flex: 1, borderWidth: 1, borderColor: b.line, borderRadius: 10, paddingHorizontal: 10, minHeight: 40, color: b.ink, backgroundColor: b.cream }} />
+                <Pressable accessibilityRole="button" accessibilityLabel={L("Ajouter")} onPress={add} style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: PURPLE, alignItems: 'center', justifyContent: 'center' }}>
                   <Ionicons name="add" size={22} color="#fff" />
                 </Pressable>
               </View>

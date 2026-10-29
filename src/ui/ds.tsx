@@ -1,9 +1,11 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Easing, Platform, Pressable, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { Text } from '@/ui/Text';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, type IconName } from './kit';
 import { alpha, brand as b, elevation } from './theme';
+import { L } from '@/lib/l10n';
 
 /** Composants du système de design 1.0.19 (au-dessus de kit/light). */
 
@@ -71,7 +73,7 @@ export function Tile({ icon, title, subtitle, onPress, color = b.green, style }:
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
+      accessibilityLabel={subtitle ? `${L(title)}. ${L(subtitle)}` : L(title)}
       onPress={() => {
         tapHaptic('select');
         onPress();
@@ -148,7 +150,7 @@ export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `$
     loop.start();
     return () => loop.stop();
   }, [o]);
-  return <Animated.View accessibilityLabel="Chargement" style={[{ width: w, height: h, borderRadius: r, backgroundColor: b.line, opacity: o }, style]} />;
+  return <Animated.View accessibilityLabel={L("Chargement")} style={[{ width: w, height: h, borderRadius: r, backgroundColor: b.line, opacity: o }, style]} />;
 }
 
 /** Apparition douce (fondu + léger glissement). */

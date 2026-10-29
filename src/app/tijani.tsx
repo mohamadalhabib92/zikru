@@ -1,17 +1,20 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import Svg, { Circle, Line, Rect, Text as SvgText } from 'react-native-svg';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey } from '@/lib/growth';
 import { computeDay, hhmm, type PrayerKey } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
-import { ADILLA, BIOGRAPHY, CONDITIONS, FORMULAS, MUQADDAM_NOTE, PRACTICES, SHAYKH, type Practice } from '@/lib/tijani';
+import { ADILLA_I18N } from '@/lib/i18n-content/tijani';
+import { ADILLA, BIOGRAPHY, CONDITIONS, FORMULAS, MUQADDAM_NOTE, PRACTICES, SHAYKH, practiceDoneKey, type Practice } from '@/lib/tijani';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, LTitle, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
+import { L, useUiLang } from '@/lib/l10n';
 
 type Tab = 'wird' | 'wazifa' | 'hailala' | 'path' | 'adilla';
 const TABS: { v: Tab; label: string; icon: IconName }[] = [
@@ -196,7 +199,7 @@ function DaySchedule() {
 function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
   const [done, setDone] = usePersistentState<Record<string, number[]>>('tijani-done', {});
   const [open, setOpen] = useState<number | null>(null);
-  const key = `${dayKey()}-${p.id}`;
+  const key = practiceDoneKey(dayKey(), p.id);
   const checked = done[key] ?? [];
   const toggle = (i: number) =>
     setDone((d) => {
@@ -242,7 +245,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
             return (
               <View key={i} style={{ borderRadius: 14, borderWidth: 1, borderColor: isOn ? b.wirdGreen : b.line, backgroundColor: isOn ? b.greenTint : b.paper }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 10 }}>
-                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isOn }} accessibilityLabel={`${f.title} — ${isOn ? 'fait' : 'marquer comme fait'}`} onPress={() => toggle(i)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isOn }} accessibilityLabel={`${L(f.title)} — ${isOn ? L('fait') : L('marquer comme fait')}`} onPress={() => toggle(i)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                     {isOn ? (
                       <Ionicons name="checkmark-circle" size={30} color={b.wirdGreen} />
                     ) : (
@@ -314,6 +317,7 @@ function PathTab() {
 }
 
 function AdillaTab() {
+  const lang = useUiLang();
   const [kind, setKind] = useState<'all' | 'coran' | 'hadith'>('all');
   const list = ADILLA.filter((a) => kind === 'all' || a.kind === kind);
   return (
@@ -328,10 +332,20 @@ function AdillaTab() {
       {list.map((a) => (
         <LCard key={a.ref}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ color: a.kind === 'coran' ? b.wirdGreen : b.purple, fontWeight: '800', fontSize: 12 }}>{a.kind === 'coran' ? 'CORAN' : 'HADITH'}</Text>
+            <Text style={{ color: a.kind === 'coran' ? b.wirdGreen : b.purple, fontWeight: '800', fontSize: 12 }}>{L(a.kind === 'coran' ? 'Coran' : 'Hadith').toUpperCase()}</Text>
             <LMuted style={{ fontSize: 12 }}>{a.topic}</LMuted>
           </View>
-          <LText style={{ marginTop: 6 }}>{a.text}</LText>
+          {lang === 'fr' ? (
+            <LText style={{ marginTop: 6 }}>{a.text}</LText>
+          ) : lang === 'ar' ? (
+            ADILLA_I18N[a.ref]?.ar ? (
+              <Text style={{ marginTop: 6, color: b.ink, fontSize: 19, lineHeight: 34, writingDirection: 'rtl', textAlign: 'right' }}>{ADILLA_I18N[a.ref]!.ar}</Text>
+            ) : (
+              <LMuted style={{ marginTop: 6 }}>{L('Texte arabe du hadith non recopié dans l’app : voir la source citée.')}</LMuted>
+            )
+          ) : (
+            <LText style={{ marginTop: 6 }}>{ADILLA_I18N[a.ref]?.en ?? a.text}</LText>
+          )}
           <Text style={{ color: b.brown, fontWeight: '800', marginTop: 6 }}>{a.ref}</Text>
           <ProvenanceBadges set="adilla" id={String(ADILLA.indexOf(a))} />
         </LCard>

@@ -1,11 +1,13 @@
 import Constants from 'expo-constants';
 import { useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { GRADE_LABEL, GRADINGS_CHECKED_AT, dorarSearchUrl, gradeTone, provenanceFor, reportUrl } from '@/lib/provenance';
 import type { ProvenanceItem, ProvenanceSet } from '@/lib/provenance-types';
 import { REVIEW_LABEL } from '@/lib/reviews';
 import { Badge, Ionicons } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 export const APP_VERSION = Constants.expoConfig?.version ?? 'web';
 
@@ -52,7 +54,7 @@ export function ProvenanceBadges({ set, id, item }: { set?: ProvenanceSet; id?: 
         {p.divergence ? <Badge label="Jugements divergents" tone="warning" /> : null}
         <Badge label={REVIEW_LABEL[p.review.status]} tone={p.review.status === 'valide' ? 'success' : p.review.status === 'a_corriger' ? 'danger' : 'neutral'} />
       </View>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel="Sources et jugements" onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, minHeight: 32 }}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={L("Sources et jugements")} onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, minHeight: 32 }}>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={b.inkMuted} />
         <Text style={{ color: b.inkMuted, fontSize: 12, fontWeight: '700' }}>Sources, jugements et signalement</Text>
       </Pressable>

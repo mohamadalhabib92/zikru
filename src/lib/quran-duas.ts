@@ -1,6 +1,6 @@
 /** Du‘as coraniques — GÉNÉRÉ par scripts/gen-quran-duas.mjs depuis api.alquran.cloud (ne pas éditer à la main).
- * Texte : quran-simple-enhanced · translittération : en.transliteration · traduction : Muhammad Hamidullah (fr.hamidullah). */
-export type QuranDua = { id: string; ref: string; surah: number; title: string; who?: string; ar: string; tr: string; fr: string };
+ * Texte : quran-simple-enhanced · translittération : en.transliteration · traduction : Muhammad Hamidullah (fr.hamidullah) · anglais : Marmaduke Pickthall (en.pickthall, 1930, domaine public). */
+export type QuranDua = { id: string; ref: string; surah: number; title: string; who?: string; ar: string; tr: string; fr: string; en: string };
 export const QURAN_DUAS: QuranDua[] = [
  {
   "id": "q-fatiha",
@@ -10,7 +10,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Al-Fātiḥa, récitée à chaque rak‘a",
   "ar": "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ۝ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
   "tr": "Ihdinas-Siraatal-Mustaqeem · Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen",
-  "fr": "Guide-nous dans le droit chemin, le chemin de ceux que Tu as comblés de faveurs, non pas de ceux qui ont encouru Ta colère, ni des égarés."
+  "fr": "Guide-nous dans le droit chemin, le chemin de ceux que Tu as comblés de faveurs, non pas de ceux qui ont encouru Ta colère, ni des égarés.",
+  "en": "Show us the straight path, The path of those whom Thou hast favoured; Not the (path) of those who earn Thine anger nor of those who go astray."
  },
  {
   "id": "q-b127",
@@ -20,7 +21,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ibrāhīm et Ismā‘īl en élevant la Ka‘ba",
   "ar": "وَإِذْ يَرْفَعُ إِبْرَاهِيمُ الْقَوَاعِدَ مِنَ الْبَيْتِ وَإِسْمَاعِيلُ رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ",
   "tr": "Wa iz yarfa'u Ibraaheemul qawaa'ida minal Baitiwa Ismaa'eelu Rabbanaa taqabbal minnaa innaka Antas Samee'ul Aleem",
-  "fr": "Et quand Abraham et Ismaël élevaient les assises de la Maison: «O notre Seigneur, accepte ceci de notre part! Car c'est Toi l'Audient, l'Omniscient."
+  "fr": "Et quand Abraham et Ismaël élevaient les assises de la Maison: «O notre Seigneur, accepte ceci de notre part! Car c'est Toi l'Audient, l'Omniscient.",
+  "en": "And when Abraham and Ishmael were raising the foundations of the House, (Abraham prayed): Our Lord! Accept from us (this duty). Lo! Thou, only Thou, art the Hearer, the Knower."
  },
  {
   "id": "q-b128",
@@ -30,7 +32,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ibrāhīm et Ismā‘īl",
   "ar": "رَبَّنَا وَاجْعَلْنَا مُسْلِمَيْنِ لَكَ وَمِن ذُرِّيَّتِنَا أُمَّةً مُّسْلِمَةً لَّكَ وَأَرِنَا مَنَاسِكَنَا وَتُبْ عَلَيْنَا ۖ إِنَّكَ أَنتَ التَّوَّابُ الرَّحِيمُ",
   "tr": "Rabbanaa waj'alnaa muslimaini laka wa min zurriyyatinaaa ummatam muslimatal laka wa arinaa manaasikanaa wa tub 'alainaa innaka antat Tawwaabur Raheem",
-  "fr": "Notre Seigneur! Fais de nous Tes Soumis, et de notre descendance une communauté soumise à Toi. Et montre nous nos rites et accepte de nous le repentir. Car c'est Toi certes l'Accueillant au repentir, le Miséricordieux."
+  "fr": "Notre Seigneur! Fais de nous Tes Soumis, et de notre descendance une communauté soumise à Toi. Et montre nous nos rites et accepte de nous le repentir. Car c'est Toi certes l'Accueillant au repentir, le Miséricordieux.",
+  "en": "Our Lord! And make us submissive unto Thee and of our seed a nation submissive unto Thee, and show us our ways of worship, and relent toward us. Lo! Thou, only Thou, art the Relenting, the Merciful."
  },
  {
   "id": "q-b201",
@@ -40,7 +43,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Rabbanā ātinā",
   "ar": "وَمِنْهُم مَّن يَقُولُ رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
   "tr": "Wa minhum mai yaqoolu rabbanaaa aatina fid dunyaa hasanatawn wa fil aakhirati hasanatanw wa qinaa azaaban Naar",
-  "fr": "Et il est des gens qui disent: «Seigneur! Accorde nous belle part ici-bas, et belle part aussi dans l'au-delà; et protège-nous du châtiment du Feu!»"
+  "fr": "Et il est des gens qui disent: «Seigneur! Accorde nous belle part ici-bas, et belle part aussi dans l'au-delà; et protège-nous du châtiment du Feu!»",
+  "en": "And of them (also) is he who saith: \"Our Lord! Give unto us in the world that which is good and in the Hereafter that which is good, and guard us from the doom of Fire.\""
  },
  {
   "id": "q-b250",
@@ -50,7 +54,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Les compagnons de Ṭālūt face à Jālūt",
   "ar": "وَلَمَّا بَرَزُوا لِجَالُوتَ وَجُنُودِهِ قَالُوا رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَثَبِّتْ أَقْدَامَنَا وَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ",
   "tr": "Wa lammaa barazoo liJaaloota wa junoodihee qaaloo Rabbanaaa afrigh 'alainaa sabranw wa sabbit aqdaamanaa wansurnaa 'alal qawmil kaafireen",
-  "fr": "Et quand ils affrontèrent Goliath et ses troupes, ils dirent: «Seigneur! Déverse sur nous l'endurance, affermis nos pas et donne-nous la victoire sur ce peuple infidèle»."
+  "fr": "Et quand ils affrontèrent Goliath et ses troupes, ils dirent: «Seigneur! Déverse sur nous l'endurance, affermis nos pas et donne-nous la victoire sur ce peuple infidèle».",
+  "en": "And when they went into the field against Goliath and his hosts they said: Our Lord! Bestow on us endurance, make our foothold sure, and give us help against the disbelieving folk."
  },
  {
   "id": "q-b286",
@@ -60,7 +65,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Fin de sourate al-Baqara",
   "ar": "لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا ۚ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِن قَبْلِنَا ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا ۚ أَنتَ مَوْلَانَا فَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ",
   "tr": "Laa yukalliful-laahu nafsan illaa wus'ahaa; lahaa maa kasabat wa 'alaihaa maktasabat; Rabbanaa la tu'aakhiznaa in naseenaaa aw akhtaanaa; Rabbanaa wa laa tahmil-'alainaaa isran kamaa hamaltahoo 'alal-lazeena min qablinaa; Rabbanaa wa laa tuhammilnaa maa laa taaqata lanaa bih wa'fu 'annaa waghfir lanaa warhamnaa; Anta mawlaanaa fansurnaa 'alal qawmil kaafireen",
-  "fr": "Allah n'impose à aucune âme une charge supérieure à sa capacité. Elle sera récompensée du bien qu'elle aura fait, punie du mal qu'elle aura fait. Seigneur, ne nous châtie pas s'il nous arrive d'oublier ou de commettre une erreur. Seigneur! Ne nous charge pas d'un fardeau lourd comme Tu as chargé ceux qui vécurent avant nous. Seigneur! Ne nous impose pas ce que nous ne pouvons supporter, efface nos fautes, pardonne-nous et fais nous miséricorde. Tu es Notre Maître, accorde-nous donc la victoire sur les peuples infidèles."
+  "fr": "Allah n'impose à aucune âme une charge supérieure à sa capacité. Elle sera récompensée du bien qu'elle aura fait, punie du mal qu'elle aura fait. Seigneur, ne nous châtie pas s'il nous arrive d'oublier ou de commettre une erreur. Seigneur! Ne nous charge pas d'un fardeau lourd comme Tu as chargé ceux qui vécurent avant nous. Seigneur! Ne nous impose pas ce que nous ne pouvons supporter, efface nos fautes, pardonne-nous et fais nous miséricorde. Tu es Notre Maître, accorde-nous donc la victoire sur les peuples infidèles.",
+  "en": "Allah tasketh not a soul beyond its scope. For it (is only) that which it hath earned, and against it (only) that which it hath deserved. Our Lord! Condemn us not if we forget, or miss the mark! Our Lord! Lay not on us such a burden as thou didst lay on those before us! Our Lord! Impose not on us that which we have not the strength to bear! Pardon us, absolve us and have mercy on us, Thou, our Protector, and give us victory over the disbelieving folk."
  },
  {
   "id": "q-a8",
@@ -70,7 +76,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Les gens enracinés dans la science",
   "ar": "رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً ۚ إِنَّكَ أَنتَ الْوَهَّابُ",
   "tr": "Rabbanaa laa tuzigh quloobanaa ba'da iz hadaitanaa wa hab lanaa mil ladunka rahmah; innaka antal Wahhaab",
-  "fr": "«Seigneur! Ne laisse pas dévier nos cœurs après que Tu nous aies guidés; et accorde-nous Ta miséricorde. C'est Toi, certes, le Grand Donateur!"
+  "fr": "«Seigneur! Ne laisse pas dévier nos cœurs après que Tu nous aies guidés; et accorde-nous Ta miséricorde. C'est Toi, certes, le Grand Donateur!",
+  "en": "Our Lord! Cause not our hearts to stray after Thou hast guided us, and bestow upon us mercy from Thy Presence. Lo! Thou, only Thou, art the Bestower."
  },
  {
   "id": "q-a9",
@@ -79,7 +86,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Tu rassembleras les hommes",
   "ar": "رَبَّنَا إِنَّكَ جَامِعُ النَّاسِ لِيَوْمٍ لَّا رَيْبَ فِيهِ ۚ إِنَّ اللَّهَ لَا يُخْلِفُ الْمِيعَادَ",
   "tr": "Rabbanaaa innaka jaami 'un-naasi li Yawmil laa raibafeeh; innal laaha laa yukhliful mee'aad",
-  "fr": "Seigneur! C'est Toi qui rassembleras les gens, un jour - en quoi il n'y a point de doute - Allah, vraiment, ne manque jamais à Sa promesse.»"
+  "fr": "Seigneur! C'est Toi qui rassembleras les gens, un jour - en quoi il n'y a point de doute - Allah, vraiment, ne manque jamais à Sa promesse.»",
+  "en": "Our Lord! Lo! it is Thou Who gatherest mankind together to a Day of which there is no doubt. Lo! Allah faileth not to keep the tryst."
  },
  {
   "id": "q-a16",
@@ -88,7 +96,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Pardonne nos péchés, préserve-nous du Feu",
   "ar": "الَّذِينَ يَقُولُونَ رَبَّنَا إِنَّنَا آمَنَّا فَاغْفِرْ لَنَا ذُنُوبَنَا وَقِنَا عَذَابَ النَّارِ",
   "tr": "Allazeena yaqooloona Rabbanaaa innanaaa aamannaa faghfir lanaa zunoobanaa wa qinaa 'azaaban Naar",
-  "fr": "qui disent: «O notre Seigneur, nous avons la foi; pardonne-nous donc nos péchés, et protège-nous du châtiment du Feu»,"
+  "fr": "qui disent: «O notre Seigneur, nous avons la foi; pardonne-nous donc nos péchés, et protège-nous du châtiment du Feu»,",
+  "en": "Those who say: Our Lord! Lo! we believe. So forgive us our sins and guard us from the punishment of Fire;"
  },
  {
   "id": "q-a26",
@@ -97,7 +106,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Ô Allah, Maître de la royauté",
   "ar": "قُلِ اللَّهُمَّ مَالِكَ الْمُلْكِ تُؤْتِي الْمُلْكَ مَن تَشَاءُ وَتَنزِعُ الْمُلْكَ مِمَّن تَشَاءُ وَتُعِزُّ مَن تَشَاءُ وَتُذِلُّ مَن تَشَاءُ ۖ بِيَدِكَ الْخَيْرُ ۖ إِنَّكَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ",
   "tr": "Qulil laahumma Maalikal Mulki tu'til mulka man tashaaa'u wa tanzi'ulmulka mimman tashhaaa'u wa tu'izzu man tashaaa'u wa tuzillu man tashaaa'u biyadikal khairu innaka 'alaa kulli shai'in Qadeer",
-  "fr": "- Dis: «O Allah, Maître de l'autorité absolue. Tu donnes l'autorité à qui Tu veux, et Tu arraches l'autorité à qui Tu veux; et Tu donnes la puissance à qui Tu veux, et Tu humilies qui Tu veux. Le bien est en Ta main et Tu es Omnipotent."
+  "fr": "- Dis: «O Allah, Maître de l'autorité absolue. Tu donnes l'autorité à qui Tu veux, et Tu arraches l'autorité à qui Tu veux; et Tu donnes la puissance à qui Tu veux, et Tu humilies qui Tu veux. Le bien est en Ta main et Tu es Omnipotent.",
+  "en": "Say: O Allah! Owner of Sovereignty! Thou givest sovereignty unto whom Thou wilt, and Thou withdrawest sovereignty from whom Thou wilt. Thou exaltest whom Thou wilt, and Thou abasest whom Thou wilt. In Thy hand is the good. Lo! Thou art Able to do all things."
  },
  {
   "id": "q-a38",
@@ -107,7 +117,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Zakariyyā",
   "ar": "هُنَالِكَ دَعَا زَكَرِيَّا رَبَّهُ ۖ قَالَ رَبِّ هَبْ لِي مِن لَّدُنكَ ذُرِّيَّةً طَيِّبَةً ۖ إِنَّكَ سَمِيعُ الدُّعَاءِ",
   "tr": "Hunaaalika da'aa Zakariyyaa Rabbahoo qaala Rabbi hab lee mil ladunka zurriyyatan taiyibatan innaka samee'ud du'aaa'",
-  "fr": "Alors, Zacharie pria son Seigneur, et dit: «O mon Seigneur, donne-moi, venant de Toi, une excellente descendance. Car Tu es Celui qui entend bien la prière»."
+  "fr": "Alors, Zacharie pria son Seigneur, et dit: «O mon Seigneur, donne-moi, venant de Toi, une excellente descendance. Car Tu es Celui qui entend bien la prière».",
+  "en": "Then Zachariah prayed unto his Lord and said: My Lord! Bestow upon me of Thy bounty goodly offspring. Lo! Thou art the Hearer of Prayer."
  },
  {
   "id": "q-a53",
@@ -117,7 +128,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Les apôtres de ‘Īsā",
   "ar": "رَبَّنَا آمَنَّا بِمَا أَنزَلْتَ وَاتَّبَعْنَا الرَّسُولَ فَاكْتُبْنَا مَعَ الشَّاهِدِينَ",
   "tr": "Rabbanaaa aamannaa bimaaa anzalta wattaba'nar Rasoola faktubnaa ma'ash shaahideen",
-  "fr": "Seigneur! Nous avons cru à ce que Tu as fait descendre et suivi le messager. Inscris-nous donc parmi ceux qui témoignent»."
+  "fr": "Seigneur! Nous avons cru à ce que Tu as fait descendre et suivi le messager. Inscris-nous donc parmi ceux qui témoignent».",
+  "en": "Our Lord! We believe in that which Thou hast revealed and we follow him whom Thou hast sent. Enrol us among those who witness (to the truth)."
  },
  {
   "id": "q-a147",
@@ -126,7 +138,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Pardonne nos excès, affermis nos pas",
   "ar": "وَمَا كَانَ قَوْلَهُمْ إِلَّا أَن قَالُوا رَبَّنَا اغْفِرْ لَنَا ذُنُوبَنَا وَإِسْرَافَنَا فِي أَمْرِنَا وَثَبِّتْ أَقْدَامَنَا وَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ",
   "tr": "Wa maa kaana qawlahum illaa an qaaloo Rabbanagh fir lanaa zunoobanaa wa israafanaa feee amirnaa wa sabbit aqdaamanaa wansurnaa 'alal qawmil kaafireen",
-  "fr": "Et ils n'eurent que cette parole: «Seigneur, pardonne-nous nos péchés ainsi que nos excès dans nos comportements, affermis nos pas et donne-nous la victoire sur les gens mécréants»."
+  "fr": "Et ils n'eurent que cette parole: «Seigneur, pardonne-nous nos péchés ainsi que nos excès dans nos comportements, affermis nos pas et donne-nous la victoire sur les gens mécréants».",
+  "en": "Their cry was only that they said: Our Lord! forgive us for our sins and wasted efforts, make our foothold sure, and give us victory over the disbelieving folk."
  },
  {
   "id": "q-a191",
@@ -136,7 +149,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Les doués d’intelligence",
   "ar": "الَّذِينَ يَذْكُرُونَ اللَّهَ قِيَامًا وَقُعُودًا وَعَلَىٰ جُنُوبِهِمْ وَيَتَفَكَّرُونَ فِي خَلْقِ السَّمَاوَاتِ وَالْأَرْضِ رَبَّنَا مَا خَلَقْتَ هَٰذَا بَاطِلًا سُبْحَانَكَ فَقِنَا عَذَابَ النَّارِ",
   "tr": "Allazeena yazkuroonal laaha qiyaamaiw-wa qu'oodanw-wa 'alaa juno obihim wa yatafakkaroona fee khalqis samaawaati wal ardi Rabbanaa maa khalaqta haaza baatilan Subhaanak faqinaa 'azaaban Naar",
-  "fr": "qui, debout, assis, couchés sur leurs côtés, invoquent Allah et méditent sur la création des cieux et de la terre (disant): «Notre Seigneur! Tu n'as pas créé cela en vain. Gloire à Toi! Garde-nous du châtiment du Feu."
+  "fr": "qui, debout, assis, couchés sur leurs côtés, invoquent Allah et méditent sur la création des cieux et de la terre (disant): «Notre Seigneur! Tu n'as pas créé cela en vain. Gloire à Toi! Garde-nous du châtiment du Feu.",
+  "en": "Such as remember Allah, standing, sitting, and reclining, and consider the creation of the heavens and the earth, (and say): Our Lord! Thou createdst not this in vain. Glory be to Thee! Preserve us from the doom of Fire."
  },
  {
   "id": "q-a193",
@@ -145,7 +159,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Nous avons entendu l’appel à la foi",
   "ar": "رَّبَّنَا إِنَّنَا سَمِعْنَا مُنَادِيًا يُنَادِي لِلْإِيمَانِ أَنْ آمِنُوا بِرَبِّكُمْ فَآمَنَّا ۚ رَبَّنَا فَاغْفِرْ لَنَا ذُنُوبَنَا وَكَفِّرْ عَنَّا سَيِّئَاتِنَا وَتَوَفَّنَا مَعَ الْأَبْرَارِ",
   "tr": "Rabbanaaa innanaa sami'naa munaadiyai yunaadee lil eemaani an aaminoo bi Rabbikum fa aamannaa; Rabbanaa faghfir lanaa zunoobanaa wa kaffir 'annaa saiyi aatina wa tawaffanaa ma'al abraar",
-  "fr": "Seigneur! Nous avons entendu l'appel de celui qui a appelé ainsi à la foi: «Croyez en votre Seigneur» et dès lors nous avons cru. Seigneur, pardonne-nous nos péchés, efface de nous nos méfaits, et place nous, à notre mort, avec les gens de bien."
+  "fr": "Seigneur! Nous avons entendu l'appel de celui qui a appelé ainsi à la foi: «Croyez en votre Seigneur» et dès lors nous avons cru. Seigneur, pardonne-nous nos péchés, efface de nous nos méfaits, et place nous, à notre mort, avec les gens de bien.",
+  "en": "Our Lord! Lo! we have heard a crier calling unto Faith: \"Believe ye in your Lord!\" So we believed. Our Lord! Therefor forgive us our sins, and remit from us our evil deeds, and make us die the death of the righteous."
  },
  {
   "id": "q-a194",
@@ -154,7 +169,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Donne-nous ce que Tu as promis",
   "ar": "رَبَّنَا وَآتِنَا مَا وَعَدتَّنَا عَلَىٰ رُسُلِكَ وَلَا تُخْزِنَا يَوْمَ الْقِيَامَةِ ۗ إِنَّكَ لَا تُخْلِفُ الْمِيعَادَ",
   "tr": "Rabbanaa wa aatinaa maa wa'attanaa 'alaa Rusulika wa laa tukhzinaa Yawmal Qiyaamah; innaka laa tukhliful mee'aad",
-  "fr": "Seigneur! Donne-nous ce que Tu nous as promis par Tes messagers. Et ne nous couvre pas d'ignominie au Jour de la Résurrection. Car Toi, Tu ne manques pas à Ta promesse»."
+  "fr": "Seigneur! Donne-nous ce que Tu nous as promis par Tes messagers. Et ne nous couvre pas d'ignominie au Jour de la Résurrection. Car Toi, Tu ne manques pas à Ta promesse».",
+  "en": "Our Lord! And give us that which Thou hast promised to us by Thy messengers. Confound us not upon the Day of Resurrection. Lo! Thou breakest not the tryst."
  },
  {
   "id": "q-m83",
@@ -163,7 +179,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Inscris-nous parmi les témoins",
   "ar": "وَإِذَا سَمِعُوا مَا أُنزِلَ إِلَى الرَّسُولِ تَرَىٰ أَعْيُنَهُمْ تَفِيضُ مِنَ الدَّمْعِ مِمَّا عَرَفُوا مِنَ الْحَقِّ ۖ يَقُولُونَ رَبَّنَا آمَنَّا فَاكْتُبْنَا مَعَ الشَّاهِدِينَ",
   "tr": "Wa izaa sami'oo maaa unzila ilar Rasooli taraaa a'yunahum tafeedu minad dam'i mimmmaa 'arafoo minalhaqq; yaqooloona Rabbanaaa aamannaa faktubnaa ma'ash shaahideen",
-  "fr": "Et quand ils entendent ce qui a été descendu sur le Messager [Muhammad], tu vois leurs yeux déborder de larmes, parce qu'ils ont reconnu la vérité. Ils disent: «O notre Seigneur! Nous croyons: inscris-nous donc parmi ceux qui témoignent (de la véracité du Coran)."
+  "fr": "Et quand ils entendent ce qui a été descendu sur le Messager [Muhammad], tu vois leurs yeux déborder de larmes, parce qu'ils ont reconnu la vérité. Ils disent: «O notre Seigneur! Nous croyons: inscris-nous donc parmi ceux qui témoignent (de la véracité du Coran).",
+  "en": "When they listen to that which hath been revealed unto the messengers, thou seest their eyes overflow with tears because of their recognition of the Truth. They say: Our Lord, we believe. Inscribe us as among the witnesses."
  },
  {
   "id": "q-f23",
@@ -173,7 +190,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ādam et Ḥawwā’",
   "ar": "قَالَا رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ",
   "tr": "Qaalaa Rabbanaa zalamnaaa anfusanaa wa illam taghfir lanaa wa tarhamnaa lanakoonanna minal khaasireen",
-  "fr": "Tous deux dirent: «O notre Seigneur, nous avons fait du tort à nous-mêmes. Et si Tu ne nous pardonnes pas et ne nous fais pas miséricorde, nous serons très certainement du nombre des perdants»."
+  "fr": "Tous deux dirent: «O notre Seigneur, nous avons fait du tort à nous-mêmes. Et si Tu ne nous pardonnes pas et ne nous fais pas miséricorde, nous serons très certainement du nombre des perdants».",
+  "en": "They said: Our Lord! We have wronged ourselves. If thou forgive us not and have not mercy on us, surely we are of the lost!"
  },
  {
   "id": "q-f47",
@@ -182,7 +200,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Ne nous place pas avec les injustes",
   "ar": "۞ وَإِذَا صُرِفَتْ أَبْصَارُهُمْ تِلْقَاءَ أَصْحَابِ النَّارِ قَالُوا رَبَّنَا لَا تَجْعَلْنَا مَعَ الْقَوْمِ الظَّالِمِينَ",
   "tr": "Wa izaa surifat absaaruhum tilqaaa'a Ashaabin Naari qaalo Rabbanaa laa taj'alnaa ma'al qawmiz zaalimneen",
-  "fr": "Et quand leurs regards seront tournés vers les gens du Feu, ils diront; «O notre Seigneur! Ne nous mets pas avec le peuple injuste»."
+  "fr": "Et quand leurs regards seront tournés vers les gens du Feu, ils diront; «O notre Seigneur! Ne nous mets pas avec le peuple injuste».",
+  "en": "And when their eyes are turned toward the dwellers of the Fire, they say: Our Lord! Place us not with the wrong-doing folk."
  },
  {
   "id": "q-f126",
@@ -192,7 +211,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Les magiciens de Pharaon devenus croyants",
   "ar": "وَمَا تَنقِمُ مِنَّا إِلَّا أَنْ آمَنَّا بِآيَاتِ رَبِّنَا لَمَّا جَاءَتْنَا ۚ رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَتَوَفَّنَا مُسْلِمِينَ",
   "tr": "Wa maa tanqimu minnaaa illaaa an aamannaa bi Aayaati Rabbinaa lammaa jaaa'atnaa; Rabbanaaa afrigh 'alainaa sabranw wa tawaffanaa muslimeen",
-  "fr": "Tu ne te venges de nous que parce que nous avons cru aux preuves de notre Seigneur, lorsqu'elles nous sont venues. O notre Seigneur! Déverse sur nous l'endurance et fais nous mourir entièrement soumis.»"
+  "fr": "Tu ne te venges de nous que parce que nous avons cru aux preuves de notre Seigneur, lorsqu'elles nous sont venues. O notre Seigneur! Déverse sur nous l'endurance et fais nous mourir entièrement soumis.»",
+  "en": "Thou takest vengeance on us only forasmuch as we believed the tokens of our Lord when they came unto us. Our Lord! Vouchsafe unto us steadfastness and make us die as men who have surrendered (unto Thee)."
  },
  {
   "id": "q-y85",
@@ -202,7 +222,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Le peuple de Mūsā",
   "ar": "فَقَالُوا عَلَى اللَّهِ تَوَكَّلْنَا رَبَّنَا لَا تَجْعَلْنَا فِتْنَةً لِّلْقَوْمِ الظَّالِمِينَ ۝ وَنَجِّنَا بِرَحْمَتِكَ مِنَ الْقَوْمِ الْكَافِرِينَ",
   "tr": "Faqaaloo 'alal laahi tawakkalnaa Rabbanaa laa taj'alnaa fitnatal lilqawmiz zaalimeen · Wa najjinaa birahmatika minal qawmil kaafireen",
-  "fr": "Ils dirent: «En Allah nous plaçons notre confiance. O notre Seigneur, ne fais pas de nous une cible pour les persécutions des injustes. Et délivre-nous, par Ta miséricorde, des gens mécréants»."
+  "fr": "Ils dirent: «En Allah nous plaçons notre confiance. O notre Seigneur, ne fais pas de nous une cible pour les persécutions des injustes. Et délivre-nous, par Ta miséricorde, des gens mécréants».",
+  "en": "They said: In Allah we put trust. Our Lord! Oh, make us not a lure for the wrongdoing folk; And, of Thy mercy, save us from the folk that disbelieve."
  },
  {
   "id": "q-h47",
@@ -212,7 +233,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Nūḥ",
   "ar": "قَالَ رَبِّ إِنِّي أَعُوذُ بِكَ أَنْ أَسْأَلَكَ مَا لَيْسَ لِي بِهِ عِلْمٌ ۖ وَإِلَّا تَغْفِرْ لِي وَتَرْحَمْنِي أَكُن مِّنَ الْخَاسِرِينَ",
   "tr": "Qaala rabbi inneee a'oozu bika an as'alaka maa laisa lee bihee 'ilmunw wa illaa taghfir lee wa tarhamneee akum minal khaasireen",
-  "fr": "Alors Noé dit: «Seigneur, je cherche Ta protection contre toute demande de ce dont je n'ai aucune connaissance. Et si Tu ne me pardonnes pas et ne me fais pas miséricorde, je serai au nombre des perdants»."
+  "fr": "Alors Noé dit: «Seigneur, je cherche Ta protection contre toute demande de ce dont je n'ai aucune connaissance. Et si Tu ne me pardonnes pas et ne me fais pas miséricorde, je serai au nombre des perdants».",
+  "en": "He said: My Lord! Lo! in Thee do I seek refuge (from the sin) that I should ask of Thee that whereof I have no knowledge. Unless Thou forgive me and have mercy on me I shall be among the lost."
  },
  {
   "id": "q-yu101",
@@ -222,7 +244,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Yūsuf",
   "ar": "۞ رَبِّ قَدْ آتَيْتَنِي مِنَ الْمُلْكِ وَعَلَّمْتَنِي مِن تَأْوِيلِ الْأَحَادِيثِ ۚ فَاطِرَ السَّمَاوَاتِ وَالْأَرْضِ أَنتَ وَلِيِّي فِي الدُّنْيَا وَالْآخِرَةِ ۖ تَوَفَّنِي مُسْلِمًا وَأَلْحِقْنِي بِالصَّالِحِينَ",
   "tr": "Rabbi qad aataitanee minal mulki wa 'allamtanee min taaweelil ahaadees; faati ras samaawaati wal ardi Anta waliyyee fid dunyaa wal Aakhirati tawaffanee muslimanw wa alhiqnee bissaaliheen",
-  "fr": "O mon Seigneur, Tu m'as donné du pouvoir et m'as enseigné l'interprétation des rêves. [C'est Toi Le] Créateur des cieux et de la terre, Tu es mon patron, ici-bas et dans l'au-delà. Fais-moi mourir en parfaite soumission et fais moi rejoindre les vertueux."
+  "fr": "O mon Seigneur, Tu m'as donné du pouvoir et m'as enseigné l'interprétation des rêves. [C'est Toi Le] Créateur des cieux et de la terre, Tu es mon patron, ici-bas et dans l'au-delà. Fais-moi mourir en parfaite soumission et fais moi rejoindre les vertueux.",
+  "en": "O my Lord! Thou hast given me (something) of sovereignty and hast taught me (something) of the interpretation of events - Creator of the heavens and the earth! Thou art my Protecting Guardian in the world and the Hereafter. Make me to die muslim (unto Thee), and join me to the righteous."
  },
  {
   "id": "q-i40",
@@ -232,7 +255,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ibrāhīm",
   "ar": "رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ ۝ رَبَّنَا اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ يَوْمَ يَقُومُ الْحِسَابُ",
   "tr": "Rabbij 'alnee muqeemas Salaati wa min zurriyyatee Rabbanaa wa taqabbal du'aaa' · Rabbanagh fir lee wa liwaalidaiya wa lilmu'mineena Yawma yaqoomul hisaab",
-  "fr": "O mon Seigneur! Fais que j'accomplisse assidûment la Salât ainsi qu'une partie de ma descendance; exauce ma prière, ô notre Seigneur! O notre Seigneur! pardonne-moi, ainsi qu'à mes père et mère et aux croyants, le jour de la reddition des comptes»."
+  "fr": "O mon Seigneur! Fais que j'accomplisse assidûment la Salât ainsi qu'une partie de ma descendance; exauce ma prière, ô notre Seigneur! O notre Seigneur! pardonne-moi, ainsi qu'à mes père et mère et aux croyants, le jour de la reddition des comptes».",
+  "en": "My Lord! Make me to establish proper worship, and some of my posterity (also); our Lord! and accept my prayer. Our Lord! Forgive me and my parents and believers on the day when the account is cast."
  },
  {
   "id": "q-is24",
@@ -242,7 +266,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Pour les parents",
   "ar": "وَاخْفِضْ لَهُمَا جَنَاحَ الذُّلِّ مِنَ الرَّحْمَةِ وَقُل رَّبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا",
   "tr": "Wakhfid lahumaa janaahaz zulli minar rahmati wa qur Rabbir hamhumaa kamaa rabbayaanee sagheera",
-  "fr": "et par miséricorde, abaisse pour eux l'aile de l'humilité, et dis: «O mon Seigneur, fais-leur, à tous deux, miséricorde comme ils m'ont élevé tout petit»."
+  "fr": "et par miséricorde, abaisse pour eux l'aile de l'humilité, et dis: «O mon Seigneur, fais-leur, à tous deux, miséricorde comme ils m'ont élevé tout petit».",
+  "en": "And lower unto them the wing of submission through mercy, and say: My Lord! Have mercy on them both as they did care for me when I was little."
  },
  {
   "id": "q-is80",
@@ -251,7 +276,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Une entrée et une sortie de vérité",
   "ar": "وَقُل رَّبِّ أَدْخِلْنِي مُدْخَلَ صِدْقٍ وَأَخْرِجْنِي مُخْرَجَ صِدْقٍ وَاجْعَل لِّي مِن لَّدُنكَ سُلْطَانًا نَّصِيرًا",
   "tr": "Wa qur Rabbi adkhilnee mudkhala sidqinw wa akhrijnee mukhraja sidqinw waj'al lee milladunka sultaanan naseeraa",
-  "fr": "Et dis: «O mon Seigneur, fais que j'entre par une entrée de vérité et que je sorte par une sortie de vérité; et accorde-moi de Ta part, un pouvoir bénéficiant de Ton secours»."
+  "fr": "Et dis: «O mon Seigneur, fais que j'entre par une entrée de vérité et que je sorte par une sortie de vérité; et accorde-moi de Ta part, un pouvoir bénéficiant de Ton secours».",
+  "en": "And say: My Lord! Cause me to come in with a firm incoming and to go out with a firm outgoing. And give me from Thy presence a sustaining Power."
  },
  {
   "id": "q-k10",
@@ -261,7 +287,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Les gens de la Caverne",
   "ar": "إِذْ أَوَى الْفِتْيَةُ إِلَى الْكَهْفِ فَقَالُوا رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا",
   "tr": "Iz awal fityatu ilal Kahfi faqaaloo Rabbanaaa aatinaa mil ladunka rahmatanw wa haiyi' lanaa min amrinaa rashadaa",
-  "fr": "Quand les jeunes gens se furent réfugiés dans la caverne, ils dirent: «O notre Seigneur, donne-nous de Ta part une miséricorde; et assure nous la droiture dans tout ce qui nous concerne»."
+  "fr": "Quand les jeunes gens se furent réfugiés dans la caverne, ils dirent: «O notre Seigneur, donne-nous de Ta part une miséricorde; et assure nous la droiture dans tout ce qui nous concerne».",
+  "en": "When the young men fled for refuge to the Cave and said: Our Lord! Give us mercy from Thy presence, and shape for us right conduct in our plight."
  },
  {
   "id": "q-t25",
@@ -271,7 +298,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Mūsā",
   "ar": "قَالَ رَبِّ اشْرَحْ لِي صَدْرِي ۝ وَيَسِّرْ لِي أَمْرِي ۝ وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي ۝ يَفْقَهُوا قَوْلِي",
   "tr": "Qaala Rabbish rah lee sadree · Wa yassir leee amree · Wahlul 'uqdatam milli saanee · Yafqahoo qawlee",
-  "fr": "[Moïse] dit: «Seigneur, ouvre-moi ma poitrine, et facilite ma mission, et dénoue un nœud en ma langue, afin qu'ils comprennent mes paroles,"
+  "fr": "[Moïse] dit: «Seigneur, ouvre-moi ma poitrine, et facilite ma mission, et dénoue un nœud en ma langue, afin qu'ils comprennent mes paroles,",
+  "en": "(Moses) said: My Lord! relieve my mind And ease my task for me; And loose a knot from my tongue, That they may understand my saying."
  },
  {
   "id": "q-t114",
@@ -280,7 +308,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Accrois-moi en science",
   "ar": "فَتَعَالَى اللَّهُ الْمَلِكُ الْحَقُّ ۗ وَلَا تَعْجَلْ بِالْقُرْآنِ مِن قَبْلِ أَن يُقْضَىٰ إِلَيْكَ وَحْيُهُ ۖ وَقُل رَّبِّ زِدْنِي عِلْمًا",
   "tr": "Fata'aalal laahul Malikul Haqq; wa laa ta'jal bil Quraani min qabli ai yuqdaaa ilaika wahyuhoo wa qur Rabbi zidnee 'ilmaa",
-  "fr": "Que soit éxalté Allah, le Vrai Souverain! Ne te hâte pas [de réciter] le Coran avant que ne te soit achevée sa révélation. Et dis: «O mon Seigneur, accroît mes connaissances!»"
+  "fr": "Que soit éxalté Allah, le Vrai Souverain! Ne te hâte pas [de réciter] le Coran avant que ne te soit achevée sa révélation. Et dis: «O mon Seigneur, accroît mes connaissances!»",
+  "en": "Then exalted be Allah, the True King! And hasten not (O Muhammad) with the Qur'an ere its revelation hath been perfected unto thee, and say: My Lord! Increase me in knowledge."
  },
  {
   "id": "q-an83",
@@ -290,7 +319,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ayyūb",
   "ar": "۞ وَأَيُّوبَ إِذْ نَادَىٰ رَبَّهُ أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ",
   "tr": "Wa Ayyooba iz naadaa Rabbahooo annee massaniyad durru wa Anta arhamur raahimeen",
-  "fr": "Et Job, quand il implora son Seigneur: «Le mal m'a touché. Mais Toi, tu es le plus miséricordieux des miséricordieux»!"
+  "fr": "Et Job, quand il implora son Seigneur: «Le mal m'a touché. Mais Toi, tu es le plus miséricordieux des miséricordieux»!",
+  "en": "And Job, when he cried unto his Lord, (saying): Lo! adversity afflicteth me, and Thou art Most Merciful of all who show mercy."
  },
  {
   "id": "q-an87",
@@ -300,7 +330,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Yūnus (Dhū-n-Nūn)",
   "ar": "وَذَا النُّونِ إِذ ذَّهَبَ مُغَاضِبًا فَظَنَّ أَن لَّن نَّقْدِرَ عَلَيْهِ فَنَادَىٰ فِي الظُّلُمَاتِ أَن لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ",
   "tr": "Wa Zan Nooni iz zahaba mughaadiban fazaanna al lan naqdira 'alaihi fanaanna al lan naqdira 'alaihi fanaadaa fiz zulumaati al laaa ilaaha illaaa Anta Subhaanaka innee kuntu minaz zaalimeen",
-  "fr": "Et Dû'n-Nûn (Jonas) quand il partit, irrité. Il pensa que Nous N'allions pas l'éprouver. Puis il fit, dans les ténèbres, l'appel que voici: «Pas de divinité à part Toi! Pureté à Toi! J'ai été vraiment du nombre des injustes»."
+  "fr": "Et Dû'n-Nûn (Jonas) quand il partit, irrité. Il pensa que Nous N'allions pas l'éprouver. Puis il fit, dans les ténèbres, l'appel que voici: «Pas de divinité à part Toi! Pureté à Toi! J'ai été vraiment du nombre des injustes».",
+  "en": "And (mention) Dhu'n-Nun, when he went off in anger and deemed that We had no power over him, but he cried out in the darkness, saying: There is no Allah save Thee. Be Thou Glorified! Lo! I have been a wrong-doer."
  },
  {
   "id": "q-an89",
@@ -310,7 +341,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Zakariyyā",
   "ar": "وَزَكَرِيَّا إِذْ نَادَىٰ رَبَّهُ رَبِّ لَا تَذَرْنِي فَرْدًا وَأَنتَ خَيْرُ الْوَارِثِينَ",
   "tr": "Wa Zakariyyaaa iz naadaa Rabbahoo Rabbi laa tazarnee fardanw wa Anta khairul waariseen",
-  "fr": "Et Zacharie, quand il implora son Seigneur: «Ne me laisse pas seul, Seigneur, alors que Tu es le meilleur des héritiers»."
+  "fr": "Et Zacharie, quand il implora son Seigneur: «Ne me laisse pas seul, Seigneur, alors que Tu es le meilleur des héritiers».",
+  "en": "And Zachariah, when he cried unto his Lord: My Lord! Leave me not childless, though Thou art the Best of inheritors."
  },
  {
   "id": "q-mu29",
@@ -320,7 +352,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Nūḥ",
   "ar": "وَقُل رَّبِّ أَنزِلْنِي مُنزَلًا مُّبَارَكًا وَأَنتَ خَيْرُ الْمُنزِلِينَ",
   "tr": "Wa qur Rabbi anzilnee munzalam mubaarakanw wa Anta khairul munzileen",
-  "fr": "Et dis: «Seigneur, fais-moi débarquer d'un débarquement béni. Tu es Celui qui procure le meilleur débarquement»."
+  "fr": "Et dis: «Seigneur, fais-moi débarquer d'un débarquement béni. Tu es Celui qui procure le meilleur débarquement».",
+  "en": "And say: My Lord! Cause me to land at a blessed landing-place, for Thou art Best of all who bring to land."
  },
  {
   "id": "q-mu97",
@@ -329,7 +362,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Refuge contre les suggestions des démons",
   "ar": "وَقُل رَّبِّ أَعُوذُ بِكَ مِنْ هَمَزَاتِ الشَّيَاطِينِ ۝ وَأَعُوذُ بِكَ رَبِّ أَن يَحْضُرُونِ",
   "tr": "Wa qur Rabbi a'oozu bika min hamazaatish Shayaateen · Wa a'oozu bika Rabbi ai-yahduroon",
-  "fr": "Et dis: «Seigneur, je cherche Ta protection, contre les incitations des diables. et je cherche Ta protection, Seigneur, contre leur présence auprès de moi»."
+  "fr": "Et dis: «Seigneur, je cherche Ta protection, contre les incitations des diables. et je cherche Ta protection, Seigneur, contre leur présence auprès de moi».",
+  "en": "And say: My Lord! I seek refuge in Thee from suggestions of the evil ones, And I seek refuge in Thee, my Lord, lest they be present with me,"
  },
  {
   "id": "q-mu109",
@@ -338,7 +372,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Pardonne-nous et fais-nous miséricorde",
   "ar": "إِنَّهُ كَانَ فَرِيقٌ مِّنْ عِبَادِي يَقُولُونَ رَبَّنَا آمَنَّا فَاغْفِرْ لَنَا وَارْحَمْنَا وَأَنتَ خَيْرُ الرَّاحِمِينَ",
   "tr": "Innahoo kaana fareequm min 'ibaadee yaqooloona Rabbanaaa aamannaa faghfir lanaa warhamnaa wa Anta khairur raahimeen",
-  "fr": "Il y eut un groupe de Mes serviteurs qui dirent: «Seigneur, nous croyons; pardonne-nous donc et fais-nous miséricorde, car Tu es le meilleur des Miséricordieux»"
+  "fr": "Il y eut un groupe de Mes serviteurs qui dirent: «Seigneur, nous croyons; pardonne-nous donc et fais-nous miséricorde, car Tu es le meilleur des Miséricordieux»",
+  "en": "Lo! there was a party of My slaves who said: Our Lord! We believe, therefor forgive us and have mercy on us for Thou art Best of all who show mercy;"
  },
  {
   "id": "q-mu118",
@@ -348,7 +383,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Fin de sourate al-Mu’minūn",
   "ar": "وَقُل رَّبِّ اغْفِرْ وَارْحَمْ وَأَنتَ خَيْرُ الرَّاحِمِينَ",
   "tr": "Wa qur Rabbigh fir warham wa Anta khairur raahimeen",
-  "fr": "Et dis: «Seigneur, pardonne et fais miséricorde. C'est Toi le Meilleur des miséricordieux»."
+  "fr": "Et dis: «Seigneur, pardonne et fais miséricorde. C'est Toi le Meilleur des miséricordieux».",
+  "en": "And (O Muhammad) say: My Lord! Forgive and have mercy, for Thou art Best of all who show mercy."
  },
  {
   "id": "q-fu65",
@@ -358,7 +394,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Les serviteurs du Tout-Miséricordieux",
   "ar": "وَالَّذِينَ يَقُولُونَ رَبَّنَا اصْرِفْ عَنَّا عَذَابَ جَهَنَّمَ ۖ إِنَّ عَذَابَهَا كَانَ غَرَامًا ۝ إِنَّهَا سَاءَتْ مُسْتَقَرًّا وَمُقَامًا",
   "tr": "Wallazeena yaqooloona Rabbanas rif 'annnaa 'azaaba Jahannama inn 'azaabahaa kaana gharaamaa · Innahaa saaa'at mustaqarranw wa muqaamaa",
-  "fr": "qui disent: «Seigneur, écarte de nous le châtiment de l'Enfer». - car son châtiment est permanent. Quels mauvais gîte et lieu de séjour!"
+  "fr": "qui disent: «Seigneur, écarte de nous le châtiment de l'Enfer». - car son châtiment est permanent. Quels mauvais gîte et lieu de séjour!",
+  "en": "And who say: Our Lord! Avert from us the doom of hell; lo! the doom thereof is anguish; Lo! it is wretched as abode and station;"
  },
  {
   "id": "q-fu74",
@@ -367,7 +404,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Des épouses et des enfants, joie de nos yeux",
   "ar": "وَالَّذِينَ يَقُولُونَ رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا",
   "tr": "Wallazeena yaqooloona Rabbanaa hab lanaa min azwaajinaa wa zurriyaatinaa qurrata a'yuninw waj 'alnaa lilmuttaqeena Imaamaa",
-  "fr": "et qui disent: «Seigneur, donne-nous, en nos épouses et nos descendants, la joie des yeux, et fais de nous un guide pour les pieux»."
+  "fr": "et qui disent: «Seigneur, donne-nous, en nos épouses et nos descendants, la joie des yeux, et fais de nous un guide pour les pieux».",
+  "en": "And who say: Our Lord! Vouchsafe us comfort of our wives and of our offspring, and make us patterns for (all) those who ward off (evil)."
  },
  {
   "id": "q-sh83",
@@ -377,7 +415,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ibrāhīm",
   "ar": "رَبِّ هَبْ لِي حُكْمًا وَأَلْحِقْنِي بِالصَّالِحِينَ ۝ وَاجْعَل لِّي لِسَانَ صِدْقٍ فِي الْآخِرِينَ ۝ وَاجْعَلْنِي مِن وَرَثَةِ جَنَّةِ النَّعِيمِ",
   "tr": "Rabbi hab lee hukmanw wa alhiqnee bis saaliheen · Waj'al lee lisaana sidqin fil aakhireen · Waj'alnee minw warasati Jannnatin Na'eem",
-  "fr": "Seigneur, accorde-moi sagesse (et savoir) et fais-moi rejoindre les gens de bien; fais que j'aie une mention honorable sur les langues de la postérité; et fais de moi l'un des héritiers du Jardin des délices."
+  "fr": "Seigneur, accorde-moi sagesse (et savoir) et fais-moi rejoindre les gens de bien; fais que j'aie une mention honorable sur les langues de la postérité; et fais de moi l'un des héritiers du Jardin des délices.",
+  "en": "My Lord! Vouchsafe me wisdom and unite me to the righteous. And give unto me a good report in later generations. And place me among the inheritors of the Garden of Delight,"
  },
  {
   "id": "q-na19",
@@ -387,7 +426,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Sulaymān",
   "ar": "فَتَبَسَّمَ ضَاحِكًا مِّن قَوْلِهَا وَقَالَ رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَىٰ وَالِدَيَّ وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ وَأَدْخِلْنِي بِرَحْمَتِكَ فِي عِبَادِكَ الصَّالِحِينَ",
   "tr": "Fatabassama daahikam min qawlihaa wa qaala Rabbi awzi'nee an ashkura ni'mata kal lateee an'amta 'alaiya wa 'alaa waalidaiya wa an a'mala saalihan tardaahu wa adkhilnee birahmatika fee 'ibaadikas saaliheen",
-  "fr": "Il sourit, amusé par ses propos et dit: «Permets-moi Seigneur, de rendre grâce pour le bienfait dont Tu m'as comblé ainsi que mes père et mère, et que je fasse une bonne œuvre que tu agrées et fais-moi entrer, par Ta miséricorde, parmi Tes serviteurs vertueux»."
+  "fr": "Il sourit, amusé par ses propos et dit: «Permets-moi Seigneur, de rendre grâce pour le bienfait dont Tu m'as comblé ainsi que mes père et mère, et que je fasse une bonne œuvre que tu agrées et fais-moi entrer, par Ta miséricorde, parmi Tes serviteurs vertueux».",
+  "en": "And (Solomon) smiled, laughing at her speech, and said: My Lord, arouse me to be thankful for Thy favour wherewith Thou hast favoured me and my parents, and to do good that shall be pleasing unto Thee, and include me in (the number of) Thy righteous slaves."
  },
  {
   "id": "q-q16",
@@ -397,7 +437,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Mūsā",
   "ar": "قَالَ رَبِّ إِنِّي ظَلَمْتُ نَفْسِي فَاغْفِرْ لِي فَغَفَرَ لَهُ ۚ إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ",
   "tr": "Qaala Rabbi innee zalamtu nafsee faghfir lee faghafaralah; innahoo Huwal Ghafoorur Raheem",
-  "fr": "Il dit: «Seigneur, je me suis fait du tort à moi-même; pardonne-moi». Et Il lui pardonna. C'est Lui vraiment le Pardonneur, le Miséricordieux!"
+  "fr": "Il dit: «Seigneur, je me suis fait du tort à moi-même; pardonne-moi». Et Il lui pardonna. C'est Lui vraiment le Pardonneur, le Miséricordieux!",
+  "en": "He said: My Lord! Lo! I have wronged my soul, so forgive me. Then He forgave him. Lo! He is the Forgiving, the Merciful."
  },
  {
   "id": "q-q21",
@@ -407,7 +448,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Mūsā",
   "ar": "فَخَرَجَ مِنْهَا خَائِفًا يَتَرَقَّبُ ۖ قَالَ رَبِّ نَجِّنِي مِنَ الْقَوْمِ الظَّالِمِينَ",
   "tr": "Fakharaja minhaa khaaa 'ifany-yataraqqab; qaala Rabbi najjinee minal qawmiz zaalimeen",
-  "fr": "Il sortit de là, craintif, regardant autour de lui. Il dit: «Seigneur, sauve-moi de [ce] peuple injuste!»"
+  "fr": "Il sortit de là, craintif, regardant autour de lui. Il dit: «Seigneur, sauve-moi de [ce] peuple injuste!»",
+  "en": "So he escaped from thence, fearing, vigilant. He said: My Lord! Deliver me from the wrongdoing folk."
  },
  {
   "id": "q-q24",
@@ -417,7 +459,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Mūsā à Madyan",
   "ar": "فَسَقَىٰ لَهُمَا ثُمَّ تَوَلَّىٰ إِلَى الظِّلِّ فَقَالَ رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرٍ فَقِيرٌ",
   "tr": "Fasaqaa lahumaa summa tawallaaa ilaz zilli faqaala Rabbi innee limaaa anzalta ilaiya min khairin faqeer",
-  "fr": "Il abreuva [les bêtes] pour elles puis retourna à l'ombre et dit: «Seigneur, j'ai grand besoin du bien que tu feras descendre vers moi»."
+  "fr": "Il abreuva [les bêtes] pour elles puis retourna à l'ombre et dit: «Seigneur, j'ai grand besoin du bien que tu feras descendre vers moi».",
+  "en": "So he watered (their flock) for them. Then he turned aside into the shade, and said: My Lord! I am needy of whatever good Thou sendest down for me."
  },
  {
   "id": "q-ank30",
@@ -427,7 +470,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Lūṭ",
   "ar": "قَالَ رَبِّ انصُرْنِي عَلَى الْقَوْمِ الْمُفْسِدِينَ",
   "tr": "Qaala Rabbin surnee 'alal qawmil mufsideen",
-  "fr": "Il dit: «Seigneur, donne-moi victoire sur ce peuple de corrupteurs!»"
+  "fr": "Il dit: «Seigneur, donne-moi victoire sur ce peuple de corrupteurs!»",
+  "en": "He said: My Lord! Give me victory over folk who work corruption."
  },
  {
   "id": "q-saf100",
@@ -437,7 +481,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ibrāhīm",
   "ar": "رَبِّ هَبْ لِي مِنَ الصَّالِحِينَ",
   "tr": "Rabbi hab lee minas saaliheen",
-  "fr": "Seigneur, fais-moi don d'une [progéniture] d'entre les vertueux»."
+  "fr": "Seigneur, fais-moi don d'une [progéniture] d'entre les vertueux».",
+  "en": "My Lord! Vouchsafe me of the righteous."
  },
  {
   "id": "q-ah15",
@@ -446,7 +491,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Gratitude, bonnes œuvres et descendance",
   "ar": "وَوَصَّيْنَا الْإِنسَانَ بِوَالِدَيْهِ إِحْسَانًا ۖ حَمَلَتْهُ أُمُّهُ كُرْهًا وَوَضَعَتْهُ كُرْهًا ۖ وَحَمْلُهُ وَفِصَالُهُ ثَلَاثُونَ شَهْرًا ۚ حَتَّىٰ إِذَا بَلَغَ أَشُدَّهُ وَبَلَغَ أَرْبَعِينَ سَنَةً قَالَ رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَىٰ وَالِدَيَّ وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ وَأَصْلِحْ لِي فِي ذُرِّيَّتِي ۖ إِنِّي تُبْتُ إِلَيْكَ وَإِنِّي مِنَ الْمُسْلِمِينَ",
   "tr": "Wa wassainal insaana biwaalidaihi ihsaanan hamalathu ummuhoo kurhanw-wa wada'athu kurhanw wa hamluhoo wa fisaaluhoo salaasoona shahraa; hattaaa izaa balagha ashuddahoo wa balagho arba'eena sanatan qaala Rabbi aqzi'neee an ashkura ni'matakal lateee an'amta 'alaiya wa 'alaa waalidaiya wa an a'mala saalihan tardaahu wa aslih lee fee zurriyyatee innee tubtu ilaika wa innee minal muslimeen",
-  "fr": "Et Nous avons enjoint à l'homme de la bonté envers ses père et mère: sa mère l'a péniblement porté et en a péniblement accouché; et sa gestation et sevrage durent trente mois; puis quand il atteint ses pleines forces et atteint quarante ans, il dit: «O Seigneur! Inspire-moi pour que je rende grâce au bienfait dont Tu m'as comblé ainsi qu'à mes père et mère, et pour que je fasse une bonne œuvre que Tu agrées. Et fais que ma postérité soit de moralité saine. Je me repens à Toi et je suis du nombre des Soumis»."
+  "fr": "Et Nous avons enjoint à l'homme de la bonté envers ses père et mère: sa mère l'a péniblement porté et en a péniblement accouché; et sa gestation et sevrage durent trente mois; puis quand il atteint ses pleines forces et atteint quarante ans, il dit: «O Seigneur! Inspire-moi pour que je rende grâce au bienfait dont Tu m'as comblé ainsi qu'à mes père et mère, et pour que je fasse une bonne œuvre que Tu agrées. Et fais que ma postérité soit de moralité saine. Je me repens à Toi et je suis du nombre des Soumis».",
+  "en": "And We have commended unto man kindness toward parents. His mother beareth him with reluctance, and bringeth him forth with reluctance, and the bearing of him and the weaning of him is thirty months, till, when he attaineth full strength and reacheth forty years, he saith: My Lord! Arouse me that I may give thanks for the favour wherewith Thou hast favoured me and my parents, and that I may do right acceptable unto Thee. And be gracious unto me in the matter of my seed. Lo! I have turned unto Thee repentant, and lo! I am of those who surrender (unto Thee)."
  },
  {
   "id": "q-ha10",
@@ -455,7 +501,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Pardonne-nous ainsi qu’à nos frères",
   "ar": "وَالَّذِينَ جَاءُوا مِن بَعْدِهِمْ يَقُولُونَ رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا الَّذِينَ سَبَقُونَا بِالْإِيمَانِ وَلَا تَجْعَلْ فِي قُلُوبِنَا غِلًّا لِّلَّذِينَ آمَنُوا رَبَّنَا إِنَّكَ رَءُوفٌ رَّحِيمٌ",
   "tr": "Wallazeena jaaa'oo min ba'dihim yaqooloona Rabbanagh fir lanaa wa li ikhwaani nal lazeena sabqoonaa bil eemaani wa laa taj'al fee quloobinaa ghillalil lazeena aamanoo rabbannaaa innaka Ra'oofur Raheem",
-  "fr": "Et [il appartient également] à ceux qui sont venus après eux en disant: «Seigneur, pardonne-nous, ainsi qu'à nos frères qui nous ont précédés dans la foi; et ne mets dans nos cœurs aucune rancœur pour ceux qui ont cru. Seigneur, Tu es Compatissant et Très Miséricordieux»."
+  "fr": "Et [il appartient également] à ceux qui sont venus après eux en disant: «Seigneur, pardonne-nous, ainsi qu'à nos frères qui nous ont précédés dans la foi; et ne mets dans nos cœurs aucune rancœur pour ceux qui ont cru. Seigneur, Tu es Compatissant et Très Miséricordieux».",
+  "en": "And those who came (into the faith) after them say: Our Lord! Forgive us and our brethren who were before us in the faith, and place not in our hearts any rancour toward those who believe. Our Lord! Thou art Full of Pity, Merciful."
  },
  {
   "id": "q-mt4",
@@ -465,7 +512,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Ibrāhīm et ceux qui étaient avec lui",
   "ar": "قَدْ كَانَتْ لَكُمْ أُسْوَةٌ حَسَنَةٌ فِي إِبْرَاهِيمَ وَالَّذِينَ مَعَهُ إِذْ قَالُوا لِقَوْمِهِمْ إِنَّا بُرَآءُ مِنكُمْ وَمِمَّا تَعْبُدُونَ مِن دُونِ اللَّهِ كَفَرْنَا بِكُمْ وَبَدَا بَيْنَنَا وَبَيْنَكُمُ الْعَدَاوَةُ وَالْبَغْضَاءُ أَبَدًا حَتَّىٰ تُؤْمِنُوا بِاللَّهِ وَحْدَهُ إِلَّا قَوْلَ إِبْرَاهِيمَ لِأَبِيهِ لَأَسْتَغْفِرَنَّ لَكَ وَمَا أَمْلِكُ لَكَ مِنَ اللَّهِ مِن شَيْءٍ ۖ رَّبَّنَا عَلَيْكَ تَوَكَّلْنَا وَإِلَيْكَ أَنَبْنَا وَإِلَيْكَ الْمَصِيرُ ۝ رَبَّنَا لَا تَجْعَلْنَا فِتْنَةً لِّلَّذِينَ كَفَرُوا وَاغْفِرْ لَنَا رَبَّنَا ۖ إِنَّكَ أَنتَ الْعَزِيزُ الْحَكِيمُ",
   "tr": "Qad kaanat lakum uswatun basanatun feee Ibraaheema wallazeena ma'ahoo iz qaaloo liqawmihim innaa bura'aaa'u minkum wa mimmaa ta'budoona min doonil laahi kafarnaa bikum wa badaa bainanaa wa bainakumul 'adaawatu wal baghdaaa'u abadan hattaa tu'minoo billaahi wahdahooo illaa qawla Ibraheema li abeehi la astaghfiranna laka wa maaa amliku laka minal laahi min shai; rabbanaa 'alaika tawakkalnaa wa ilaika anabnaa wa ilaikal maseer · Rabbana laa taj'alnaa fitnatal lillazeena kafaroo waghfir lanaa rabbanaa innaka antal azeezul hakeem",
-  "fr": "Certes, vous avez eu un bel exemple [à suivre] en Abraham et en ceux qui étaient avec lui, quand ils dirent à leur peuple: «Nous vous désavouons, vous et ce que vous adorez en dehors d'Allah. Nous vous renions. Entre vous et nous, l'inimitié et la haine sont à jamais déclarées jusqu'à ce que vous croyiez en Allah, seul». Exception faite de la parole d'Abraham [adressée] à son père: «J'implorerai certes, le pardon [d'Allah] en ta faveur bien que je ne puisse rien pour toi auprès d'Allah». «Seigneur, c'est en Toi que nous mettons notre confiance et à Toi nous revenons [repentants]. Et vers Toi est le Devenir. Seigneur, ne fais pas de nous [un sujet] de tentation pour ceux qui ont mécru; et pardonne-nous, Seigneur, car c'est Toi le Puissant, le Sage»."
+  "fr": "Certes, vous avez eu un bel exemple [à suivre] en Abraham et en ceux qui étaient avec lui, quand ils dirent à leur peuple: «Nous vous désavouons, vous et ce que vous adorez en dehors d'Allah. Nous vous renions. Entre vous et nous, l'inimitié et la haine sont à jamais déclarées jusqu'à ce que vous croyiez en Allah, seul». Exception faite de la parole d'Abraham [adressée] à son père: «J'implorerai certes, le pardon [d'Allah] en ta faveur bien que je ne puisse rien pour toi auprès d'Allah». «Seigneur, c'est en Toi que nous mettons notre confiance et à Toi nous revenons [repentants]. Et vers Toi est le Devenir. Seigneur, ne fais pas de nous [un sujet] de tentation pour ceux qui ont mécru; et pardonne-nous, Seigneur, car c'est Toi le Puissant, le Sage».",
+  "en": "There is a goodly pattern for you in Abraham and those with him, when they told their folk: Lo! we are guiltless of you and all that ye worship beside Allah. We have done with you. And there hath arisen between us and you hostility and hate for ever until ye believe in Allah only - save that which Abraham promised his father (when he said): I will ask forgiveness for thee, though I own nothing for thee from Allah - Our Lord! In Thee we put our trust, and unto Thee we turn repentant, and unto Thee is the journeying. Our Lord! Make us not a prey for those who disbelieve, and forgive us, our Lord! Lo! Thou, only Thou, are the Mighty, the Wise."
  },
  {
   "id": "q-tah8",
@@ -474,7 +522,8 @@ export const QURAN_DUAS: QuranDua[] = [
   "title": "Parachève-nous notre lumière",
   "ar": "يَا أَيُّهَا الَّذِينَ آمَنُوا تُوبُوا إِلَى اللَّهِ تَوْبَةً نَّصُوحًا عَسَىٰ رَبُّكُمْ أَن يُكَفِّرَ عَنكُمْ سَيِّئَاتِكُمْ وَيُدْخِلَكُمْ جَنَّاتٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ يَوْمَ لَا يُخْزِي اللَّهُ النَّبِيَّ وَالَّذِينَ آمَنُوا مَعَهُ ۖ نُورُهُمْ يَسْعَىٰ بَيْنَ أَيْدِيهِمْ وَبِأَيْمَانِهِمْ يَقُولُونَ رَبَّنَا أَتْمِمْ لَنَا نُورَنَا وَاغْفِرْ لَنَا ۖ إِنَّكَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ",
   "tr": "Yaaa ayyuhal lazeena aammano toobooo ilal laahi tawbatan nasoohan 'asaa rabbukum any-yukaffira 'ankum sayyi aatikum wa yudkhilakum jannaatin tajree min tahtihal anhaaru yawma laa yukhzil laahun nabiyya wallazeena aamanoo ma'ahoo nooruhum yas'aa baina aydeehim wa bi aymaanihim yaqooloona rabbanaaa atmim lanaa nooranaa waghfir lana innaka 'alaa kulli shai'in qadeer",
-  "fr": "O vous qui avez cru! Repentez-vous à Allah d'un repentir sincère. Il se peut que votre Seigneur vous efface vos fautes et qu'Il vous fasse entrer dans des Jardins sous lesquels coulent les ruisseaux, le jour où Allah épargnera l'ignominie au Prophète et à ceux qui croient avec lui. Leur lumière courra devant eux et à leur droite; ils diront: «Seigneur, parfais-nous notre lumière et pardonne-nous. Car Tu es Omnipotent»."
+  "fr": "O vous qui avez cru! Repentez-vous à Allah d'un repentir sincère. Il se peut que votre Seigneur vous efface vos fautes et qu'Il vous fasse entrer dans des Jardins sous lesquels coulent les ruisseaux, le jour où Allah épargnera l'ignominie au Prophète et à ceux qui croient avec lui. Leur lumière courra devant eux et à leur droite; ils diront: «Seigneur, parfais-nous notre lumière et pardonne-nous. Car Tu es Omnipotent».",
+  "en": "O ye who believe! Turn unto Allah in sincere repentance! It may be that your Lord will remit from you your evil deeds and bring you into Gardens underneath which rivers flow, on the day when Allah will not abase the Prophet and those who believe with him. Their light will run before them and on their right hands; they will say: Our Lord! Perfect our light for us, and forgive us! Lo! Thou art Able to do all things."
  },
  {
   "id": "q-nuh28",
@@ -484,6 +533,7 @@ export const QURAN_DUAS: QuranDua[] = [
   "who": "Nūḥ",
   "ar": "رَّبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَلِمَن دَخَلَ بَيْتِيَ مُؤْمِنًا وَلِلْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ وَلَا تَزِدِ الظَّالِمِينَ إِلَّا تَبَارًا",
   "tr": "Rabbigh fir lee wa liwaa lidaiya wa liman dakhala baitiya mu'minanw wa lil mu'mineena wal mu'minaati wa laa tazidiz zaalimeena illaa tabaaraa",
-  "fr": "Seigneur! Pardonne-moi, et à mes père et mère et à celui qui entre dans ma demeure croyant, ainsi qu'aux croyants et croyantes; et ne fais croître les injustes qu'en perdition»."
+  "fr": "Seigneur! Pardonne-moi, et à mes père et mère et à celui qui entre dans ma demeure croyant, ainsi qu'aux croyants et croyantes; et ne fais croître les injustes qu'en perdition».",
+  "en": "My Lord! Forgive me and my parents and him who entereth my house believing, and believing men and believing women, and increase not the wrong-doers in aught save ruin."
  }
 ];

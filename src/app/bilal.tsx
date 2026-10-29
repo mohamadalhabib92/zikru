@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View, type ScrollViewInstance } from 'react-native';
+import { Text } from '@/ui/Text';
 import { AiConsentSheet } from '@/components/AiConsentSheet';
 import { askBilal, BilalError, bilalErrorFr, type ChatMsg } from '@/lib/bilal';
 import { useConsent } from '@/lib/consent';
@@ -11,6 +12,7 @@ import { usePersistentState } from '@/lib/storage';
 import { Button, Ionicons } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const IND = b.purple;
 const STARTERS = ['Comment être plus régulier dans mon wird ?', 'Je me sens loin de la prière ces jours-ci…', 'Une petite habitude pour mieux commencer la journée ?', 'Comment gérer la colère selon la Sunna ?'];
@@ -117,8 +119,8 @@ export default function Bilal() {
         ) : null}
       </ScrollView>
       <View style={{ flexDirection: 'row', gap: 8, padding: 10, borderTopWidth: 1, borderTopColor: b.line, backgroundColor: b.paper }}>
-        <TextInput value={input} onChangeText={setInput} placeholder="Écrivez à Bilal…" placeholderTextColor={b.inkMuted} multiline maxLength={1000} accessibilityLabel="Message à Bilal" style={{ flex: 1, maxHeight: 120, minHeight: 44, borderRadius: 22, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, paddingVertical: 10, color: b.ink, backgroundColor: b.cream }} />
-        <Pressable accessibilityRole="button" accessibilityLabel="Envoyer" disabled={busy || !input.trim()} onPress={() => send(input)} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: busy || !input.trim() ? b.line : IND, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' }}>
+        <TextInput value={input} onChangeText={setInput} placeholder={L("Écrivez à Bilal…")} placeholderTextColor={b.inkMuted} multiline maxLength={1000} accessibilityLabel={L("Message à Bilal")} style={{ flex: 1, maxHeight: 120, minHeight: 44, borderRadius: 22, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, paddingVertical: 10, color: b.ink, backgroundColor: b.cream }} />
+        <Pressable accessibilityRole="button" accessibilityLabel={L("Envoyer")} disabled={busy || !input.trim()} onPress={() => send(input)} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: busy || !input.trim() ? b.line : IND, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' }}>
           <Ionicons name="send" size={20} color="#fff" />
         </Pressable>
       </View>

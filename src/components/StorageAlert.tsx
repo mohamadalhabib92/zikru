@@ -1,7 +1,9 @@
 import { useState, useSyncExternalStore } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { storageIssues } from '@/lib/storage';
+import { L } from '@/lib/l10n';
 
 /**
  * Bandeau visible quand un enregistrement local échoue (stockage plein, indisponible, données illisibles).
@@ -17,7 +19,7 @@ export function StorageAlert() {
   const title = write ? 'Enregistrement impossible pour le moment' : 'Lecture des données locales impossible';
   const text = write
     ? 'Vos appuis sont gardés en mémoire et seront enregistrés dès que possible (nouvel essai automatique). Si le stockage du téléphone est plein, libérez de la place. Ne fermez pas l’app tant que ce message est affiché.'
-    : `Rien n’a été écrasé : si des données sont illisibles, une copie est conservée (et le compteur reprend sa dernière sauvegarde). Détail : ${corrupt?.message ?? ''}`;
+    : L('Rien n’a été écrasé : si des données sont illisibles, une copie est conservée (et le compteur reprend sa dernière sauvegarde). Détail : {d}', { d: corrupt?.message ?? '' });
   return (
     <View
       accessibilityRole="alert"

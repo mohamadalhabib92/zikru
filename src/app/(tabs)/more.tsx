@@ -1,6 +1,7 @@
 import { Hub, type HubSection } from '@/components/Hub';
 import { useSettings } from '@/lib/settings';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /** Onglet « Plus » : outils, parcours, communauté, réglages. */
 export default function More() {
@@ -31,7 +32,7 @@ export default function More() {
     {
       title: tr.about,
       items: [
-        { icon: 'settings', title: tr.settings_title, sub: `${tr.appearance} · ${tr.language} · méthode`, href: '/settings', color: b.inkMuted },
+        { icon: 'settings', title: tr.settings_title, sub: `${tr.appearance} · ${tr.language} · ${L('méthode')}`, href: '/settings', color: b.inkMuted },
         { icon: 'library', title: tr.sources_title, sub: 'Références et méthodologie', href: '/sources', color: b.inkMuted },
       ],
     },

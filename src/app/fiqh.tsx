@@ -1,10 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { RulingSource } from '@/components/zikru/RulingSource';
 import { FIQH, FIQH_GAPS, SCHOOLS, SCHOOL_LABEL } from '@/lib/fiqh';
 import { useMadhab } from '@/lib/madhab';
+import { fiqhTopicTitle, rulingView, schoolLabel } from '@/lib/i18n-content';
+import { L, useUiLang } from '@/lib/l10n';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LText, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
@@ -13,6 +16,7 @@ const COLOR = '#A0522D';
 export default function Fiqh() {
   const router = useRouter();
   const [m, setM] = useMadhab();
+  const lang = useUiLang();
   const [open, setOpen] = useState<string | null>('wudu');
   const gaps = FIQH_GAPS.filter((g) => g.school === m);
   return (
@@ -26,7 +30,7 @@ export default function Fiqh() {
       <View style={{ padding: 16 }}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
           {SCHOOLS.map((s) => (
-            <Pill key={s} label={SCHOOL_LABEL[s].fr} active={m === s} onPress={() => setM(s)} color={COLOR} />
+            <Pill key={s} label={schoolLabel(SCHOOL_LABEL[s], lang)} active={m === s} onPress={() => setM(s)} color={COLOR} />
           ))}
         </View>
         <LMuted style={{ marginBottom: 10 }}>
@@ -41,9 +45,9 @@ export default function Fiqh() {
                   <Ionicons name={sec.icon as IconName} size={20} color={COLOR} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{sec.title}</Text>
+                  <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{fiqhTopicTitle(sec.id, sec.title, lang)}</Text>
                   <Text style={{ color: b.brownSoft }}>
-                    {sec.ar} · {SCHOOL_LABEL[m].fr}
+                    {lang === 'ar' ? schoolLabel(SCHOOL_LABEL[m], lang) : `${sec.ar} · ${schoolLabel(SCHOOL_LABEL[m], lang)}`}
                   </Text>
                 </View>
                 <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={b.inkMuted} />
@@ -52,22 +56,34 @@ export default function Fiqh() {
                 <View style={{ marginTop: 10 }}>
                   {sec.intro ? (
                     <View style={{ marginBottom: 8 }}>
-                      <LText>{sec.intro.items[0]}</LText>
+                      {(() => {
+                        const v = rulingView(sec.intro, lang);
+                        return v.items ? <LText>{v.items[0]}</LText> : <Text style={{ color: b.ink, fontSize: 17, lineHeight: 30, writingDirection: 'rtl', textAlign: 'right' }}>{sec.intro.textAr}</Text>;
+                      })()}
                       <RulingSource r={sec.intro} />
                     </View>
                   ) : null}
-                  {sec.lists.map((l) => (
-                    <View key={l.id} style={{ marginTop: 10 }}>
-                      <Text style={{ color: COLOR, fontWeight: '800', marginBottom: 4 }}>{l.title.fr}</Text>
-                      {l.items.map((it, i) => (
-                        <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
-                          <Text style={{ color: COLOR, fontWeight: '800', width: 20 }}>{i + 1}.</Text>
-                          <LText style={{ flex: 1 }}>{it}</LText>
-                        </View>
-                      ))}
-                      <RulingSource r={l} />
-                    </View>
-                  ))}
+                  {sec.lists.map((l) => {
+                    const v = rulingView(l, lang);
+                    return (
+                      <View key={l.id} style={{ marginTop: 10 }}>
+                        <Text style={{ color: COLOR, fontWeight: '800', marginBottom: 4 }}>{v.title}</Text>
+                        {v.items ? (
+                          v.items.map((it, i) => (
+                            <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
+                              <Text style={{ color: COLOR, fontWeight: '800', width: 22 }}>{i + 1}.</Text>
+                              <LText style={{ flex: 1 }}>{it}</LText>
+                            </View>
+                          ))
+                        ) : (
+                          // Arabe : l’extrait classique de l’édition citée, tel quel (pas de paraphrase inventée).
+                          <Text style={{ color: b.ink, fontSize: 17, lineHeight: 30, writingDirection: 'rtl', textAlign: 'right' }}>{l.textAr}</Text>
+                        )}
+                        {v.toReview ? <Text style={{ alignSelf: 'flex-start', marginTop: 2, fontSize: 11, fontWeight: '700', color: b.brown, backgroundColor: b.gold + '22', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>{L('Traduction Zikru — à relire')}</Text> : null}
+                        <RulingSource r={l} />
+                      </View>
+                    );
+                  })}
                 </View>
               ) : null}
             </LCard>

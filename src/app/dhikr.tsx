@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Text } from 'react-native';
+import { Text } from '@/ui/Text';
 import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
 import { isPending } from '@/lib/i18n';

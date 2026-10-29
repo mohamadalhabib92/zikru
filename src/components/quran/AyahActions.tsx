@@ -1,6 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
-import { Pressable, Share, Text, TextInput, View } from 'react-native';
+import { Pressable, Share, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { arNum } from '@/lib/quran-nav';
 import { BOOKMARK_COLORS, HIGHLIGHTS, keyOf, marks, removeBookmark, saveBookmark, setHighlight, setNote } from '@/lib/quran-store';
 import { useShared } from '@/lib/shared-state';
@@ -9,13 +10,14 @@ import { Ionicons, type IconName } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import type { Pal } from './palette';
 import { QBtn, QLabel, Sheet } from './Sheet';
+import { L } from '@/lib/l10n';
 
 export type AyahTarget = { s: number; a: number; ar: string; tr?: string };
 export type AyahAction = 'play' | 'tafsir' | 'zikr' | 'hifz';
 
 function Act({ icon, label, onPress, pal }: { icon: IconName; label: string; onPress: () => void; pal: Pal }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => ({ flexBasis: '30%', flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 16, backgroundColor: pal.card, borderWidth: 1, borderColor: pal.line, opacity: pressed ? 0.75 : 1 })}>
+    <Pressable accessibilityRole="button" accessibilityLabel={typeof label === "string" ? L(label) : label} onPress={onPress} style={({ pressed }) => ({ flexBasis: '30%', flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 16, backgroundColor: pal.card, borderWidth: 1, borderColor: pal.line, opacity: pressed ? 0.75 : 1 })}>
       <Ionicons name={icon} size={22} color={pal.accent} />
       <Text style={{ color: pal.ink, fontSize: 12, fontWeight: '700', textAlign: 'center' }}>{label}</Text>
     </Pressable>
@@ -39,7 +41,7 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
   if (!target) return null;
   const meta = SURAHS[target.s - 1];
   const title = `${meta[2]} · ${target.s}:${target.a}`;
-  const plain = `${target.ar} ﴿${arNum(target.a)}﴾${target.tr ? `\n\n${target.tr}` : ''}\n\n— Coran ${target.s}:${target.a} (${meta[2]})`;
+  const plain = `${target.ar} ﴿${arNum(target.a)}﴾${target.tr ? `\n\n${target.tr}` : ''}\n\n— ${L('Coran')} ${target.s}:${target.a} (${meta[2]})`;
   const close = () => {
     if (note !== (m.notes[k]?.text ?? '')) setNote(target.s, target.a, note);
     if (bm && name !== bm.name) saveBookmark(target.s, target.a, name, bm.color);
@@ -50,7 +52,7 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
     onAction(a, target);
   };
   return (
-    <Sheet visible onClose={close} pal={pal} title={title} subtitle={`${meta[4]} versets · ${meta[5] === 'M' ? 'mecquoise' : 'médinoise'}`}>
+    <Sheet visible onClose={close} pal={pal} title={title} subtitle={`${L('{n} versets', { n: meta[4] })} · ${L(meta[5] === 'M' ? 'mecquoise' : 'médinoise')}`}>
       <Text numberOfLines={3} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 22, lineHeight: 46, textAlign: 'right', writingDirection: 'rtl' }}>
         {target.ar}
       </Text>
@@ -78,7 +80,7 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
             <Pressable
               key={c.hex}
               accessibilityRole="button"
-              accessibilityLabel={on ? `Retirer le marque-page ${c.label}` : `Marque-page ${c.label}`}
+              accessibilityLabel={on ? L('Retirer le marque-page {c}', { c: L(c.label) }) : L('Marque-page {c}', { c: L(c.label) })}
               accessibilityState={{ selected: on }}
               onPress={() => (on && bm ? removeBookmark(bm.id) : saveBookmark(target.s, target.a, name, c.hex))}
               style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: c.hex, alignItems: 'center', justifyContent: 'center', borderWidth: on ? 3 : 0, borderColor: pal.ink }}
@@ -93,9 +95,9 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
           value={name}
           onChangeText={setName}
           onBlur={() => saveBookmark(target.s, target.a, name, bm.color)}
-          placeholder="Nom du marque-page (ex. Révision du soir)"
+          placeholder={L("Nom du marque-page (ex. Révision du soir)")}
           placeholderTextColor={pal.muted}
-          accessibilityLabel="Nom du marque-page"
+          accessibilityLabel={L("Nom du marque-page")}
           style={{ marginTop: 10, minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: pal.line, backgroundColor: pal.card, color: pal.ink, paddingHorizontal: 12 }}
         />
       ) : null}
@@ -105,7 +107,7 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
         {HIGHLIGHTS.map((h) => {
           const on = m.hl[k] === h.hex;
           return (
-            <Pressable key={h.hex} accessibilityRole="button" accessibilityLabel={`Surligner en ${h.label}`} accessibilityState={{ selected: on }} onPress={() => setHighlight(target.s, target.a, on ? null : h.hex)} style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: alpha(h.hex, 0.45), borderWidth: on ? 3 : 1, borderColor: on ? pal.ink : alpha(h.hex, 0.8) }} />
+            <Pressable key={h.hex} accessibilityRole="button" accessibilityLabel={L('Surligner en {c}', { c: L(h.label) })} accessibilityState={{ selected: on }} onPress={() => setHighlight(target.s, target.a, on ? null : h.hex)} style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: alpha(h.hex, 0.45), borderWidth: on ? 3 : 1, borderColor: on ? pal.ink : alpha(h.hex, 0.8) }} />
           );
         })}
         {m.hl[k] ? <QBtn small icon="close" label="Retirer" onPress={() => setHighlight(target.s, target.a, null)} pal={pal} /> : null}
@@ -116,10 +118,10 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
         value={note}
         onChangeText={setNoteTxt}
         onBlur={() => setNote(target.s, target.a, note)}
-        placeholder="Réflexion, leçon, lien avec un autre verset…"
+        placeholder={L("Réflexion, leçon, lien avec un autre verset…")}
         placeholderTextColor={pal.muted}
         multiline
-        accessibilityLabel="Note sur ce verset"
+        accessibilityLabel={L("Note sur ce verset")}
         style={{ minHeight: 84, borderRadius: 12, borderWidth: 1, borderColor: pal.line, backgroundColor: pal.card, color: pal.ink, padding: 12, textAlignVertical: 'top' }}
       />
       <Text style={{ color: pal.muted, fontSize: 11, marginTop: 8 }}>Marque-pages, notes et surlignages restent sur cet appareil.</Text>
