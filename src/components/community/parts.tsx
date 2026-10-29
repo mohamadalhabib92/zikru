@@ -1,24 +1,26 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, Share, Text, View } from 'react-native';
+import { Alert, Platform, Share, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { PWA_URL } from '@/lib/backend';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
 import { Badge, Button, Card, Chip, Field, H2, Muted, Notice, Row, Segmented, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 export const fmt = (n: number) => n.toLocaleString('fr-CH');
 
 /** Confirmation (Alert natif, window.confirm sur le web). */
 export function confirmAsk(title: string, text: string, ok: string, onOk: () => void) {
   if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined' && window.confirm(`${title}\n\n${text}`)) onOk();
+    if (typeof window !== 'undefined' && window.confirm(`${L(title)}\n\n${L(text)}`)) onOk();
     return;
   }
-  Alert.alert(title, text, [
-    { text: 'Annuler', style: 'cancel' },
-    { text: ok, style: 'destructive', onPress: onOk },
+  Alert.alert(L(title), L(text), [
+    { text: L('Annuler'), style: 'cancel' },
+    { text: L(ok), style: 'destructive', onPress: onOk },
   ]);
 }
 
@@ -146,7 +148,7 @@ export function GoalCard({
             <Row wrap gap={6} style={{ marginBottom: 8 }}>
               <Chip label="Pour moi" active={!forMember} onPress={() => setForMember(null)} />
               {managedChildren.map((m) => (
-                <Chip key={m.id} label={`Pour ${m.name}`} active={forMember === m.id} onPress={() => setForMember(m.id)} />
+                <Chip key={m.id} label={L('Pour {x}', { x: m.name })} active={forMember === m.id} onPress={() => setForMember(m.id)} />
               ))}
             </Row>
           ) : null}
@@ -202,8 +204,8 @@ export function NewGoal({ onCreate }: { onCreate: (g: { title: string; formula: 
   return (
     <Card>
       <H2>Nouvel objectif</H2>
-      <Field label="Titre" placeholder="Salāt ‘alā n-Nabī" value={title} onChangeText={setTitle} />
-      <Field label="Formule (facultatif)" placeholder="Allāhumma ṣalli ‘alā Muḥammad" value={formula} onChangeText={setFormula} />
+      <Field label="Titre" placeholder={L("Salāt ‘alā n-Nabī")} value={title} onChangeText={setTitle} />
+      <Field label="Formule (facultatif)" placeholder={L("Allāhumma ṣalli ‘alā Muḥammad")} value={formula} onChangeText={setFormula} />
       <Field label="Objectif" keyboardType="number-pad" value={target} onChangeText={setTarget} error={err} />
       <Row gap={8}>
         <Button
@@ -243,7 +245,7 @@ export function InvitePanel({ scope, scopeId, scopeName, roles }: { scope: api.S
   const share = (code: string) => {
     const link = `${PWA_URL}join?code=${code}`;
     void Share.share({
-      message: `Assalāmu ‘alaykum ! Rejoignez « ${scopeName} » sur Zikru.\nCode d’invitation : ${code}\nDans l’app : Communauté › Rejoindre avec un code, ou ouvrez ${link}`,
+      message: L('Assalāmu ‘alaykum ! Rejoignez « {name} » sur Zikru.\nCode d’invitation : {code}\nDans l’app : Communauté › Rejoindre avec un code, ou ouvrez {link}', { name: scopeName, code, link }),
     }).catch(() => {});
   };
   return (
@@ -362,7 +364,7 @@ export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: s
       <Muted>Récitez ensemble à distance : chacun compte sur son téléphone ou sa bague, le total s’affiche en direct.</Muted>
       <Spacer h={8} />
       {list.data?.map((s) => (
-        <Button key={s.id} icon="radio-outline" title={`Rejoindre : ${s.title}`} onPress={() => router.push(`/live/${s.id}`)} style={{ marginBottom: 8 }} />
+        <Button key={s.id} icon="radio-outline" title={L('Rejoindre : {x}', { x: s.title })} onPress={() => router.push(`/live/${s.id}`)} style={{ marginBottom: 8 }} />
       ))}
       <Row gap={8}>
         <View style={{ flex: 1 }}>

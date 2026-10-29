@@ -6,7 +6,8 @@
 import Constants from 'expo-constants';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import appJson from '../../app.json';
 import { isDeviceVisible, servicesToRequest, profileById, shortUuid } from '@/lib/ble/core';
 import { diag } from '@/lib/ble/diag';
@@ -14,6 +15,7 @@ import { bleCounter, useBleCounter } from '@/lib/ble/manager';
 import { transport } from '@/lib/ble/transport';
 import { Badge, Body, Button, Card, Eyebrow, H2, Muted, Notice, Row, Screen, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const mono = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
@@ -48,7 +50,7 @@ export default function BleDiagScreen() {
     Système: os,
     Transport: transport.platform,
     'État adaptateur': raw,
-    Disponibilité: s.availability ? (s.availability.ok ? 'OK' : `${s.availability.kind} — ${s.availability.reason}`) : '—',
+    Disponibilité: s.availability ? (s.availability.ok ? 'OK' : `${s.availability.kind} — ${L(s.availability.reason)}`) : '—',
     Statut: s.status,
     Reconnexion: `${s.auto}${s.autoTarget ? ` (${s.autoTarget})` : ''}`,
     Profil: s.prefs.profileId,
@@ -85,7 +87,7 @@ export default function BleDiagScreen() {
       </Card>
 
       {d.lastError ? (
-        <Notice tone="danger" title={`Dernière erreur · ${new Date(d.lastError.t).toLocaleTimeString()}`} text={`[${d.lastError.tag}] ${d.lastError.msg}`} />
+        <Notice tone="danger" title={L('Dernière erreur · {t}', { t: new Date(d.lastError.t).toLocaleTimeString() })} text={`[${d.lastError.tag}] ${d.lastError.msg}`} />
       ) : (
         <Notice tone="success" title="Aucune erreur enregistrée" text="Depuis l’ouverture de l’app." />
       )}
@@ -95,7 +97,7 @@ export default function BleDiagScreen() {
         <Muted>Web : le navigateur affiche son propre sélecteur (pas de RSSI) ; les appareils choisis apparaissent ci-dessous.</Muted>
       ) : (
         <>
-          <Muted>Sans filtre : tous les appareils BLE (recommandé, la plupart des anneaux n’annoncent pas leur service). Avec filtre : seulement les services connus ({known.map(shortUuid).join(', ')}).</Muted>
+          <Muted>{L('Sans filtre : tous les appareils BLE (recommandé, la plupart des anneaux n’annoncent pas leur service). Avec filtre : seulement les services connus ({k}).', { k: known.map(shortUuid).join(', ') })}</Muted>
           <Spacer h={8} />
           <Row wrap>
             <Button

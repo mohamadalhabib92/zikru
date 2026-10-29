@@ -1,5 +1,6 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { BILAL_SOURCE } from '@/lib/audio';
 import { useSettings } from '@/lib/settings';
 import { Card, IconButton, Ionicons, Muted, Row } from '@/ui/kit';

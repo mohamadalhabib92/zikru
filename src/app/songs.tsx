@@ -1,6 +1,7 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { enableBackgroundAudio, NowPlaying, PlayerBar } from '@/components/PlayerBar';
 import { useSettings } from '@/lib/settings';
 import { importFiles, removeFile, resolveUri } from '@/lib/songs';
@@ -8,6 +9,7 @@ import { titleFromName, validUrl, type Track } from '@/lib/songs-types';
 import { uid, usePersistentState } from '@/lib/storage';
 import { Button, Card, Empty, Eyebrow, Field, H1, H2, IconButton, Ionicons, Muted, Notice, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 export default function Songs() {
   const { t: tr } = useSettings();
@@ -40,7 +42,7 @@ export default function Songs() {
       setCur(i);
       autoNext.current = true;
       player.play();
-      if (Platform.OS !== 'web') player.setActiveForLockScreen(true, { title: tk.title, artist: 'Zikru · Chants soufis' });
+      if (Platform.OS !== 'web') player.setActiveForLockScreen(true, { title: tk.title, artist: L('Zikru · Chants soufis') });
     } catch {
       setErr('Lecture impossible pour ce fichier.');
     }
@@ -86,7 +88,7 @@ export default function Songs() {
       setTracks(tracks.filter((_, j) => j !== i));
     };
     if (Platform.OS === 'web') void go();
-    else Alert.alert('Retirer cette piste ?', tracks[i].title, [{ text: 'Annuler', style: 'cancel' }, { text: 'Retirer', style: 'destructive', onPress: () => void go() }]);
+    else Alert.alert(L('Retirer cette piste ?'), tracks[i].title, [{ text: L('Annuler'), style: 'cancel' }, { text: L('Retirer'), style: 'destructive', onPress: () => void go() }]);
   };
 
   const now = cur != null ? tracks[cur] : null;
@@ -109,7 +111,7 @@ export default function Songs() {
       </Row>
       {showUrl ? (
         <Card style={{ marginTop: 12 }}>
-          <Field label="URL du fichier audio" placeholder="https://…/chant.mp3" autoCapitalize="none" autoCorrect={false} keyboardType="url" value={url} onChangeText={setUrl} />
+          <Field label="URL du fichier audio" placeholder={L("https://…/chant.mp3")} autoCapitalize="none" autoCorrect={false} keyboardType="url" value={url} onChangeText={setUrl} />
           <Field label="Titre (facultatif)" value={title} onChangeText={setTitle} />
           <Button title="Ajouter" icon="add" onPress={addUrl} />
         </Card>
@@ -131,7 +133,7 @@ export default function Songs() {
             Ma liste · {tracks.length} piste{tracks.length > 1 ? 's' : ''}
           </H2>
           {tracks.map((tk, i) => (
-            <Pressable key={tk.id} accessibilityRole="button" accessibilityLabel={`Lire ${tk.title}`} onPress={() => void play(i)}>
+            <Pressable key={tk.id} accessibilityRole="button" accessibilityLabel={L('Lire {x}', { x: tk.title })} onPress={() => void play(i)}>
               <Card style={cur === i ? { borderColor: t.primary } : undefined}>
                 <Row gap={12}>
                   <Ionicons name={cur === i && st.playing ? 'volume-high' : tk.kind === 'url' ? 'link-outline' : 'musical-note'} size={22} color={cur === i ? t.primary : t.muted} />
@@ -141,7 +143,7 @@ export default function Songs() {
                     </Text>
                     <Muted style={{ fontSize: 12 }}>{tk.kind === 'url' ? 'Lien' : 'Fichier local'}</Muted>
                   </View>
-                  <IconButton icon="trash-outline" color={t.muted} label={`Retirer ${tk.title}`} onPress={() => remove(i)} />
+                  <IconButton icon="trash-outline" color={t.muted} label={L('Retirer {x}', { x: tk.title })} onPress={() => remove(i)} />
                 </Row>
               </Card>
             </Pressable>

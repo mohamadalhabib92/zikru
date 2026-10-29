@@ -1,11 +1,13 @@
 import { useRouter, type Href } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSettings } from '@/lib/settings';
 import { Container, FadeIn, IconBadge, SectionHeader, tapHaptic, useLayout } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 export type HubItem = { icon: IconName; title: string; sub?: string; href: Href; color: string };
 export type HubSection = { title: string; items: HubItem[] };
@@ -21,7 +23,7 @@ export function Hub({ title, eyebrow, sections, top }: { title: string; eyebrow?
     <View style={{ flex: 1, backgroundColor: b.cream }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 40 + insets.bottom }}>
         <Container max={1100} style={{ paddingHorizontal: tablet ? 28 : 16 }}>
-          {eyebrow ? <Text style={{ color: b.goldDeep, fontWeight: '800', fontSize: 12, letterSpacing: 1.4 }}>{eyebrow.toUpperCase()}</Text> : null}
+          {eyebrow ? <Text style={{ color: b.goldDeep, fontWeight: '800', fontSize: 12, letterSpacing: 1.4 }}>{L(eyebrow).toUpperCase()}</Text> : null}
           <Text accessibilityRole="header" style={{ color: b.ink, fontSize: 32, fontWeight: '800', letterSpacing: -0.6, marginBottom: 12 }}>
             {title}
           </Text>
@@ -43,7 +45,7 @@ export function Hub({ title, eyebrow, sections, top }: { title: string; eyebrow?
                   <View key={it.title} style={{ width: `${100 / cols}%`, padding: 5 }}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={it.sub ? `${it.title}. ${it.sub}` : it.title}
+                      accessibilityLabel={it.sub ? `${L(it.title)}. ${L(it.sub)}` : L(it.title)}
                       onPress={() => {
                         tapHaptic('select');
                         router.push(it.href);

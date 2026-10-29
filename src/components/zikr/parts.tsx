@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, Share, Text, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, Share, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { computeAbjad } from '@/lib/abjad';
 import { nameBare, nameCall, nameCallTr, type AllahName } from '@/lib/names';
 import type { ZikrItem } from '@/lib/zikr';
@@ -9,6 +10,7 @@ import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const SYSC = {
   get mashriqi() {
@@ -26,7 +28,7 @@ export function LBtn({ icon, label, onPress, active, color = b.green, solid, dis
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={typeof label === "string" ? L(label) : label}
       accessibilityState={{ disabled: !!disabled }}
       onPress={disabled ? undefined : onPress}
       hitSlop={4}
@@ -165,7 +167,7 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
   return (
     <Modal transparent animationType="fade" visible onRequestClose={close}>
       <Pressable
-        accessibilityLabel="Fermer"
+        accessibilityLabel={L("Fermer")}
         onPress={close}
         style={{
           flex: 1,
@@ -187,12 +189,12 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
           }}
         >
           <Text style={{ color: b.ink, fontWeight: '800', fontSize: 18 }}>Ajouter à un zikr</Text>
-          <LMuted style={{ marginTop: 2 }}>{`${item.label} — × ${item.reps}`}</LMuted>
+          <LMuted style={{ marginTop: 2 }}>{`${L(item.label)} — × ${item.reps}`}</LMuted>
           {doneId ? (
             <View style={{ marginTop: 14, gap: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="checkmark-circle" size={22} color={b.green} />
-                <Text style={{ color: b.green, fontWeight: '800', flex: 1 }}>{`Ajouté à « ${doneName} »`}</Text>
+                <Text style={{ color: b.green, fontWeight: '800', flex: 1 }}>{L('Ajouté à « {n} »', { n: doneName })}</Text>
               </View>
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                 <LBtn
@@ -216,7 +218,7 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
                 <Pressable
                   key={z.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`Ajouter à ${z.name}`}
+                  accessibilityLabel={L('Ajouter à {n}', { n: z.name })}
                   onPress={() => pick(z.id, z.name)}
                   style={({ pressed }) => ({
                     flexDirection: 'row',
@@ -234,7 +236,7 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
                   <Ionicons name="albums-outline" size={20} color={b.green} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: b.ink, fontWeight: '800' }}>{z.name}</Text>
-                    <LMuted style={{ fontSize: 12 }}>{`${z.items.length} élément${z.items.length > 1 ? 's' : ''}`}</LMuted>
+                    <LMuted style={{ fontSize: 12 }}>{L('Éléments : {n}', { n: z.items.length })}</LMuted>
                   </View>
                   <Ionicons name="add-circle" size={22} color={b.green} />
                 </Pressable>
@@ -254,9 +256,9 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
                 <TextInput
                   value={name}
                   onChangeText={setName}
-                  placeholder="Nom (ex. Wird du matin)"
+                  placeholder={L("Nom (ex. Wird du matin)")}
                   placeholderTextColor={b.inkMuted}
-                  accessibilityLabel="Nom de la nouvelle composition"
+                  accessibilityLabel={L("Nom de la nouvelle composition")}
                   style={{
                     flex: 1,
                     minHeight: 44,

@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { HideText } from '@/components/quran/HideText';
 import { QBtn, QChoice, QLabel, QStepper, Sheet } from '@/components/quran/Sheet';
@@ -17,6 +18,7 @@ import { cardStatus, dailyQueue, type Grade } from '@/lib/srs';
 import { SURAHS } from '@/lib/surahs';
 import { useRecitation } from '@/lib/use-recitation';
 import { alpha, fonts } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const HIDES: { label: string; value: HideMode; a11y: string }[] = [
   { label: 'Texte', value: 'none', a11y: 'Texte visible' },
@@ -38,7 +40,7 @@ function GradeRow({ onGrade, pal, small }: { onGrade: (g: Grade) => void; pal: P
         <Pressable
           key={x.g}
           accessibilityRole="button"
-          accessibilityLabel={`${x.label} : prochaine révision ${x.sub}`}
+          accessibilityLabel={L('{x} : prochaine révision {s}', { x: L(x.label), s: L(x.sub) })}
           onPress={() => onGrade(x.g)}
           style={({ pressed }) => ({ flex: 1, minHeight: small ? 36 : 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(x.color, pressed ? 0.3 : 0.15), borderWidth: 1, borderColor: alpha(x.color, 0.5) })}
         >
@@ -57,7 +59,7 @@ export default function HifzSession() {
   const [rp] = useShared(readerPrefs);
   const pal = readerPalette(rp.theme);
   useReaderKeepAwake(rp.keepAwake, 'hifz');
-  const title = review ? 'Révision du jour' : 'Mémorisation';
+  const title = L(review ? 'Révision du jour' : 'Mémorisation');
   return (
     <View style={{ flex: 1, backgroundColor: pal.bg }}>
       <Stack.Screen options={{ title, headerStyle: { backgroundColor: pal.bg }, headerTintColor: pal.ink, headerTitleStyle: { color: pal.ink } }} />
@@ -106,7 +108,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
   };
   const step = rec.step;
   const size = rp.arSize + 2;
-  const info = step ? `Verset ${step.a} · répétition ${step.rep}/${hp.each}${hp.times !== 1 ? ` · passage ${step.pass}${hp.times ? `/${hp.times}` : ''}` : ''}` : undefined;
+  const info = step ? L('Verset {a} · répétition {r}/{e}', { a: step.a, r: step.rep, e: hp.each }) + (hp.times !== 1 ? ' · ' + L('passage {p}', { p: hp.times ? `${step.pass}/${hp.times}` : step.pass }) : '') : undefined;
 
   return (
     <>
@@ -115,7 +117,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: pal.ink, fontWeight: '900', fontSize: 18 }}>{`${meta[2]} · ${from}–${to}`}</Text>
-              <Text style={{ color: pal.muted, fontSize: 13 }}>{`${reciterById(reciter).name} · ${hp.each}× chaque verset · ${hp.times ? `${hp.times}× la plage` : 'en boucle'}`}</Text>
+              <Text style={{ color: pal.muted, fontSize: 13 }}>{L('{r} · {e}× chaque verset · {p}', { r: reciterById(reciter).name, e: hp.each, p: hp.times ? L('{n}× la plage', { n: hp.times }) : L('en boucle') })}</Text>
             </View>
             <QBtn icon="options-outline" onPress={() => setSettings(true)} pal={pal} a11y="Réglages de répétition" small />
           </View>
@@ -148,7 +150,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
               <Pressable
                 key={a}
                 accessibilityRole="button"
-                accessibilityLabel={`Verset ${a}. Toucher pour écouter à partir d’ici`}
+                accessibilityLabel={L('Verset {a}. Toucher pour écouter à partir d’ici', { a })}
                 onPress={() => begin(i)}
                 style={{ backgroundColor: playing ? alpha(pal.accent, 0.1) : pal.card, borderRadius: 18, borderWidth: playing ? 2 : 1, borderColor: playing ? pal.accent : pal.line, padding: 14, gap: 8 }}
               >
@@ -171,7 +173,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
           <GradeRow pal={pal} onGrade={gradeAll} />
           {graded ? (
             <View style={{ gap: 8 }}>
-              <Text accessibilityLiveRegion="polite" style={{ color: pal.accent, fontWeight: '800' }}>{`Enregistré (${graded}). Les versets rejoignent votre révision.`}</Text>
+              <Text accessibilityLiveRegion="polite" style={{ color: pal.accent, fontWeight: '800' }}>{L('Enregistré ({g}). Les versets rejoignent votre révision.', { g: L(graded) })}</Text>
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                 {to < meta[4] ? <QBtn icon="arrow-forward" label="Versets suivants" onPress={() => { const n = Math.min(meta[4], to + 1 + (to - from)); setFrom(to + 1); setTo(n); setGraded(null); started.current = false; }} pal={pal} solid /> : null}
                 <QBtn icon="grid-outline" label="Mémorisation" onPress={() => router.back()} pal={pal} />
@@ -230,7 +232,7 @@ function Review({ pal }: { pal: Pal }) {
         </Text>
         <Text style={{ color: pal.ink, fontSize: 22, fontWeight: '900', textAlign: 'center' }}>{items.length ? 'Révision terminée' : 'Rien à réviser aujourd’hui'}</Text>
         <Text style={{ color: pal.muted, textAlign: 'center', maxWidth: 420 }}>
-          {items.length ? `${items.length} verset${items.length > 1 ? 's' : ''} : ${tally.easy} facile, ${tally.medium} moyen, ${tally.hard} difficile. Qu’Allah vous facilite la préservation de Son Livre.` : 'Commencez une nouvelle leçon pour alimenter la révision.'}
+          {items.length ? L('{n} verset(s) : {e} facile, {m} moyen, {h} difficile. Qu’Allah vous facilite la préservation de Son Livre.', { n: items.length, e: tally.easy, m: tally.medium, h: tally.hard }) : 'Commencez une nouvelle leçon pour alimenter la révision.'}
         </Text>
         <QBtn icon="grid-outline" label="Retour à la mémorisation" onPress={() => router.back()} pal={pal} solid />
       </View>
@@ -258,7 +260,7 @@ function Review({ pal }: { pal: Pal }) {
           </View>
         </View>
         <View style={{ backgroundColor: pal.card, borderRadius: 22, borderWidth: 1, borderColor: pal.line, padding: 18, gap: 14 }}>
-          <Text style={{ color: pal.accent, fontWeight: '900', fontSize: 16 }}>{`${SURAHS[s - 1][2]} · verset ${a}`}</Text>
+          <Text style={{ color: pal.accent, fontWeight: '900', fontSize: 16 }}>{L('{s} · verset {a}', { s: SURAHS[s - 1][2], a })}</Text>
           {prev ? (
             <View style={{ gap: 4 }}>
               <Text style={{ color: pal.muted, fontSize: 12 }}>Verset précédent (indice)</Text>

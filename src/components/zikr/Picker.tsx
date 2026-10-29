@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { computeAbjad } from '@/lib/abjad';
 import { DUAS_LIST, duaCatLabel } from '@/lib/duas';
@@ -8,6 +9,9 @@ import { getSurah, translationFor, type SurahText } from '@/lib/quran';
 import { searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { SALAWAT } from '@/lib/salawat';
+import { duaView, quranDuaView } from '@/lib/i18n-content';
+import { SALAWAT_EN } from '@/lib/i18n-content/knowledge';
+import { L, useUiLang } from '@/lib/l10n';
 import { SURAHS } from '@/lib/surahs';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons } from '@/ui/kit';
@@ -44,7 +48,7 @@ function Row({ title, sub, ar, abjadAr, onAdd }: { title: string; sub?: string; 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Ajouter ${title}`}
+      accessibilityLabel={L('Ajouter {x}', { x: L(title) })}
       onPress={onAdd}
       style={({ pressed }) => ({
         backgroundColor: b.paper,
@@ -119,7 +123,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   if (!n) {
     return (
       <View>
-        <TextInput value={sq} onChangeText={setSq} placeholder="Sourate, verset (2:255) ou mots en arabe" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Rechercher une sourate ou un verset" autoCorrect={false} />
+        <TextInput value={sq} onChangeText={setSq} placeholder={L("Sourate, verset (2:255) ou mots en arabe")} placeholderTextColor={b.inkMuted} style={input} accessibilityLabel={L("Rechercher une sourate ou un verset")} autoCorrect={false} />
         {vh.length ? (
           <View style={{ marginTop: 8 }}>
             <LMuted style={{ fontSize: 12, fontWeight: '700' }}>Versets (hors-ligne)</LMuted>
@@ -127,7 +131,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
               <Pressable
                 key={`${v.s}:${v.a}`}
                 accessibilityRole="button"
-                accessibilityLabel={`Verset ${v.s}:${v.a}`}
+                accessibilityLabel={L('Verset {s}:{a}', { s: v.s, a: v.a })}
                 onPress={() => pick(v)}
                 style={({ pressed }) => ({ paddingVertical: 10, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: b.line, opacity: pressed ? 0.7 : 1 })}
               >
@@ -149,7 +153,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
             <Pressable
               key={m[0]}
               accessibilityRole="button"
-              accessibilityLabel={`Sourate ${m[0]} ${m[2]}`}
+              accessibilityLabel={L('Sourate {n} {s}', { n: m[0], s: m[2] })}
               onPress={() => setN(m[0])}
               style={({ pressed }) => ({
                 flexDirection: 'row',
@@ -183,10 +187,10 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   return (
     <View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Changer de sourate" onPress={() => setN(null)} hitSlop={8}>
+        <Pressable accessibilityRole="button" accessibilityLabel={L("Changer de sourate")} onPress={() => setN(null)} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={b.ink} />
         </Pressable>
-        <Text style={{ color: b.ink, fontWeight: '800', flex: 1 }}>{`${n}. ${meta[2]} · ${meta[4]} versets`}</Text>
+        <Text style={{ color: b.ink, fontWeight: '800', flex: 1 }}>{L('{n}. {s} · {v} versets', { n, s: meta[2], v: meta[4] })}</Text>
       </View>
       <View
         style={{
@@ -197,9 +201,9 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
         }}
       >
         <LMuted>Verset</LMuted>
-        <TextInput value={from} onChangeText={setFrom} keyboardType="number-pad" style={[input, { width: 70 }]} accessibilityLabel="Premier verset" />
+        <TextInput value={from} onChangeText={setFrom} keyboardType="number-pad" style={[input, { width: 70 }]} accessibilityLabel={L("Premier verset")} />
         <LMuted>à</LMuted>
-        <TextInput value={to} onChangeText={setTo} keyboardType="number-pad" placeholder={String(a)} placeholderTextColor={b.inkMuted} style={[input, { width: 70 }]} accessibilityLabel="Dernier verset (facultatif)" />
+        <TextInput value={to} onChangeText={setTo} keyboardType="number-pad" placeholder={String(a)} placeholderTextColor={b.inkMuted} style={[input, { width: 70 }]} accessibilityLabel={L("Dernier verset (facultatif)")} />
       </View>
       <LMuted style={{ fontSize: 11, marginTop: 4 }}>Jusqu’à 20 versets consécutifs.</LMuted>
       {!data ? (
@@ -215,7 +219,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
             marginTop: 10,
           }}
         >
-          <Text style={{ color: b.green, fontWeight: '800' }}>{`Coran ${ref}`}</Text>
+          <Text style={{ color: b.green, fontWeight: '800' }}>{L('Coran {r}', { r: ref })}</Text>
           <Arabic size={21} style={{ marginTop: 6 }}>
             {ar}
           </Arabic>
@@ -240,7 +244,7 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
               }
             />
           </View>
-          <LMuted style={{ fontSize: 11, marginTop: 6 }}>{`Texte : Tanzil / api.alquran.cloud · traduction ${fr.label}`}</LMuted>
+          <LMuted style={{ fontSize: 11, marginTop: 6 }}>{L('Texte : Tanzil / api.alquran.cloud · traduction {t}', { t: fr.label })}</LMuted>
         </View>
       )}
     </View>
@@ -255,7 +259,7 @@ function FreeText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   const ok = ar.trim().length > 0;
   return (
     <View style={{ gap: 8 }}>
-      <TextInput value={label} onChangeText={setLabel} placeholder="Titre (ex. Tahlīl)" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Titre" />
+      <TextInput value={label} onChangeText={setLabel} placeholder={L("Titre (ex. Tahlīl)")} placeholderTextColor={b.inkMuted} style={input} accessibilityLabel={L("Titre")} />
       <TextInput
         value={ar}
         onChangeText={setAr}
@@ -272,10 +276,10 @@ function FreeText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
             paddingVertical: 8,
           },
         ]}
-        accessibilityLabel="Texte arabe"
+        accessibilityLabel={L("Texte arabe")}
       />
-      <TextInput value={tr} onChangeText={setTr} placeholder="Translittération (facultatif)" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Translittération" />
-      <TextInput value={fr} onChangeText={setFr} placeholder="Traduction (facultatif)" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Traduction" />
+      <TextInput value={tr} onChangeText={setTr} placeholder={L("Translittération (facultatif)")} placeholderTextColor={b.inkMuted} style={input} accessibilityLabel={L("Translittération")} />
+      <TextInput value={fr} onChangeText={setFr} placeholder={L("Traduction (facultatif)")} placeholderTextColor={b.inkMuted} style={input} accessibilityLabel={L("Traduction")} />
       {ok ? <AbjadBadge ar={ar} /> : null}
       <View style={{ alignSelf: 'flex-start' }}>
         <LBtn
@@ -318,6 +322,8 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
     setTimeout(() => setAdded((x) => (x === d.label ? null : x)), 1600);
   };
   const nq = norm(q.trim());
+  const pl = useUiLang();
+  const salT = (x: { id: string; title: string }) => (pl === 'en' ? SALAWAT_EN[x.id]?.title[0] : pl === 'ar' ? SALAWAT_EN[x.id]?.title[1] : undefined) ?? x.title;
   const has = (...p: (string | undefined)[]) => !nq || norm(p.filter(Boolean).join(' ')).includes(nq);
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen">
@@ -336,7 +342,7 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
           <Text style={{ color: b.heroText, fontWeight: '900', fontSize: 18, flex: 1 }}>Ajouter un élément</Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Terminer"
+            accessibilityLabel={L("Terminer")}
             onPress={onClose}
             hitSlop={8}
             style={{
@@ -372,7 +378,7 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
               textAlign: 'center',
               marginBottom: 6,
             }}
-          >{`✓ Ajouté : ${added}`}</Text>
+          >{L('✓ Ajouté : {x}', { x: added })}</Text>
         ) : null}
         <ScrollView
           contentContainerStyle={{
@@ -386,7 +392,7 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
           keyboardShouldPersistTaps="handled"
         >
           {tab === 'names' || tab === 'quran' || tab === 'dua' || tab === 'salat' ? (
-            <TextInput value={q} onChangeText={setQ} placeholder="Rechercher…" placeholderTextColor={b.inkMuted} style={[input, { marginBottom: 10 }]} accessibilityLabel="Rechercher" autoCorrect={false} />
+            <TextInput value={q} onChangeText={setQ} placeholder={L("Rechercher…")} placeholderTextColor={b.inkMuted} style={[input, { marginBottom: 10 }]} accessibilityLabel={L("Rechercher")} autoCorrect={false} />
           ) : null}
           {nq &&
           ((tab === 'names' && !NAMES.some((x) => has(x.tr, x.fr, x.ar, String(x.n)))) ||
@@ -408,18 +414,18 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
                         marginBottom: 10,
                       }}
                     >
-                      <LBtn icon="calculator-outline" label={`Ajouter × ${v} (abjad)`} onPress={() => add(nameItem(x, v || 1))} />
+                      <LBtn icon="calculator-outline" label={L('Ajouter × {n} (abjad)', { n: v })} onPress={() => add(nameItem(x, v || 1))} />
                     </View>
                   </View>
                 );
               })
             : null}
           {tab === 'quran'
-            ? QURAN_DUAS.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref, d.who)).map((d) => (
+            ? QURAN_DUAS.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref, d.who, quranDuaView(d, pl).title)).map((d) => (
                 <Row
                   key={d.id}
-                  title={d.title}
-                  sub={`Coran ${d.ref}${d.who ? ' · ' + d.who : ''}`}
+                  title={quranDuaView(d, pl).title}
+                  sub={`${pl === 'ar' ? 'القرآن' : pl === 'en' ? 'Qur’an' : 'Coran'} ${d.ref}${d.who ? ' · ' + d.who : ''}`}
                   ar={d.ar}
                   onAdd={() =>
                     add({
@@ -436,10 +442,10 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
               ))
             : null}
           {tab === 'dua'
-            ? DUAS_LIST.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref, d.when, duaCatLabel(d.cat))).map((d) => (
+            ? DUAS_LIST.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref, d.when, duaCatLabel(d.cat), duaView(d, pl).title)).map((d) => (
                 <Row
                   key={d.id}
-                  title={d.title}
+                  title={duaView(d, pl).title}
                   sub={`${d.ref}${d.reps ? ` · × ${d.reps}` : ''}`}
                   ar={d.ar}
                   onAdd={() =>
@@ -457,10 +463,10 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
               ))
             : null}
           {tab === 'salat'
-            ? SALAWAT.filter((s) => has(s.title, s.fr, s.tr, s.ar, s.ref)).map((s) => (
+            ? SALAWAT.filter((s) => has(s.title, s.fr, s.tr, s.ar, s.ref, salT(s))).map((s) => (
                 <Row
                   key={s.id}
-                  title={s.title}
+                  title={salT(s)}
                   sub={s.ref}
                   ar={s.ar}
                   onAdd={() =>

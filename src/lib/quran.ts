@@ -10,7 +10,10 @@ export type SurahText = { n: number; edition: string; ayahs: Ayah[] };
 export function translationFor(lang: string): { id: string; label: string } {
   if (lang === 'fr' || lang === 'ff' || lang === 'wo') return { id: 'fr.hamidullah', label: 'Muhammad Hamidullah (FR)' };
   if (lang === 'de' || lang === 'de-CH') return { id: 'de.bubenheim', label: 'Bubenheim & Elyas (DE)' };
-  return { id: 'en.sahih', label: 'Saheeh International (EN)' };
+  // Arabe : pas de « traduction » ; tafsir abrégé al-Muyassar (Complexe du roi Fahd), source arabe classique contemporaine.
+  if (lang === 'ar') return { id: 'ar.muyassar', label: 'التفسير الميسر (مجمع الملك فهد)' };
+  // Anglais : Pickthall (1930), domaine public. Saheeh International est sous copyright (Dar Abul-Qasim) : non utilisée.
+  return { id: 'en.pickthall', label: 'M. Pickthall (EN, public domain)' };
 }
 
 const BASMALA = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';

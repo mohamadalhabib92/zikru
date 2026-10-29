@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { policyLang, type PolicyLang } from '@/lib/privacy';
 import { POLICY } from '@/lib/privacy-policy';
 import { useSettings } from '@/lib/settings';

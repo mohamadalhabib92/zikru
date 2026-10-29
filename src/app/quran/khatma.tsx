@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { QStepper } from '@/components/quran/Sheet';
 import { readerPalette } from '@/components/quran/palette';
 import { addDays, dayKey } from '@/lib/dates';
@@ -14,6 +15,7 @@ import { SURAHS } from '@/lib/surahs';
 import { Container, FadeIn, HeroHeader, ProgressBar, SectionHeader } from '@/ui/ds';
 import { Button, Segmented } from '@/ui/kit';
 import { alpha, brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const PLANS = [
   { days: 7, label: '7 jours', sub: '≈ 87 p./jour' },
@@ -85,7 +87,7 @@ export default function KhatmaScreen() {
               <QStepper label="Page de départ" value={from} min={1} max={MUSHAF_PAGES} onChange={setFrom} step={1} pal={pal} />
             </View>
           </View>
-          <Text style={{ color: b.inkMuted }}>{`${Math.ceil((MUSHAF_PAGES - from + 1) / custom)} pages par jour environ · fin le ${fmt(addDays(today, custom - 1))} · départ : ${surahAtPage(from)}`}</Text>
+          <Text style={{ color: b.inkMuted }}>{L('{n} pages par jour environ · fin le {d} · départ : {s}', { n: Math.ceil((MUSHAF_PAGES - from + 1) / custom), d: fmt(addDays(today, custom - 1)), s: surahAtPage(from) })}</Text>
           <Button title="Commencer la khatma" icon="flag-outline" onPress={() => setK(newKhatma(today, custom, from))} />
           {reminder}
         </Container>
@@ -98,29 +100,29 @@ export default function KhatmaScreen() {
       <Container max={820} style={{ padding: 16, gap: 16 }}>
         <FadeIn>
           <HeroHeader>
-            <Text style={{ color: b.heroMuted, fontWeight: '700' }}>{st.finished ? 'Khatma achevée' : `Jour ${st.day} sur ${k.days}`}</Text>
+            <Text style={{ color: b.heroMuted, fontWeight: '700' }}>{st.finished ? 'Khatma achevée' : L('Jour {a} sur {b}', { a: st.day, b: k.days })}</Text>
             <Text style={{ color: b.heroText, fontSize: 28, fontWeight: '900' }}>{`${Math.round(st.progress * 100)} %`}</Text>
-            <Text style={{ color: b.heroMuted }}>{`${st.done} / ${st.total} pages · fin prévue le ${fmt(st.end)}`}</Text>
+            <Text style={{ color: b.heroMuted }}>{L('{a} / {b} pages · fin prévue le {d}', { a: st.done, b: st.total, d: fmt(st.end) })}</Text>
             <View style={{ marginTop: 12 }}>
               <ProgressBar progress={st.progress} color={b.gold} />
             </View>
-            <Text style={{ color: b.heroText, marginTop: 10, fontWeight: '700' }}>{`Série : ${sk.current} jour${sk.current > 1 ? 's' : ''} · record ${sk.best}`}</Text>
+            <Text style={{ color: b.heroText, marginTop: 10, fontWeight: '700' }}>{L('Série : {n} jour(s) · record {b}', { n: sk.current, b: sk.best })}</Text>
           </HeroHeader>
         </FadeIn>
         {st.finished ? (
           <View style={{ backgroundColor: b.paper, borderRadius: 20, padding: 18, gap: 8, borderWidth: 1, borderColor: b.gold }}>
             <Text style={{ color: b.ink, fontSize: 18, fontWeight: '900' }}>Mabrouk, khatma terminée !</Text>
-            <Text style={{ color: b.inkMuted }}>{`Achevée le ${fmt(k.finished ?? today)}. Il est d’usage de faire des invocations à la fin de la lecture du Coran.`}</Text>
+            <Text style={{ color: b.inkMuted }}>{L('Achevée le {d}. Il est d’usage de faire des invocations à la fin de la lecture du Coran.', { d: fmt(k.finished ?? today) })}</Text>
             <Button title="Nouvelle khatma" icon="refresh" onPress={() => setK(null)} />
           </View>
         ) : (
           <View style={{ backgroundColor: b.paper, borderRadius: 20, padding: 16, gap: 10, borderWidth: 1, borderColor: b.line }}>
             <Text style={{ color: b.ink, fontSize: 17, fontWeight: '900' }}>Wird du jour</Text>
-            {st.today ? <Text style={{ color: b.ink }}>{`Pages ${st.today.from} à ${st.today.to} · ${surahAtPage(st.today.from)}`}</Text> : null}
+            {st.today ? <Text style={{ color: b.ink }}>{L('Pages {a} à {b} · {s}', { a: st.today.from, b: st.today.to, s: surahAtPage(st.today.from) })}</Text> : null}
             <Text style={{ color: ahead ? b.green : '#D98A2B', fontWeight: '700' }}>
-              {st.delta === 0 ? 'Vous êtes dans les temps.' : ahead ? `En avance de ${st.delta} page${st.delta > 1 ? 's' : ''}.` : `En retard de ${-st.delta} page${st.delta < -1 ? 's' : ''} : ${st.needPerDay} pages/jour pour finir à temps.`}
+              {st.delta === 0 ? 'Vous êtes dans les temps.' : ahead ? L('En avance de {n} page(s).', { n: st.delta }) : L('En retard de {n} page(s) : {p} pages/jour pour finir à temps.', { n: -st.delta, p: st.needPerDay })}
             </Text>
-            <Button title={`Lire à partir de la page ${st.nextPage}`} icon="book-outline" onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(st.nextPage) } })} />
+            <Button title={L('Lire à partir de la page {p}', { p: st.nextPage })} icon="book-outline" onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(st.nextPage) } })} />
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
               <Button small variant="secondary" title="Page suivante lue" icon="checkmark" onPress={() => setK((c) => (c ? markPage(c, st.nextPage, today) : c))} />
               {st.today ? <Button small variant="secondary" title="Wird du jour lu" icon="checkmark-done" onPress={() => setK((c) => (c ? markPage(c, st.today!.to, today) : c))} /> : null}

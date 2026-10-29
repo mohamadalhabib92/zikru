@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text } from 'react-native';
+import { Text } from '@/ui/Text';
 import { NEXT_STATUS, STATUS_LABEL, type ContentItem, type ContentStatus } from '@/lib/content';
 import { useData } from '@/lib/data';
 import { uid } from '@/lib/storage';

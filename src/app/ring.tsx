@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, Text, TextInput, View } from 'react-native';
+import { Platform, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
 import { fieldLabel, isValidUuid, keyLabel, PROFILES, shortUuid } from '@/lib/ble/core';
@@ -9,6 +10,7 @@ import { useData } from '@/lib/data';
 import { useSettings } from '@/lib/settings';
 import { Badge, Body, Button, Card, Chip, Divider, Eyebrow, Field, H2, ListItem, Muted, Notice, Row, Screen, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L, uiLang } from '@/lib/l10n';
 
 const STATUS_TONE = { connecté: 'success', connexion: 'info', reconnexion: 'warning', déconnecté: 'neutral', erreur: 'danger' } as const;
 const STATUS_HELP = {
@@ -39,7 +41,7 @@ export default function BluetoothCounterScreen() {
     <Screen>
       {/* Le titre est déjà dans l'en-tête de navigation : pas de second H1 ici. */}
       <Row wrap style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <Badge label={s.status === 'reconnexion' ? 'recherche…' : s.status} tone={STATUS_TONE[s.status]} />
+        <Badge label={L(s.status === 'reconnexion' ? 'recherche…' : s.status)} tone={STATUS_TONE[s.status]} />
         <Button title="Diagnostic" icon="pulse-outline" small variant="ghost" onPress={() => router.push('/ble-diag')} />
       </Row>
       <Muted>Tasbih électronique, anneau de dhikr ou télécommande : chaque appui ajoute +1 au compteur de session ({tasbih.count}{tasbih.target ? ` / ${tasbih.target}` : ''}).</Muted>
@@ -49,7 +51,7 @@ export default function BluetoothCounterScreen() {
       <Spacer />
       {s.lastSync && Date.now() - s.lastSync.at < 10 * 60 * 1000 ? (
         <>
-          <Notice tone="success" icon="sync-outline" title={`Synchronisé : +${s.lastSync.added}`} text="Appuis faits pendant que l’appareil était déconnecté, ajoutés une seule fois à la session et à l’historique." />
+          <Notice tone="success" icon="sync-outline" title={L('Synchronisé : +{n}', { n: s.lastSync.added })} text="Appuis faits pendant que l’appareil était déconnecté, ajoutés une seule fois à la session et à l’historique." />
           <Spacer />
         </>
       ) : null}
@@ -58,8 +60,8 @@ export default function BluetoothCounterScreen() {
           <Notice
             tone="warning"
             icon="help-circle-outline"
-            title={`« ${s.similar.name ?? 'Appareil sans nom'} » détecté avec un autre identifiant`}
-            text={`Même ${s.similar.by === 'nom' ? 'nom' : 'service'} que votre compteur, mais identifiant différent (${s.similar.id}${s.similar.rssi != null ? ` · ${s.similar.rssi} dBm` : ''}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.`}
+            title={L('« {n} » détecté avec un autre identifiant', { n: s.similar.name ?? L('Appareil sans nom') })}
+            text={L(s.similar.by === 'nom' ? 'Même nom que votre compteur, mais identifiant différent ({id}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.' : 'Même service que votre compteur, mais identifiant différent ({id}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.', { id: `${s.similar.id}${s.similar.rssi != null ? ` · ${s.similar.rssi} dBm` : ''}` })}
           />
           <Spacer h={8} />
           <Row wrap>
@@ -77,7 +79,7 @@ export default function BluetoothCounterScreen() {
             title={s.mapping?.auto ? 'Compteur détecté automatiquement' : 'Appareil inconnu'}
             text={
               s.mapping?.auto
-                ? `Champ repéré : ${s.mapping.field ? fieldLabel(s.mapping.field) : 'format connu'} sur ${shortUuid(s.mapping.characteristic)}. Confirmez en appuyant 3 fois : le profil sera mémorisé pour cet appareil.`
+                ? L('Champ repéré : {f} sur {u}. Confirmez en appuyant 3 fois : le profil sera mémorisé pour cet appareil.', { f: s.mapping.field ? fieldLabel(s.mapping.field) : L('format connu'), u: shortUuid(s.mapping.characteristic) })
                 : 'Appuyez sur « Confirmer (3 appuis) » puis 3 fois lentement sur le bouton : Zikru repère le signal et le mémorise pour cet appareil.'
             }
           />
@@ -151,21 +153,21 @@ export default function BluetoothCounterScreen() {
           <Spacer />
           <H2>Appareils à proximité</H2>
           <Muted>Seuls les compteurs de dhikr (tasbih, zikr, iQibla, BW…, bague ZKR-R1) et les écouteurs sont listés ; les autres appareils Bluetooth sont ignorés. Appuyez une fois sur le bouton du compteur pour le réveiller.</Muted>
-          {s.hiddenCount > 0 ? <Muted>{`${s.hiddenCount} appareil(s) non reconnu(s) masqué(s). Votre compteur n’apparaît pas ? Bouton « Diagnostic » › « Afficher tous les appareils ».`}</Muted> : null}
+          {s.hiddenCount > 0 ? <Muted>{L('{n} appareil(s) non reconnu(s) masqué(s). Votre compteur n’apparaît pas ? Bouton « Diagnostic » › « Afficher tous les appareils ».', { n: s.hiddenCount })}</Muted> : null}
           <Spacer h={8} />
           {s.scanResults.map((r) =>
             r.kind === 'audio' ? (
               <ListItem
                 key={r.id}
                 title={r.name ?? 'Écouteurs'}
-                subtitle={`Écouteurs — gérés par le système, pas un compteur. La récitation passe par la sortie audio choisie dans les réglages du téléphone.${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
+                subtitle={`${L('Écouteurs — gérés par le système, pas un compteur. La récitation passe par la sortie audio choisie dans les réglages du téléphone.')}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
                 icon="headset-outline"
               />
             ) : (
               <ListItem
                 key={r.id}
                 title={`${r.likely ? '★ ' : ''}${r.name ?? 'Sans nom'}`}
-                subtitle={`${r.likely ? `Compteur (${r.reason}) · ` : 'Hors liste (mode diagnostic) · '}${r.id}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
+                subtitle={`${r.likely ? `${L('Compteur ({r})', { r: r.reason })} · ` : `${L('Hors liste (mode diagnostic)')} · `}${r.id}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
                 icon={r.likely ? 'radio-button-on-outline' : 'bluetooth-outline'}
                 onPress={() => void bleCounter.connectTo(r.id)}
               />
@@ -193,7 +195,7 @@ export default function BluetoothCounterScreen() {
                   <Body style={{ flex: 1 }}>{d.name ?? 'Appareil sans nom'}</Body>
                   <Badge label={isCur ? 'connecté' : s.autoTarget === d.name && s.auto === 'recherche' && d.auto !== false ? 'recherche…' : 'hors connexion'} tone={isCur ? 'success' : 'neutral'} />
                 </Row>
-                <Muted>{d.lastSeen ? `Vu le ${new Date(d.lastSeen).toLocaleString('fr-CH')}` : 'Jamais vu'}</Muted>
+                <Muted>{d.lastSeen ? L('Vu le {d}', { d: new Date(d.lastSeen).toLocaleString(uiLang() === 'ar' ? 'ar' : uiLang() === 'en' ? 'en-GB' : 'fr-CH') }) : L('Jamais vu')}</Muted>
                 <Toggle label="Reconnexion automatique" value={d.auto !== false} onChange={(v) => bleCounter.setDeviceAuto(d.id, v)} />
                 <Row wrap>
                   {!isCur ? <Button title="Connecter" icon="bluetooth-outline" small variant="ghost" onPress={() => void bleCounter.reconnect(d.id)} /> : null}
@@ -258,7 +260,7 @@ export default function BluetoothCounterScreen() {
           <>
             <Spacer h={8} />
             {s.learn.result.ok ? (
-              <Notice tone="success" title={`Correspondance enregistrée (confiance ${s.learn.result.confidence})`} text={`${s.learn.result.detail} Caractéristique ${shortUuid(s.learn.result.mapping.characteristic)}.`} icon="checkmark-circle-outline" />
+              <Notice tone="success" title={L('Correspondance enregistrée (confiance {c})', { c: s.learn.result.confidence })} text={`${s.learn.result.detail} ${L('Caractéristique {u}.', { u: shortUuid(s.learn.result.mapping.characteristic) })}`} icon="checkmark-circle-outline" />
             ) : (
               <Notice tone="warning" title="Apprentissage non concluant" text={s.learn.result.reason} />
             )}
@@ -289,15 +291,15 @@ export default function BluetoothCounterScreen() {
             }}
             onSubmitEditing={() => bleCounter.nativeKey('Enter')}
             submitBehavior="submit"
-            placeholder="Zone de capture : touchez ici, puis utilisez la télécommande"
+            placeholder={L("Zone de capture : touchez ici, puis utilisez la télécommande")}
             placeholderTextColor={t.muted}
             autoCorrect={false}
             autoCapitalize="none"
             showSoftInputOnFocus={false}
             style={{ borderWidth: 1, borderColor: t.border, borderRadius: 12, padding: 12, color: t.text, marginTop: 8 }}
           />
-          <Muted>Touches : {s.prefs.hidKeys.map(keyLabel).join(', ')}</Muted>
-          {s.lastKey ? <Muted>Dernière touche reçue : {keyLabel(s.lastKey)}</Muted> : null}
+          <Muted>Touches : {s.prefs.hidKeys.map((k) => L(keyLabel(k))).join(', ')}</Muted>
+          {s.lastKey ? <Muted>Dernière touche reçue : {L(keyLabel(s.lastKey))}</Muted> : null}
           <Spacer h={8} />
           <Row wrap>
             <Button title={s.capturingKey ? 'Appuyez sur la télécommande…' : 'Apprendre une touche'} icon="keypad-outline" small variant="ghost" onPress={() => bleCounter.captureKey()} />
@@ -312,8 +314,8 @@ export default function BluetoothCounterScreen() {
             directement : Zikru écoute donc leurs touches quand l’app est au premier plan.
           </Muted>
           <Toggle label="Compter les touches du clavier / de la télécommande" value={s.prefs.hidEnabled} onChange={(v) => bleCounter.setPrefs({ hidEnabled: v })} />
-          <Muted>Touches : {s.prefs.hidKeys.map(keyLabel).join(', ')}</Muted>
-          {s.lastKey ? <Muted>Dernière touche reçue : {keyLabel(s.lastKey)}</Muted> : null}
+          <Muted>Touches : {s.prefs.hidKeys.map((k) => L(keyLabel(k))).join(', ')}</Muted>
+          {s.lastKey ? <Muted>Dernière touche reçue : {L(keyLabel(s.lastKey))}</Muted> : null}
           <Spacer h={8} />
           <Row wrap>
             <Button title={s.capturingKey ? 'Appuyez sur la télécommande…' : 'Apprendre une touche'} icon="keypad-outline" small variant="ghost" onPress={() => bleCounter.captureKey()} />
@@ -353,7 +355,7 @@ export default function BluetoothCounterScreen() {
       <Spacer h={8} />
       <View>
         <Eyebrow>Test sans appareil</Eyebrow>
-        <Button title={`Simuler un appui (+1) · ${tr.simulation}`} icon="finger-print-outline" variant="ghost" small onPress={() => bleCounter.simulate()} />
+        <Button title={`${L('Simuler un appui (+1)')} · ${tr.simulation}`} icon="finger-print-outline" variant="ghost" small onPress={() => bleCounter.simulate()} />
       </View>
     </Screen>
   );

@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey, HABIT_PRESETS, streak, useGrowth, type Habit } from '@/lib/growth';
 import { Button, Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LText, LTitle, SectionLabel } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const TEAL = b.teal;
 function confirm(msg: string, ok: () => void) {
   if (Platform.OS === 'web') {
     if (globalThis.confirm?.(msg)) ok();
-  } else Alert.alert(msg, undefined, [{ text: 'Annuler', style: 'cancel' }, { text: 'Supprimer', style: 'destructive', onPress: ok }]);
+  } else Alert.alert(msg, undefined, [{ text: L('Annuler'), style: 'cancel' }, { text: L('Supprimer'), style: 'destructive', onPress: ok }]);
 }
 
 function Plant({ n }: { n: number }) {
@@ -41,7 +43,7 @@ export default function Habits() {
       <PatternBg color={TEAL} style={{ padding: 20 }}>
         <Text style={{ color: '#fff', fontSize: 24, fontWeight: '900' }}>Jardin des habitudes</Text>
         <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>
-          {g.habits.length ? `${done}/${g.habits.length} arrosées aujourd’hui` : 'Plantez de petites habitudes, attachées à un moment précis.'}
+          {g.habits.length ? L('{a}/{b} arrosées aujourd’hui', { a: done, b: g.habits.length }) : 'Plantez de petites habitudes, attachées à un moment précis.'}
         </Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
@@ -64,11 +66,11 @@ export default function Habits() {
                     🔥 {s} j · {h.done.length} fois au total
                   </Text>
                 </View>
-                <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: ok }} accessibilityLabel={`${h.title} fait aujourd’hui`} onPress={() => g.toggleHabit(h.id)} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: TEAL, backgroundColor: ok ? TEAL : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: ok }} accessibilityLabel={L('{x} fait aujourd’hui', { x: h.title })} onPress={() => g.toggleHabit(h.id)} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: TEAL, backgroundColor: ok ? TEAL : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {ok ? <Ionicons name="checkmark" size={24} color="#fff" /> : null}
                 </Pressable>
               </View>
-              <Pressable accessibilityRole="button" accessibilityLabel={`Supprimer ${h.title}`} onPress={() => confirm(`Supprimer « ${h.title} » ?`, () => g.removeHabit(h.id))} style={{ alignSelf: 'flex-end', marginTop: 4, padding: 4 }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L('Supprimer {x}', { x: h.title })} onPress={() => confirm(L('Supprimer « {x} » ?', { x: h.title }), () => g.removeHabit(h.id))} style={{ alignSelf: 'flex-end', marginTop: 4, padding: 4 }}>
                 <Text style={{ color: b.inkMuted, fontSize: 12 }}>Supprimer</Text>
               </Pressable>
             </LCard>
@@ -99,7 +101,7 @@ export default function Habits() {
             <View style={{ height: 16 }} />
             <SectionLabel color={TEAL}>IDÉES À PLANTER</SectionLabel>
             {presets.map((p) => (
-              <LCard key={p.title} onPress={() => g.addHabit(p)} label={`Ajouter ${p.title}`}>
+              <LCard key={p.title} onPress={() => g.addHabit(p)} label={L('Ajouter {x}', { x: L(p.title) })}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Ionicons name={p.icon as IconName} size={22} color={TEAL} />
                   <View style={{ flex: 1 }}>

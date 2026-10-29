@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { useData } from '@/lib/data';
@@ -11,6 +12,8 @@ import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
+import { L, useUiLang } from '@/lib/l10n';
+import { duaView } from '@/lib/i18n-content';
 
 const COLOR = '#2F7FD0';
 const norm = (s: string) =>
@@ -24,7 +27,7 @@ function Action({ icon, label, onPress, active, color = COLOR }: { icon: IconNam
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={L(label)}
       onPress={onPress}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: active ? color : b.line, backgroundColor: active ? color + '18' : b.paper, opacity: pressed ? 0.8 : 1 })}
     >
@@ -38,15 +41,16 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
   const [n, setN] = useState(0);
   const reps = d.reps ?? 0;
   const done = reps > 0 && n >= reps;
+  const v = duaView(d, useUiLang());
   return (
     <LCard>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: COLOR, fontWeight: '800', fontSize: 11, letterSpacing: 0.6 }}>{duaCatLabel(d.cat).toUpperCase()}</Text>
-          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16, marginTop: 2 }}>{d.title}</Text>
-          {d.when ? <LMuted style={{ fontSize: 12, marginTop: 2 }}>{d.when}</LMuted> : null}
+          <Text style={{ color: COLOR, fontWeight: '800', fontSize: 11, letterSpacing: 0.6 }}>{L(duaCatLabel(d.cat)).toUpperCase()}</Text>
+          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16, marginTop: 2 }}>{v.title}</Text>
+          {v.when ? <LMuted style={{ fontSize: 12, marginTop: 2 }}>{v.when}</LMuted> : null}
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} onPress={onFav} hitSlop={10} style={{ padding: 4 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={L(fav ? 'Retirer des favoris' : 'Ajouter aux favoris')} onPress={onFav} hitSlop={10} style={{ padding: 4 }}>
           <Ionicons name={fav ? 'star' : 'star-outline'} size={22} color={fav ? b.gold : b.inkMuted} />
         </Pressable>
       </View>
@@ -54,8 +58,9 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
         {d.ar}
       </Arabic>
       <Text style={{ color: b.brownSoft, fontStyle: 'italic', marginTop: 4, lineHeight: 20 }}>{d.tr}</Text>
-      <LText style={{ marginTop: 6 }}>{d.fr}</LText>
-      {d.note ? <LMuted style={{ marginTop: 6 }}>{d.note}</LMuted> : null}
+      {v.meaning ? <LText style={{ marginTop: 6 }}>{v.meaning}</LText> : null}
+      {v.toReview ? <Text style={{ alignSelf: 'flex-start', marginTop: 4, fontSize: 11, fontWeight: '700', color: b.brown, backgroundColor: b.gold + '22', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>{v.translation}</Text> : null}
+      {v.note ? <LMuted style={{ marginTop: 6 }}>{v.note}</LMuted> : null}
       <Text style={{ color: b.brown, fontWeight: '800', marginTop: 8, fontSize: 13 }}>{d.ref}</Text>
       <ProvenanceBadges set="duas" id={d.id} />
       <View style={{ marginTop: 8 }}>
@@ -68,7 +73,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
           <>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Compter : ${n} sur ${reps}`}
+              accessibilityLabel={L('Compter : {n} sur {r}', { n, r: reps })}
               onPress={() => setN((x) => (x >= reps ? 1 : x + 1))}
               onLongPress={() => setN(0)}
               style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: done ? b.green : COLOR, opacity: pressed ? 0.85 : 1 })}
@@ -82,7 +87,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
           </>
         ) : null}
       </View>
-      {reps > 0 ? <LMuted style={{ fontSize: 11, marginTop: 6 }}>{`× ${reps} — touchez pour compter, appui long pour remettre à zéro.`}</LMuted> : null}
+      {reps > 0 ? <LMuted style={{ fontSize: 11, marginTop: 6 }}>{L('× {r} — touchez pour compter, appui long pour remettre à zéro.', { r: reps })}</LMuted> : null}
     </LCard>
   );
 }
@@ -96,6 +101,7 @@ export default function Duas() {
   const [favs, setFavs] = usePersistentState<string[]>('duas_favs', []);
   const [copied, setCopied] = useState<string | null>(null);
   const [draft, setDraft] = useState<DraftItem | null>(null);
+  const lang = useUiLang();
 
   const list = useMemo(() => {
     const nq = norm(q.trim());
@@ -103,13 +109,15 @@ export default function Duas() {
       if (cat === 'favs' && !favs.includes(d.id)) return false;
       if (cat && cat !== 'favs' && d.cat !== cat) return false;
       if (!nq) return true;
-      return norm([d.title, d.fr, d.tr, d.ar, d.ref, d.when ?? '', duaCatLabel(d.cat)].join(' ')).includes(nq);
+      const v = duaView(d, lang);
+      return norm([d.title, d.fr, d.tr, d.ar, d.ref, d.when ?? '', duaCatLabel(d.cat), v.title, v.meaning ?? '', v.when ?? '', L(duaCatLabel(d.cat))].join(' ')).includes(nq);
     });
-  }, [q, cat, favs]);
+  }, [q, cat, favs, lang]);
 
   const toggleFav = (id: string) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
   const copy = async (d: Dua) => {
-    const text = `${d.ar}\n\n${d.tr}\n\n${d.fr}\n\n— ${d.ref}${d.reps ? ` (× ${d.reps})` : ''}`;
+    const v = duaView(d, lang);
+    const text = `${d.ar}\n\n${d.tr}${v.meaning ? `\n\n${v.meaning}` : ''}\n\n— ${d.ref}${d.reps ? ` (× ${d.reps})` : ''}`;
     try {
       await Clipboard.setStringAsync(text);
       setCopied(d.id);
@@ -130,23 +138,23 @@ export default function Duas() {
         <Ionicons name="hand-left" size={28} color="#fff" />
         <Text style={{ color: '#fff', fontSize: 26, writingDirection: 'rtl', marginTop: 4 }}>الأدعية النبوية</Text>
         <Text style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>Du‘as prophétiques</Text>
-        <Text style={{ color: 'rgba(255,255,255,0.85)', textAlign: 'center' }}>{`${DUAS_LIST.length} invocations · ${DUA_CATS.length} catégories · sources indiquées`}</Text>
+        <Text style={{ color: 'rgba(255,255,255,0.85)', textAlign: 'center' }}>{L('{n} invocations · {c} catégories · sources indiquées', { n: DUAS_LIST.length, c: DUA_CATS.length })}</Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: b.paper, borderRadius: 14, borderWidth: 1, borderColor: b.line, paddingHorizontal: 12, marginBottom: 10 }}>
           <Ionicons name="search" size={18} color={b.inkMuted} />
-          <TextInput value={q} onChangeText={setQ} placeholder="Rechercher (mot, moment, référence, arabe)…" placeholderTextColor={b.inkMuted} style={{ flex: 1, minHeight: 44, color: b.ink, marginLeft: 8 }} accessibilityLabel="Rechercher une invocation" autoCorrect={false} />
+          <TextInput value={q} onChangeText={setQ} placeholder={L("Rechercher (mot, moment, référence, arabe)…")} placeholderTextColor={b.inkMuted} style={{ flex: 1, minHeight: 44, color: b.ink, marginLeft: 8 }} accessibilityLabel={L("Rechercher une invocation")} autoCorrect={false} />
           {q ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="Effacer la recherche" onPress={() => setQ('')} hitSlop={8}>
+            <Pressable accessibilityRole="button" accessibilityLabel={L("Effacer la recherche")} onPress={() => setQ('')} hitSlop={8}>
               <Ionicons name="close-circle" size={18} color={b.inkMuted} />
             </Pressable>
           ) : null}
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ marginBottom: 12 }}>
           <Pill label="Tout" active={!cat} onPress={() => setCat(null)} color={COLOR} />
-          <Pill label={`★ Favoris${favs.length ? ` (${favs.length})` : ''}`} active={cat === 'favs'} onPress={() => setCat('favs')} color={b.gold} />
+          <Pill label={`★ ${L('Favoris')}${favs.length ? ` (${favs.length})` : ''}`} active={cat === 'favs'} onPress={() => setCat('favs')} color={b.gold} />
           {DUA_CATS.map((c) => (
-            <Pill key={c.id} label={c.label} active={cat === c.id} onPress={() => setCat(c.id)} color={COLOR} />
+            <Pill key={c.id} label={L(c.label)} active={cat === c.id} onPress={() => setCat(c.id)} color={COLOR} />
           ))}
         </ScrollView>
         <LMuted style={{ marginBottom: 8 }}>{`${list.length} invocation${list.length > 1 ? 's' : ''}`}</LMuted>

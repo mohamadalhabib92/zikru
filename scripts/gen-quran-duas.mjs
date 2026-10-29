@@ -1,5 +1,5 @@
 // Génère src/lib/quran-duas.ts : texte coranique exact (api.alquran.cloud, quran-simple-enhanced),
-// translittération (en.transliteration) et traduction Hamidullah (fr.hamidullah). Usage : node scripts/gen-quran-duas.mjs
+// translittération (en.transliteration), traduction Hamidullah (fr.hamidullah) et Pickthall (en.pickthall, domaine public). Usage : node scripts/gen-quran-duas.mjs
 import { writeFileSync } from 'node:fs';
 const L = [
   ['fatiha', '1:6-7', 'Guide-nous sur le droit chemin', 'Al-Fātiḥa, récitée à chaque rak‘a'],
@@ -57,21 +57,21 @@ const out = [];
 for (const [id, ref, title, who] of L) {
   const [s, r] = ref.split(':');
   const [a0, a1] = r.split('-').map(Number);
-  const ar = [], tr = [], fr = [];
+  const ar = [], tr = [], fr = [], en = [];
   for (let a = a0; a <= (a1 || a0); a++) {
     let j;
     for (let k = 0; k < 8; k++) {
-      j = await (await fetch(`https://api.alquran.cloud/v1/ayah/${s}:${a}/editions/quran-simple-enhanced,en.transliteration,fr.hamidullah`)).json().catch(() => ({}));
+      j = await (await fetch(`https://api.alquran.cloud/v1/ayah/${s}:${a}/editions/quran-simple-enhanced,en.transliteration,fr.hamidullah,en.pickthall`)).json().catch(() => ({}));
       if (Array.isArray(j.data)) break;
       await new Promise((r) => setTimeout(r, 1500 * (k + 1)));
     }
     await new Promise((r) => setTimeout(r, 250));
-    const [x, y, z] = j.data;
-    ar.push(x.text.replace(/^\ufeff/, '').trim()); tr.push(y.text.trim()); fr.push(z.text.trim());
+    const [x, y, z, w] = j.data;
+    ar.push(x.text.replace(/^\ufeff/, '').trim()); tr.push(y.text.trim()); fr.push(z.text.trim()); en.push(w.text.trim());
   }
-  out.push({ id: 'q-' + id, ref, surah: Number(s), title, who: who || undefined, ar: ar.join(' ۝ '), tr: tr.join(' · '), fr: fr.join(' ') });
+  out.push({ id: 'q-' + id, ref, surah: Number(s), title, who: who || undefined, ar: ar.join(' ۝ '), tr: tr.join(' · '), fr: fr.join(' '), en: en.join(' ') });
   process.stdout.write('.');
 }
-const head = `/** Du‘as coraniques — GÉNÉRÉ par scripts/gen-quran-duas.mjs depuis api.alquran.cloud (ne pas éditer à la main).\n * Texte : quran-simple-enhanced · translittération : en.transliteration · traduction : Muhammad Hamidullah (fr.hamidullah). */\n`;
-writeFileSync(new URL('../src/lib/quran-duas.ts', import.meta.url), head + `export type QuranDua = { id: string; ref: string; surah: number; title: string; who?: string; ar: string; tr: string; fr: string };\nexport const QURAN_DUAS: QuranDua[] = ${JSON.stringify(out, null, 1)};\n`);
+const head = `/** Du‘as coraniques — GÉNÉRÉ par scripts/gen-quran-duas.mjs depuis api.alquran.cloud (ne pas éditer à la main).\n * Texte : quran-simple-enhanced · translittération : en.transliteration · traduction : Muhammad Hamidullah (fr.hamidullah) · anglais : Marmaduke Pickthall (en.pickthall, 1930, domaine public). */\n`;
+writeFileSync(new URL('../src/lib/quran-duas.ts', import.meta.url), head + `export type QuranDua = { id: string; ref: string; surah: number; title: string; who?: string; ar: string; tr: string; fr: string; en: string };\nexport const QURAN_DUAS: QuranDua[] = ${JSON.stringify(out, null, 1)};\n`);
 console.log('\n', out.length, 'du‘as');

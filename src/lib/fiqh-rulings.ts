@@ -423,7 +423,7 @@ export const FIQH_GAPS: { school: School; topic: string; what: string }[] = [
   { school: 'maliki', topic: 'sahw', what: 'ar-Risāla p. 37 : le texte Shamela est lacunaire au début du passage sur le sahw — fragment cité, à vérifier sur l’imprimé.' },
   { school: 'hanafi', topic: 'général', what: 'Marāqī al-Falāḥ et Mukhtaṣar al-Qudūrī non utilisés comme source principale (Nūr al-Īḍāḥ suffit pour le périmètre) ; al-Qudūrī disponible pour recoupement.' },
   { school: 'hanbali', topic: 'général', what: 'Zād al-Mustaqni‘ et Akhṣar al-Mukhtaṣarāt non utilisés (‘Umdat al-Fiqh suffit pour le périmètre).' },
-  { school: 'maliki', topic: 'tout', what: 'Traductions anglaise et arabe des résumés : non rédigées (les extraits arabes des sources sont affichés).' },
+  { school: 'maliki', topic: 'tout', what: 'Résumés anglais et arabes : traduction Zikru, à relire (les extraits arabes des sources restent affichés tels quels).' },
 ];
 
 export function rulingsFor(school: School, topic?: Topic): FiqhRuling[] {

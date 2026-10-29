@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useUthmani } from '@/components/quran/data';
 import { gIndex } from '@/lib/quran-nav';
 import { BOOKMARK_COLORS, HIGHLIGHTS, marks, removeBookmark } from '@/lib/quran-store';
@@ -9,6 +10,7 @@ import { SURAHS } from '@/lib/surahs';
 import { Container } from '@/ui/ds';
 import { Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 type Row = { key: string; s: number; a: number; color: string; title: string; body?: string; at: number; onRemove?: () => void };
 
@@ -32,9 +34,9 @@ export default function Bookmarks() {
       <Container max={820} style={{ padding: 16, gap: 12 }}>
         <Segmented
           options={[
-            { label: `Marque-pages (${m.bookmarks.length})`, value: 'bm' },
-            { label: `Notes (${Object.keys(m.notes).length})`, value: 'notes' },
-            { label: `Surlignés (${Object.keys(m.hl).length})`, value: 'hl' },
+            { label: L('Marque-pages ({n})', { n: m.bookmarks.length }), value: 'bm' },
+            { label: L('Notes ({n})', { n: Object.keys(m.notes).length }), value: 'notes' },
+            { label: L('Surlignés ({n})', { n: Object.keys(m.hl).length }), value: 'hl' },
           ]}
           value={tab}
           onChange={setTab}
@@ -44,7 +46,7 @@ export default function Bookmarks() {
           <Pressable
             key={r.key}
             accessibilityRole="button"
-            accessibilityLabel={`${r.title}. Ouvrir le verset`}
+            accessibilityLabel={L('{x}. Ouvrir le verset', { x: r.title })}
             onPress={() => router.push({ pathname: '/quran/[n]', params: { n: String(r.s), a: String(r.a) } })}
             style={({ pressed }) => ({ backgroundColor: b.paper, borderRadius: 18, borderWidth: 1, borderColor: b.line, borderLeftWidth: 5, borderLeftColor: r.color, padding: 14, gap: 6, opacity: pressed ? 0.9 : 1 })}
           >
@@ -55,7 +57,7 @@ export default function Bookmarks() {
               </Text>
               {tab === 'bm' ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{`${r.s}:${r.a}`}</Text> : null}
               {r.onRemove ? (
-                <Pressable accessibilityRole="button" accessibilityLabel="Supprimer le marque-page" hitSlop={10} onPress={r.onRemove} style={{ padding: 4 }}>
+                <Pressable accessibilityRole="button" accessibilityLabel={L("Supprimer le marque-page")} hitSlop={10} onPress={r.onRemove} style={{ padding: 4 }}>
                   <Ionicons name="trash-outline" size={18} color={b.inkMuted} />
                 </Pressable>
               ) : null}
@@ -68,7 +70,7 @@ export default function Bookmarks() {
             {r.body ? <Text style={{ color: b.inkMuted, fontSize: 14 }}>{r.body}</Text> : null}
           </Pressable>
         ))}
-        <Text style={{ color: b.inkMuted, fontSize: 12, marginTop: 6 }}>{`Couleurs : ${BOOKMARK_COLORS.map((c) => c.label).join(', ')}. Tout est enregistré sur cet appareil.`}</Text>
+        <Text style={{ color: b.inkMuted, fontSize: 12, marginTop: 6 }}>{L('Couleurs : {c}. Tout est enregistré sur cet appareil.', { c: BOOKMARK_COLORS.map((c) => L(c.label)).join(', ') })}</Text>
       </Container>
     </ScrollView>
   );

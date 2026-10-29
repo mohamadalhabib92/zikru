@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { Hub, type HubSection } from '@/components/Hub';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
@@ -7,6 +8,7 @@ import { SURAHS } from '@/lib/surahs';
 import { Ionicons } from '@/ui/kit';
 import { Arabic } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /** Onglet « Lire » : Coran, invocations, Noms, savoir. */
 export default function Read() {
@@ -41,7 +43,7 @@ export default function Read() {
   const top = surah ? (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${tr.continue_where} : ${surah[2]}, verset ${last!.ayah}`}
+      accessibilityLabel={L('{c} : {s}, verset {a}', { c: tr.continue_where, s: surah[2], a: last!.ayah })}
       onPress={() => router.push(`/quran/${surah[0]}`)}
       style={({ pressed }) => ({ marginTop: 14, borderRadius: 20, backgroundColor: b.hero, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? 0.92 : 1 })}
     >

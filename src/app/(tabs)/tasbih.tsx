@@ -1,7 +1,8 @@
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, Pressable, Text, View } from 'react-native';
+import { Animated, Platform, Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
 import { useBleCounter } from '@/lib/ble/manager';
@@ -10,6 +11,7 @@ import { Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer 
 import { ProgressRing, tapHaptic, useLayout } from '@/ui/ds';
 import { Arabic } from '@/ui/light';
 import { brand as b, theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 export default function TasbihScreen() {
   const { t: tr } = useSettings();
@@ -110,14 +112,14 @@ export default function TasbihScreen() {
               </Row>
               <Muted>
                 {new Date(s.at).toLocaleString('fr-CH')}
-                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? 'compteur Bluetooth' : `mixte (${s.deviceCount ?? 0} via compteur)`}` : ''}
+                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? 'compteur Bluetooth' : L('mixte ({n} via compteur)', { n: s.deviceCount ?? 0 })}` : ''}
               </Muted>
             </Card>
           );
         })
       )}
       <Spacer />
-      <Button title={bleOn ? `${tr.ring} : connecté` : tr.ring} variant="ghost" icon="bluetooth-outline" onPress={() => router.push('/ring')} />
+      <Button title={bleOn ? `${tr.ring} : ${L('connecté')}` : tr.ring} variant="ghost" icon="bluetooth-outline" onPress={() => router.push('/ring')} />
     </Screen>
   );
 }

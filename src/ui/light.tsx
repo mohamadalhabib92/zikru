@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
-import { Pressable, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Pressable, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Text } from '@/ui/Text';
 import { brand as b, elevation, fonts } from './theme';
+import { L } from "@/lib/l10n";
 
 /** Composants « cartes claires » de la palette Zikru originale. */
 export function LCard({ children, style, onPress, label }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; label?: string }) {
   const base: ViewStyle = { backgroundColor: b.paper, borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: b.line, ...elevation(1) };
   if (onPress)
     return (
-      <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [base, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, style]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={typeof label === "string" ? L(label) : label} onPress={onPress} style={({ pressed }) => [base, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, style]}>
         {children}
       </Pressable>
     );

@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import type { FiqhRuling } from '@/lib/fiqh-rulings';
 import { reportUrl } from '@/lib/provenance';
 import { REVIEW_LABEL, reviewFor } from '@/lib/reviews';
 import { Badge, Ionicons } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
 import { APP_VERSION } from './Provenance';
+import { FIQH_EN } from '@/lib/i18n-content/fiqh';
+import { L, useUiLang } from '@/lib/l10n';
 
 export const rulingUid = (r: Pick<FiqhRuling, 'id'>) => `fiqh:${r.id}`;
 export function rulingStatus(r: FiqhRuling) {
@@ -26,6 +29,9 @@ export function RulingSource({ r }: { r: FiqhRuling }) {
   const [open, setOpen] = useState(false);
   const st = rulingStatus(r);
   const uid = rulingUid(r);
+  const lang = useUiLang();
+  // Remarque du relecteur : anglais si disponible ; en arabe, la remarque française reste (destinée au relecteur).
+  const note = lang === 'en' ? (FIQH_EN[r.id]?.note ?? r.note) : r.note;
   return (
     <View testID={`ruling-${r.id}`} style={{ marginTop: 6 }}>
       <Text style={{ color: b.inkMuted, fontSize: 12, lineHeight: 17 }}>
@@ -50,7 +56,7 @@ export function RulingSource({ r }: { r: FiqhRuling }) {
             </Text>
           ))}
           {r.evidence?.length ? <Text style={{ color: b.inkMuted, fontSize: 12, marginTop: 4 }}>Preuves : {r.evidence.join(' ; ')}</Text> : null}
-          {r.note ? <Text style={{ color: b.ink, fontSize: 12, marginTop: 4 }}>Remarque : {r.note}</Text> : null}
+          {note ? <Text style={{ color: b.ink, fontSize: 12, marginTop: 4 }}>{L('Remarque : {n}', { n: note })}</Text> : null}
           {r.source.url ? <Link label="Ouvrir la page de l’édition" url={r.source.url} icon="open-outline" /> : null}
           <Link label="Signaler une erreur" url={reportUrl(uid, `${r.title.fr} (${r.school})`, APP_VERSION)} icon="mail-outline" />
         </View>

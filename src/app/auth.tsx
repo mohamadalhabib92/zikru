@@ -1,12 +1,14 @@
 import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useAuth } from '@/lib/community/auth';
 import { useConsent } from '@/lib/consent';
 import { privacyText } from '@/lib/privacy-text';
 import { useSettings } from '@/lib/settings';
 import { brand as b } from '@/ui/theme';
 import { Button, Card, Field, H1, Ionicons, Muted, Notice, Screen, Spacer } from '@/ui/kit';
+import { L } from '@/lib/l10n';
 
 /** Connexion par e-mail : code à usage unique (ou lien magique dans le même e-mail). */
 export default function AuthScreen() {
@@ -45,7 +47,7 @@ export default function AuthScreen() {
   };
   return (
     <Screen>
-      <Stack.Screen options={{ title: 'Connexion' }} />
+      <Stack.Screen options={{ title: L("Connexion") }} />
       <H1>Connexion</H1>
       <Muted>Pour votre famille et vos cercles. Sans mot de passe : nous vous envoyons un code par e-mail.</Muted>
       <Spacer />
@@ -112,7 +114,7 @@ export default function AuthScreen() {
               }}
             />
             <Spacer h={8} />
-            <Button variant="ghost" title={cool > 0 ? `Renvoyer le code (${cool} s)` : 'Renvoyer le code'} disabled={cool > 0} onPress={send} />
+            <Button variant="ghost" title={cool > 0 ? L('Renvoyer le code ({n} s)', { n: cool }) : 'Renvoyer le code'} disabled={cool > 0} onPress={send} />
           </>
         )}
         {err ? <Muted style={{ color: '#E57373', marginTop: 8 }}>{err}</Muted> : null}

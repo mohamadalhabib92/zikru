@@ -36,7 +36,7 @@ export default function Sources() {
       <H2>Coran</H2>
       <Card>
         <Body>Texte arabe embarqué pour la lecture et la recherche hors-ligne : Tanzil Quran Text (Simple, version 1.1), © 2007-2026 Tanzil Project, licence Creative Commons Attribution 3.0, reproduit sans modification. Source et mises à jour : tanzil.net.</Body>
-        <Muted>Lecture en ligne et traductions (Muhammad Hamidullah, Bubenheim & Elyas, Saheeh International) : api.alquran.cloud. La traduction n’est pas incluse dans l’app : elle est téléchargée à votre demande puis conservée sur l’appareil.</Muted>
+        <Muted>Lecture en ligne et traductions (Muhammad Hamidullah, Bubenheim & Elyas, Marmaduke Pickthall — domaine public) : api.alquran.cloud. La traduction n’est pas incluse dans l’app : elle est téléchargée à votre demande puis conservée sur l’appareil.</Muted>
         <Muted>La recherche ignore les voyelles et signes (tashkīl), le tatwīl et les variantes de alif, hamza, yā’ et tā’ marbūṭa.</Muted>
         <Body>Lecture en écriture uthmanie (riwaya Hafs ‘an ‘Asim) : Tanzil Quran Text (Uthmani, version 1.1), © Tanzil Project, CC BY 3.0, reproduit sans modification. Découpage en juz’, hizb, quarts, pages du mushaf de Médine (604) et sajdas : métadonnées Tanzil (CC BY 3.0).</Body>
         <Muted>Police : Amiri Quran (Khaled Hosny), licence SIL Open Font License 1.1.</Muted>

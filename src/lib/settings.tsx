@@ -2,6 +2,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { DICTS, type Dict, type Lang } from './i18n';
 import { DEFAULT_PLACE, type MethodKey, type Place } from './prayer';
 import { usePersistentState } from './storage';
+import { setUiLang, UiLangContext } from './l10n';
 import { DEFAULT_NOTIF, type NotifPrefs } from './notify-plan';
 
 export type Settings = {
@@ -20,8 +21,10 @@ export type Settings = {
   reminders: boolean;
   /** Détail des rappels (prières, avant l’adhan, vendredi, adhkar, wird). */
   notif: NotifPrefs;
+  /** Commencer chaque composition « Mes zikrs » par Al-Fatiha (1×). Actif par défaut. */
+  fatihaFirst?: boolean;
 };
-const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: 'MuslimWorldLeague', madhab: 'shafi', hijriOffset: 0, onboarded: false, appearance: 'system', reminders: false, notif: DEFAULT_NOTIF };
+const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: 'MuslimWorldLeague', madhab: 'shafi', hijriOffset: 0, onboarded: false, appearance: 'system', reminders: false, notif: DEFAULT_NOTIF, fatihaFirst: true };
 
 type Ctx = { s: Settings; set: (p: Partial<Settings>) => void; t: Dict; ready: boolean };
 const C = createContext<Ctx | null>(null);
@@ -29,7 +32,12 @@ const C = createContext<Ctx | null>(null);
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [s, setS, ready] = usePersistentState<Settings>('settings', DEFAULTS);
   const merged = { ...DEFAULTS, ...s, notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers } } };
-  return <C.Provider value={{ s: merged, set: (p) => setS((prev) => ({ ...DEFAULTS, ...prev, ...p })), t: DICTS[merged.lang] ?? DICTS.fr, ready }}>{children}</C.Provider>;
+  setUiLang(merged.lang);
+  return (
+    <C.Provider value={{ s: merged, set: (p) => setS((prev) => ({ ...DEFAULTS, ...prev, ...p })), t: DICTS[merged.lang] ?? DICTS.fr, ready }}>
+      <UiLangContext.Provider value={merged.lang}>{children}</UiLangContext.Provider>
+    </C.Provider>
+  );
 }
 export function useSettings() {
   const v = useContext(C);

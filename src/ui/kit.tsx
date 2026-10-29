@@ -1,20 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps, ReactNode } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type StyleProp,
-  type TextInputProps,
-  type TextStyle,
-  type ViewStyle,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { currentScheme, elevation, theme as t, type Scheme } from './theme';
+import { L } from "@/lib/l10n";
 
 const S = () => getStyles();
 
@@ -74,7 +64,7 @@ export function Card({ children, style, onPress, accessibilityLabel }: { childre
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
+        accessibilityLabel={typeof accessibilityLabel === "string" ? L(accessibilityLabel) : accessibilityLabel}
         style={({ pressed }) => [S().card, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, style]}
       >
         {children}
@@ -122,7 +112,7 @@ export function Button({
     <Pressable
       onPress={off ? undefined : onPress}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityLabel={L(accessibilityLabel ?? title)}
       accessibilityState={{ disabled: !!off, busy: !!loading }}
       hitSlop={6}
       style={({ pressed }) => [
@@ -152,10 +142,12 @@ export function IconButton({ icon, onPress, label, color = t.text, size = 22 }: 
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [S().iconBtn, pressed && { backgroundColor: t.surfaceAlt }]}
+      accessibilityLabel={typeof label === "string" ? L(label) : label}
+      hitSlop={4}
+      // La boîte suit la taille de l’icône (≥ 44 pt) : une icône de 64 pt dans une boîte fixe de 44 pt était rognée sur iOS.
+      style={({ pressed }) => [S().iconBtn, size > 36 && { width: size + 8, height: size + 8, borderRadius: (size + 8) / 2 }, pressed && { backgroundColor: t.surfaceAlt }]}
     >
-      <Ionicons name={icon} size={size} color={color} />
+      <Ionicons name={icon} size={size} color={color} allowFontScaling={false} style={{ width: size, height: size, lineHeight: size, textAlign: 'center' }} />
     </Pressable>
   );
 }
@@ -200,7 +192,7 @@ export function Field({ label, hint, error, style, ...props }: TextInputProps & 
       <Text style={S().label}>{label}</Text>
       <TextInput
         placeholderTextColor={t.muted}
-        accessibilityLabel={label}
+        accessibilityLabel={typeof label === "string" ? L(label) : label}
         style={[S().input, props.multiline && { minHeight: 88, textAlignVertical: 'top', paddingTop: 12 }, error ? { borderColor: t.danger } : null, style]}
         {...props}
       />
@@ -240,7 +232,7 @@ export function Toggle({ label, value, onChange, hint }: { label: string; value:
       onPress={() => onChange(!value)}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
-      accessibilityLabel={label}
+      accessibilityLabel={typeof label === "string" ? L(label) : label}
       style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, gap: 12 }}
     >
       <View style={{ flex: 1 }}>

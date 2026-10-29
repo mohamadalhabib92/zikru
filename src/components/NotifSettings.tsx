@@ -4,6 +4,7 @@ import { BEFORE_OPTIONS, FARD_KEYS, type NotifPrefs } from '@/lib/notify-plan';
 import { reminderPermission, remindersNative, remindersSupported, requestReminderPermission, scheduledCount, sendTestNotification } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
 import { Button, Card, Chip, Divider, H2, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
+import { L } from '@/lib/l10n';
 
 /** Réglages des rappels : interrupteur général, prière par prière, avant l’adhan, vendredi, adhkar, wird. */
 export function NotifSettings() {
@@ -50,7 +51,7 @@ export function NotifSettings() {
             <Spacer h={10} />
             <Segmented
               label={tr.notif_before}
-              options={BEFORE_OPTIONS.map((m) => ({ label: m === 0 ? 'Off' : `${m} min`, value: m }))}
+              options={BEFORE_OPTIONS.map((m) => ({ label: m === 0 ? L('Désactivé') : L('{n} min', { n: m }), value: m }))}
               value={BEFORE_OPTIONS.includes(n.before) ? n.before : 0}
               onChange={(v) => patch({ before: v })}
             />

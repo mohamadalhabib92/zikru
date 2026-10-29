@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { APP_VERSION } from '@/components/zikru/Provenance';
 import type { ReviewStatus } from '@/lib/provenance-types';
 import { REVIEW_LABEL } from '@/lib/reviews';
 import { reviewCsv, reviewMarkdown, reviewRows, type ReviewRow } from '@/lib/review-sheet';
 import { Badge, Button, Card, Eyebrow, H1, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 type Kind = 'all' | ReviewRow['kind'];
 const STATUSES: ReviewStatus[] = ['a_valider', 'source_a_completer', 'a_corriger', 'valide'];
@@ -75,7 +77,7 @@ export default function Validation() {
           {r.note ? <Text style={{ color: t.text, fontSize: 12, marginTop: 2, lineHeight: 17 }}>Remarque : {r.note}</Text> : null}
         </Card>
       ))}
-      {shown.length > limit ? <Button title={`Afficher plus (${shown.length - limit} restants)`} variant="secondary" onPress={() => setLimit(limit + 40)} /> : null}
+      {shown.length > limit ? <Button title={L('Afficher plus ({n} restants)', { n: shown.length - limit })} variant="secondary" onPress={() => setLimit(limit + 40)} /> : null}
       <View style={{ height: 20 }} />
     </Screen>
   );

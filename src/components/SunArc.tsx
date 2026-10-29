@@ -1,7 +1,9 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/ui/Text';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { hhmm } from '@/lib/prayer';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /** Arc solaire : position du soleil entre le lever (shuruq) et le coucher (maghrib). */
 export function SunArc({ sunrise, sunset, now }: { sunrise: Date; sunset: Date; now: Date }) {
@@ -21,7 +23,7 @@ export function SunArc({ sunrise, sunset, now }: { sunrise: Date; sunset: Date; 
   const arc = `M ${pad} ${cy} A ${r} ${r * 0.9} 0 0 1 ${W - pad} ${cy}`;
   const done = `M ${pad} ${cy} A ${r} ${r * 0.9} 0 0 1 ${sx} ${sy}`;
   return (
-    <View style={{ alignItems: 'center' }} accessible accessibilityLabel={`Soleil : lever ${hhmm(sunrise)}, coucher ${hhmm(sunset)}`}>
+    <View style={{ alignItems: 'center' }} accessible accessibilityLabel={L('Soleil : lever {a}, coucher {b}', { a: hhmm(sunrise), b: hhmm(sunset) })}>
       <Svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
         <Line x1={0} y1={cy} x2={W} y2={cy} stroke={t.border} strokeWidth={1} />
         <Path d={arc} stroke={t.border} strokeWidth={3} strokeDasharray="6 6" fill="none" />
@@ -30,7 +32,7 @@ export function SunArc({ sunrise, sunset, now }: { sunrise: Date; sunset: Date; 
       </Svg>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingHorizontal: 8 }}>
         <Text style={{ color: t.muted }}>☀︎ {hhmm(sunrise)}</Text>
-        <Text style={{ color: t.muted }}>{day ? `${Math.round(p * 100)} % du jour` : 'Nuit'}</Text>
+        <Text style={{ color: t.muted }}>{day ? L('{p} % du jour', { p: Math.round(p * 100) }) : 'Nuit'}</Text>
         <Text style={{ color: t.muted }}>☾ {hhmm(sunset)}</Text>
       </View>
     </View>

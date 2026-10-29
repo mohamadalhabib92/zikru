@@ -28,6 +28,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
+      - name: i18n — clés en/ar manquantes par rapport au français (échoue si manque)
+        run: node scripts/test-i18n.mjs && node scripts/test-i18n-content.mjs
       - run: npm run build:web
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

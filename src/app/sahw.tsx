@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { APP_VERSION } from '@/components/zikru/Provenance';
 import { SCHOOLS, SCHOOL_LABEL, citation, type FiqhSource } from '@/lib/fiqh-rulings';
 import { useMadhab } from '@/lib/madhab';
 import { reportUrl } from '@/lib/provenance';
 import { REVIEW_LABEL, reviewFor } from '@/lib/reviews';
+import { SAHW_CASES_AR, SAHW_CASES_EN, SAHW_HOW_AR, SAHW_HOW_EN } from '@/lib/i18n-content/sahw';
+import { schoolLabel } from '@/lib/i18n-content';
+import { L, useUiLang } from '@/lib/l10n';
 import { CASES, HOW, REFERENCE, SAHW_SOURCES, sahwUid, type SahwAnswer, type When } from '@/lib/sahw';
 import { useSettings } from '@/lib/settings';
 import { Badge, Card, Eyebrow, H1, H2, Ionicons, Muted, Notice, Row, Screen, Segmented, Spacer } from '@/ui/kit';
@@ -28,7 +32,12 @@ function SourceLine({ s, label = 'Source' }: { s: FiqhSource; label?: string }) 
   );
 }
 
-function Answer({ a, uid, q }: { a: SahwAnswer; uid: string; q: string }) {
+function Answer({ a, uid, q, caseId, madhab }: { a: SahwAnswer; uid: string; q: string; caseId: string; madhab: keyof typeof SAHW_HOW_EN }) {
+  const lang = useUiLang();
+  const isAr = lang === 'ar';
+  const en = lang === 'en' ? SAHW_CASES_EN[caseId]?.by[madhab] : undefined;
+  const text = en?.text ?? a.text;
+  const note = en ? en.note : a.note;
   const [ar, setAr] = useState(false);
   const w = WHEN[a.when];
   const st = reviewFor(uid).status;
@@ -38,14 +47,21 @@ function Answer({ a, uid, q }: { a: SahwAnswer; uid: string; q: string }) {
         <Badge label={w.label} tone={w.tone} />
         <Badge label={REVIEW_LABEL[st]} tone={st === 'valide' ? 'success' : 'warning'} />
       </Row>
-      <Text style={{ color: t.text, marginTop: 8, lineHeight: 22 }}>{a.text}</Text>
-      {a.note ? <Text style={{ color: t.muted, marginTop: 6, fontSize: 12, lineHeight: 17 }}>Remarque : {a.note}</Text> : null}
+      {isAr ? (
+        // Arabe : l’extrait classique cité, tel quel (pas de paraphrase inventée).
+        <Text style={{ color: t.text, marginTop: 8, fontSize: 17, lineHeight: 30, writingDirection: 'rtl', textAlign: 'right' }}>{a.textAr}</Text>
+      ) : (
+        <Text style={{ color: t.text, marginTop: 8, lineHeight: 22 }}>{text}</Text>
+      )}
+      {en ? <Text style={{ alignSelf: 'flex-start', marginTop: 4, fontSize: 11, fontWeight: '700', color: t.muted }}>{L('Traduction Zikru — à relire')}</Text> : null}
+      {note && !isAr ? <Text style={{ color: t.muted, marginTop: 6, fontSize: 12, lineHeight: 17 }}>{L('Remarque : {n}', { n: note })}</Text> : null}
       <SourceLine s={a.source} />
       {a.also?.map((s, i) => <SourceLine key={i} s={s} label="Voir aussi" />)}
-      <Pressable accessibilityRole="button" onPress={() => setAr(!ar)} style={{ paddingVertical: 4 }}>
+      {isAr ? <Text style={{ color: t.muted, fontSize: 12 }}>{citation(a.source)}</Text> : null}
+      {isAr ? null : <Pressable accessibilityRole="button" onPress={() => setAr(!ar)} style={{ paddingVertical: 4 }}>
         <Text style={{ color: t.primary, fontWeight: '700', fontSize: 12 }}>{ar ? 'Masquer le texte arabe' : 'Voir le texte arabe et l’édition'}</Text>
-      </Pressable>
-      {ar ? (
+      </Pressable>}
+      {ar && !isAr ? (
         <View>
           <Text style={{ color: t.text, fontSize: 17, lineHeight: 30, writingDirection: 'rtl', textAlign: 'right' }}>{a.textAr}</Text>
           <Text style={{ color: t.muted, fontSize: 12 }}>{citation(a.source)}</Text>
@@ -63,6 +79,10 @@ export default function Sahw() {
   const [madhab, setMadhab] = useMadhab();
   const [tab, setTab] = useState<'help' | 'how' | 'ref'>('help');
   const [sel, setSel] = useState<string | null>(null);
+  const lang = useUiLang();
+  const qOf = (c: { id: string; q: string }) => (lang === 'en' ? SAHW_CASES_EN[c.id]?.q : lang === 'ar' ? SAHW_CASES_AR[c.id] : undefined) ?? c.q;
+  const gapOf = (c: (typeof CASES)[number]) => lang === 'ar' ? undefined : ((lang === 'en' ? SAHW_CASES_EN[c.id]?.gap?.[madhab] : undefined) ?? c.gap?.[madhab]);
+  const how = lang === 'en' ? SAHW_HOW_EN[madhab] : lang === 'ar' ? { title: SAHW_HOW_AR[madhab], steps: [] as string[] } : HOW[madhab];
   const cases = CASES.filter((c) => c.by[madhab]);
   const gaps = CASES.filter((c) => !c.by[madhab]);
   return (
@@ -70,7 +90,7 @@ export default function Sahw() {
       <Eyebrow>Sujud al-Sahw</Eyebrow>
       <H1>{tr.sahw}</H1>
       <Spacer />
-      <Segmented label="École (réglage partagé avec le Fiqh et les Réglages)" options={SCHOOLS.map((s) => ({ label: SCHOOL_LABEL[s].fr, value: s }))} value={madhab} onChange={setMadhab} />
+      <Segmented label="École (réglage partagé avec le Fiqh et les Réglages)" options={SCHOOLS.map((s) => ({ label: schoolLabel(SCHOOL_LABEL[s], lang), value: s }))} value={madhab} onChange={setMadhab} />
       <Segmented options={[{ label: 'Que s’est-il passé ?', value: 'help' }, { label: 'Comment', value: 'how' }, { label: 'Référence', value: 'ref' }]} value={tab} onChange={setTab} />
 
       {tab === 'help' ? (
@@ -83,10 +103,10 @@ export default function Sahw() {
               <Pressable key={c.id} accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setSel(open ? null : c.id)}>
                 <Card style={open ? { borderColor: t.primary } : undefined}>
                   <Row style={{ justifyContent: 'space-between' }}>
-                    <Text style={{ color: t.text, fontWeight: '700', flex: 1, fontSize: 15 }}>{c.q}</Text>
+                    <Text style={{ color: t.text, fontWeight: '700', flex: 1, fontSize: 15 }}>{qOf(c)}</Text>
                     <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={t.muted} />
                   </Row>
-                  {open ? <Answer a={c.by[madhab]!} uid={sahwUid(c.id, madhab)} q={`${c.q} (${madhab})`} /> : null}
+                  {open ? <Answer a={c.by[madhab]!} uid={sahwUid(c.id, madhab)} q={`${c.q} (${madhab})`} caseId={c.id} madhab={madhab} /> : null}
                 </Card>
               </Pressable>
             );
@@ -96,7 +116,7 @@ export default function Sahw() {
               <H2>Cas non affichés pour cette école</H2>
               {gaps.map((c) => (
                 <Muted key={c.id} style={{ marginTop: 4 }}>
-                  • {c.q} — {c.gap?.[madhab] ?? 'non couvert par la source citée.'}
+                  • {qOf(c)} — {gapOf(c) ?? L('non couvert par la source citée.')}
                 </Muted>
               ))}
             </Card>
@@ -106,8 +126,8 @@ export default function Sahw() {
 
       {tab === 'how' ? (
         <Card>
-          <H2>{HOW[madhab].title}</H2>
-          {HOW[madhab].steps.map((x, i) => (
+          <H2>{how.title}</H2>
+          {how.steps.map((x, i) => (
             <Row key={i} gap={10} style={{ alignItems: 'flex-start', marginTop: 8 }}>
               <Text style={{ color: t.primary, fontWeight: '800' }}>{i + 1}.</Text>
               <Text style={{ color: t.text, flex: 1, lineHeight: 22 }}>{x}</Text>

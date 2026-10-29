@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, Text, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { LBtn, fmt, shareZikr } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { compositionTotals, dayKey, exportText, type Zikr } from '@/lib/zikr';
@@ -8,15 +9,16 @@ import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 function confirm(msg: string, ok: () => void) {
   if (Platform.OS === 'web') {
     if ((globalThis as { confirm?: (m: string) => boolean }).confirm?.(msg) ?? true) ok();
     return;
   }
-  Alert.alert('Confirmer', msg, [
-    { text: 'Annuler', style: 'cancel' },
-    { text: 'Supprimer', style: 'destructive', onPress: ok },
+  Alert.alert(L('Confirmer'), msg, [
+    { text: L('Annuler'), style: 'cancel' },
+    { text: L('Supprimer'), style: 'destructive', onPress: ok },
   ]);
 }
 
@@ -107,8 +109,8 @@ export default function Zikrs() {
               >
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: b.ink, fontWeight: '800', fontSize: 17 }}>{z.name}</Text>
-                  {z.niyya ? <LMuted style={{ fontStyle: 'italic', marginTop: 2 }}>{`Intention : ${z.niyya}`}</LMuted> : null}
-                  <LMuted style={{ fontSize: 12, marginTop: 4 }}>{`${z.items.length} élément${z.items.length > 1 ? 's' : ''} · ${fmt(t[0]?.totalReps ?? 0)} répétitions`}</LMuted>
+                  {z.niyya ? <LMuted style={{ fontStyle: 'italic', marginTop: 2 }}>{L('Intention : {x}', { x: z.niyya })}</LMuted> : null}
+                  <LMuted style={{ fontSize: 12, marginTop: 4 }}>{L('{n} élément(s) · {r} répétitions', { n: z.items.length, r: fmt(t[0]?.totalReps ?? 0) })}</LMuted>
                 </View>
                 {z.goal ? (
                   <View
@@ -129,7 +131,7 @@ export default function Zikrs() {
                     <Text style={{ color: b.inkMuted, fontSize: 10 }}>{z.goal.moment && z.goal.moment !== 'Libre' ? z.goal.moment : 'aujourd’hui'}</Text>
                   </View>
                 ) : doneToday ? (
-                  <Text style={{ color: b.green, fontWeight: '800', fontSize: 12 }}>{`✓ ${doneToday}× aujourd’hui`}</Text>
+                  <Text style={{ color: b.green, fontWeight: '800', fontSize: 12 }}>{L('✓ {n}× aujourd’hui', { n: doneToday })}</Text>
                 ) : null}
               </View>
               {z.items[0] ? (
@@ -156,7 +158,7 @@ export default function Zikrs() {
                       fontWeight: '700',
                       fontSize: 12,
                     }}
-                  >{`Abjad ${x.s} : ${fmt(x.perRecitation)} · × rép. ${fmt(x.withReps)}`}</Text>
+                  >{L('Abjad {s} : {v} · × rép. {r}', { s: L(x.s), v: fmt(x.perRecitation), r: fmt(x.withReps) })}</Text>
                 ))}
               </View>
               <View
@@ -190,7 +192,7 @@ export default function Zikrs() {
                   }
                 />
                 <LBtn icon="share-outline" label="Partager" onPress={() => void share(z)} />
-                <LBtn icon="trash-outline" label="Supprimer" color="#B3261E" onPress={() => confirm(`Supprimer « ${z.name} » ?`, () => remove(z.id))} />
+                <LBtn icon="trash-outline" label="Supprimer" color="#B3261E" onPress={() => confirm(L('Supprimer « {x} » ?', { x: z.name }), () => remove(z.id))} />
               </View>
             </LCard>
           );

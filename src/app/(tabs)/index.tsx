@@ -1,6 +1,7 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { SkyArc } from '@/components/zikru/SkyArc';
@@ -19,7 +20,7 @@ import { canFetchWeather, canSendToAI, undecided } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
 import { usePersistentState } from '@/lib/storage';
 import { SURAHS } from '@/lib/surahs';
-import { PRACTICES } from '@/lib/tijani';
+import { PRACTICES, practiceDoneKey } from '@/lib/tijani';
 import { getWeather, wmo, type Weather } from '@/lib/weather';
 import { useZikrs } from '@/lib/zikrs';
 import { khatmaStatus, streak as readStreak } from '@/lib/khatma';
@@ -31,6 +32,8 @@ import { Container, FadeIn, Grid, IconBadge, ProgressRing, SectionHeader, Skelet
 import { Ionicons, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted } from '@/ui/light';
 import { alpha, brand as b } from '@/ui/theme';
+import { L, useUiLang } from '@/lib/l10n';
+import { duaView, quranDuaView } from '@/lib/i18n-content';
 
 const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
 let aiUnavailable = false; // évite d'appeler la fonction à chaque rendu si l'IA n'est pas configurée
@@ -41,6 +44,7 @@ const dayOfYear = (d: Date) => Math.floor((d.getTime() - new Date(d.getFullYear(
 /** Accueil : tableau de bord personnel. */
 export default function Home() {
   const { s, t: tr } = useSettings();
+  const uiL = useUiLang();
   const { tasbih, content } = useData();
   const { zikrs } = useZikrs();
   const g = useGrowth();
@@ -132,11 +136,13 @@ export default function Home() {
   const doy = dayOfYear(now);
   const verse = QURAN_DUAS[doy % QURAN_DUAS.length];
   const dua = DUAS_LIST[(doy * 7) % DUAS_LIST.length];
+  const vv = quranDuaView(verse, uiL);
+  const dv = duaView(dua, uiL);
   const wm = weather ? wmo(weather.code, weather.isDay) : null;
   const temp = (c: number) => Math.round(unit === 'C' ? c : (c * 9) / 5 + 32);
 
   // Pratique tijanie du jour (clé `tijani-done` : `${jour}-${id}` → étapes cochées)
-  const practice = PRACTICES.filter((p) => p.id !== 'hailala' || now.getDay() === 5).map((p) => ({ p, done: (tijaniDone[`${today}-${p.id}`] ?? []).length, total: p.steps.length }));
+  const practice = PRACTICES.filter((p) => p.id !== 'hailala' || now.getDay() === 5).map((p) => ({ p, done: (tijaniDone[practiceDoneKey(today, p.id)] ?? []).length, total: p.steps.length }));
 
   // Reprendre
   const lastZikr = [...zikrs].filter((z) => z.items.length).sort((a, c) => (a.updatedAt < c.updatedAt ? 1 : -1))[0];
@@ -236,7 +242,7 @@ export default function Home() {
         ))}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${tr.streak} : ${st} ${tr.days}. ${dhikrToday} dhikr`}
+          accessibilityLabel={`${tr.streak} : ${st} ${tr.days}. ${L('{n} dhikr', { n: dhikrToday })}`}
           onPress={go('/journey')}
           style={({ pressed }) => ({ flex: 1, backgroundColor: b.goldSoft, borderRadius: 18, padding: 12, alignItems: 'center', justifyContent: 'center', gap: 2, opacity: pressed ? 0.9 : 1 })}
         >
@@ -251,8 +257,8 @@ export default function Home() {
   );
 
   const resume: { icon: IconName; title: string; sub: string; href: Href; color: string }[] = [];
-  if (lastZikr) resume.push({ icon: 'albums', title: lastZikr.name, sub: `${tr.my_zikrs} · ${totalReps(lastZikr.items)} rép.`, href: { pathname: '/zikrs/practice', params: { id: lastZikr.id } }, color: b.violet });
-  resume.push({ icon: 'radio-button-on', title: currentDhikr?.transliteration ?? tr.tasbih_title, sub: `${tr.tasbih_title} · ${tasbih.count}${tasbih.target ? ` / ${tasbih.target}` : ''} · ${dhikrToday} aujourd’hui`, href: '/tasbih', color: b.teal });
+  if (lastZikr) resume.push({ icon: 'albums', title: lastZikr.name, sub: `${tr.my_zikrs} · ` + L('{n} rép.', { n: totalReps(lastZikr.items) }), href: { pathname: '/zikrs/practice', params: { id: lastZikr.id } }, color: b.violet });
+  resume.push({ icon: 'radio-button-on', title: currentDhikr?.transliteration ?? tr.tasbih_title, sub: `${tr.tasbih_title} · ${tasbih.count}${tasbih.target ? ` / ${tasbih.target}` : ''} · ` + L('{n} aujourd’hui', { n: dhikrToday }), href: '/tasbih', color: b.teal });
 
   // Coran : reprise de lecture (et khatma) + révision de mémorisation du jour
   const kst = qKhatma ? khatmaStatus(qKhatma, today) : null;
@@ -267,7 +273,7 @@ export default function Home() {
       <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={surah ? `Continuer la lecture : ${surah[2]}, verset ${quranLast!.ayah}` : 'Commencer la lecture du Coran'}
+          accessibilityLabel={surah ? L('Continuer la lecture : {s}, verset {a}', { s: surah[2], a: quranLast!.ayah }) : L('Commencer la lecture du Coran')}
           onPress={go(lastHref)}
           style={({ pressed }) => ({ flex: 1, minWidth: 150, backgroundColor: b.hero, borderRadius: 18, padding: 14, gap: 6, opacity: pressed ? 0.92 : 1 })}
         >
@@ -281,7 +287,7 @@ export default function Home() {
             {surah ? `${surah[2]} · ${quranLast!.n}:${quranLast!.ayah}` : 'Al-Fātiḥa'}
           </Text>
           <Text style={{ color: b.heroMuted, fontSize: 12 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
-            {kst && !kst.finished ? `Khatma ${Math.round(kst.progress * 100)} % · ${kst.today ? `p. ${kst.today.from}–${kst.today.to}` : ''}` : surah ? `Page ${quranLast!.page ?? pageOf(quranLast!.n, quranLast!.ayah)} · ${qStreak.current} j de suite` : 'Mushaf, récitation, tafsir'}
+            {kst && !kst.finished ? `${L('Khatma {p} %', { p: Math.round(kst.progress * 100) })} · ${kst.today ? L('p. {a}–{b}', { a: kst.today.from, b: kst.today.to }) : ''}` : surah ? L('Page {p} · {n} j de suite', { p: quranLast!.page ?? pageOf(quranLast!.n, quranLast!.ayah), n: qStreak.current }) : L('Mushaf, récitation, tafsir')}
           </Text>
           {kst && !kst.finished ? (
             <View style={{ height: 4, borderRadius: 2, backgroundColor: alpha(b.heroText, 0.15), overflow: 'hidden' }}>
@@ -291,7 +297,7 @@ export default function Home() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={tracked ? `Révision du jour : ${hqN} versets` : 'Commencer la mémorisation'}
+          accessibilityLabel={tracked ? L('Révision du jour : {n} versets', { n: hqN }) : L('Commencer la mémorisation')}
           onPress={go(tracked && hqN ? { pathname: '/quran/hifz-session', params: { mode: 'review' } } : '/quran/hifz')}
           style={({ pressed }) => ({ flex: 1, minWidth: 150, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line, borderRadius: 18, padding: 14, gap: 6, opacity: pressed ? 0.92 : 1 })}
         >
@@ -302,10 +308,10 @@ export default function Home() {
             </Text>
           </View>
           <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
-            {tracked ? (hqN ? `${hqN} verset${hqN > 1 ? 's' : ''} à réviser` : 'À jour ✓') : 'Mémoriser le Coran'}
+            {tracked ? (hqN ? L('Versets à réviser : {n}', { n: hqN }) : L('À jour ✓')) : L('Mémoriser le Coran')}
           </Text>
           <Text style={{ color: b.inkMuted, fontSize: 12 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
-            {tracked ? `Sabaq ${hq.sabaq.length} · Sabqi ${hq.sabqi.length} · Manzil ${hq.manzil.length}` : 'Répétition, masquage, révision espacée'}
+            {tracked ? L('Sabaq {a} · Sabqi {b} · Manzil {c}', { a: hq.sabaq.length, b: hq.sabqi.length, c: hq.manzil.length }) : L('Répétition, masquage, révision espacée')}
           </Text>
         </Pressable>
       </View>
@@ -348,7 +354,7 @@ export default function Home() {
             <Pressable
               key={z.id}
               accessibilityRole="button"
-              accessibilityLabel={`${z.name}, ${z.items.length} formules`}
+              accessibilityLabel={L('{name}, {n} formules', { name: z.name, n: z.items.length })}
               onPress={go(z.items.length ? { pathname: '/zikrs/practice', params: { id: z.id } } : { pathname: '/zikrs/edit', params: { id: z.id } })}
               style={({ pressed }) => ({ width: 168, backgroundColor: b.paper, borderRadius: 18, borderWidth: 1, borderColor: b.line, padding: 14, gap: 8, opacity: pressed ? 0.9 : 1 })}
             >
@@ -360,13 +366,13 @@ export default function Home() {
                 {z.name}
               </Text>
               <LMuted>
-                {z.items.length} formule{z.items.length > 1 ? 's' : ''} · {totalReps(z.items)} rép.
+                {L(z.items.length > 1 ? '{n} formules · {r} rép.' : '{n} formule · {r} rép.', { n: z.items.length, r: totalReps(z.items) })}
               </LMuted>
             </Pressable>
           ))}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Composer un zikr"
+            accessibilityLabel={L("Composer un zikr")}
             onPress={go('/zikrs/edit')}
             style={({ pressed }) => ({ width: 120, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: b.line, alignItems: 'center', justifyContent: 'center', gap: 6, opacity: pressed ? 0.8 : 1 })}
           >
@@ -390,24 +396,26 @@ export default function Home() {
   const dailyCards = (
     <FadeIn delay={180}>
       <SectionHeader title={tr.verse_of_day} />
-      <LCard onPress={go(`/quran/${verse.surah}`)} label={`${tr.verse_of_day} : ${verse.title}, ${verse.ref}`}>
+      <LCard onPress={go(`/quran/${verse.surah}`)} label={`${tr.verse_of_day} : ${vv.title}, ${verse.ref}`}>
         <Arabic size={24} quran style={{ color: b.ink }}>
           {verse.ar}
         </Arabic>
-        <Text style={{ color: b.ink, fontSize: 15, lineHeight: 22, marginTop: 6 }}>{verse.fr}</Text>
+        {vv.meaning ? <Text style={{ color: b.ink, fontSize: 15, lineHeight: 22, marginTop: 6 }}>{vv.meaning}</Text> : null}
         <Text style={{ color: b.goldDeep, fontWeight: '700', fontSize: 12, marginTop: 8 }}>
-          {verse.title} · {verse.ref} · trad. Hamidullah
+          {[vv.title, verse.ref, vv.translation].filter(Boolean).join(' · ')}
         </Text>
       </LCard>
       <SectionHeader title={tr.dua_of_day} action={tr.see_all} onAction={go('/duas')} />
-      <LCard onPress={go({ pathname: '/duas', params: { q: dua.title } })} label={`${tr.dua_of_day} : ${dua.title}`}>
-        <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15, marginBottom: 4 }}>{dua.title}</Text>
+      <LCard onPress={go({ pathname: '/duas', params: { q: dua.title } })} label={`${tr.dua_of_day} : ${dv.title}`}>
+        <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15, marginBottom: 4 }}>{dv.title}</Text>
         <Arabic size={21} numberOfLines={3}>
           {dua.ar}
         </Arabic>
-        <LMuted style={{ marginTop: 4 }} numberOfLines={3}>
-          {dua.fr}
-        </LMuted>
+        {dv.meaning ? (
+          <LMuted style={{ marginTop: 4 }} numberOfLines={3}>
+            {dv.meaning}
+          </LMuted>
+        ) : null}
         <Text style={{ color: b.goldDeep, fontWeight: '700', fontSize: 12, marginTop: 8 }}>{dua.ref}</Text>
       </LCard>
     </FadeIn>
@@ -467,7 +475,7 @@ export default function Home() {
             <Text style={{ color: b.ink, fontSize: 15, lineHeight: 23 }}>{reflection}</Text>
             <LMuted style={{ marginTop: 6 }}>Un mot de Bilal · {tr.reflection}</LMuted>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Nouvelle réflexion" onPress={() => void refresh(true)} hitSlop={8} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={L("Nouvelle réflexion")} onPress={() => void refresh(true)} hitSlop={8} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
             {aiBusy ? <ActivityIndicator color={b.inkMuted} size="small" /> : <Ionicons name="refresh" size={20} color={b.inkMuted} />}
           </Pressable>
         </View>

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSettings } from '@/lib/settings';
 import { privacyText } from '@/lib/privacy-text';
 import { Button, Ionicons } from '@/ui/kit';

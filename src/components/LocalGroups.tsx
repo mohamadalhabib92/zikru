@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Share, Text, View } from 'react-native';
+import { Share, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { uid, usePersistentState } from '@/lib/storage';
 import { Badge, Button, Card, Field, H2, IconButton, Muted, Notice, Row, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 type Entry = { by: string; n: number; at: number };
 type Group = { id: string; name: string; formula: string; goal: number; entries: Entry[]; createdAt: number };
@@ -44,7 +46,7 @@ export function LocalGroups() {
         title="Local uniquement"
         text="Les groupes et compteurs sont enregistrés sur cet appareil. Rien n’est envoyé en ligne : saisissez les contributions de votre cercle (ex. après une séance de dhikr) et partagez l’avancée par message."
       />
-      <Field label="Votre nom (pour l’historique)" placeholder="Moi" value={who} onChangeText={setWho} />
+      <Field label="Votre nom (pour l’historique)" placeholder={L("Moi")} value={who} onChangeText={setWho} />
       {groups.map((g) => {
         const n = total(g);
         const pct = Math.min(1, n / g.goal);
@@ -86,7 +88,7 @@ export function LocalGroups() {
                     }}
                   />
                 </Row>
-                <Muted>{people.length ? `Contributions saisies : ${people.join(', ')}` : 'Aucune contribution pour l’instant.'}</Muted>
+                <Muted>{people.length ? L('Contributions saisies : {p}', { p: people.join(', ') }) : 'Aucune contribution pour l’instant.'}</Muted>
                 {g.entries.slice(0, 5).map((e, i) => (
                   <Muted key={i} style={{ fontSize: 12 }}>
                     {new Date(e.at).toLocaleString('fr-CH', { dateStyle: 'short', timeStyle: 'short' })} · {e.by} +{e.n}
@@ -98,7 +100,7 @@ export function LocalGroups() {
                   {g.entries.length ? (
                     <IconButton icon="arrow-undo-outline" color={t.muted} label="Annuler la dernière contribution" onPress={() => setGroups(groups.map((x) => (x.id === g.id ? { ...x, entries: x.entries.slice(1) } : x)))} />
                   ) : null}
-                  <IconButton icon="trash-outline" color={t.muted} label={`Supprimer ${g.name}`} onPress={() => setGroups(groups.filter((x) => x.id !== g.id))} />
+                  <IconButton icon="trash-outline" color={t.muted} label={L('Supprimer {x}', { x: g.name })} onPress={() => setGroups(groups.filter((x) => x.id !== g.id))} />
                 </Row>
               </View>
             ) : null}
@@ -109,8 +111,8 @@ export function LocalGroups() {
       {adding ? (
         <Card>
           <H2>Nouveau groupe</H2>
-          <Field label="Nom" placeholder="Cercle du jeudi" value={gName} onChangeText={setGName} />
-          <Field label="Formule (facultatif)" placeholder="Lā ilāha illā-llāh" value={gFormula} onChangeText={setGFormula} />
+          <Field label="Nom" placeholder={L("Cercle du jeudi")} value={gName} onChangeText={setGName} />
+          <Field label="Formule (facultatif)" placeholder={L("Lā ilāha illā-llāh")} value={gFormula} onChangeText={setGFormula} />
           <Field label="Objectif" keyboardType="number-pad" value={gGoal} onChangeText={setGGoal} />
           <Button title="Créer" icon="add" onPress={create} />
         </Card>

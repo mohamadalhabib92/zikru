@@ -1,6 +1,7 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useTranslationId } from '@/components/quran/data';
 import { dayKey } from '@/lib/dates';
 import { khatmaStatus, streak } from '@/lib/khatma';
@@ -13,6 +14,7 @@ import { SURAHS } from '@/lib/surahs';
 import { FadeIn, Grid, HeroHeader, ProgressBar, Tile, useLayout } from '@/ui/ds';
 import { Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 type Tab = 'surah' | 'juz' | 'hizb' | 'page';
 const STATUS_COLOR = () => ({ none: b.line, learning: b.gold, review: '#D98A2B', memorised: b.green });
@@ -68,29 +70,29 @@ export default function QuranHub() {
     else if (ref.kind === 'juz') go({ pathname: '/quran/mushaf', params: { p: String(juzPage(ref.j)) } });
     else go({ pathname: '/quran/mushaf', params: { p: String(hizbPage(ref.h)) } });
   };
-  const refLabel = ref ? (ref.kind === 'ayah' ? `Aller à ${SURAHS[ref.s - 1][2]} ${ref.s}:${ref.a}` : ref.kind === 'surah' ? `Ouvrir la sourate ${ref.s} · ${SURAHS[ref.s - 1][2]}` : ref.kind === 'page' ? `Ouvrir la page ${ref.p}` : ref.kind === 'juz' ? `Ouvrir le juz’ ${ref.j}` : `Ouvrir le hizb ${ref.h}`) : '';
+  const refLabel = ref ? (ref.kind === 'ayah' ? L('Aller à {s} {r}', { s: SURAHS[ref.s - 1][2], r: `${ref.s}:${ref.a}` }) : ref.kind === 'surah' ? L('Ouvrir la sourate {n} · {s}', { n: ref.s, s: SURAHS[ref.s - 1][2] }) : ref.kind === 'page' ? L('Ouvrir la page {n}', { n: ref.p }) : ref.kind === 'juz' ? L('Ouvrir le juz’ {n}', { n: ref.j }) : L('Ouvrir le hizb {n}', { n: ref.h })) : '';
 
   const lastHref: Href | null = last ? (last.mode === 'page' ? { pathname: '/quran/mushaf', params: { p: String(last.page ?? pageOf(last.n, last.ayah)) } } : { pathname: '/quran/[n]', params: { n: String(last.n), a: String(last.ayah) } }) : null;
   const colors = STATUS_COLOR();
 
   const rows = useMemo(() => {
-    if (tab === 'surah') return SURAHS.map((s) => ({ key: `s${s[0]}`, num: s[0], title: s[2], sub: `${s[3]} · ${s[4]} v. · ${s[5] === 'M' ? 'mecquoise' : 'médinoise'} · p. ${surahPage(s[0])}`, ar: s[1].replace(/^سُورَةُ\s*/, ''), range: [OFFSETS[s[0] - 1], OFFSETS[s[0] - 1] + s[4]] as [number, number], href: `/quran/${s[0]}` as Href }));
+    if (tab === 'surah') return SURAHS.map((s) => ({ key: `s${s[0]}`, num: s[0], title: s[2], sub: `${s[3]} · ${L('{n} v.', { n: s[4] })} · ${L(s[5] === 'M' ? 'mecquoise' : 'médinoise')} · ${L('p. {n}', { n: surahPage(s[0]) })}`, ar: s[1].replace(/^سُورَةُ\s*/, ''), range: [OFFSETS[s[0] - 1], OFFSETS[s[0] - 1] + s[4]] as [number, number], href: `/quran/${s[0]}` as Href }));
     if (tab === 'juz')
       return Array.from({ length: 30 }, (_, i) => {
         const [a, z] = juzRange(i + 1);
         const [s, v] = fromIndex(a);
-        return { key: `j${i}`, num: i + 1, title: `Juz’ ${i + 1}`, sub: `${SURAHS[s - 1][2]} ${s}:${v} · p. ${juzPage(i + 1)}`, ar: '', range: [a, z] as [number, number], href: { pathname: '/quran/mushaf', params: { p: String(juzPage(i + 1)) } } as Href };
+        return { key: `j${i}`, num: i + 1, title: L('Juz’ {n}', { n: i + 1 }), sub: `${SURAHS[s - 1][2]} ${s}:${v} · ${L('p. {n}', { n: juzPage(i + 1) })}`, ar: '', range: [a, z] as [number, number], href: { pathname: '/quran/mushaf', params: { p: String(juzPage(i + 1)) } } as Href };
       });
     if (tab === 'hizb')
       return Array.from({ length: 60 }, (_, i) => {
         const [a, z] = hizbRange(i + 1);
         const [s, v] = fromIndex(a);
-        return { key: `h${i}`, num: i + 1, title: `Hizb ${i + 1}`, sub: `${SURAHS[s - 1][2]} ${s}:${v} · p. ${hizbPage(i + 1)}`, ar: '', range: [a, z] as [number, number], href: { pathname: '/quran/mushaf', params: { p: String(hizbPage(i + 1)) } } as Href };
+        return { key: `h${i}`, num: i + 1, title: L('Hizb {n}', { n: i + 1 }), sub: `${SURAHS[s - 1][2]} ${s}:${v} · ${L('p. {n}', { n: hizbPage(i + 1) })}`, ar: '', range: [a, z] as [number, number], href: { pathname: '/quran/mushaf', params: { p: String(hizbPage(i + 1)) } } as Href };
       });
     return Array.from({ length: 604 }, (_, i) => {
       const [a, z] = pageRange(i + 1);
       const [s, v] = fromIndex(a);
-      return { key: `p${i}`, num: i + 1, title: `Page ${i + 1}`, sub: `${SURAHS[s - 1][2]} ${s}:${v}`, ar: '', range: [a, z] as [number, number], href: { pathname: '/quran/mushaf', params: { p: String(i + 1) } } as Href };
+      return { key: `p${i}`, num: i + 1, title: L('Page {n}', { n: i + 1 }), sub: `${SURAHS[s - 1][2]} ${s}:${v}`, ar: '', range: [a, z] as [number, number], href: { pathname: '/quran/mushaf', params: { p: String(i + 1) } } as Href };
     });
   }, [tab]);
   const nCols = tablet ? Math.min(3, cols) : 1;
@@ -105,18 +107,18 @@ export default function QuranHub() {
               <Text style={{ color: b.heroText, fontSize: 22, fontWeight: '900' }}>Le Noble Coran</Text>
               <Text style={{ color: b.heroMuted, marginTop: 2 }}>Texte uthmani · 604 pages · récitation verset par verset</Text>
             </View>
-            <View style={{ alignItems: 'center', backgroundColor: alpha(b.heroText, 0.08), borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 }} accessibilityLabel={`Série de lecture : ${st.current} jours`}>
+            <View style={{ alignItems: 'center', backgroundColor: alpha(b.heroText, 0.08), borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 }} accessibilityLabel={L('Série de lecture : {n} jours', { n: st.current })}>
               <Ionicons name="flame" size={20} color={b.gold} />
               <Text style={{ color: b.heroText, fontWeight: '900', fontSize: 18 }}>{st.current}</Text>
               <Text style={{ color: b.heroMuted, fontSize: 11 }}>{st.current > 1 ? 'jours' : 'jour'}</Text>
             </View>
           </View>
           {lastHref && last ? (
-            <Pressable accessibilityRole="button" accessibilityLabel={`Continuer : ${SURAHS[last.n - 1][2]}, verset ${last.ayah}`} onPress={() => go(lastHref)} style={({ pressed }) => ({ marginTop: 14, backgroundColor: b.gold, borderRadius: 16, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10, opacity: pressed ? 0.9 : 1 })}>
+            <Pressable accessibilityRole="button" accessibilityLabel={L('Continuer : {s}, verset {a}', { s: SURAHS[last.n - 1][2], a: last.ayah })} onPress={() => go(lastHref)} style={({ pressed }) => ({ marginTop: 14, backgroundColor: b.gold, borderRadius: 16, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10, opacity: pressed ? 0.9 : 1 })}>
               <Ionicons name="bookmark" size={20} color="#1B1405" />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: '#1B1405', fontWeight: '900' }}>Continuer la lecture</Text>
-                <Text style={{ color: '#3A2C0C', fontSize: 12 }}>{`${SURAHS[last.n - 1][2]} · ${last.n}:${last.ayah} · page ${last.page ?? pageOf(last.n, last.ayah)}${last.mode === 'page' ? ' · mushaf' : ''}`}</Text>
+                <Text style={{ color: '#3A2C0C', fontSize: 12 }}>{`${SURAHS[last.n - 1][2]} · ${last.n}:${last.ayah} · ${L('page {p}', { p: last.page ?? pageOf(last.n, last.ayah) })}${last.mode === 'page' ? L(' · mushaf') : ''}`}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#1B1405" />
             </Pressable>
@@ -124,7 +126,7 @@ export default function QuranHub() {
           {kst && !kst.finished ? (
             <View style={{ marginTop: 12, gap: 6 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ color: b.heroText, fontWeight: '700', fontSize: 13 }}>{`Khatma · ${kst.done}/${kst.total} pages`}</Text>
+                <Text style={{ color: b.heroText, fontWeight: '700', fontSize: 13 }}>{L('Khatma · {d}/{t} pages', { d: kst.done, t: kst.total })}</Text>
                 <Text style={{ color: b.heroMuted, fontSize: 13 }}>{`${Math.round(kst.progress * 100)} %`}</Text>
               </View>
               <ProgressBar progress={kst.progress} color={b.gold} />
@@ -140,13 +142,13 @@ export default function QuranHub() {
           onChangeText={setQ}
           onSubmitEditing={openRef}
           returnKeyType="go"
-          placeholder="Sourate, 2:255, p. 300, juz 30, mot…"
+          placeholder={L("Sourate, 2:255, p. 300, juz 30, mot…")}
           placeholderTextColor={b.inkMuted}
-          accessibilityLabel="Rechercher dans le Coran"
+          accessibilityLabel={L("Rechercher dans le Coran")}
           style={{ flex: 1, minHeight: 48, color: b.ink, marginLeft: 8, fontSize: 15 }}
         />
         {busy ? <ActivityIndicator color={b.green} /> : q ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Effacer" onPress={() => setQ('')} hitSlop={8}>
+          <Pressable accessibilityRole="button" accessibilityLabel={L("Effacer")} onPress={() => setQ('')} hitSlop={8}>
             <Ionicons name="close-circle" size={18} color={b.inkMuted} />
           </Pressable>
         ) : null}
@@ -175,16 +177,16 @@ export default function QuranHub() {
               {h.tr ? <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={2}>{h.tr}</Text> : null}
             </Pressable>
           ))}
-          {hits && hits.total > 8 ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{`${hits.total} versets — affinez, ou ouvrez la recherche complète.`}</Text> : null}
+          {hits && hits.total > 8 ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('{n} versets — affinez, ou ouvrez la recherche complète.', { n: hits.total })}</Text> : null}
           {hits && !hits.translated && !/[\u0600-\u06FF]/.test(q) && !surahHits.length ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>La recherche par mot (traduction) nécessite la traduction hors-ligne : Recherche → Télécharger. L’arabe fonctionne toujours.</Text> : null}
         </View>
       ) : null}
 
       <Grid cols={tablet ? 4 : 2}>
-        <Tile icon="book" title="Mushaf" subtitle={`Mode page · p. ${last?.page ?? 1}`} onPress={() => go({ pathname: '/quran/mushaf', params: { p: String(last?.page ?? 1) } })} />
-        <Tile icon="school" title="Mémorisation" subtitle={Object.keys(cards).length ? (due ? `${due} à réviser aujourd’hui` : 'Révision à jour ✓') : 'Hifz guidé et révision'} color={b.gold} onPress={() => go('/quran/hifz')} />
-        <Tile icon="calendar" title="Khatma" subtitle={kst && !kst.finished && kst.today ? `Wird : p. ${kst.today.from}–${kst.today.to}` : 'Planifier une lecture complète'} color={b.teal} onPress={() => go('/quran/khatma')} />
-        <Tile icon="bookmarks" title="Marque-pages" subtitle={`${m.bookmarks.length} marque-page${m.bookmarks.length > 1 ? 's' : ''} · ${Object.keys(m.notes).length} note${Object.keys(m.notes).length > 1 ? 's' : ''}`} color={b.violet} onPress={() => go('/quran/bookmarks')} />
+        <Tile icon="book" title="Mushaf" subtitle={L('Mode page · p. {p}', { p: last?.page ?? 1 })} onPress={() => go({ pathname: '/quran/mushaf', params: { p: String(last?.page ?? 1) } })} />
+        <Tile icon="school" title="Mémorisation" subtitle={Object.keys(cards).length ? (due ? L('{n} à réviser aujourd’hui', { n: due }) : L('Révision à jour ✓')) : L('Hifz guidé et révision')} color={b.gold} onPress={() => go('/quran/hifz')} />
+        <Tile icon="calendar" title="Khatma" subtitle={kst && !kst.finished && kst.today ? L('Wird : p. {a}–{b}', { a: kst.today.from, b: kst.today.to }) : L('Planifier une lecture complète')} color={b.teal} onPress={() => go('/quran/khatma')} />
+        <Tile icon="bookmarks" title="Marque-pages" subtitle={L('Marque-pages : {b} · notes : {n}', { b: m.bookmarks.length, n: Object.keys(m.notes).length })} color={b.violet} onPress={() => go('/quran/bookmarks')} />
       </Grid>
       <Segmented
         label="Parcourir par"
@@ -231,7 +233,7 @@ export default function QuranHub() {
                 </Text>
                 <Text style={{ color: b.inkMuted, fontSize: 12 }} numberOfLines={1}>
                   {r.sub}
-                  {rs && rs.known ? ` · hifz ${Math.round((rs.known / rs.total) * 100)} %` : ''}
+                  {rs && rs.known ? ` · ${L('hifz {p} %', { p: Math.round((rs.known / rs.total) * 100) })}` : ''}
                 </Text>
               </View>
               {r.ar ? <Text style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18, lineHeight: 36 }}>{r.ar}</Text> : null}

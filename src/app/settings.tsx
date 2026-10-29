@@ -16,6 +16,7 @@ import { consentStore, useConsent } from '@/lib/consent';
 import { DEFAULT_CONSENT } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
 import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { L } from '@/lib/l10n';
 
 export default function SettingsScreen() {
   const { s, set, t: tr } = useSettings();
@@ -107,12 +108,25 @@ export default function SettingsScreen() {
         onChange={(v) => set({ madhab: v, asrManual: v !== asrForSchool(fiqh) })}
       />
       <Muted>
-        {s.lang === 'fr'
-          ? `Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite). ${s.asrManual ? 'Choisi manuellement.' : 'Suit l’école choisie ci-dessus.'}`
+        {s.lang === 'fr' || s.lang === 'en' || s.lang === 'ar'
+          ? `${L('Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite).')} ${L(s.asrManual ? 'Choisi manuellement.' : 'Suit l’école choisie ci-dessus.')}`
           : `Separate from the school: shadow ×1 (majority) or ×2 (Hanafi). ${s.asrManual ? 'Set manually.' : 'Follows the school above.'}`}
       </Muted>
       <Spacer />
       <Segmented label={tr.hijri_offset} options={[-2, -1, 0, 1, 2].map((n) => ({ label: n > 0 ? `+${n}` : String(n), value: n }))} value={s.hijriOffset} onChange={(v) => set({ hijriOffset: v })} />
+      <Spacer h={20} />
+
+      <H2>Mes zikrs</H2>
+      <Segmented
+        label="Commencer par Al-Fatiha"
+        options={[
+          { label: 'Oui', value: 'on' as const },
+          { label: 'Non', value: 'off' as const },
+        ]}
+        value={s.fatihaFirst === false ? 'off' : 'on'}
+        onChange={(v) => set({ fatihaFirst: v === 'on' })}
+      />
+      <Muted>Ajoute la sourate Al-Fatiha (1×) comme première étape de chaque composition, sans modifier la composition enregistrée.</Muted>
       <Spacer h={20} />
 
       <H2>{pt.section}</H2>
@@ -178,8 +192,8 @@ export default function SettingsScreen() {
             else set({ onboarded: false });
           };
           if (Platform.OS === 'web') {
-            if (typeof confirm === 'undefined' || confirm('Effacer toutes les données locales de Zikru ?')) void go();
-          } else Alert.alert(tr.reset_data, 'Compteurs, réglages et contenu local seront effacés.', [{ text: tr.cancel, style: 'cancel' }, { text: 'OK', style: 'destructive', onPress: () => void go() }]);
+            if (typeof confirm === 'undefined' || confirm(L('Effacer toutes les données locales de Zikru ?'))) void go();
+          } else Alert.alert(tr.reset_data, L('Compteurs, réglages et contenu local seront effacés.'), [{ text: tr.cancel, style: 'cancel' }, { text: 'OK', style: 'destructive', onPress: () => void go() }]);
         }}
       />
       <Spacer />

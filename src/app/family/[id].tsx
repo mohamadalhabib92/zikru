@@ -1,12 +1,14 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { confirmAsk, EncouragementsPanel, ErrorNote, fmt, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
 import { Badge, Button, Card, Chip, Eyebrow, Field, H1, H2, Muted, Notice, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const KINDS = [
   { value: 'wird', label: 'Wird' },
@@ -49,7 +51,7 @@ export default function FamilyScreen() {
       <H1>{name}</H1>
       <ErrorNote error={fam.error || members.error} onRetry={() => (fam.reload(), members.reload())} />
       {fam.data ? <Wird family={fam.data} canEdit={isParent} onSaved={fam.reload} /> : null}
-      {isChild && myPc?.daily_minutes_limit ? <Notice tone="info" title="Temps conseillé par tes parents" text={`${myPc.daily_minutes_limit} minutes par jour. Pense à faire des pauses.`} /> : null}
+      {isChild && myPc?.daily_minutes_limit ? <Notice tone="info" title="Temps conseillé par tes parents" text={L('{n} minutes par jour. Pense à faire des pauses.', { n: myPc.daily_minutes_limit })} /> : null}
       <Spacer />
 
       <H2>Objectifs communs</H2>
@@ -126,7 +128,7 @@ function Wird({ family, canEdit, onSaved }: { family: api.Family; canEdit: boole
   if (edit)
     return (
       <Card>
-        <Field label="Wird familial" multiline value={wird} onChangeText={setWird} maxLength={500} placeholder="Ex. 100 istighfār et 100 ṣalawāt chaque soir" />
+        <Field label="Wird familial" multiline value={wird} onChangeText={setWird} maxLength={500} placeholder={L("Ex. 100 istighfār et 100 ṣalawāt chaque soir")} />
         <Row gap={8}>
           <Button small title="Enregistrer" onPress={() => void api.updateFamily(family.id, { wird: wird.trim() || null }).then(() => (setEdit(false), onSaved()))} />
           <Button small variant="ghost" title="Annuler" onPress={() => setEdit(false)} />
@@ -224,7 +226,7 @@ function MemberRow({ m, isParent, isMe, pc, familyId, onChanged }: { m: api.Fami
             variant="ghost"
             icon="person-remove-outline"
             title="Retirer de la famille"
-            onPress={() => confirmAsk(`Retirer ${m.display_name} ?`, 'Ses contributions passées restent dans le total.', 'Retirer', () => void api.removeFamilyMember(m.id).then(onChanged).catch((e) => setErr(api.frError(e))))}
+            onPress={() => confirmAsk(L('Retirer {name} ?', { name: m.display_name }), 'Ses contributions passées restent dans le total.', 'Retirer', () => void api.removeFamilyMember(m.id).then(onChanged).catch((e) => setErr(api.frError(e))))}
           />
         </View>
       ) : null}
@@ -284,7 +286,7 @@ function Calendar({ familyId, canEdit }: { familyId: string; canEdit: boolean })
                 {new Date(e.starts_at).toLocaleString('fr-CH', e.all_day ? { dateStyle: 'full' } : { dateStyle: 'medium', timeStyle: 'short' })}
               </Muted>
             </View>
-            {canEdit ? <Button small variant="ghost" icon="trash-outline" title="" accessibilityLabel={`Supprimer ${e.title}`} onPress={() => void api.deleteEvent(e.id).then(ev.reload)} /> : null}
+            {canEdit ? <Button small variant="ghost" icon="trash-outline" title="" accessibilityLabel={L('Supprimer {x}', { x: e.title })} onPress={() => void api.deleteEvent(e.id).then(ev.reload)} /> : null}
           </Row>
         ))
       ) : (
@@ -293,7 +295,7 @@ function Calendar({ familyId, canEdit }: { familyId: string; canEdit: boolean })
       {canEdit ? (
         adding ? (
           <View style={{ marginTop: 10 }}>
-            <Field label="Titre" placeholder="Zikr du jeudi soir" value={title} onChangeText={setTitle} />
+            <Field label="Titre" placeholder={L("Zikr du jeudi soir")} value={title} onChangeText={setTitle} />
             <Row wrap gap={6} style={{ marginBottom: 10 }}>
               {KINDS.map((k) => (
                 <Chip key={k.value} label={k.label} active={kind === k.value} onPress={() => setKind(k.value)} />
@@ -344,7 +346,7 @@ function KidMode({ family, memberId, childName, goals, onExit }: { family: strin
   const [n, setN] = useState(0);
   return (
     <Screen>
-      <Stack.Screen options={{ title: `Mode enfant · ${childName}` }} />
+      <Stack.Screen options={{ title: L('Mode enfant · {name}', { name: childName }) }} />
       <Eyebrow>{family}</Eyebrow>
       <H1>Salām {childName} !</H1>
       <Muted>Touche le grand bouton à chaque dhikr.</Muted>
@@ -358,7 +360,7 @@ function KidMode({ family, memberId, childName, goals, onExit }: { family: strin
       <Spacer h={24} />
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Compter un dhikr"
+        accessibilityLabel={L("Compter un dhikr")}
         onPress={() => {
           setN(n + 1);
           if (goalId) c.contribute(goalId, 1, 'manuel', memberId);
@@ -380,7 +382,7 @@ function KidMode({ family, memberId, childName, goals, onExit }: { family: strin
       </Pressable>
       <Spacer h={24} />
       {!goalId ? <Notice tone="info" title="Pas d’objectif familial" text="Les appuis sont comptés ici, sans être envoyés." /> : null}
-      <Pressable onLongPress={onExit} delayLongPress={1200} accessibilityRole="button" accessibilityLabel="Quitter le mode enfant (appui long)" style={{ alignSelf: 'center', padding: 16 }}>
+      <Pressable onLongPress={onExit} delayLongPress={1200} accessibilityRole="button" accessibilityLabel={L("Quitter le mode enfant (appui long)")} style={{ alignSelf: 'center', padding: 16 }}>
         <Muted>Parent : appui long ici pour quitter</Muted>
       </Pressable>
     </Screen>

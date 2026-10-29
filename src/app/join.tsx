@@ -1,11 +1,12 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { Text } from '@/ui/Text';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { Button, Card, Field, H1, H2, Muted, Notice, Screen, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { roleFr } from '@/components/community/parts';
+import { L } from '@/lib/l10n';
 
 /** Rejoindre une famille ou un cercle avec un code (lien zikru://join?code=… ou …/zikru/join?code=…). */
 export default function Join() {
@@ -29,7 +30,7 @@ export default function Join() {
   if (!auth.session) {
     return (
       <Screen>
-        <Stack.Screen options={{ title: 'Invitation' }} />
+        <Stack.Screen options={{ title: L("Invitation") }} />
         <H1>Invitation</H1>
         {code ? <Muted>Code : {code}</Muted> : null}
         <Spacer />
@@ -41,7 +42,7 @@ export default function Join() {
   }
   return (
     <Screen>
-      <Stack.Screen options={{ title: 'Invitation' }} />
+      <Stack.Screen options={{ title: L("Invitation") }} />
       <H1>Invitation</H1>
       {err ? <Notice tone="warning" title="Invitation" text={err} /> : null}
       {p && !p.valid ? <Notice tone="warning" title="Invitation non valable" text="Ce code est invalide, expiré, révoqué ou déjà utilisé. Demandez-en un nouveau." /> : null}

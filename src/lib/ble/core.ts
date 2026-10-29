@@ -150,8 +150,7 @@ export const PROFILES: DeviceProfile[] = [
     services: [],
     parse: parseIqibla,
     note:
-      'Format des trames publié, mais pas les UUID de service : utilisez la détection automatique (natif) ou le mode apprentissage. ' +
-      'Le manuel iQibla indique que l’anneau ne synchronise ses comptes avec l’app qu’après remise à zéro : le comptage en direct peut ne pas fonctionner selon le firmware.',
+      'Format des trames publié, mais pas les UUID de service : utilisez la détection automatique (natif) ou le mode apprentissage. Le manuel iQibla indique que l’anneau ne synchronise ses comptes avec l’app qu’après remise à zéro : le comptage en direct peut ne pas fonctionner selon le firmware.',
     sources: ['https://nikkoenggaliano.my.id/read.php?id=51', 'https://manuals.plus/iqibla/e01-zikr-ring-manual'],
   },
   {

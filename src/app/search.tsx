@@ -1,10 +1,14 @@
 import { Stack, useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { DUAS_LIST } from '@/lib/duas';
 import { NAMES } from '@/lib/names';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { SALAWAT } from '@/lib/salawat';
+import { duaView, quranDuaView } from '@/lib/i18n-content';
+import { SALAWAT_EN } from '@/lib/i18n-content/knowledge';
+import { L, useUiLang } from '@/lib/l10n';
 import { useSettings } from '@/lib/settings';
 import { translationFor } from '@/lib/quran';
 import { cachedTranslation, downloadTranslation, hasArabic, searchVerses, type VerseHit } from '@/lib/quran-offline';
@@ -43,6 +47,7 @@ const SECTIONS: { title: string; kw: string; href: Href; icon: IconName }[] = [
 
 /** Recherche globale : Noms, du‘as, versets-du‘as, salawat, sourates, zikrs, sections ; + tous les versets (hors-ligne). */
 export default function Search() {
+  const sl = useUiLang();
   const router = useRouter();
   const { s: st, t: tr } = useSettings();
   const ed = translationFor(st.lang);
@@ -69,22 +74,22 @@ export default function Search() {
     );
     push(
       'Sourates',
-      SURAHS.filter((x) => has(x[2], x[3], x[1]) || String(x[0]) === nq).map((x) => ({ key: `q${x[0]}`, icon: 'book', color: b.green, title: `${x[0]}. ${x[2]}`, sub: `${x[3]} · ${x[4]} versets`, ar: x[1], href: `/quran/${x[0]}` })),
+      SURAHS.filter((x) => has(x[2], x[3], x[1]) || String(x[0]) === nq).map((x) => ({ key: `q${x[0]}`, icon: 'book', color: b.green, title: `${x[0]}. ${x[2]}`, sub: L('{m} · {n} versets', { m: x[3], n: x[4] }), ar: x[1], href: `/quran/${x[0]}` })),
     );
     push(
       'Du‘as prophétiques',
-      DUAS_LIST.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.when, d.ref)).map((d) => ({ key: d.id, icon: 'hand-left', color: b.blue, title: d.title, sub: d.ref, ar: d.ar, href: { pathname: '/duas', params: { q: d.title } } })),
+      DUAS_LIST.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.when, d.ref, duaView(d, sl).title, duaView(d, sl).meaning)).map((d) => ({ key: d.id, icon: 'hand-left', color: b.blue, title: duaView(d, sl).title, sub: d.ref, ar: d.ar, href: { pathname: '/duas', params: { q: d.title } } })),
     );
     push(
       'Du‘as du Coran',
-      QURAN_DUAS.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref, d.who)).map((d) => ({ key: d.id, icon: 'book', color: b.wirdGreen, title: d.title, sub: `${d.ref} · trad. Hamidullah`, ar: d.ar, href: `/quran/${d.surah}` })),
+      QURAN_DUAS.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref, d.who, quranDuaView(d, sl).title, d.en)).map((d) => ({ key: d.id, icon: 'book', color: b.wirdGreen, title: quranDuaView(d, sl).title, sub: sl === 'ar' ? d.ref : `${d.ref} · ${quranDuaView(d, sl).translation ?? ''}`, ar: d.ar, href: `/quran/${d.surah}` })),
     );
     push(
       'Salawat',
-      SALAWAT.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref)).map((d) => ({ key: d.id, icon: 'heart', color: b.rust, title: d.title, sub: d.ref, ar: d.ar, expand: `${d.tr}\n\n${d.fr}` })),
+      SALAWAT.filter((d) => has(d.title, d.fr, d.tr, d.ar, d.ref, SALAWAT_EN[d.id]?.en)).map((d) => ({ key: d.id, icon: 'heart', color: b.rust, title: (sl === 'en' ? SALAWAT_EN[d.id]?.title[0] : sl === 'ar' ? SALAWAT_EN[d.id]?.title[1] : undefined) ?? d.title, sub: d.ref, ar: d.ar, expand: sl === 'ar' ? (d.tr ?? '') : `${d.tr}\n\n${(sl === 'en' ? SALAWAT_EN[d.id]?.en : undefined) ?? d.fr}` })),
     );
     return out;
-  }, [nq, zikrs, tr.my_zikrs]);
+  }, [nq, zikrs, tr.my_zikrs, sl]);
 
   // Versets : recherche hors-ligne (arabe embarqué + traduction en cache), avec léger anti-rebond.
   const [vr, setVr] = useState<{ q: string; hits: VerseHit[]; total: number; translated: boolean } | null>(null);
@@ -154,7 +159,7 @@ export default function Search() {
               style={{ flex: 1, color: b.ink, fontSize: 16, paddingVertical: 10 }}
             />
             {q ? (
-              <Pressable accessibilityLabel="Effacer" onPress={() => setQ('')} hitSlop={10}>
+              <Pressable accessibilityLabel={L("Effacer")} onPress={() => setQ('')} hitSlop={10}>
                 <Ionicons name="close-circle" size={20} color={b.inkMuted} />
               </Pressable>
             ) : null}

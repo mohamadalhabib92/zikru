@@ -1,15 +1,19 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { ItemPicker } from '@/components/zikr/Picker';
 import { LBtn, fmt, shareZikr } from '@/components/zikr/parts';
 import type { AbjadSystem } from '@/lib/abjad';
 import { uid } from '@/lib/storage';
 import { KIND_LABEL, MOMENTS, abjadAsReps, clampReps, compositionTotals, duplicateItem, exportText, itemAbjad, moveItem, removeItem, type ZikrItem } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
+import { isFatiha } from '@/lib/fatiha';
+import { useSettings } from '@/lib/settings';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, Pill, SectionLabel } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 const SYSC: Record<AbjadSystem, string> = {
   mashriqi: '#2F7FD0',
@@ -30,7 +34,7 @@ function Icon({ icon, label, onPress, disabled, color = b.inkMuted }: { icon: Ic
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={L(label)}
       accessibilityState={{ disabled: !!disabled }}
       onPress={disabled ? undefined : onPress}
       hitSlop={4}
@@ -69,7 +73,7 @@ function RepsInput({ value, onChange }: { value: number; onChange: (n: number) =
         }}
         keyboardType="number-pad"
         selectTextOnFocus
-        accessibilityLabel="Nombre de répétitions"
+        accessibilityLabel={L("Nombre de répétitions")}
         style={[input, { width: 80, textAlign: 'center', fontWeight: '800', fontSize: 16 }]}
       />
       <Icon icon="add" label="Plus une répétition" onPress={() => onChange(clampReps(value + 1))} />
@@ -81,6 +85,7 @@ export default function EditZikr() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { zikrs, update, systems, opts, repSys, prefs, setPrefs, ready } = useZikrs();
+  const { s: settings } = useSettings();
   const z = zikrs.find((x) => x.id === id);
   const [picker, setPicker] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -117,16 +122,16 @@ export default function EditZikr() {
       <SectionLabel color={b.green}>Composition</SectionLabel>
       <LCard>
         <LMuted style={{ fontWeight: '700', marginBottom: 4 }}>Nom</LMuted>
-        <TextInput value={z.name} onChangeText={(name) => set({ name })} placeholder="Ex. Wird du matin" placeholderTextColor={b.inkMuted} style={input} accessibilityLabel="Nom de la composition" />
+        <TextInput value={z.name} onChangeText={(name) => set({ name })} placeholder={L("Ex. Wird du matin")} placeholderTextColor={b.inkMuted} style={input} accessibilityLabel={L("Nom de la composition")} />
         <LMuted style={{ fontWeight: '700', marginBottom: 4, marginTop: 10 }}>Intention (niyya)</LMuted>
         <TextInput
           value={z.niyya}
           onChangeText={(niyya) => set({ niyya })}
-          placeholder="Ex. Pour la facilité dans mes affaires"
+          placeholder={L("Ex. Pour la facilité dans mes affaires")}
           placeholderTextColor={b.inkMuted}
           multiline
           style={[input, { minHeight: 64, paddingVertical: 8 }]}
-          accessibilityLabel="Intention"
+          accessibilityLabel={L("Intention")}
         />
         <View
           style={{
@@ -162,7 +167,7 @@ export default function EditZikr() {
           marginTop: 16,
         }}
       >
-        <SectionLabel color={b.green}>{`Éléments (${z.items.length})`}</SectionLabel>
+        <SectionLabel color={b.green}>{L('Éléments ({n})', { n: z.items.length })}</SectionLabel>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           <Pill label="Les deux" active={prefs.view === 'both'} onPress={() => setPrefs({ view: 'both' })} color={b.green} />
           <Pill label="Mch" active={prefs.view === 'mashriqi'} onPress={() => setPrefs({ view: 'mashriqi' })} color={SYSC.mashriqi} />
@@ -173,6 +178,9 @@ export default function EditZikr() {
         <LCard>
           <LMuted>Ajoutez des Noms d’Allah, des du‘as coraniques ou prophétiques, des prières sur le Prophète ﷺ, un verset ou votre propre texte.</LMuted>
         </LCard>
+      ) : null}
+      {z.items.length && settings.fatihaFirst !== false && !isFatiha(z.items[0]) ? (
+        <LMuted style={{ fontSize: 12, marginBottom: 6 }}>Pendant la pratique, Al-Fatiha (1×) est récitée en première étape. Réglable dans Réglages › Mes zikrs.</LMuted>
       ) : null}
       {z.items.map((it, i) => {
         const asReps = itemAbjad(it, repSys, opts);
@@ -200,7 +208,7 @@ export default function EditZikr() {
                     letterSpacing: 0.5,
                   }}
                 >
-                  {KIND_LABEL[it.kind].toUpperCase()}
+                  {L(KIND_LABEL[it.kind] ?? String(it.kind ?? '')).toUpperCase()}
                 </Text>
                 <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15 }}>{it.label}</Text>
                 {it.ref ? <LMuted style={{ fontSize: 11 }}>{it.ref}</LMuted> : null}
@@ -223,7 +231,7 @@ export default function EditZikr() {
             <View style={{ marginTop: 8, gap: 2 }}>
               {systems.map((s) => {
                 const v = itemAbjad(it, s, opts);
-                return <Text key={s} style={{ color: SYSC[s], fontWeight: '700', fontSize: 12 }}>{`Abjad ${s} : ${fmt(v)} × ${fmt(it.reps)} = ${fmt(v * it.reps)}`}</Text>;
+                return <Text key={s} style={{ color: SYSC[s], fontWeight: '700', fontSize: 12 }}>{L('Abjad {s} : {v} × {r} = {t}', { s: L(s), v: fmt(v), r: fmt(it.reps), t: fmt(v * it.reps) })}</Text>;
               })}
               {it.abjadAr ? <LMuted style={{ fontSize: 11 }}>Calcul sur le Nom sans « yā » ni article.</LMuted> : null}
             </View>
@@ -238,7 +246,7 @@ export default function EditZikr() {
             >
               <RepsInput value={it.reps} onChange={(reps) => setItems((l) => l.map((x) => (x.id === it.id ? { ...x, reps } : x)))} />
               {asReps > 0 ? (
-                <LBtn icon="calculator-outline" label={`= abjad (${fmt(asReps)})`} active={it.reps === asReps} onPress={() => setItems((l) => l.map((x) => (x.id === it.id ? abjadAsReps(x, repSys, opts) : x)))} />
+                <LBtn icon="calculator-outline" label={L('= abjad ({n})', { n: fmt(asReps) })} active={it.reps === asReps} onPress={() => setItems((l) => l.map((x) => (x.id === it.id ? abjadAsReps(x, repSys, opts) : x)))} />
               ) : null}
             </View>
             <View
@@ -290,7 +298,7 @@ export default function EditZikr() {
                 </View>
               </View>
             ))}
-            <LMuted>{`${fmt(totals[0].totalReps)} répétitions au total · options ة = ${prefs.ta === 'ha' ? 'ه (5)' : 'ت (400)'}, ء = ${prefs.hamza}`}</LMuted>
+            <LMuted>{L('{n} répétitions au total · options ة = {t}, ء = {h}', { n: fmt(totals[0].totalReps), t: prefs.ta === 'ha' ? 'ه (5)' : 'ت (400)', h: String(prefs.hamza) })}</LMuted>
           </LCard>
         </>
       ) : null}

@@ -1,0 +1,92 @@
+# Gabarits L('… {var} …') des écrans couverts (P5)
+Afficher plus ({n} restants)	Show more ({n} remaining)	عرض المزيد (المتبقي: {n})
+Ajouter à {n}	Add to {n}	إضافة إلى {n}
+Ajouté à « {n} »	Added to “{n}”	أُضيف إلى «{n}»
+Aller à {s} {r}	Go to {s} {r}	الانتقال إلى {s} {r}
+Appareil semblable détecté — à confirmer	Similar device detected — please confirm	رُصد جهاز مشابه — يُرجى التأكيد
+Caractéristique {u}.	Characteristic {u}.	الخاصية {u}.
+Champ repéré : {f} sur {u}. Confirmez en appuyant 3 fois : le profil sera mémorisé pour cet appareil.	Field found: {f} on {u}. Confirm by pressing 3 times: the profile will be saved for this device.	تم تحديد الحقل: {f} على {u}. أكِّد بالضغط 3 مرات، وسيُحفظ الملف التعريفي لهذا الجهاز.
+Compter : {n} sur {r}	Count: {n} of {r}	العدّ: {n} من {r}
+Compteur ({r})	Counter ({r})	عدّاد ({r})
+Compteur connecté ✓	Counter connected ✓	العدّاد متصل ✓
+Continuer : {s}, verset {a}	Continue: {s}, verse {a}	متابعة: {s}، الآية {a}
+Continuer la lecture : {s}, verset {a}	Continue reading: {s}, verse {a}	متابعة القراءة: {s}، الآية {a}
+Correspondance enregistrée (confiance {c})	Mapping saved (confidence {c})	حُفظ الربط (درجة الثقة {c})
+Dernière erreur · {t}	Last error · {t}	آخر خطأ · {t}
+Désactivé	Off	متوقف
+Favoris	Favourites	المفضلة
+Hizb {n}	Hizb {n}	الحزب {n}
+Hors liste (mode diagnostic)	Not on the list (diagnostic mode)	خارج القائمة (وضع التشخيص)
+Juz’ {n}	Juz’ {n}	الجزء {n}
+Khatma {p} %	Khatma {p}%	الختمة {p}٪
+Khatma · {d}/{t} pages	Khatma · {d}/{t} pages	الختمة · {d}/{t} صفحة
+Marque-page {c}	Bookmark {c}	علامة {c}
+Marque-pages : {b} · notes : {n}	Bookmarks: {b} · notes: {n}	العلامات: {b} · الملاحظات: {n}
+Mode page · p. {p}	Page mode · p. {p}	وضع الصفحة · ص {p}
+Même nom que votre compteur, mais identifiant différent ({id}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.	Same name as your counter, but a different identifier ({id}). It may be yours after a reset — or someone else’s nearby. Zikru will not connect to it without your consent.	الاسم نفسه الذي يحمله عدّادك، لكن بمعرّف مختلف ({id}). قد يكون عدّادك بعد إعادة ضبطه — أو عدّاد شخص قريب منك. لن يتصل به ذِكرو دون موافقتك.
+Même service que votre compteur, mais identifiant différent ({id}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.	Same service as your counter, but a different identifier ({id}). It may be yours after a reset — or someone else’s nearby. Zikru will not connect to it without your consent.	الخدمة نفسها التي يستخدمها عدّادك، لكن بمعرّف مختلف ({id}). قد يكون عدّادك بعد إعادة ضبطه — أو عدّاد شخص قريب منك. لن يتصل به ذِكرو دون موافقتك.
+Ouvrir la page {n}	Open page {n}	فتح الصفحة {n}
+Ouvrir la sourate {n} · {s}	Open surah {n} · {s}	فتح السورة {n} · {s}
+Ouvrir le hizb {n}	Open hizb {n}	فتح الحزب {n}
+Ouvrir le juz’ {n}	Open juz’ {n}	فتح الجزء {n}
+Page {n}	Page {n}	الصفحة {n}
+Page {p} · {n} j de suite	Page {p} · {n}-day streak	الصفحة {p} · {n} يومًا متتاليًا
+Recherche du compteur…	Searching for the counter…	جارٍ البحث عن العدّاد…
+Retirer le marque-page {c}	Remove bookmark {c}	إزالة العلامة {c}
+Rien n’a été écrasé : si des données sont illisibles, une copie est conservée (et le compteur reprend sa dernière sauvegarde). Détail : {d}	Nothing was overwritten: if some data is unreadable, a copy is kept (and the counter resumes from its last save). Detail: {d}	لم يُستبدل شيء: إذا تعذّرت قراءة بعض البيانات، تُحفظ نسخة منها (ويستأنف العدّاد من آخر حفظ). التفاصيل: {d}
+Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite).	Separate from the school: shadow ×1 (majority) or ×2 (Hanafi).	إعداد مستقل عن المذهب: الظل مثل الشيء (الجمهور) أو مثلاه (الحنفية).
+Révision du jour : {n} versets	Today’s review: {n} verses	مراجعة اليوم: {n} آية
+SOURATE {n} · {k} · {v} VERSETS	SURAH {n} · {k} · {v} VERSES	السورة {n} · {k} · {v} آية
+Sabaq {a} · Sabqi {b} · Manzil {c}	Sabaq {a} · Sabqi {b} · Manzil {c}	السَّبَق {a} · السَّبْقي {b} · المنزل {c}
+Sans filtre : tous les appareils BLE (recommandé, la plupart des anneaux n’annoncent pas leur service). Avec filtre : seulement les services connus ({k}).	No filter: all BLE devices (recommended — most rings do not advertise their service). With filter: known services only ({k}).	دون تصفية: جميع أجهزة البلوتوث منخفض الطاقة (موصى به، فمعظم الخواتم لا تُعلن عن خدمتها). مع التصفية: الخدمات المعروفة فقط ({k}).
+Simuler un appui (+1)	Simulate a press (+1)	محاكاة ضغطة (+1)
+Surligner en {c}	Highlight in {c}	تظليل باللون {c}
+Synchronisé : +{n}	Synced: +{n}	تمت المزامنة: +{n}
+Série de lecture : {n} jours	Reading streak: {n} days	سلسلة القراءة: {n} يومًا
+Texte : Tanzil (uthmani, CC BY 3.0) · Traduction : {t} via alquran.cloud	Text: Tanzil (Uthmani, CC BY 3.0) · Translation: {t} via alquran.cloud	النص: تنزيل (الرسم العثماني، CC BY 3.0) · الترجمة: {t} عبر alquran.cloud
+Thème {t}	Theme {t}	السمة {t}
+Toucher pour reconnecter	Tap to reconnect	المس لإعادة الاتصال
+Toucher pour reconnecter le compteur	Tap to reconnect the counter	المس لإعادة الاتصال بالعدّاد
+Touchez un verset pour ses actions	Tap a verse for its actions	المس آيةً لعرض إجراءاتها
+Verset {n}. Actions	Verse {n}. Actions	الآية {n}. الإجراءات
+Versets à réviser : {n}	Verses to review: {n}	آيات للمراجعة: {n}
+Vitesse ×{r}	Speed ×{r}	السرعة ×{r}
+Vu le {d}	Seen on {d}	شوهد في {d}
+Wird : p. {a}–{b}	Wird: p. {a}–{b}	الورد: ص {a}–{b}
+hifz {p} %	hifz {p}%	الحفظ {p}٪
+mixte ({n} via compteur)	mixed ({n} via counter)	مختلط ({n} عبر العدّاد)
+méthode	method	طريقة الحساب
+p. {a}–{b}	p. {a}–{b}	ص {a}–{b}
+p. {n}	p. {n}	ص {n}
+page {p}	page {p}	الصفحة {p}
+{c} : {s}, verset {a}	{c}: {s}, verse {a}	{c}: {s}، الآية {a}
+{l} : augmenter	{l}: increase	{l}: زيادة
+{l} : diminuer	{l}: decrease	{l}: إنقاص
+{name}, {n} formules	{name}, {n} formulas	{name}، {n} صيغة
+{n} appareil(s) non reconnu(s) masqué(s). Votre compteur n’apparaît pas ? Bouton « Diagnostic » › « Afficher tous les appareils ».	{n} unrecognised device(s) hidden. Your counter is not listed? Button “Diagnostics” › “Show all devices”.	أُخفي {n} من الأجهزة غير المعروفة. لا يظهر عدّادك؟ زر «التشخيص» › «عرض جميع الأجهزة».
+{n} dhikr	{n} dhikr	{n} ذكر
+{n} invocations · {c} catégories · sources indiquées	{n} supplications · {c} categories · sources given	{n} دعاءً · {c} فئة · مع ذكر المصادر
+{n} min	{n} min	{n} د
+{n} v.	{n} v.	{n} آية
+{n} versets	{n} verses	{n} آية
+{n} versets — affinez, ou ouvrez la recherche complète.	{n} verses — refine, or open the full search.	{n} آية — دقِّق البحث، أو افتح البحث الكامل.
+{n} à réviser aujourd’hui	{n} to review today	{n} للمراجعة اليوم
+« {n} » détecté avec un autre identifiant	“{n}” detected with a different identifier	رُصد «{n}» بمعرّف مختلف
+Écouter le verset {n}	Listen to verse {n}	الاستماع إلى الآية {n}
+Écouteurs — gérés par le système, pas un compteur. La récitation passe par la sortie audio choisie dans les réglages du téléphone.	Headphones — managed by the system, not a counter. Recitation plays through the audio output chosen in your phone’s settings.	سماعات — يديرها النظام، وليست عدّادًا. تُشغَّل التلاوة عبر مخرج الصوت المختار في إعدادات الهاتف.
+Éléments : {n}	Items: {n}	العناصر: {n}
+× {r} — touchez pour compter, appui long pour remettre à zéro.	× {r} — tap to count, long-press to reset.	× {r} — المس للعدّ، واضغط مطوَّلًا لإعادة التصفير.
+MECQUOISE	MECCAN	مكية
+MÉDINOISE	MEDINAN	مدنية
+mecquoise	Meccan	مكية
+médinoise	Medinan	مدنية
+Coran	Qur’an	القرآن
+Tafsir	Tafsir	التفسير
+ · Translittération : alquran.cloud	 · Transliteration: alquran.cloud	 · النقل الصوتي: alquran.cloud
+ · mushaf	 · mushaf	 · المصحف
+Appareil sans nom	Unnamed device	جهاز دون اسم
+format connu	known format	صيغة معروفة
+Jamais vu	Never seen	لم يُشاهَد قط
+connecté	connected	متصل
+Choisi manuellement.	Set manually.	مُختار يدويًا.
+Suit l’école choisie ci-dessus.	Follows the school chosen above.	يتبع المذهب المختار أعلاه.

@@ -7,6 +7,25 @@ import { allProvenance, GRADE_LABEL, SET_LABEL } from './provenance';
 import type { ReviewStatus } from './provenance-types';
 import { REVIEW_LABEL, reviewFor } from './reviews';
 import { allSahwAnswers, refItemsToComplete } from './sahw';
+import { DUAS_I18N } from './i18n-content/duas';
+import { FIQH_EN } from './i18n-content/fiqh';
+import { HADITHS_EN, SALAWAT_EN } from './i18n-content/knowledge';
+import { SAHW_CASES_EN } from './i18n-content/sahw';
+import { QURAN_DUAS } from './quran-duas';
+import { FATIHA_AR, FATIHA_EN, FATIHA_FR } from './fatiha';
+import { NURANI_LETTERS, NURANI_MNEMONIC } from './nuraniyya';
+import { FATIHA_ORDER_FLAG, PRACTICES } from './tijani';
+
+const TO_REVIEW = 'traduction à relire (Zikru, assistée par machine puis revue)';
+const QD_EN = Object.fromEntries(QURAN_DUAS.map((q) => [q.id, q.en ?? '']));
+/** Anglais d’un texte (du‘a, hadith, ṣalāt) + son statut. */
+function englishOf(set: string, id: string): [string, string] {
+  if (set === 'duas' && DUAS_I18N[id]) return [DUAS_I18N[id].en, TO_REVIEW];
+  if (set === 'hadiths' && HADITHS_EN[id]) return [HADITHS_EN[id].en, TO_REVIEW];
+  if (set === 'salawat' && SALAWAT_EN[id]) return [SALAWAT_EN[id].en, TO_REVIEW];
+  if (set === 'quran-duas' && QD_EN[id]) return [QD_EN[id], 'Pickthall (1930, domaine public) — sens du Coran, non modifié'];
+  return ['', 'pas encore de traduction anglaise'];
+}
 
 export type ReviewRow = {
   uid: string;
@@ -15,6 +34,9 @@ export type ReviewRow = {
   title: string;
   arabic: string;
   french: string;
+  english: string;
+  /** « traduction à relire », domaine public, ou manquante. */
+  englishState: string;
   source: string;
   grading: string;
   status: ReviewStatus;
@@ -40,6 +62,8 @@ export function reviewRows(): ReviewRow[] {
       title: p.title,
       arabic: p.arabic ?? '',
       french: p.translation.fr ?? '',
+      english: englishOf(p.set, p.id)[0],
+      englishState: englishOf(p.set, p.id)[1],
       source: p.refText,
       grading: grading + (p.divergence ? ' — DIVERGENCE entre savants' : ''),
       status: p.review.status,
@@ -58,6 +82,8 @@ export function reviewRows(): ReviewRow[] {
       title: r.title.fr,
       arabic: r.textAr,
       french: r.items.map((x, i) => `${i + 1}. ${x}`).join(' '),
+      english: FIQH_EN[r.id] ? `${FIQH_EN[r.id].title} — ` + FIQH_EN[r.id].items.map((x, i) => `${i + 1}. ${x}`).join(' ') : '',
+      englishState: FIQH_EN[r.id] ? TO_REVIEW + ' ; en arabe l’app affiche l’extrait classique ci-contre' : 'pas encore de traduction anglaise',
       source: [citation(r.source), ...(r.also ?? []).map(citation)].join(' | '),
       grading: r.evidence?.length ? 'Preuves : ' + r.evidence.join(' ; ') : '',
       status: st,
@@ -74,6 +100,8 @@ export function reviewRows(): ReviewRow[] {
       title: x.q,
       arabic: x.a.textAr,
       french: `[${x.a.when}] ${x.a.text}`,
+      english: SAHW_CASES_EN[x.caseId]?.by[x.school]?.text ?? '',
+      englishState: SAHW_CASES_EN[x.caseId]?.by[x.school] ? TO_REVIEW + ' ; en arabe l’app affiche l’extrait classique ci-contre' : 'pas encore de traduction anglaise',
       source: [citation(x.a.source), ...(x.a.also ?? []).map(citation)].join(' | '),
       grading: '',
       status: st,
@@ -91,6 +119,8 @@ export function reviewRows(): ReviewRow[] {
       title: `${x.item.act} (${x.item.cat})`,
       arabic: '',
       french: x.item.act,
+      english: '',
+      englishState: 'tableau de référence : français seulement',
       source: '',
       grading: '',
       status: st,
@@ -98,7 +128,51 @@ export function reviewRows(): ReviewRow[] {
       note: x.item.todo ?? '',
     });
   }
+  rows.push(...p5Rows());
   return rows;
+}
+
+/** Points ajoutés en P5 (Fatiha en tête, lettres lumineuses, al-Kahf) à faire relire. */
+function p5Rows(): ReviewRow[] {
+  const row = (uid: string, group: string, title: string, o: Partial<ReviewRow>): ReviewRow => {
+    const st = reviewFor(uid).status;
+    return { uid, kind: 'texte', group, title, arabic: '', french: '', english: '', englishState: '', source: '', grading: 'Sans objet (Coran, tradition ou usage)', status: st, statusLabel: REVIEW_LABEL[st], note: '', ...o };
+  };
+  const out: ReviewRow[] = [];
+  for (const p of PRACTICES)
+    out.push(
+      row(`tijani:order:${p.id}`, 'Tijaniyya — ordre des étapes', `${p.name} : ordre des étapes`, {
+        french: p.steps.map((s, i) => `${i + 1}. ${s.formula}${s.count ? ` ×${s.count}` : ' (sans compter)'}`).join(' '),
+        englishState: 'sans objet',
+        source: 'Usage couramment décrit dans la tariqa (Jawahir al-Ma‘ani pour le wird) — à confirmer',
+        note: FATIHA_ORDER_FLAG,
+      }),
+    );
+  out.push(
+    row('fatiha:translation', 'Coran — Al-Fatiha (étape d’ouverture)', 'Al-Fatiha 1:1-7 — traductions', {
+      arabic: FATIHA_AR,
+      french: FATIHA_FR,
+      english: FATIHA_EN,
+      englishState: 'Pickthall (1930, domaine public) — sens du Coran, non modifié',
+      source: 'Texte arabe : Tanzil Uthmani (non modifié). Français : traduction de l’app, à relire.',
+      note: 'Étape ajoutée en tête des compositions « Mes zikrs » (réglage, actif par défaut) et des pratiques Tijaniyya.',
+    }),
+    row('quran:nuraniyya', 'Coran — lecteur', 'Lettres lumineuses (al-ḥurūf an-nūrāniyya) : fiche d’information', {
+      arabic: `${NURANI_LETTERS.join(' ')} — ${NURANI_MNEMONIC}`,
+      french:
+        'Les 29 sourates ouvertes par des lettres isolées ; 14 lettres distinctes (moitié de l’alphabet), formule mnémotechnique « نص حكيم قاطع له سر ». Sens : Allah en connaît mieux le sens (avis rapporté de nombreux savants) ; az-Zamakhsharī et Ibn Kathīr y voient un signe de l’inimitabilité. Aucune vertu attribuée.',
+      englishState: 'interface : traduction à relire',
+      source: 'Ibn Kathīr, Tafsīr al-Qur’ān al-‘Aẓīm, début de la sourate al-Baqara (2:1) ; az-Zamakhsharī, al-Kashshāf, même passage',
+      note: 'Règles d’affichage : ا ٱ آ أ إ et ى comptent ; ء ؤ ئ et ة non. À confirmer (en particulier ى et les formes de hamza).',
+    }),
+    row('kahf:hadith-ar', 'Coran — sourate al-Kahf', 'Hadiths cités sur l’écran al-Kahf : libellé arabe', {
+      arabic: 'مَنْ حَفِظَ عَشْرَ آيَاتٍ مِنْ أَوَّلِ سُورَةِ الْكَهْفِ عُصِمَ مِنَ الدَّجَّالِ ‖ مَنْ قَرَأَ سُورَةَ الْكَهْفِ فِي يَوْمِ الْجُمُعَةِ أَضَاءَ لَهُ مِنَ النُّورِ مَا بَيْنَ الْجُمُعَتَيْنِ',
+      englishState: 'interface : traduction à relire',
+      source: 'Sahih Muslim 809 ; al-Ḥākim (al-Mustadrak) et al-Bayhaqī, authentifié par al-Albānī (Ṣaḥīḥ al-Jāmi‘ 6470)',
+      note: 'Vérifier le libellé arabe exact de chaque recueil avant validation.',
+    }),
+  );
+  return out;
 }
 
 const COLS: [keyof ReviewRow, string][] = [
@@ -108,6 +182,8 @@ const COLS: [keyof ReviewRow, string][] = [
   ['title', 'Titre'],
   ['arabic', 'Texte arabe'],
   ['french', 'Résumé / traduction française'],
+  ['english', 'Traduction anglaise'],
+  ['englishState', 'Statut de la traduction anglaise'],
   ['source', 'Source citée'],
   ['grading', 'Jugement (hadith) / preuves'],
   ['statusLabel', 'Statut'],
@@ -142,6 +218,7 @@ export function reviewMarkdown(rows = reviewRows(), version = ''): string {
     out.push(`### ${r.title}  \`${r.uid}\``, '');
     if (r.arabic) out.push(`> ${r.arabic}`, '');
     if (r.french) out.push(`- **Français** : ${r.french}`);
+    if (r.english) out.push(`- **English** (${r.englishState}) : ${r.english}`);
     out.push(`- **Source** : ${r.source || '**SOURCE À COMPLÉTER** — aucune source précise pour l’instant'}`);
     if (r.grading) out.push(`- **Jugement / preuves** : ${r.grading}`);
     if (r.note) out.push(`- **Remarque** : ${r.note}`);
