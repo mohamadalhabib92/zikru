@@ -7,13 +7,14 @@ import { fileURLToPath } from 'node:url';
 import { loadLib, policyHtml, PRIVACY_HTML_PATH } from './privacy-html.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const storageStub = 'export async function loadJSON(k, f) { return f; } export async function saveJSON() {}';
+const storageStub = 'export async function loadJSON(k, f) { return f; } export async function saveJSON() { return true; } export async function saveCacheJSON() {}';
 const dir = await loadLib(['privacy', 'privacy-policy', 'privacy-text', 'prayer', 'weather'], { storage: storageStub });
 const P = await import(join(dir, 'privacy.mjs'));
 const W = await import(join(dir, 'weather.mjs'));
 const { POLICY } = await import(join(dir, 'privacy-policy.mjs'));
 const { PRIVACY_TEXT } = await import(join(dir, 'privacy-text.mjs'));
 let ok = 0;
+const CONTACT = 'mohamadalhabib@live.com';
 const test = async (n, f) => { await f(); ok++; console.log('✓', n); };
 
 await test('coarse : arrondi au dixième de degré, sans artefacts', () => {
@@ -133,6 +134,15 @@ await test('gating : Bilal et la météo ne partent qu’avec consentement (vér
   assert.equal(app.ios.privacyManifests.NSPrivacyTracking, false);
   assert.ok(app.ios.privacyManifests.NSPrivacyCollectedDataTypes.length >= 4, 'manifeste de confidentialité iOS renseigné');
   assert.ok(app.ios.privacyManifests.NSPrivacyCollectedDataTypes.every((d) => d.NSPrivacyCollectedDataTypeTracking === false));
+});
+
+await test('contact protection des données publié (fr/en/ar, page publique, assistance)', () => {
+  for (const l of ['fr', 'en', 'ar']) {
+    const all = JSON.stringify(POLICY[l]);
+    assert.ok(all.split(CONTACT).length - 1 >= 2, `${l} : contact en section 1 et dans les droits`);
+  }
+  assert.ok(readFileSync(PRIVACY_HTML_PATH, 'utf8').includes(CONTACT));
+  assert.ok(readFileSync(join(root, 'public/support/index.html'), 'utf8').includes(CONTACT));
 });
 
 console.log(`\n${ok} tests confidentialité OK`);

@@ -226,6 +226,21 @@ export function defaultMapping(profile: DeviceProfile, chars: GattChar[]): Mappi
 
 // ---------------------------------------------------------------- Décodage des appuis
 export const MAX_JUMP = 10;
+/** Cadence maximale plausible d'un doigt sur un compteur (≈ 16 appuis/s). */
+export const MIN_TAP_MS = 60;
+/** Plafond absolu d'un saut accepté en cours de connexion (au-delà : valeur aberrante, compté 1). */
+export const JUMP_PLAUSIBLE_MAX = 100;
+/**
+ * Appuis retenus pour un saut d de la valeur absolue en cours de connexion.
+ * Avant : tout saut > MAX_JUMP comptait 1 (trames perdues = appuis perdus). Maintenant le saut est accepté
+ * s'il est physiquement possible vu le temps écoulé depuis la trame précédente ; sinon il est plafonné.
+ */
+export function plausibleJump(d: number, elapsedMs: number): number {
+  if (d <= MAX_JUMP) return d;
+  if (d > JUMP_PLAUSIBLE_MAX) return 1;
+  const allowed = MAX_JUMP + Math.floor(Math.max(0, elapsedMs) / MIN_TAP_MS);
+  return Math.min(d, allowed);
+}
 export const BASELINE_GRACE_MS = 1500;
 
 /**
@@ -236,6 +251,7 @@ export const BASELINE_GRACE_MS = 1500;
  */
 export class ClickDecoder {
   private last: number | null = null;
+  private lastAt = 0;
   private pulses = 0;
   /** true si le dernier appel à feed() a rattrapé des appuis faits hors connexion. */
   lastWasSync = false;
@@ -267,7 +283,9 @@ export class ClickDecoder {
       const v = this.absoluteValue(b);
       if (v == null) return 0;
       const prev = this.last;
+      const prevAt = this.lastAt;
       this.last = v;
+      this.lastAt = now;
       if (prev == null) {
         // Première valeur de la connexion : synchronisation avec le total mémorisé (sans double comptage).
         if (this.stored != null) {
@@ -280,11 +298,11 @@ export class ClickDecoder {
       }
       const d = v - prev;
       if (d === 0) return 0;
-      if (d > 0) return d <= MAX_JUMP ? d : 1;
+      if (d > 0) return plausibleJump(d, now - prevAt);
       // compteur revenu en arrière : débordement du champ, ou remise à zéro de l'appareil
       const max = this.maxValue();
       if (max < Number.MAX_SAFE_INTEGER && prev >= max - 5 && v <= 5) return v + max + 1 - prev;
-      return v === 0 ? 0 : Math.min(v, MAX_JUMP);
+      return v === 0 ? 0 : plausibleJump(v, now - prevAt);
     }
     if (this.mapping.pressSignature) return toHex(b) === this.mapping.pressSignature ? 1 : 0;
     const per = Math.max(1, this.mapping.notifsPerClick ?? 1);

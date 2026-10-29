@@ -12,6 +12,7 @@ import type { ClickSource } from '../tasbih-core';
 import { allSharingModes, insertContributions, type ContributionRow, type ScopeType, type SharingMode } from './api';
 import { useAuth } from './auth';
 import { onClicks } from './clicks';
+import { coalesceQueue } from './queue';
 
 export type GoalLink = { goalId: string; title: string; scope: ScopeType; scopeId: string; scopeName: string; memberId?: string | null };
 type Queued = ContributionRow & { tries?: number };
@@ -31,6 +32,11 @@ type Ctx = {
 };
 const C = createContext<Ctx | null>(null);
 const FLUSH_MS = 6000;
+/** Délai avant de ranger les appuis dans la file persistante (un arrêt brutal ne perd au plus que ce délai). */
+const STASH_MS = 400;
+/** Au-delà, les lignes en attente sont regroupées par objectif (avant : les plus anciennes étaient supprimées). */
+const QUEUE_SOFT_MAX = 1000;
+
 
 export function CommunityProvider({ children }: { children: ReactNode }) {
   const { userId } = useAuth();
@@ -45,6 +51,12 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const modesRef = useRef(modes);
   const queueRef = useRef(queue);
   const busy = useRef(false);
+  const inflight = useRef<Set<string>>(new Set());
+  const stashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const qReadyRef = useRef(qReady);
+  useEffect(() => {
+    qReadyRef.current = qReady;
+  }, [qReady]);
   linksRef.current = links;
   modesRef.current = modes;
   queueRef.current = queue;
@@ -64,9 +76,15 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     void refreshModes();
   }, [refreshModes]);
 
-  /** Transfère l'accumulateur en file (une ligne par objectif) puis envoie la file. */
-  const flush = useCallback(async () => {
-    if (acc.current.size) {
+  /** Transfère l'accumulateur dans la file persistante (une ligne par objectif). */
+  const stash = useCallback(() => {
+    if (stashTimer.current) {
+      clearTimeout(stashTimer.current);
+      stashTimer.current = null;
+    }
+    // avant le chargement de la file, les appuis restent dans l'accumulateur (sinon la file chargée serait écrasée)
+    if (!qReadyRef.current || !acc.current.size) return;
+    {
       const rows: Queued[] = [];
       for (const v of acc.current.values()) {
         let n = v.n;
@@ -77,12 +95,24 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
         }
       }
       acc.current.clear();
-      queueRef.current = [...queueRef.current, ...rows].slice(-2000);
-      setQueue(queueRef.current);
+      let q = [...queueRef.current, ...rows];
+      if (q.length > QUEUE_SOFT_MAX) q = coalesceQueue(q, inflight.current, () => uid('c-'));
+      queueRef.current = q;
+      setQueue(q);
     }
+  }, [setQueue]);
+  const stashRef = useRef(stash);
+  useEffect(() => {
+    stashRef.current = stash;
+  }, [stash]);
+
+  /** Range l'accumulateur en file puis envoie la file. */
+  const flush = useCallback(async () => {
+    stash();
     if (!userId || busy.current || !queueRef.current.length) return;
     busy.current = true;
     const batch = queueRef.current.slice(0, 200);
+    for (const b of batch) inflight.current.add(b.client_id);
     try {
       await insertContributions(
         userId,
@@ -107,8 +137,9 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       busy.current = false;
+      inflight.current.clear();
     }
-  }, [userId, setQueue, setLinks]);
+  }, [userId, setQueue, setLinks, stash]);
   const flushRef = useRef(flush);
   flushRef.current = flush;
 
@@ -116,6 +147,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     const key = memberId ? `${goalId}|${memberId}` : goalId;
     const cur = acc.current.get(key);
     acc.current.set(key, { goalId, n: (cur?.n ?? 0) + n, source: cur && cur.source !== source ? 'manuel' : source, memberId });
+    if (!stashTimer.current) stashTimer.current = setTimeout(() => stashRef.current(), STASH_MS);
   };
 
   // Appuis du tasbih → objectifs reliés (respect du choix de partage par lieu).

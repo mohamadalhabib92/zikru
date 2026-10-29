@@ -5,7 +5,7 @@
 import { stripBasmala } from './quran';
 import { cachedTranslation } from './quran-offline';
 import { OFFSETS, TOTAL_AYAHS } from './quran-nav';
-import { loadJSON, saveJSON } from './storage';
+import { loadJSON, saveCacheJSON } from './storage';
 import { SURAHS } from './surahs';
 
 let uthP: Promise<string[]> | null = null;
@@ -45,7 +45,7 @@ export function surahEdition(n: number, ed: string): Promise<string[] | null> {
         if (!r.ok) return null;
         const j = (await r.json()) as { data: { ayahs: { text: string }[] } };
         const out = j.data.ayahs.map((a) => a.text);
-        await saveJSON(`qtr-${n}-${ed}`, out);
+        await saveCacheJSON(`qtr-${n}-${ed}`, out);
         return out;
       } catch {
         return null;
@@ -97,6 +97,6 @@ export async function getTafsir(id: string, s: number, a: number): Promise<strin
     text = decode(((await r.json()) as { tafsir: { text: string } }).tafsir.text);
   }
   if (!text) throw new Error('vide');
-  await saveJSON(key, text);
+  await saveCacheJSON(key, text);
   return text;
 }

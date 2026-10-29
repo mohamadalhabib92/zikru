@@ -12,7 +12,7 @@ const load = (name) => {
   writeFileSync(join(dir, name + '.mjs'), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
 };
 for (const n of ['surahs', 'quran-text', 'quran', 'quran-offline']) load(n);
-writeFileSync(join(dir, 'storage.mjs'), 'export const loadJSON = async (k, f) => f; export const saveJSON = async () => {};');
+writeFileSync(join(dir, 'storage.mjs'), 'export const loadJSON = async (k, f) => f; export const saveJSON = async () => true; export const saveCacheJSON = async () => {};');
 writeFileSync(join(dir, 'text-cache.mjs'), 'const m = new Map(); export const readText = async (k) => m.get(k) ?? null; export const writeText = async (k, v) => { m.set(k, v); };');
 const Q = await import(join(dir, 'quran-offline.mjs'));
 const T = await import(join(dir, 'quran-text.mjs'));

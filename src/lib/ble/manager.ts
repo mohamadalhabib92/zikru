@@ -80,7 +80,14 @@ export type BleState = {
 const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: Platform.OS === 'web', hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
 const KEY = 'ble-counter';
 
-type ClickListener = (n: number, source: ClickSourceBle) => void;
+/** cursor : valeur absolue de l'appareil après ces appuis (compteur « absolu ») — enregistrée AVEC le compte. */
+export type BleCursor = { id: string; value: number };
+type ClickListener = (n: number, source: ClickSourceBle, cursor?: BleCursor) => void;
+/**
+ * Mémoire des valeurs absolues déjà comptées, tenue par le magasin du tasbih (même écriture atomique que le compte) :
+ * après un arrêt brutal, la reconnexion ne recompte jamais des appuis déjà enregistrés.
+ */
+export type CursorStore = { get: (id: string) => number | undefined; set: (c: BleCursor) => void; drop: (id: string) => void };
 
 class BleCounterManager {
   private s: BleState = {
@@ -116,6 +123,7 @@ class BleCounterManager {
   private mappings: Record<string, Mapping> = {};
   private subs = new Set<() => void>();
   private clickSubs = new Set<ClickListener>();
+  private cursors: CursorStore | null = null;
   private link: BleLink | null = null;
   private unsub: (() => void)[] = [];
   private decoder: ClickDecoder | null = null;
@@ -162,10 +170,23 @@ class BleCounterManager {
       this.clickSubs.delete(f);
     };
   }
-  private emitClicks(n: number, source: ClickSourceBle) {
+  /** Branche la mémoire durable des curseurs (fournie par le magasin du tasbih). */
+  setCursorStore(c: CursorStore | null) {
+    this.cursors = c;
+  }
+  /** Dernière valeur comptée pour un appareil : celle du magasin durable d'abord, sinon l'ancienne mémoire locale. */
+  private storedValue(id: string): number | null {
+    return this.cursors?.get(id) ?? this.lastValues[id] ?? null;
+  }
+  private currentCursor(): BleCursor | undefined {
+    const id = this.s.device?.id;
+    const v = this.decoder?.lastValue;
+    return id && v != null && this.s.mapping?.mode === 'absolute' ? { id, value: v } : undefined;
+  }
+  private emitClicks(n: number, source: ClickSourceBle, cursor?: BleCursor) {
     if (n <= 0) return;
     if (source === 'bluetooth') this.set({ clicksThisConnection: this.s.clicksThisConnection + n });
-    this.clickSubs.forEach((f) => f(n, source));
+    this.clickSubs.forEach((f) => f(n, source, cursor));
   }
   private persist() {
     void saveJSON<Persisted>(KEY, { prefs: this.s.prefs, lastDevice: this.s.lastDevice, mappings: this.mappings, lastValues: this.lastValues, devices: this.s.devices });
@@ -333,13 +354,16 @@ class BleCounterManager {
     }
   }
   private makeDecoder(m: Mapping, profile: DeviceProfile, deviceId: string) {
-    const stored = m.mode === 'absolute' ? (this.lastValues[deviceId] ?? null) : null;
+    const stored = m.mode === 'absolute' ? this.storedValue(deviceId) : null;
     return new ClickDecoder(m, profile.parse ?? profileById('generic').parse, Date.now(), stored);
   }
   private rememberValue() {
     const id = this.s.device?.id;
     const v = this.decoder?.lastValue;
-    if (!id || v == null || this.lastValues[id] === v) return;
+    if (!id || v == null) return;
+    // curseur durable : écrit avec le compte (aucune fenêtre de 200 ms où un arrêt brutal ferait recompter)
+    if (this.s.mapping?.mode === 'absolute') this.cursors?.set({ id, value: v });
+    if (this.lastValues[id] === v) return;
     this.lastValues[id] = v;
     if (this.persistTimer) clearTimeout(this.persistTimer);
     this.persistTimer = setTimeout(() => this.persist(), 200);
@@ -400,7 +424,7 @@ class BleCounterManager {
         this.emitClicks(frames.length - 1, 'bluetooth');
       }
       const devId = this.s.device?.id;
-      this.decoder = new ClickDecoder(m, profile.parse, 0, devId && !m.field ? (this.lastValues[devId] ?? null) : null);
+      this.decoder = new ClickDecoder(m, profile.parse, 0, devId && !m.field ? this.storedValue(devId) : null);
       if (devId) this.mappings[devId] = m;
       this.set({ mapping: m, needsConfirm: true });
       this.persist();
@@ -413,7 +437,7 @@ class BleCounterManager {
     if (!sameUuid(m.characteristic, characteristic) || !sameUuid(m.service, service) || !this.decoder) return;
     const n = this.decoder.feed(b);
     if (this.decoder.lastWasSync && n > 0) this.set({ lastSync: { added: n, at: Date.now() } });
-    this.emitClicks(n, 'bluetooth');
+    this.emitClicks(n, 'bluetooth', this.currentCursor());
     this.rememberValue();
   }
   private handleDisconnect(link: BleLink) {
@@ -470,6 +494,7 @@ class BleCounterManager {
     if (!target) return;
     delete this.mappings[target];
     delete this.lastValues[target];
+    this.cursors?.drop(target);
     if (this.pendingId === target) this.cancelPending();
     const isCurrent = this.s.device?.id === target;
     if (isCurrent) void this.disconnect();
@@ -650,6 +675,9 @@ class BleCounterManager {
     if (oldId === newId) return;
     if (this.mappings[oldId] && !this.mappings[newId]) this.mappings[newId] = this.mappings[oldId];
     if (this.lastValues[oldId] != null && this.lastValues[newId] == null) this.lastValues[newId] = this.lastValues[oldId];
+    const c = this.cursors?.get(oldId);
+    if (c != null && this.cursors?.get(newId) == null) this.cursors?.set({ id: newId, value: c });
+    this.cursors?.drop(oldId);
     delete this.mappings[oldId];
     delete this.lastValues[oldId];
     this.set({

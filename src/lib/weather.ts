@@ -6,7 +6,7 @@
  */
 import { CITIES } from './prayer';
 import { coarsePoint, nearestCityLabel } from './privacy';
-import { loadJSON, saveJSON } from './storage';
+import { loadJSON, saveCacheJSON } from './storage';
 
 export type Weather = { temp: number; code: number; isDay: boolean; wind: number; feels?: number | null; max: number | null; min: number | null; city: string | null; at: number; lat: number; lng: number };
 
@@ -65,6 +65,6 @@ export async function getWeather(rawLat: number, rawLng: number, fallbackCity: s
     lat,
     lng,
   };
-  await saveJSON(KEY, w);
+  await saveCacheJSON(KEY, w);
   return w;
 }

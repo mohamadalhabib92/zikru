@@ -50,6 +50,7 @@ Réponses exactes : `store/app-privacy-checklist.md` §1. Résumé :
 - **Non collectées** : position précise (reste sur l'appareil), identifiants d'appareil, diagnostics, données d'usage, achats, santé.
 - **Suivi (tracking)** : Non. Pas d'identifiant publicitaire, pas de demande ATT.
 - URL de la politique : https://mohamadalhabib92.github.io/zikru/privacy/
+- Contact protection des données (indiqué dans la politique fr/en/ar et sur la page d’assistance) : mohamadalhabib@live.com
 
 Données qui restent sur l'appareil (pour information) : compteurs de tasbih, objectifs et historique ; ville ou position (horaires et qibla) ; réglages ; identifiant du compteur Bluetooth associé ; conversation avec Bilal.
 

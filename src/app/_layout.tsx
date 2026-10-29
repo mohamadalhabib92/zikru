@@ -17,6 +17,7 @@ import { takePendingRoute } from '@/ui/appearance';
 import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
+import { StorageAlert } from '@/components/StorageAlert';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -105,6 +106,7 @@ function Root() {
         <Stack.Screen name="circle/[id]" options={{ title: 'Mon cercle' }} />
         <Stack.Screen name="live/[id]" options={{ title: 'Zikr en direct' }} />
       </Stack>
+      <StorageAlert />
     </View>
   );
 }

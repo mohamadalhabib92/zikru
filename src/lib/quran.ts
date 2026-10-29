@@ -2,7 +2,7 @@
  * Lecture du Coran via l'API publique gratuite api.alquran.cloud (texte arabe vocalisé « simple-enhanced », lisible avec toutes les polices + traduction).
  * Chaque sourate téléchargée est mise en cache sur l'appareil → relecture hors-ligne.
  */
-import { loadJSON, saveJSON } from './storage';
+import { loadJSON, saveCacheJSON } from './storage';
 
 export type Ayah = { n: number; ar: string; tr: string };
 export type SurahText = { n: number; edition: string; ayahs: Ayah[] };
@@ -47,7 +47,7 @@ export async function getSurah(n: number, edition: string): Promise<SurahText> {
     return { n: a.numberInSurah, ar: t, tr: tr.ayahs[i]?.text ?? '' };
   });
   const out = { n, edition, ayahs };
-  await saveJSON(key, out);
+  await saveCacheJSON(key, out);
   return out;
 }
 export { BASMALA };

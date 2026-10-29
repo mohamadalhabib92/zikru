@@ -1,7 +1,7 @@
-# Zikru 1.0.23 — réponses « App Privacy » (App Store Connect), « Data safety » (Google Play) et classification par âge
+# Zikru 1.0.24 — réponses « App Privacy » (App Store Connect), « Data safety » (Google Play) et classification par âge
 
 Source de vérité : `src/lib/privacy-policy.ts` (politique publiée sur https://mohamadalhabib92.github.io/zikru/privacy/).
-Ces réponses décrivent le comportement **réel** de la version 1.0.23. À mettre à jour à chaque nouveau flux de données.
+Ces réponses décrivent le comportement **réel** de la version 1.0.24. À mettre à jour à chaque nouveau flux de données.
 
 Faits techniques qui fondent les réponses :
 - Horaires de prière, qibla, hégirien, tasbih, Coran, rappels : calculés et stockés **sur l’appareil** (aucun envoi).
@@ -10,6 +10,7 @@ Faits techniques qui fondent les réponses :
 - Bilal (IA, facultatif, consentement explicite) : texte des messages → fonction Supabase (Zurich) → Anthropic (États-Unis). L’identifiant de compte sert au quota et **n’est pas transmis** au fournisseur ; la conversation n’est pas enregistrée sur notre serveur (reste sur l’appareil).
 - Bluetooth : lecture des appuis du compteur, en local. Notifications : planifiées en local, pas de push serveur.
 - Aucune publicité, aucun SDK d’analyse ou de crash, aucun IDFA/AAID, aucune revente.
+- Contact pour les demandes liées aux données (accès, rectification, suppression, opposition) : **mohamadalhabib@live.com** (politique section 1 et droits, fr/en/ar ; page d’assistance). Réponse sous 30 jours. À reporter dans Google Play › Data safety / fiche (adresse e-mail de contact) et dans App Store Connect si demandé.
 
 ---
 

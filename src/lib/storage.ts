@@ -1,37 +1,83 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createDurable, type StorageIssue } from './durable';
 
 /**
  * Stockage local (AsyncStorage sur mobile, localStorage sur le web).
  * Toutes les données « cœur » vivent ici : l'app fonctionne hors-ligne,
  * sans backend ni API payante.
+ *
+ * Écritures sérialisées par clé, regroupées, réessayées en cas d'échec et SIGNALÉES
+ * (voir durable.ts et le bandeau StorageAlert) : plus aucune erreur avalée en silence.
  */
 // Préfixe propre à l'app : plusieurs PWA partagent la même origine sur GitHub Pages.
 const PREFIX = '@zikru/';
 
+export const durable = createDurable(AsyncStorage);
+/** Clé complète (avec le préfixe de l'app). */
+export const storageKey = (key: string) => PREFIX + key;
+export type { StorageIssue };
+
+/** Problèmes d'enregistrement en cours (affichés par le bandeau StorageAlert). */
+export const storageIssues = {
+  get: () => durable.issues(),
+  subscribe: (f: () => void) => durable.subscribe(f),
+  /** Nouvel essai immédiat de toutes les écritures en attente. */
+  retry: () => durable.flush(),
+  /** Masque une alerte de lecture (clé complète, telle que donnée par l'alerte). */
+  dismissFull: (fullKey: string) => durable.dismiss(fullKey),
+};
+
 export async function loadJSON<T>(key: string, fallback: T): Promise<T> {
+  return (await durable.read<T>(PREFIX + key, fallback)).value;
+}
+/** Lecture détaillée : indique si la valeur manque, est illisible ou si la lecture a échoué. */
+export function readJSON<T>(key: string, fallback: T) {
+  return durable.read<T>(PREFIX + key, fallback);
+}
+
+/** Écriture sérialisée et réessayée ; true si enregistrée (false : échec signalé, nouvel essai programmé). */
+export function saveJSON<T>(key: string, value: T): Promise<boolean> {
+  return durable.write(PREFIX + key, value);
+}
+
+/**
+ * Cache re-téléchargeable (texte du Coran, météo…) : écriture directe, sans nouvel essai ni alerte.
+ * À NE PAS utiliser pour des données de l'utilisateur.
+ */
+export async function saveCacheJSON<T>(key: string, value: T): Promise<boolean> {
   try {
-    const raw = await AsyncStorage.getItem(PREFIX + key);
-    return raw == null ? fallback : (JSON.parse(raw) as T);
+    await AsyncStorage.setItem(PREFIX + key, JSON.stringify(value));
+    return true;
   } catch {
-    return fallback;
+    return false; // cache seulement : il sera re-téléchargé
   }
 }
 
-export async function saveJSON<T>(key: string, value: T): Promise<void> {
-  try {
-    await AsyncStorage.setItem(PREFIX + key, JSON.stringify(value));
-  } catch {
-    // stockage plein / indisponible : on ne crashe jamais l'UI
-  }
+/** Force l'enregistrement des écritures en attente (passage en arrière-plan). */
+export function flushStorage(key?: string): Promise<boolean> {
+  return durable.flush(key == null ? undefined : PREFIX + key);
+}
+
+const clearSubs = new Set<() => void>();
+/** Prévenu après « Effacer toutes les données » (les états en mémoire reviennent à zéro). */
+export function onStorageCleared(f: () => void): () => void {
+  clearSubs.add(f);
+  return () => {
+    clearSubs.delete(f);
+  };
 }
 
 export async function clearAll(): Promise<void> {
+  // les écritures en attente ne doivent pas recréer les données effacées
+  durable.cancelAll();
   const keys = await AsyncStorage.getAllKeys();
   await AsyncStorage.multiRemove(keys.filter((k) => k.startsWith(PREFIX)));
+  clearSubs.forEach((f) => f());
 }
 
 export async function exportAll(): Promise<Record<string, unknown>> {
+  await durable.flush();
   const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(PREFIX));
   const pairs = await AsyncStorage.multiGet(keys);
   const out: Record<string, unknown> = {};
@@ -45,20 +91,34 @@ export async function exportAll(): Promise<Record<string, unknown>> {
   return out;
 }
 
-/** État React persistant (écriture immédiate à chaque changement). */
+/**
+ * État React persistant (écriture immédiate, sérialisée, à chaque changement).
+ * Une modification faite AVANT la fin du chargement n'est plus écrasée par la valeur chargée
+ * (ni ne l'écrase) : elle est rejouée sur la valeur chargée.
+ */
 export function usePersistentState<T>(key: string, initial: T | (() => T)) {
   const [value, setValue] = useState<T>(initial);
   const [ready, setReady] = useState(false);
   const initialRef = useRef(initial);
+  const cur = useRef<T>(value);
+  const loaded = useRef(false);
+  const early = useRef<(T | ((prev: T) => T))[]>([]);
 
   useEffect(() => {
     let alive = true;
+    loaded.current = false;
     const fb = typeof initialRef.current === 'function' ? (initialRef.current as () => T)() : initialRef.current;
-    loadJSON<T>(key, fb).then((v) => {
-      if (alive) {
-        setValue(v);
-        setReady(true);
-      }
+    loadJSON<T>(key, fb).then((stored) => {
+      if (!alive) return;
+      let v = stored;
+      const ops = early.current;
+      early.current = [];
+      for (const n of ops) v = typeof n === 'function' ? (n as (p: T) => T)(v) : n;
+      loaded.current = true;
+      cur.current = v;
+      setValue(v);
+      setReady(true);
+      if (ops.length) void saveJSON(key, v);
     });
     return () => {
       alive = false;
@@ -67,11 +127,14 @@ export function usePersistentState<T>(key: string, initial: T | (() => T)) {
 
   const set = useCallback(
     (next: T | ((prev: T) => T)) => {
-      setValue((prev) => {
-        const v = typeof next === 'function' ? (next as (p: T) => T)(prev) : next;
-        void saveJSON(key, v);
-        return v;
-      });
+      const v = typeof next === 'function' ? (next as (p: T) => T)(cur.current) : next;
+      cur.current = v;
+      setValue(v);
+      if (!loaded.current) {
+        early.current.push(next);
+        return;
+      }
+      void saveJSON(key, v);
     },
     [key],
   );

@@ -14,7 +14,7 @@ export const CONTROLLER = 'Mohamed El Habib Ba, Chemin de la Suettaz 17, 1008 Pr
 
 const fr: Policy = {
   title: 'Politique de confidentialité de Zikru',
-  updated: 'Dernière mise à jour : 29 octobre 2026 (version 1.0.23)',
+  updated: 'Dernière mise à jour : 29 octobre 2026 (version 1.0.24)',
   lead: 'Zikru fonctionne sans compte et sans publicité. Sans compte, vos compteurs, réglages et lectures restent sur votre appareil. Certaines fonctions facultatives envoient des données à des serveurs : elles sont décrites ci-dessous, une par une, et les plus sensibles ne s’activent qu’avec votre accord explicite.',
   sections: [
     {
@@ -23,7 +23,7 @@ const fr: Policy = {
       p: [
         `${CONTROLLER}.`,
         'Une société Zikru est en cours de création ; lorsqu’elle reprendra l’application, cette politique sera mise à jour et vous en serez informé dans l’app.',
-        'Contact pour toute question ou demande liée à vos données : par courrier à l’adresse ci-dessus, ou via la page d’assistance https://mohamadalhabib92.github.io/zikru/support/ (n’y publiez pas de données personnelles : nous vous recontacterons en privé).',
+        'Contact pour toute question ou demande liée à vos données (accès, rectification, suppression, opposition) : par e-mail à mohamadalhabib@live.com, par courrier à l’adresse ci-dessus, ou via la page d’assistance https://mohamadalhabib92.github.io/zikru/support/ (n’y publiez pas de données personnelles : nous vous recontacterons en privé).',
       ],
     },
     {
@@ -116,7 +116,7 @@ const fr: Policy = {
       li: [
         'Vous pouvez demander l’accès à vos données, leur rectification, leur effacement, leur portabilité, vous opposer à un traitement ou retirer un consentement à tout moment (sans effet sur la licéité passée).',
         'Effacement : directement dans l’app (Communauté › Supprimer mon compte). Consentements : Réglages › Confidentialité.',
-        'Pour les autres demandes, contactez-nous (section 1) ; nous répondons dans un délai de 30 jours.',
+        'Pour les autres demandes, écrivez à mohamadalhabib@live.com (section 1) ; nous répondons dans un délai de 30 jours.',
         'Vous pouvez porter plainte auprès du Préposé fédéral à la protection des données et à la transparence (PFPDT, www.edoeb.admin.ch) ou, dans l’Union européenne, auprès de l’autorité de contrôle de votre pays.',
       ],
     },
@@ -135,7 +135,7 @@ const fr: Policy = {
 
 const en: Policy = {
   title: 'Zikru privacy policy',
-  updated: 'Last updated: 29 October 2026 (version 1.0.23)',
+  updated: 'Last updated: 29 October 2026 (version 1.0.24)',
   lead: 'Zikru works without an account and without ads. Without an account, your counters, settings and reading stay on your device. Some optional features send data to servers: each is described below, and the most sensitive ones only turn on with your explicit consent.',
   sections: [
     {
@@ -144,7 +144,7 @@ const en: Policy = {
       p: [
         `${CONTROLLER}.`,
         'A Zikru company is being set up; when it takes over the app, this policy will be updated and you will be told in the app.',
-        'Contact for any question or request about your data: by post at the address above, or through the support page https://mohamadalhabib92.github.io/zikru/support/ (do not post personal data there: we will get back to you privately).',
+        'Contact for any question or request about your data (access, correction, deletion, objection): by email at mohamadalhabib@live.com, by post at the address above, or through the support page https://mohamadalhabib92.github.io/zikru/support/ (do not post personal data there: we will get back to you privately).',
       ],
     },
     {
@@ -237,7 +237,7 @@ const en: Policy = {
       li: [
         'You can ask to access, correct, erase or port your data, object to processing, or withdraw a consent at any time (without affecting past lawfulness).',
         'Erasure: directly in the app (Community › Delete my account). Consents: Settings › Privacy.',
-        'For other requests, contact us (section 1); we reply within 30 days.',
+        'For other requests, email mohamadalhabib@live.com (section 1); we reply within 30 days.',
         'You can complain to the Swiss Federal Data Protection and Information Commissioner (FDPIC, www.edoeb.admin.ch) or, in the European Union, to your national supervisory authority.',
       ],
     },
@@ -257,7 +257,7 @@ const en: Policy = {
 
 const ar: Policy = {
   title: 'سياسة الخصوصية لتطبيق ذكرو',
-  updated: 'آخر تحديث: 29 أكتوبر 2026 (الإصدار 1.0.23)',
+  updated: 'آخر تحديث: 29 أكتوبر 2026 (الإصدار 1.0.24)',
   lead: 'يعمل ذكرو بدون حساب وبدون إعلانات. بدون حساب، تبقى عدّاداتك وإعداداتك وقراءتك على جهازك. بعض الميزات الاختيارية ترسل بيانات إلى خوادم: نصفها أدناه واحدةً واحدة، ولا تعمل أكثرها حساسيةً إلا بموافقتك الصريحة.',
   sections: [
     {
@@ -266,7 +266,7 @@ const ar: Policy = {
       p: [
         `${CONTROLLER}.`,
         'شركة ذكرو قيد التأسيس؛ وعندما تتولى التطبيق ستُحدَّث هذه السياسة وستُبلَّغ بذلك داخل التطبيق.',
-        'للتواصل بشأن أي سؤال أو طلب يتعلق ببياناتك: بالبريد على العنوان أعلاه، أو عبر صفحة الدعم https://mohamadalhabib92.github.io/zikru/support/ (لا تنشر هناك بيانات شخصية: سنتواصل معك بشكل خاص).',
+        'للتواصل بشأن أي سؤال أو طلب يتعلق ببياناتك (الاطلاع، التصحيح، الحذف، الاعتراض): بالبريد الإلكتروني على mohamadalhabib@live.com، أو بالبريد على العنوان أعلاه، أو عبر صفحة الدعم https://mohamadalhabib92.github.io/zikru/support/ (لا تنشر هناك بيانات شخصية: سنتواصل معك بشكل خاص).',
       ],
     },
     {
@@ -359,7 +359,7 @@ const ar: Policy = {
       li: [
         'يمكنك طلب الاطلاع على بياناتك أو تصحيحها أو حذفها أو نقلها، أو الاعتراض على معالجتها، أو سحب أي موافقة في أي وقت (دون أثر على مشروعية ما سبق).',
         'الحذف: مباشرةً في التطبيق (المجتمع › حذف حسابي). الموافقات: الإعدادات › الخصوصية.',
-        'للطلبات الأخرى تواصل معنا (القسم 1)؛ نجيب خلال 30 يومًا.',
+        'للطلبات الأخرى راسلنا على mohamadalhabib@live.com (القسم 1)؛ نجيب خلال 30 يومًا.',
         'يمكنك تقديم شكوى إلى المفوض الفيدرالي السويسري لحماية البيانات والشفافية (www.edoeb.admin.ch)، أو في الاتحاد الأوروبي إلى سلطة الرقابة في بلدك.',
       ],
     },
