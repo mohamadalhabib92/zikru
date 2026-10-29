@@ -6,7 +6,7 @@ import { RULINGS, SCHOOL_LABEL, citation } from './fiqh-rulings';
 import { allProvenance, GRADE_LABEL, SET_LABEL } from './provenance';
 import type { ReviewStatus } from './provenance-types';
 import { REVIEW_LABEL, reviewFor } from './reviews';
-import { allSahwAnswers } from './sahw';
+import { allSahwAnswers, refItemsToComplete } from './sahw';
 
 export type ReviewRow = {
   uid: string;
@@ -81,6 +81,23 @@ export function reviewRows(): ReviewRow[] {
       note: x.a.note ?? '',
     });
   }
+  for (const x of refItemsToComplete()) {
+    const r = reviewFor(x.uid);
+    const st: ReviewStatus = r.status === 'a_valider' ? 'source_a_completer' : r.status;
+    rows.push({
+      uid: x.uid,
+      kind: 'sahw',
+      group: `Sahw ${SCHOOL_LABEL[x.school].fr} — tableau de référence`,
+      title: `${x.item.act} (${x.item.cat})`,
+      arabic: '',
+      french: x.item.act,
+      source: '',
+      grading: '',
+      status: st,
+      statusLabel: REVIEW_LABEL[st],
+      note: x.item.todo ?? '',
+    });
+  }
   return rows;
 }
 
@@ -125,7 +142,7 @@ export function reviewMarkdown(rows = reviewRows(), version = ''): string {
     out.push(`### ${r.title}  \`${r.uid}\``, '');
     if (r.arabic) out.push(`> ${r.arabic}`, '');
     if (r.french) out.push(`- **Français** : ${r.french}`);
-    out.push(`- **Source** : ${r.source}`);
+    out.push(`- **Source** : ${r.source || '**SOURCE À COMPLÉTER** — aucune source précise pour l’instant'}`);
     if (r.grading) out.push(`- **Jugement / preuves** : ${r.grading}`);
     if (r.note) out.push(`- **Remarque** : ${r.note}`);
     out.push(`- **Statut** : ${r.statusLabel}`, '- [ ] Validé   - [ ] À corriger — correction : ……………………………', '');

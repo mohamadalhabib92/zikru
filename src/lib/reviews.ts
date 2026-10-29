@@ -16,4 +16,5 @@ export const REVIEW_LABEL: Record<Review['status'], string> = {
   a_valider: 'À valider',
   valide: 'Validé',
   a_corriger: 'À corriger',
+  source_a_completer: 'Source à compléter',
 };

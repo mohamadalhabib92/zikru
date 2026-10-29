@@ -52,7 +52,8 @@ export type SourceRef = {
   url?: string;
 };
 
-export type ReviewStatus = 'a_valider' | 'valide' | 'a_corriger';
+/** 'source_a_completer' : élément affiché mais dont la source précise manque encore — jamais présenté comme sourcé. */
+export type ReviewStatus = 'a_valider' | 'valide' | 'a_corriger' | 'source_a_completer';
 export type Review = {
   status: ReviewStatus;
   /** Rôle du validateur (ex. « muhaddith », « faqih malikite ») — jamais un nom sans son accord. */
@@ -82,4 +83,6 @@ export type ProvenanceItem = {
   gradings: (VerifiedGrading & { key: string })[];
   divergence: boolean;
   review: Review;
+  /** Déclaration explicite d’une source manquante (seul cas toléré par le CI). */
+  sourceStatus?: 'source_a_completer';
 };

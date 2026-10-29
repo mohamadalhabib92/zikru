@@ -152,13 +152,18 @@ export const CASES: Case[] = [
   },
 ];
 
-export type RefItem = { act: string; cat: string };
+/**
+ * Élément du tableau de référence. `sourceStatus: 'source_a_completer'` = affiché à la demande de l’utilisateur
+ * mais sans source précise : badge visible, listé dans « Validation savante », jamais présenté comme sourcé.
+ */
+export type RefItem = { act: string; cat: string; id?: string; sourceStatus?: 'source_a_completer'; todo?: string };
 export const REFERENCE: Record<Madhab, { cats: { name: string; rule: string }[]; items: RefItem[]; source: FiqhSource[] }> = {
   maliki: {
     cats: [
       { name: 'Fara’id (piliers)', rule: 'Obligatoires : la prosternation ne remplace ni une rak‘a ni une prosternation ; il faut les accomplir.' },
       { name: 'Sunan mu’akkada', rule: 'Sunnas confirmées : leur oubli entraîne une prosternation avant le salam.' },
       { name: 'Sans prosternation', rule: 'Pas de prosternation de l’oubli.' },
+      { name: 'Fada’il (source à compléter)', rule: 'Classement et effet sur la prosternation non encore sourcés précisément : à confirmer par un relecteur.' },
     ],
     items: [
       { act: 'Takbir d’ouverture', cat: 'Fara’id (piliers)' },
@@ -172,6 +177,20 @@ export const REFERENCE: Record<Madhab, { cats: { name: string; rule: string }[];
       { act: 'Takbirs de transition (deux ou plus)', cat: 'Sunan mu’akkada' },
       { act: 'Qunut du Subh', cat: 'Sans prosternation' },
       { act: 'Un seul takbir ou un seul « sami‘a Llahu li-man hamidah »', cat: 'Sans prosternation' },
+      {
+        act: 'Lever les mains au takbir d’ouverture',
+        cat: 'Fada’il (source à compléter)',
+        id: 'lever-mains',
+        sourceStatus: 'source_a_completer',
+        todo: 'Citer le passage précis (ar-Risāla ou Mayyāra, chapitre et page) qui classe cet acte parmi les fada’il et précise qu’il n’entraîne pas de sujud as-sahw.',
+      },
+      {
+        act: '« Rabbana wa laka-l-hamd »',
+        cat: 'Fada’il (source à compléter)',
+        id: 'rabbana-laka',
+        sourceStatus: 'source_a_completer',
+        todo: 'Citer le passage précis (ar-Risāla ou Mayyāra, chapitre et page) qui classe cette formule parmi les fada’il et précise qu’elle n’entraîne pas de sujud as-sahw.',
+      },
     ],
     source: [MAY('p. 275 (sunan) et p. 339 (sahw)', 269), RIS('p. 38', 44), src('mayyara', 'Kitāb aṣ-ṣalāt — farā’iḍ aṣ-ṣalāt', 'p. 235-237', 229)],
   },
@@ -241,5 +260,14 @@ export const sahwUid = (caseId: string, m: Madhab) => `sahw:${caseId}:${m}`;
 export function allSahwAnswers() {
   const out: { uid: string; caseId: string; q: string; school: Madhab; a: SahwAnswer }[] = [];
   for (const c of CASES) for (const m of SCHOOLS) if (c.by[m]) out.push({ uid: sahwUid(c.id, m), caseId: c.id, q: c.q, school: m, a: c.by[m]! });
+  return out;
+}
+
+/** Éléments du tableau de référence encore sans source précise (affichés avec un badge, listés pour relecture). */
+export function refItemsToComplete(): { uid: string; school: Madhab; item: RefItem }[] {
+  const out: { uid: string; school: Madhab; item: RefItem }[] = [];
+  for (const school of Object.keys(REFERENCE) as Madhab[])
+    for (const item of REFERENCE[school].items)
+      if (item.sourceStatus === 'source_a_completer') out.push({ uid: `sahw:ref:${school}:${item.id ?? item.act}`, school, item });
   return out;
 }

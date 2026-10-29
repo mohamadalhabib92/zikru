@@ -10,8 +10,9 @@ const uids = new Set();
 for (const it of items) {
   if (uids.has(it.uid)) fail.push(`${it.uid} : identifiant en double`);
   uids.add(it.uid);
-  if (!it.sources.length) fail.push(`${it.uid} : aucune source (réf. « ${it.refText} »)`);
-  if (!it.review || !['a_valider', 'valide', 'a_corriger'].includes(it.review.status)) fail.push(`${it.uid} : statut de validation invalide`);
+  // Une source absente n’est tolérée que si elle est déclarée explicitement (sourceStatus: 'source_a_completer').
+  if (!it.sources.length && !(it.sourceStatus === 'source_a_completer' && it.review.status === 'source_a_completer')) fail.push(`${it.uid} : aucune source (réf. « ${it.refText} »)`);
+  if (!it.review || !['a_valider', 'valide', 'a_corriger', 'source_a_completer'].includes(it.review.status)) fail.push(`${it.uid} : statut de validation invalide`);
   if (it.review.status === 'valide' && (!it.review.role || !it.review.date || !it.review.version)) fail.push(`${it.uid} : « validé » sans rôle/date/version`);
   for (const s of it.sources) {
     if (s.kind === 'hadith') {

@@ -8,7 +8,7 @@ import { Badge, Button, Card, Eyebrow, H1, H2, Muted, Row, Screen, Segmented, Sp
 import { theme as t } from '@/ui/theme';
 
 type Kind = 'all' | ReviewRow['kind'];
-const STATUSES: ReviewStatus[] = ['a_valider', 'a_corriger', 'valide'];
+const STATUSES: ReviewStatus[] = ['a_valider', 'source_a_completer', 'a_corriger', 'valide'];
 
 function download(name: string, text: string, type: string) {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -49,7 +49,7 @@ export default function Validation() {
         </Text>
         <Row gap={6} style={{ flexWrap: 'wrap', marginTop: 8 }}>
           {STATUSES.map((s) => (
-            <Badge key={s} label={`${REVIEW_LABEL[s]} : ${scoped.filter((r) => r.status === s).length}`} tone={s === 'valide' ? 'success' : s === 'a_corriger' ? 'danger' : 'warning'} />
+            <Badge key={s} label={`${REVIEW_LABEL[s]} : ${scoped.filter((r) => r.status === s).length}`} tone={s === 'valide' ? 'success' : s === 'a_corriger' || s === 'source_a_completer' ? 'danger' : 'warning'} />
           ))}
         </Row>
         {Platform.OS === 'web' ? (
@@ -70,7 +70,7 @@ export default function Validation() {
             {r.group} · {r.uid}
           </Text>
           <Text style={{ color: t.text, fontWeight: '700', marginTop: 2 }}>{r.title}</Text>
-          <Text style={{ color: t.muted, fontSize: 12, marginTop: 4, lineHeight: 17 }}>Source : {r.source}</Text>
+          <Text style={{ color: r.source ? t.muted : t.danger, fontSize: 12, marginTop: 4, lineHeight: 17, fontWeight: r.source ? '400' : '700' }}>Source : {r.source || 'à compléter (aucune source précise pour l’instant)'}</Text>
           {r.grading ? <Text style={{ color: t.muted, fontSize: 12, marginTop: 2, lineHeight: 17 }}>{r.grading}</Text> : null}
           {r.note ? <Text style={{ color: t.text, fontSize: 12, marginTop: 2, lineHeight: 17 }}>Remarque : {r.note}</Text> : null}
         </Card>

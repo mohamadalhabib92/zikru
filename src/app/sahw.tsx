@@ -125,17 +125,31 @@ export default function Sahw() {
             <Card key={c.name}>
               <Row style={{ justifyContent: 'space-between' }}>
                 <H2>{c.name}</H2>
-                <Badge label={ci === 0 ? 'Obligatoire' : ci === 1 ? 'Prosternation' : 'Aucune'} tone={ci === 0 ? 'warning' : ci === 1 ? 'success' : 'neutral'} />
+                {REFERENCE[madhab].items.some((x) => x.cat === c.name && x.sourceStatus === 'source_a_completer') ? (
+                  <Badge label={REVIEW_LABEL.source_a_completer} tone="danger" />
+                ) : (
+                  <Badge label={ci === 0 ? 'Obligatoire' : ci === 1 ? 'Prosternation' : 'Aucune'} tone={ci === 0 ? 'warning' : ci === 1 ? 'success' : 'neutral'} />
+                )}
               </Row>
               <Muted>{c.rule}</Muted>
               <Spacer h={6} />
               {REFERENCE[madhab].items
                 .filter((x) => x.cat === c.name)
-                .map((x) => (
-                  <Text key={x.act} style={{ color: t.text, marginTop: 4, lineHeight: 21 }}>
-                    • {x.act}
-                  </Text>
-                ))}
+                .map((x) =>
+                  x.sourceStatus === 'source_a_completer' ? (
+                    <View key={x.act} style={{ marginTop: 6 }}>
+                      <Row gap={6} style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+                        <Text style={{ color: t.text, lineHeight: 21 }}>• {x.act}</Text>
+                        <Badge label={REVIEW_LABEL.source_a_completer} tone="danger" />
+                      </Row>
+                      <Text style={{ color: t.muted, fontSize: 12, lineHeight: 17 }}>Non sourcé pour l’instant : {x.todo}</Text>
+                    </View>
+                  ) : (
+                    <Text key={x.act} style={{ color: t.text, marginTop: 4, lineHeight: 21 }}>
+                      • {x.act}
+                    </Text>
+                  ),
+                )}
             </Card>
           ))}
           {REFERENCE[madhab].source.map((s, i) => (
