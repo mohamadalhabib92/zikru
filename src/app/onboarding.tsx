@@ -2,14 +2,14 @@ import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Madhab } from '@/lib/fiqh';
+import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
+import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { LANGS } from '@/lib/i18n';
 import { privacyText } from '@/lib/privacy-text';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES } from '@/lib/prayer';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
-import { usePersistentState } from '@/lib/storage';
 import { Container, FadeIn, IconBadge, tapHaptic } from '@/ui/ds';
 import { Button, Ionicons, Toggle, type IconName } from '@/ui/kit';
 import { PatternBg } from '@/components/zikru/Pattern';
@@ -22,7 +22,13 @@ export default function Onboarding() {
   const { s, set, t: tr } = useSettings();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [madhab, setMadhab] = usePersistentState<Madhab>('fiqh-madhab', 'maliki');
+  const [madhab, setMadhabRaw] = useMadhab();
+  const schoolName = (m: School) => (s.lang === 'ar' ? SCHOOL_LABEL[m].ar : s.lang === 'fr' ? SCHOOL_LABEL[m].fr : SCHOOL_LABEL[m].en);
+  /** Choisir l’école règle aussi l’Asr par défaut (hanafite → Asr hanafite), sauf choix manuel de l’Asr. */
+  const setMadhab = (m: School) => {
+    setMadhabRaw(m);
+    if (!s.asrManual) set({ madhab: asrForSchool(m) });
+  };
   const steps: StepId[] = ['lang', 'madhab', 'place', ...(remindersSupported() ? (['notif'] as StepId[]) : []), 'ble', 'done'];
   const [i, setI] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -85,8 +91,9 @@ export default function Onboarding() {
       <>
         <Title icon="scale" title={tr.onb_madhab} sub={tr.onb_madhab_sub} />
         <View style={{ gap: 8 }}>
-          <Option active={madhab === 'maliki'} title={tr.maliki} sub="Imam Mālik ibn Anas" onPress={() => setMadhab('maliki')} />
-          <Option active={madhab === 'shafii'} title={tr.shafii} sub="Imam ash-Shāfi‘ī" onPress={() => setMadhab('shafii')} />
+          {SCHOOLS.map((m) => (
+            <Option key={m} active={madhab === m} title={schoolName(m)} sub={SCHOOL_LABEL[m].imam} onPress={() => setMadhab(m)} />
+          ))}
         </View>
       </>
     );
@@ -162,7 +169,7 @@ export default function Onboarding() {
         <Title icon="checkmark-done" title={tr.onb_done} sub={tr.onb_done_sub} />
         <Text style={{ color: b.inkMuted, textAlign: 'center' }}>
           {s.place.label}
-          {s.place.source === 'example' ? ' (exemple)' : ''} · {madhab === 'maliki' ? tr.maliki : tr.shafii} · {tr.offline_ready}
+          {s.place.source === 'example' ? ' (exemple)' : ''} · {schoolName(madhab)} · {tr.offline_ready}
         </Text>
       </>
     );

@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import type { Text3 } from '@/lib/knowledge';
+import type { ProvenanceSet } from '@/lib/provenance-types';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { PatternBg } from './Pattern';
+import { ProvenanceBadges } from './Provenance';
 
-export function KnowledgeList({ items, title, ar, sub, color, icon, note }: { items: Text3[]; title: string; ar: string; sub: string; color: string; icon: IconName; note: string }) {
+export function KnowledgeList({ items, title, ar, sub, color, icon, note, set }: { items: Text3[]; title: string; ar: string; sub: string; color: string; icon: IconName; note: string; set?: ProvenanceSet }) {
   const [q, setQ] = useState('');
   const [topic, setTopic] = useState<string | null>(null);
   const topics = useMemo(() => [...new Set(items.map((x) => x.topic))], [items]);
@@ -41,6 +43,7 @@ export function KnowledgeList({ items, title, ar, sub, color, icon, note }: { it
             {x.tr ? <Text style={{ color: b.brownSoft, fontStyle: 'italic', marginTop: 4 }}>{x.tr}</Text> : null}
             <LText style={{ marginTop: 6 }}>{x.fr}</LText>
             <Text style={{ color: b.brown, fontWeight: '800', marginTop: 8, fontSize: 13 }}>{x.ref}</Text>
+            {set ? <ProvenanceBadges set={set} id={x.id} /> : null}
           </LCard>
         ))}
         {!list.length ? <LMuted>Aucun résultat.</LMuted> : null}

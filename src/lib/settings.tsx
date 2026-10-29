@@ -8,7 +8,10 @@ export type Settings = {
   lang: Lang;
   place: Place;
   method: MethodKey;
+  /** Calcul de l’heure de l’Asr (ombre ×1 ou ×2) — distinct de l’école de fiqh (`fiqh-madhab`). */
   madhab: 'shafi' | 'hanafi';
+  /** true si l’utilisateur a choisi l’Asr lui-même ; sinon il suit l’école de fiqh. */
+  asrManual?: boolean;
   hijriOffset: number;
   onboarded: boolean;
   /** Apparence : suit le système par défaut. */

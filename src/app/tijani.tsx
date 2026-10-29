@@ -11,6 +11,7 @@ import { ADILLA, BIOGRAPHY, CONDITIONS, FORMULAS, MUQADDAM_NOTE, PRACTICES, SHAY
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, LTitle, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { ProvenanceBadges } from '@/components/zikru/Provenance';
 
 type Tab = 'wird' | 'wazifa' | 'hailala' | 'path' | 'adilla';
 const TABS: { v: Tab; label: string; icon: IconName }[] = [
@@ -332,6 +333,7 @@ function AdillaTab() {
           </View>
           <LText style={{ marginTop: 6 }}>{a.text}</LText>
           <Text style={{ color: b.brown, fontWeight: '800', marginTop: 6 }}>{a.ref}</Text>
+          <ProvenanceBadges set="adilla" id={String(ADILLA.indexOf(a))} />
         </LCard>
       ))}
     </View>

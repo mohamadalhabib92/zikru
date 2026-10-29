@@ -81,6 +81,7 @@ function Root() {
         <Stack.Screen name="config" options={{ title: tr.config_missing }} />
         <Stack.Screen name="content-admin" options={{ title: tr.content_admin }} />
         <Stack.Screen name="audit" options={{ title: tr.audit }} />
+        <Stack.Screen name="validation" options={{ title: 'Validation savante' }} />
         <Stack.Screen name="quran/index" options={{ title: 'Qur’an' }} />
         <Stack.Screen name="quran/[n]" options={{ title: 'Sourate' }} />
         <Stack.Screen name="quran/mushaf" options={{ title: 'Mushaf' }} />

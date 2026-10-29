@@ -6,10 +6,10 @@ import { LANGS } from '@/lib/i18n';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
 import Constants from 'expo-constants';
-import type { Madhab } from '@/lib/fiqh';
+import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
+import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
 import { useSettings } from '@/lib/settings';
-import { usePersistentState } from '@/lib/storage';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
@@ -22,7 +22,11 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [gpsErr, setGpsErr] = useState(false);
-  const [fiqh, setFiqh] = usePersistentState<Madhab>('fiqh-madhab', 'maliki');
+  const [fiqh, setFiqhRaw] = useMadhab();
+  const setFiqh = (m: School) => {
+    setFiqhRaw(m);
+    if (!s.asrManual) set({ madhab: asrForSchool(m) });
+  };
   const [consent, choose] = useConsent();
   const pt = privacyText(s.lang);
   return (
@@ -88,16 +92,25 @@ export default function SettingsScreen() {
         ))}
       </Card>
       <Spacer />
-      <Segmented label={tr.madhab} options={[{ label: tr.shafi, value: 'shafi' as const }, { label: tr.hanafi, value: 'hanafi' as const }]} value={s.madhab} onChange={(v) => set({ madhab: v })} />
       <Segmented
         label={tr.onb_madhab}
-        options={[
-          { label: tr.maliki, value: 'maliki' as const },
-          { label: tr.shafii, value: 'shafii' as const },
-        ]}
+        options={SCHOOLS.map((m) => ({ label: s.lang === 'ar' ? SCHOOL_LABEL[m].ar : s.lang === 'fr' ? SCHOOL_LABEL[m].fr : SCHOOL_LABEL[m].en, value: m }))}
         value={fiqh}
         onChange={setFiqh}
       />
+      <Muted>{s.lang === 'fr' ? 'École utilisée pour le Fiqh et le Sujud as-sahw.' : 'School used for Fiqh and Sujud as-sahw.'}</Muted>
+      <Spacer h={10} />
+      <Segmented
+        label={tr.madhab}
+        options={[{ label: tr.shafi, value: 'shafi' as const }, { label: tr.hanafi, value: 'hanafi' as const }]}
+        value={s.madhab}
+        onChange={(v) => set({ madhab: v, asrManual: v !== asrForSchool(fiqh) })}
+      />
+      <Muted>
+        {s.lang === 'fr'
+          ? `Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite). ${s.asrManual ? 'Choisi manuellement.' : 'Suit l’école choisie ci-dessus.'}`
+          : `Separate from the school: shadow ×1 (majority) or ×2 (Hanafi). ${s.asrManual ? 'Set manually.' : 'Follows the school above.'}`}
+      </Muted>
       <Spacer />
       <Segmented label={tr.hijri_offset} options={[-2, -1, 0, 1, 2].map((n) => ({ label: n > 0 ? `+${n}` : String(n), value: n }))} value={s.hijriOffset} onChange={(v) => set({ hijriOffset: v })} />
       <Spacer h={20} />
@@ -149,6 +162,8 @@ export default function SettingsScreen() {
         <ListItem title={tr.content_admin} icon="git-pull-request-outline" onPress={() => router.push('/content-admin')} />
         <Divider />
         <ListItem title={tr.audit} icon="clipboard-outline" onPress={() => router.push('/audit')} />
+        <Divider />
+        <ListItem title="Validation savante" subtitle="Pour les relecteurs : contenus par statut, fiche exportable" icon="ribbon-outline" onPress={() => router.push('/validation')} />
       </Card>
       <Spacer h={20} />
       <Button

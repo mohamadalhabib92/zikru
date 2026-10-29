@@ -10,6 +10,7 @@ import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, Pill } from '@/ui/light';
 import { useLayout } from '@/ui/ds';
 import { alpha, brand as b, isDark } from '@/ui/theme';
+import { ProvenanceBadges } from '@/components/zikru/Provenance';
 
 const norm = (s: string) =>
   s
@@ -187,6 +188,7 @@ export default function Names() {
         <LMuted
           style={{ marginTop: 8, fontSize: 12 }}
         >{`${NAMES_REF}. L’énumération des 99 Noms provient de la version d’at-Tirmidhī ; les savants en ont discuté l’authenticité (elle serait une insertion d’un rapporteur), d’autres listes existent. Sens en français indicatif.`}</LMuted>
+        <ProvenanceBadges set="names" id="enumeration" />
       </View>
       <AddToZikrSheet item={draft} onClose={() => setDraft(null)} />
     </Screen>

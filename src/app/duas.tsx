@@ -10,6 +10,7 @@ import { usePersistentState } from '@/lib/storage';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { ProvenanceBadges } from '@/components/zikru/Provenance';
 
 const COLOR = '#2F7FD0';
 const norm = (s: string) =>
@@ -56,6 +57,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
       <LText style={{ marginTop: 6 }}>{d.fr}</LText>
       {d.note ? <LMuted style={{ marginTop: 6 }}>{d.note}</LMuted> : null}
       <Text style={{ color: b.brown, fontWeight: '800', marginTop: 8, fontSize: 13 }}>{d.ref}</Text>
+      <ProvenanceBadges set="duas" id={d.id} />
       <View style={{ marginTop: 8 }}>
         <AbjadBadge ar={d.ar} />
       </View>
@@ -153,7 +155,7 @@ export default function Duas() {
         ))}
         {!list.length ? <LMuted>{cat === 'favs' ? 'Aucun favori pour l’instant : touchez l’étoile d’une invocation pour l’ajouter.' : 'Aucun résultat.'}</LMuted> : null}
         <LMuted style={{ marginTop: 8 }}>
-          Invocations tirées du Coran et des recueils authentiques (al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, Ibn Majah, Ahmad), numérotation de sunnah.com. Les textes jugés faibles ont été écartés. Traductions et translittérations indicatives : en cas de doute, se référer à un savant.
+          Invocations tirées du Coran et des recueils authentiques (al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, Ibn Majah, Ahmad), numérotation de sunnah.com. Chaque carte affiche le jugement (grading) recopié de sunnah.com ou dorar.net avec le nom du savant ; à défaut, « grading non vérifié ». Certains textes sont jugés faibles par un savant et le badge l’indique. Tout le contenu est « à valider » par une personne de savoir. Traductions et translittérations indicatives : en cas de doute, se référer à un savant.
         </LMuted>
       </View>
       <AddToZikrSheet item={draft} onClose={() => setDraft(null)} />
