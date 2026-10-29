@@ -19,7 +19,14 @@ import {
   likelyCounter,
   isCounterKey,
   isValidUuid,
+  autoConnectAllowed,
+  classifyDevice,
+  COUNTER_NAME_PREFIXES,
+  COUNTER_SERVICES,
+  isDeviceVisible,
+  connectRetryDelay,
   keeperDelay,
+  keeperPlan,
   matchKnown,
   normUuid,
   profileById,
@@ -43,7 +50,7 @@ export type Prefs = { profileId: DeviceProfile['id']; customService: string; hid
 export type KnownDevice = { id: string; name: string | null; lastSeen: string; auto?: boolean; services?: string[] };
 /** État de la reconnexion automatique aux appareils mémorisés (puce d'état). */
 export type AutoState = 'inactif' | 'recherche' | 'bt-off' | 'action' | 'indisponible' | 'connecté';
-type Persisted = { prefs: Prefs; lastDevice: { id: string; name: string | null } | null; mappings: Record<string, Mapping>; lastValues?: Record<string, number>; devices?: KnownDevice[] };
+type Persisted = { prefs: Prefs; lastDevice: { id: string; name: string | null } | null; mappings: Record<string, Mapping>; lastValues?: Record<string, number>; devices?: KnownDevice[]; ignoredIds?: string[] };
 
 export type BleState = {
   availability: Availability | null;
@@ -75,6 +82,15 @@ export type BleState = {
   auto: AutoState;
   /** Nom de l'appareil recherché (puce « Recherche du compteur… »). */
   autoTarget: string | null;
+  /**
+   * Appareil du même nom/service qu'un appareil mémorisé mais avec un autre identifiant (audit H8) :
+   * jamais adopté en silence, l'utilisateur confirme « C'est le mien » ou « Ce n'est pas le mien ».
+   */
+  similar: { oldId: string; id: string; name: string | null; rssi: number | null; by: 'nom' | 'service' } | null;
+  /** Liste autorisée : appareils ni compteurs ni écouteurs masqués pendant le dernier scan. */
+  hiddenCount: number;
+  /** « Afficher tous les appareils » (écran Diagnostic seulement, non mémorisé : revient à la liste stricte au redémarrage). */
+  showAllDevices: boolean;
 };
 
 const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: Platform.OS === 'web', hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
@@ -116,8 +132,19 @@ class BleCounterManager {
     needsConfirm: false,
     auto: 'inactif',
     autoTarget: null,
+    similar: null,
+    hiddenCount: 0,
+    showAllDevices: false,
   };
   private lastValues: Record<string, number> = {};
+  /** Identifiants refusés (« ce n'est pas mon compteur ») : jamais proposés ni connectés automatiquement. */
+  private ignoredIds: string[] = [];
+  /** iOS : appareils restaurés par CoreBluetooth, essayés en premier. */
+  private restored = new Set<string>();
+  /** La dernière tentative a échoué parce qu'elle était devenue obsolète (annulée), pas pour une erreur radio. */
+  private lastFailStale = false;
+  /** Tous les appareils vus au dernier scan (la liste affichée en est le sous-ensemble autorisé). */
+  private scanSeen = new Map<string, ScanResult>();
   private autoFrames = new Map<string, Bytes[]>();
   private persistTimer: ReturnType<typeof setTimeout> | null = null;
   private mappings: Record<string, Mapping> = {};
@@ -189,7 +216,7 @@ class BleCounterManager {
     this.clickSubs.forEach((f) => f(n, source, cursor));
   }
   private persist() {
-    void saveJSON<Persisted>(KEY, { prefs: this.s.prefs, lastDevice: this.s.lastDevice, mappings: this.mappings, lastValues: this.lastValues, devices: this.s.devices });
+    void saveJSON<Persisted>(KEY, { prefs: this.s.prefs, lastDevice: this.s.lastDevice, mappings: this.mappings, lastValues: this.lastValues, devices: this.s.devices, ignoredIds: this.ignoredIds });
   }
 
   async init() {
@@ -199,6 +226,7 @@ class BleCounterManager {
     if (p) {
       this.mappings = p.mappings ?? {};
       this.lastValues = p.lastValues ?? {};
+      this.ignoredIds = p.ignoredIds ?? [];
       // Migration : l'ancien réglage global « Reconnexion automatique » devient un réglage par appareil.
       const legacyOff = p.prefs?.autoReconnect === false;
       const devices = (p.devices ?? (p.lastDevice ? [{ ...p.lastDevice, lastSeen: '' }] : [])).map((d) => ({ ...d, auto: d.auto ?? !legacyOff }));
@@ -227,11 +255,15 @@ class BleCounterManager {
     return servicesToRequest(profileById(this.s.prefs.profileId), cs && isValidUuid(cs) ? [cs] : []);
   }
   /** Web : sélecteur du navigateur (doit être appelé depuis un geste utilisateur). */
-  async choose(acceptAll = true) {
+  async choose(acceptAll = this.s.showAllDevices) {
     this.set({ error: null });
     try {
       const prof = profileById(this.s.prefs.profileId);
-      const id = await transport.choose!({ services: this.requestedServices(), namePrefixes: prof.namePrefixes, acceptAll: acceptAll || prof.namePrefixes.length === 0 });
+      // Liste autorisée : le sélecteur du navigateur ne montre que les compteurs (préfixes de nom ou service connu),
+      // sauf « Afficher tous les appareils » activé dans le Diagnostic.
+      const namePrefixes = prof.namePrefixes.length ? prof.namePrefixes : COUNTER_NAME_PREFIXES;
+      const services = [...new Set([...this.requestedServices(), ...COUNTER_SERVICES])];
+      const id = await transport.choose!({ services, namePrefixes, filterServices: COUNTER_SERVICES, acceptAll });
       await this.connectTo(id);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -239,6 +271,20 @@ class BleCounterManager {
       diag.error('choose', e);
       this.set({ status: 'erreur', error: friendlyBleError(e) });
     }
+  }
+  /** Liste affichée = appareils autorisés (compteurs, écouteurs, déjà associés), ou tous en mode diagnostic. */
+  private publishScan() {
+    const all = [...this.scanSeen.values()];
+    const vis = all.filter((r) => isDeviceVisible(r.kind ?? 'other', { known: this.s.devices.some((d) => d.id === r.id), showAll: this.s.showAllDevices }));
+    const rank = (r: ScanResult) => (r.likely ? 0 : r.kind === 'audio' ? 1 : 2);
+    vis.sort((a, b) => rank(a) - rank(b) || Number(!!b.name) - Number(!!a.name) || (b.rssi ?? -999) - (a.rssi ?? -999));
+    this.set({ scanResults: vis.slice(0, 60), hiddenCount: all.length - vis.length });
+  }
+  /** Diagnostic : afficher aussi les appareils hors liste autorisée (dépannage). Non mémorisé. */
+  setShowAllDevices(v: boolean) {
+    diag.log('scan', v ? 'affichage de tous les appareils (diagnostic)' : 'liste autorisée stricte rétablie');
+    this.set({ showAllDevices: v });
+    this.publishScan();
   }
   /** opts.services : filtre de service (diagnostic) ; par défaut aucun filtre. */
   async startScan(opts: { services?: string[]; ms?: number } = {}) {
@@ -249,19 +295,25 @@ class BleCounterManager {
       return;
     }
     this.stopScanning();
-    this.set({ scanning: true, scanResults: [], error: null });
+    this.set({ scanning: true, scanResults: [], hiddenCount: 0, error: null });
     const seen = new Map<string, ScanResult>();
+    this.scanSeen = seen;
     try {
       this.stopScan = await transport.scan(
         (r) => {
           const prev = seen.get(r.id);
           const name = r.name ?? prev?.name ?? null;
           const services = [...new Set([...(prev?.services ?? []), ...(r.services ?? [])])];
+          const appearance = r.appearance ?? prev?.appearance ?? null;
+          const manufacturerId = r.manufacturerId ?? prev?.manufacturerId ?? null;
+          const manufacturerData = r.manufacturerData ?? prev?.manufacturerData ?? null;
+          const c0 = classifyDevice({ name, services, appearance, manufacturerId, manufacturerData });
+          const cl = c0.kind === 'other' && prev?.kind && prev.kind !== 'other' ? { kind: prev.kind, reason: prev.reason ?? null } : c0;
           const lk = likelyCounter(name, services);
           const known = this.s.devices.some((d) => d.id === r.id);
-          seen.set(r.id, { ...prev, ...r, name, services, likely: lk.likely || known, reason: known ? 'déjà associé' : lk.reason });
-          const list = [...seen.values()].sort((a, b) => Number(!!b.likely) - Number(!!a.likely) || Number(!!b.name) - Number(!!a.name) || (b.rssi ?? -999) - (a.rssi ?? -999));
-          this.set({ scanResults: list.slice(0, 60) });
+          const likely = cl.kind === 'counter' || known;
+          seen.set(r.id, { ...prev, ...r, name, services, appearance, manufacturerId, manufacturerData, kind: cl.kind, likely, reason: known ? 'déjà associé' : (cl.reason ?? lk.reason) });
+          this.publishScan();
         },
         (e) => {
           this.stopScanning();
@@ -285,8 +337,20 @@ class BleCounterManager {
   }
 
   // ------------------------------------------------ connexion
-  async connectTo(id: string, silent = false, opts: { timeoutMs?: number; wait?: boolean } = {}): Promise<boolean> {
-    if (!silent) {
+  async connectTo(id: string, silent = false, opts: { timeoutMs?: number; wait?: boolean } = {}, retry = 0): Promise<boolean> {
+    // Liste autorisée : jamais de connexion de comptage à des écouteurs (gérés par le système) ;
+    // en connexion automatique (silent), seulement un appareil déjà associé par l'utilisateur.
+    const seenKind = this.scanSeen.get(id)?.kind;
+    const isKnown = this.s.devices.some((d) => d.id === id);
+    if (seenKind === 'audio' && !isKnown) {
+      if (!silent) this.set({ error: 'Ce sont des écouteurs : ils se connectent dans les réglages Bluetooth du téléphone, pas comme compteur.' });
+      return false;
+    }
+    if (silent && !isKnown) {
+      diag.log('auto', `connexion automatique refusée : ${id} n’est pas un appareil associé`, 'warn');
+      return false;
+    }
+    if (!silent && retry === 0) {
       this.manualEpoch++;
       this.paused.delete(id);
       this.clearKeeperTimer();
@@ -295,6 +359,7 @@ class BleCounterManager {
     this.stopScanning();
     await this.teardown();
     this.manualDisconnect = false;
+    this.lastFailStale = false;
     const seq = ++this.connectSeq;
     this.set({ status: silent ? 'reconnexion' : 'connexion', error: null });
     if (opts.wait) {
@@ -305,6 +370,7 @@ class BleCounterManager {
       const link = await transport.connect(id, { services: this.requestedServices(), timeoutMs: opts.timeoutMs, wait: opts.wait });
       if (seq !== this.connectSeq) {
         // tentative obsolète (action manuelle ou autre appareil entre-temps)
+        this.lastFailStale = true;
         await link.disconnect().catch(() => {});
         return false;
       }
@@ -322,6 +388,8 @@ class BleCounterManager {
       const needsConfirm = !this.mappings[link.id]?.learnedAt && (!mapping || profile.id === 'generic' || profile.id === 'auto');
       this.autoFrames.clear();
       this.keeperAttempt = 0;
+      this.restored.delete(link.id);
+      if (this.s.similar?.id === link.id) this.set({ similar: null });
       this.set({ status: 'connecté', device, lastDevice: device, devices, profile, mapping, attempt: 0, clicksThisConnection: 0, notifyCount: 0, lastHex: null, needsConfirm, auto: 'connecté', autoTarget: null });
       this.persist();
       this.decoder = mapping ? this.makeDecoder(mapping, profile, link.id) : null;
@@ -337,10 +405,22 @@ class BleCounterManager {
       this.startKeeper();
       return true;
     } catch (e) {
-      if (seq !== this.connectSeq) return false;
+      if (seq !== this.connectSeq) {
+        this.lastFailStale = true;
+        return false;
+      }
       const msg = e instanceof Error ? e.message : String(e);
       diag.log('connect', `${silent ? 'reconnexion silencieuse' : 'connexion'} échouée : ${errMsg(e)}`, silent ? 'warn' : 'error');
       await this.teardown();
+      // Connexion manuelle : les erreurs passagères (GATT 133, délai, déconnexion pendant la découverte)
+      // sont retentées aussitôt — la 1re tentative réussit du point de vue de l'utilisateur.
+      const again = !silent && !opts.wait ? connectRetryDelay(e, retry) : null;
+      if (again != null) {
+        diag.log('connect', `erreur passagère : nouvelle tentative ${retry + 1} dans ${again} ms`, 'warn');
+        await new Promise((r) => setTimeout(r, again));
+        if (seq !== this.connectSeq) return false;
+        return this.connectTo(id, false, opts, retry + 1);
+      }
       if (silent) {
         this.set({ status: 'reconnexion' });
         return false;
@@ -369,7 +449,14 @@ class BleCounterManager {
     this.persistTimer = setTimeout(() => this.persist(), 200);
   }
   private async subscribeAll(link: BleLink, profile: DeviceProfile) {
-    const targets = candidateChars(link.chars);
+    // Une seule fois par caractéristique (une double inscription — restauration iOS + reconnexion — doublerait les appuis).
+    const seen = new Set<string>();
+    const targets = candidateChars(link.chars).filter((c) => {
+      const k = normUuid(c.service) + '|' + normUuid(c.uuid);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
     let failed = 0;
     for (const c of targets) {
       try {
@@ -436,6 +523,8 @@ class BleCounterManager {
     }
     if (!sameUuid(m.characteristic, characteristic) || !sameUuid(m.service, service) || !this.decoder) return;
     const n = this.decoder.feed(b);
+    const ev = this.decoder.lastEvent;
+    if (ev) diag.log('decode', ev === 'attente' ? `valeur inattendue ${toHex(b)} : en attente de confirmation` : ev === 'confirmé' ? `valeur confirmée : +${n}` : ev === 'parasite' ? 'trame parasite ignorée' : 'double livraison ignorée', ev === 'confirmé' ? 'info' : 'warn');
     if (this.decoder.lastWasSync && n > 0) this.set({ lastSync: { added: n, at: Date.now() } });
     this.emitClicks(n, 'bluetooth', this.currentCursor());
     this.rememberValue();
@@ -474,7 +563,7 @@ class BleCounterManager {
     const target = id ?? this.s.device?.id ?? this.s.lastDevice?.id ?? this.autoDevices()[0]?.id;
     if (!target) return;
     this.set({ attempt: 0 });
-    if (!(await transport.canReconnect(target).catch(() => false))) return this.choose(true);
+    if (!(await transport.canReconnect(target).catch(() => false))) return this.choose();
     await this.connectTo(target);
   }
   async disconnect() {
@@ -552,7 +641,19 @@ class BleCounterManager {
       );
     }
     // iOS : relance en arrière-plan par CoreBluetooth (restauration d'état) → reprise immédiate.
-    if (transport.onRestore) this.keeperOffs.push(transport.onRestore((ids) => ids.length && this.kick()));
+    if (transport.onRestore)
+      this.keeperOffs.push(
+        transport.onRestore((ids) => {
+          if (!ids.length) return;
+          ids.forEach((i) => this.restored.add(i));
+          // reprise de l'appareil déjà connecté par iOS (pas de nouvelle connexion) : annule une attente éventuelle
+          if (!this.link) {
+            this.cancelPending();
+            this.keeperAttempt = 0;
+            this.kick();
+          }
+        }),
+      );
     this.kick();
   }
   private onAppState(st: AppStateStatus) {
@@ -597,7 +698,16 @@ class BleCounterManager {
   private waitFor(id: string) {
     if (this.pendingId || this.link || !this.keeperOn) return;
     this.set({ auto: 'recherche', autoTarget: this.s.devices.find((d) => d.id === id)?.name ?? null });
-    void this.connectTo(id, true, { wait: true });
+    void this.connectTo(id, true, { wait: true }).then((ok) => {
+      // Attente interrompue par une vraie erreur (Bluetooth coupé, lien refusé…) et non annulée : on ne reste pas bloqué.
+      if (ok || this.lastFailStale || !this.keeperOn || this.link || this.pendingId) return;
+      diag.log('keeper', 'connexion en attente interrompue : nouvelle recherche planifiée', 'warn');
+      this.clearKeeperTimer();
+      this.keeperTimer = setTimeout(() => {
+        this.keeperTimer = null;
+        void this.ensure();
+      }, keeperDelay(this.keeperAttempt++));
+    });
   }
   private scheduleKeeper() {
     if (!this.keeperOn || this.link) return;
@@ -605,7 +715,11 @@ class BleCounterManager {
     if (!cands.length) return this.refreshAutoIdle();
     this.clearKeeperTimer();
     if (this.inBackground()) return this.waitFor(cands[0].id);
-    const delay = keeperDelay(this.keeperAttempt++);
+    const plan = keeperPlan(this.keeperAttempt, { ios: Platform.OS === 'ios', devices: cands.length });
+    // iOS, un seul appareil : demande « en attente » CoreBluetooth au lieu de cycles minutés (zéro scan, connexion immédiate au retour).
+    if (plan.wait) return this.waitFor(cands[0].id);
+    const delay = plan.delay;
+    this.keeperAttempt++;
     this.keeperTimer = setTimeout(() => {
       this.keeperTimer = null;
       void this.ensure();
@@ -648,19 +762,33 @@ class BleCounterManager {
         return;
       }
       this.set({ auto: 'recherche', autoTarget: usable[0].name, status: 'reconnexion' });
+      // appareils restaurés par iOS d'abord (déjà connectés : simple reprise)
+      usable.sort((a, b) => Number(this.restored.has(b.id)) - Number(this.restored.has(a.id)));
       for (const c of usable) {
         if (stale()) return;
         if (await this.connectTo(c.id, true, { timeoutMs: 8000 })) return;
       }
       if (stale()) return;
-      // Identifiant changé (réinitialisation, autre téléphone) : courte recherche par nom ou service mémorisé.
-      if (transport.findKnown) {
-        const hit = await transport.findKnown((r) => matchKnown(r, cands) != null, 8000).catch(() => null);
+      // Identifiant changé (réinitialisation, autre téléphone) : courte recherche par nom ou service mémorisé —
+      // seulement à certains cycles (scan radio coûteux en batterie) et jamais en arrière-plan.
+      const plan = keeperPlan(this.keeperAttempt, { scanBlocked: this.inBackground() || !!this.s.similar });
+      if (transport.findKnown && plan.scan) {
+        // Par identifiant : appareil associé par l'utilisateur. Par nom/service : seulement un compteur de la liste autorisée.
+        const okHit = (r: ScanResult) => {
+          const mk = matchKnown(r, cands, this.ignoredIds);
+          return !!mk && (mk.by === 'id' || classifyDevice(r).kind === 'counter');
+        };
+        const hit = await transport.findKnown(okHit, 8000).catch(() => null);
         if (stale()) return;
-        const m = hit && matchKnown(hit, cands);
+        const m = hit && okHit(hit) ? matchKnown(hit, cands, this.ignoredIds) : null;
         if (hit && m) {
-          if (m.by !== 'id') this.migrateDevice(m.device.id, hit.id, hit.name);
-          if (await this.connectTo(hit.id, true, { timeoutMs: 10000 })) return;
+          if (autoConnectAllowed(m)) {
+            if (await this.connectTo(hit.id, true, { timeoutMs: 10000 })) return;
+          } else if (m.by !== 'id') {
+            // Même nom/service mais autre identifiant : peut être l'exemplaire d'un tiers (H8) → l'utilisateur confirme.
+            diag.log('keeper', `appareil semblable « ${hit.name ?? hit.id} » (${m.by}) : confirmation demandée`, 'warn');
+            this.set({ similar: { oldId: m.device.id, id: hit.id, name: hit.name, rssi: hit.rssi, by: m.by } });
+          }
         }
       }
       if (stale()) return;
@@ -670,14 +798,35 @@ class BleCounterManager {
       this.ensuring = false;
     }
   }
-  /** Reporte correspondance apprise et dernier total d'un ancien identifiant vers le nouveau. */
+  /** « C'est mon compteur » : adopte l'appareil semblable (nouvel identifiant) puis s'y connecte. */
+  async confirmSimilar() {
+    const sim = this.s.similar;
+    if (!sim) return;
+    this.set({ similar: null });
+    this.migrateDevice(sim.oldId, sim.id, sim.name);
+    await this.connectTo(sim.id);
+  }
+  /** « Ce n'est pas le mien » : cet identifiant ne sera plus jamais proposé ni connecté automatiquement. */
+  rejectSimilar() {
+    const sim = this.s.similar;
+    if (!sim) return;
+    this.ignoredIds = [sim.id, ...this.ignoredIds.filter((i) => i !== sim.id)].slice(0, 20);
+    this.set({ similar: null });
+    this.persist();
+    diag.log('keeper', `appareil ${sim.id} ignoré (pas le vôtre)`);
+  }
+  /**
+   * Reporte la correspondance apprise d'un ancien identifiant vers le nouveau. Le dernier total n'est PAS reporté :
+   * le nouvel appareil part de sa propre valeur (référence), sans « rattrapage » calculé sur le total d'un autre
+   * appareil (sinon une bague tierce ou remise à zéro pourrait ajouter des centaines d'appuis fictifs).
+   */
   private migrateDevice(oldId: string, newId: string, name: string | null) {
     if (oldId === newId) return;
     if (this.mappings[oldId] && !this.mappings[newId]) this.mappings[newId] = this.mappings[oldId];
-    if (this.lastValues[oldId] != null && this.lastValues[newId] == null) this.lastValues[newId] = this.lastValues[oldId];
-    const c = this.cursors?.get(oldId);
-    if (c != null && this.cursors?.get(newId) == null) this.cursors?.set({ id: newId, value: c });
     this.cursors?.drop(oldId);
+    this.cursors?.drop(newId);
+    delete this.lastValues[newId];
+    this.ignoredIds = this.ignoredIds.filter((i) => i !== newId);
     delete this.mappings[oldId];
     delete this.lastValues[oldId];
     this.set({

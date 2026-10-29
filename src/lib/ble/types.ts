@@ -1,7 +1,20 @@
 import type { Bytes, GattChar } from './core';
 
 export type Availability = { ok: true } | { ok: false; reason: string; kind: 'unsupported' | 'disabled' | 'denied' | 'expo-go' };
-export type ScanResult = { id: string; name: string | null; rssi: number | null; services?: string[]; likely?: boolean; reason?: string | null };
+export type ScanResult = {
+  id: string;
+  name: string | null;
+  rssi: number | null;
+  services?: string[];
+  likely?: boolean;
+  reason?: string | null;
+  /** Apparence GAP annoncée (Android : lue dans l'annonce brute ; iOS ne l'expose pas). */
+  appearance?: number | null;
+  manufacturerId?: number | null;
+  manufacturerData?: Bytes | null;
+  /** Liste autorisée : compteur de dhikr, écouteurs, ou autre (masqué par défaut). */
+  kind?: 'counter' | 'audio' | 'other';
+};
 
 /** Liaison active avec un appareil (identique sur web et natif). */
 export interface BleLink {
@@ -36,7 +49,7 @@ export interface BleTransport {
   /** prompt=false : ne déclenche aucune demande d'autorisation (reconnexion silencieuse). */
   availability(opts?: { prompt?: boolean }): Promise<Availability>;
   /** Web : ouvre le sélecteur du navigateur, puis connecte. */
-  choose?(opts: { services: string[]; namePrefixes: string[]; acceptAll: boolean }): Promise<string>;
+  choose?(opts: { services: string[]; namePrefixes: string[]; filterServices?: string[]; acceptAll: boolean }): Promise<string>;
   /** Natif : scan BLE ; renvoie une fonction d'arrêt. */
   scan?(onResult: (r: ScanResult) => void, onError: (e: Error) => void, opts?: { services?: string[] }): Promise<() => void>;
   /** État brut de l'adaptateur (diagnostic) : PoweredOn, Unauthorized, Unknown… */

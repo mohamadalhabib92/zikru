@@ -85,10 +85,10 @@ test('ClickDecoder absolu : base, deltas, perte, remise à zéro', () => {
   assert.equal(f(41), 1);
   assert.equal(f(41), 0, 'doublon');
   assert.equal(f(44), 3, 'notifications perdues rattrapées');
-  assert.equal(f(200), 1, 'saut aberrant plafonné');
-  assert.equal(f(0), 0, 'remise à zéro');
-  assert.equal(f(1), 1);
-  assert.equal(f(0xff, 10_000) + 0, 1);
+  assert.equal(f(200), 0, 'saut aberrant : en attente, rien compté');
+  assert.equal(f(0), 0, 'remise à zéro : en attente');
+  assert.equal(f(1), 1, 'remise à zéro confirmée par la trame suivante : +1');
+  assert.equal(f(0xff, 10_000) + 0, 0, 'saut impossible : en attente');
   assert.equal(d.feed(B(1, 2), 10_000), 0, 'trame non reconnue ignorée');
   const late = new c.ClickDecoder(m, c.parseBstwsh, 0);
   assert.equal(late.feed(B(0xaa, 3, 0, 7), 5000), 1, 'premier appui après la période de base');
@@ -220,6 +220,100 @@ test('appareils mémorisés : correspondance id, nom, service', () => {
   // nom différent : aucune correspondance, même service (seuls les appareils sans nom sont associés par service)
   assert.equal(c.matchKnown({ id: 'WW', name: 'Autre', services: ['ae30'] }, known), null);
 });
+// ------------------------------------------------------------------ P4 : fiabilité BLE
+const ABS = { service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: -1 };
+const fr = (n) => B(0xaa, 3, n >> 8, n & 255);
+test('P4 trame parasite (ex. 65535) : ignorée, la référence est conservée (plus de recomptage)', () => {
+  const d = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
+  d.feed(fr(40), 10_000);
+  assert.equal(d.feed(fr(41), 10_100), 1);
+  assert.equal(d.feed(fr(65535), 10_200), 0, 'valeur aberrante : rien compté');
+  assert.equal(d.hasPending, true);
+  assert.equal(d.lastValue, 41, 'curseur durable inchangé');
+  assert.equal(d.feed(fr(42), 10_300), 1, 'trame normale : +1 seulement (avant : recomptée comme remise à zéro)');
+  assert.equal(d.lastEvent, 'parasite');
+  assert.equal(d.hasPending, false);
+  assert.equal(d.feed(fr(43), 10_400), 1);
+});
+test('P4 saut > 10 confirmé par la trame suivante : rattrapé dans la limite physique', () => {
+  const d = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
+  d.feed(fr(100), 0);
+  // notifications bloquées 20 s (iOS en arrière-plan) puis 150 appuis d'un coup : > 100 → à confirmer
+  assert.equal(d.feed(fr(250), 20_000), 0);
+  assert.equal(d.feed(fr(251), 20_500), 151, '150 confirmés + 1');
+  assert.equal(d.lastEvent, 'confirmé');
+  assert.equal(d.lastValue, 251);
+  // saut impossible physiquement (500 en 1 s) même confirmé : plafonné à ce qu'un doigt peut faire
+  const e = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
+  e.feed(fr(10), 0);
+  assert.equal(e.feed(fr(510), 1000), 0);
+  assert.equal(e.feed(fr(511), 1100), c.physicalCap(1000) + 1);
+});
+test('P4 sauts plausibles comptés tout de suite ; deux parasites de suite : aucun compte', () => {
+  const d = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
+  d.feed(fr(5), 0);
+  assert.equal(d.feed(fr(30), 5000), 25, '25 en 5 s : immédiat');
+  assert.equal(d.feed(fr(9000), 5100), 0);
+  assert.equal(d.feed(fr(3000), 5200), 0, 'autre parasite : remplace l’attente');
+  assert.equal(d.feed(fr(31), 5300), 1, 'retour à la normale : +1');
+  assert.ok(c.jumpAcceptable(10, 0) && !c.jumpAcceptable(11, 0) && c.jumpAcceptable(40, 3000) && !c.jumpAcceptable(150, 1e6));
+});
+test('P4 débordement du champ toujours immédiat', () => {
+  const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: 1 }, c.parseGeneric, 0);
+  d.feed(B(0, 254), 10_000);
+  assert.equal(d.feed(B(0, 1), 10_100), 3);
+});
+test('P4 impulsions : double livraison (< 25 ms) ignorée, appuis rapides réels comptés', () => {
+  const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'pulse' }, c.parseGeneric, 0);
+  assert.equal(d.feed(B(1), 1000), 1);
+  assert.equal(d.feed(B(1), 1005), 0, 'même trame 5 ms après : doublon');
+  assert.equal(d.lastEvent, 'doublon');
+  assert.equal(d.feed(B(1), 1070), 1, 'appui 70 ms après : compté');
+  assert.equal(d.feed(B(2), 1075), 1, 'trame différente : comptée');
+});
+test('P4 appairage par nom (H8) : jamais de connexion automatique sans identifiant', () => {
+  const known = [{ id: 'AA', name: 'BW-Ring' }];
+  const m = c.matchKnown({ id: 'ZZ', name: 'BW-Ring' }, known);
+  assert.equal(m.by, 'nom');
+  assert.equal(c.autoConnectAllowed(m), false, 'bague d’un tiers du même modèle : confirmation requise');
+  assert.equal(c.autoConnectAllowed(c.matchKnown({ id: 'AA', name: 'x' }, known)), true);
+  assert.equal(c.autoConnectAllowed(null), false);
+  assert.equal(c.matchKnown({ id: 'ZZ', name: 'BW-Ring' }, known, ['ZZ']), null, 'refusé par l’utilisateur : plus proposé');
+  assert.equal(c.matchKnown({ id: 'AA', name: 'BW-Ring' }, known, ['AA']).by, 'id', 'l’identifiant mémorisé reste prioritaire');
+});
+test('P4 reconnexion : plan économe (scan limité, cadence lente après 30 min, attente iOS)', () => {
+  const p = (a, o) => c.keeperPlan(a, o);
+  assert.deepEqual(p(0), { delay: 2000, scan: true, wait: false });
+  assert.equal(p(1).scan, false);
+  assert.equal(p(2).scan, true);
+  const scans = Array.from({ length: 60 }, (_, a) => p(a).scan).filter(Boolean).length;
+  assert.ok(scans <= 8, `scans radio sur 60 cycles : ${scans}`);
+  assert.equal(p(10).delay, 60000);
+  assert.equal(p(c.KEEPER_SLOW_AFTER).delay, c.KEEPER_SLOW_MS);
+  assert.equal(p(1e6).delay, c.KEEPER_SLOW_MS, 'jamais d’abandon');
+  assert.equal(p(0, { scanBlocked: true }).scan, false, 'arrière-plan / confirmation en cours : pas de scan');
+  assert.equal(p(0, { ios: true, devices: 1 }).wait, false, '1er cycle : tentative directe');
+  assert.equal(p(1, { ios: true, devices: 1 }).wait, true, 'iOS : connexion en attente CoreBluetooth');
+  assert.equal(p(1, { ios: true, devices: 2 }).wait, false);
+  assert.equal(p(1, { ios: false, devices: 1 }).wait, false);
+  // total sur 2 h au premier plan : nombre de cycles borné
+  let t = 0, n = 0;
+  while (t < 2 * 3600_000) t += p(n++).delay;
+  assert.ok(n < 110, `cycles en 2 h : ${n}`);
+});
+test('P4 1re connexion : erreurs passagères retentées, jamais les refus', () => {
+  assert.equal(c.connectRetryDelay({ errorCode: 3 }, 0), 600, 'délai dépassé');
+  assert.equal(c.connectRetryDelay({ errorCode: 201 }, 1), 1500, 'déconnecté pendant la découverte');
+  assert.equal(c.connectRetryDelay({ errorCode: 201 }, 2), null, 'au plus 2 nouvelles tentatives');
+  assert.equal(c.connectRetryDelay({ errorCode: 200, androidErrorCode: 133 }, 0), 600);
+  assert.equal(c.connectRetryDelay(new Error('GATT_ERROR 133'), 0), 600);
+  assert.equal(c.connectRetryDelay(new Error('Découverte des services : délai dépassé (15000 ms)'), 0), 600);
+  assert.equal(c.connectRetryDelay({ errorCode: 2 }, 0), null, 'annulé par l’utilisateur');
+  assert.equal(c.connectRetryDelay({ errorCode: 102 }, 0), null, 'Bluetooth éteint');
+  assert.equal(c.connectRetryDelay({ errorCode: 101 }, 0), null, 'autorisation');
+  assert.equal(c.connectRetryDelay({ errorCode: 601 }, 0), null, 'localisation');
+  assert.equal(c.connectRetryDelay(null, 0), null);
+});
 test('tasbih : appuis, cycles 33/99/100, sessions', () => {
   let t = { count: 0, target: 33, dhikrId: 'subhanallah', total: 5, sessions: [] };
   let r = tc.applyClicks(t, 32, 'manuel');
@@ -263,6 +357,71 @@ test('messages BLE : erreurs ble-plx traduites (fr / en / ar)', () => {
   assert.match(msgs.bleMsg('off'), /البلوتوث/);
   msgs.setBleLang('de');
   assert.match(msgs.bleMsg('off'), /désactivé/, 'repli français');
+});
+
+test('P4 liste autorisée : compteurs de dhikr reconnus (nom, service, ZKR-R1)', () => {
+  const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
+  assert.equal(k('iQIBLA Zikr Ring'), 'counter');
+  assert.equal(k('BW-1234'), 'counter');
+  assert.equal(k('Smart Tasbih'), 'counter');
+  assert.equal(k('ZKR-R1'), 'counter');
+  assert.equal(k('Digital Tally Counter'), 'counter');
+  assert.equal(k(null, ['0000ae30-0000-1000-8000-00805f9b34fb']), 'counter');
+  assert.equal(k(null, [c.ZKR_R1_SERVICE]), 'counter', 'bague ZKR-R1 sans nom, par son service');
+  assert.equal(k('Mi Band', [c.ZKR_R1_SERVICE.toUpperCase()]), 'counter', 'UUID insensible à la casse');
+  // le service ZKR-R1 l'emporte sur un service audio éventuel
+  assert.equal(k(null, [c.ZKR_R1_SERVICE, '1844']), 'counter');
+});
+test('P4 liste autorisée : écouteurs par apparence, service LE Audio, AirPods, nom', () => {
+  const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
+  for (const a of [0x0941, 0x0942, 0x0943, 0x0944, 0x0940, 0x0841, 0x0a41]) assert.equal(k(null, [], { appearance: a }), 'audio', `apparence 0x${a.toString(16)}`);
+  assert.equal(k(null, [], { appearance: 0x03c1 }), 'other', 'clavier HID');
+  assert.equal(k(null, [], { appearance: 0x00c1 }), 'other', 'montre');
+  for (const u of ['184e', '1850', '1844', 'fe2c']) assert.equal(k(null, [c.normUuid(u)]), 'audio', u);
+  assert.equal(k(null, [], { manufacturerId: 0x004c, manufacturerData: new Uint8Array([0x07, 0x19, 0x01]) }), 'audio', 'AirPods');
+  assert.equal(k(null, [], { manufacturerId: 0x004c, manufacturerData: new Uint8Array([0x10, 0x05]) }), 'other', 'iPhone voisin (Continuity) ignoré');
+  assert.equal(k('Galaxy Buds2 Pro'), 'audio');
+  assert.equal(k('WH-1000XM5'), 'audio');
+  assert.equal(k('AirPods Pro'), 'audio');
+});
+test('P4 liste autorisée : tout le reste est ignoré (sans nom, inconnus, montres, TV, HID)', () => {
+  const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
+  assert.equal(k(null, []), 'other');
+  assert.equal(k(''), 'other');
+  assert.equal(k('JBL Flip 5'), 'other', 'enceinte sans apparence annoncée : non reconnue');
+  assert.equal(k('Oura Ring'), 'other', '« ring » seul ne suffit plus');
+  assert.equal(k('Presenter Clicker'), 'other');
+  assert.equal(k('[TV] Samsung'), 'other');
+  assert.equal(k('Mi Smart Band 8', ['0000fee0-0000-1000-8000-00805f9b34fb']), 'other');
+  assert.equal(k('BLE Remote', ['00001812-0000-1000-8000-00805f9b34fb']), 'other', 'télécommande HID masquée par défaut');
+  assert.equal(k('Bowers Speaker'), 'other', '« Bo… » ne ressemble pas à BW-xxxx');
+  assert.equal(c.likelyCounter('Oura Ring').likely, false);
+});
+test('P4 liste autorisée : visibilité et connexion', () => {
+  assert.equal(c.isDeviceVisible('counter'), true);
+  assert.equal(c.isDeviceVisible('audio'), true);
+  assert.equal(c.isDeviceVisible('other'), false, 'masqué par défaut');
+  assert.equal(c.isDeviceVisible('other', { known: true }), true, 'appareil déjà associé par l’utilisateur');
+  assert.equal(c.isDeviceVisible('other', { showAll: true }), true, 'bascule du Diagnostic');
+  assert.equal(c.isCounterConnectable('counter'), true);
+  assert.equal(c.isCounterConnectable('audio'), false);
+  assert.equal(c.isCounterConnectable('audio', { showAll: true }), false, 'jamais des écouteurs comme compteur');
+  assert.equal(c.isCounterConnectable('other'), false);
+  assert.equal(c.isCounterConnectable('other', { showAll: true }), true);
+});
+test('P4 annonce brute : apparence, services 16 bits, fabricant', () => {
+  // flags · apparence 0x0941 · liste UUID16 [0x184E, 0x180F] · nom « Buds » · fabricant 0x004C [07 19]
+  const raw = new Uint8Array([2, 0x01, 0x06, 3, 0x19, 0x41, 0x09, 5, 0x03, 0x4e, 0x18, 0x0f, 0x18, 5, 0x09, 0x42, 0x75, 0x64, 0x73, 5, 0xff, 0x4c, 0x00, 0x07, 0x19, 0, 0, 0]);
+  const a = c.parseAdvertising(raw);
+  assert.equal(a.appearance, 0x0941);
+  assert.deepEqual(a.services16, [c.normUuid('184e'), c.normUuid('180f')]);
+  assert.equal(a.manufacturer.id, 0x004c);
+  assert.deepEqual([...a.manufacturer.data], [0x07, 0x19]);
+  // service data 0x16 (Fast Pair 0xFE2C)
+  assert.deepEqual(c.parseAdvertising(new Uint8Array([4, 0x16, 0x2c, 0xfe, 0x01])).services16, [c.normUuid('fe2c')]);
+  // trame tronquée / vide : pas d'exception
+  assert.equal(c.parseAdvertising(new Uint8Array([9, 0x19, 0x41])).appearance, null);
+  assert.equal(c.parseAdvertising(new Uint8Array(0)).manufacturer, null);
 });
 
 if (fail) {

@@ -20,6 +20,10 @@ export function BleStatusChip({ showIdle = false }: { showIdle?: boolean }) {
     label = `Compteur connecté ✓ ${s.device?.name ?? ''}${s.battery != null ? ` · ${s.battery} %` : ''}`.trim();
     icon = 'bluetooth';
     [fg, bg] = [t.success, t.successBg];
+  } else if (s.similar) {
+    label = `Appareil semblable détecté — à confirmer${s.similar.name ? ` (${s.similar.name})` : ''}`;
+    icon = 'help-circle-outline';
+    [fg, bg] = [t.warning, t.warningBg];
   } else if (s.auto === 'recherche' || s.status === 'reconnexion') {
     label = `Recherche du compteur…${s.autoTarget ? ` (${s.autoTarget})` : ''}`;
     icon = 'search-outline';

@@ -3,7 +3,7 @@
  * Nécessite un build de développement ou EAS (le module natif n'existe pas dans Expo Go).
  */
 import { PermissionsAndroid, Platform } from 'react-native';
-import { b64ToBytes, normUuid, type Bytes, type GattChar } from './core';
+import { b64ToBytes, normUuid, parseAdvertising, type Bytes, type GattChar } from './core';
 import { diag, errMsg } from './diag';
 import { bleMsg } from './messages';
 import type { Availability, BleLink, BleTransport, ScanResult } from './types';
@@ -104,6 +104,24 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   });
 }
 
+type PlxDevice = import('react-native-ble-plx').Device;
+/** Résultat de scan enrichi : nom, services (annoncés + service data), apparence et données fabricant (liste autorisée). */
+function toScanResult(d: PlxDevice): ScanResult {
+  const raw = d.rawScanRecord ? b64ToBytes(d.rawScanRecord) : new Uint8Array(0);
+  const adv = raw.length ? parseAdvertising(raw) : null;
+  const mfr = d.manufacturerData ? b64ToBytes(d.manufacturerData) : null;
+  const services = [...new Set([...(d.serviceUUIDs ?? []), ...Object.keys(d.serviceData ?? {}), ...(adv?.services16 ?? [])].map(normUuid))];
+  return {
+    id: d.id,
+    name: d.name ?? d.localName ?? null,
+    rssi: d.rssi ?? null,
+    services,
+    appearance: adv?.appearance ?? null,
+    manufacturerId: mfr && mfr.length >= 2 ? mfr[0] | (mfr[1] << 8) : (adv?.manufacturer?.id ?? null),
+    manufacturerData: mfr && mfr.length >= 2 ? mfr.subarray(2) : (adv?.manufacturer?.data ?? null),
+  };
+}
+
 const ANDROID_MTU = 185;
 const DISCOVERY_MS = 15000;
 
@@ -137,13 +155,14 @@ export const transport: BleTransport = {
     const filter = opts?.services?.length ? opts.services : null;
     diag.log('scan', filter ? `début (filtre : ${filter.join(', ')})` : 'début (sans filtre de service)');
     // Par défaut aucun filtre : la ZKR-R1 et la plupart des compteurs n'annoncent pas leur service principal.
-    await m.startDeviceScan(filter, { allowDuplicates: false }, (err, d) => {
+    // Recherche lancée par l'utilisateur : scan rapide (Android LowLatency, ~15 s max) pour une 1re détection immédiate.
+    await m.startDeviceScan(filter, { allowDuplicates: false, scanMode: plx?.ScanMode.LowLatency }, (err, d) => {
       if (err) {
         diag.error('scan', err);
         return onError(new Error(err.errorCode === 601 ? bleMsg('locationOff') : bleMsg('scanFailed', { m: errMsg(err) })));
       }
       if (d) {
-        const r = { id: d.id, name: d.name ?? d.localName ?? null, rssi: d.rssi ?? null, services: (d.serviceUUIDs ?? []).map(normUuid) };
+        const r = toScanResult(d);
         diag.seen(r);
         onResult(r);
       }
@@ -189,13 +208,14 @@ export const transport: BleTransport = {
       };
       const timer = setTimeout(() => finish(null), ms);
       Promise.resolve(
-        m.startDeviceScan(null, { allowDuplicates: false }, (err, d) => {
+        // Recherche automatique en tâche de fond : mode équilibré (Android) pour ménager la batterie.
+        m.startDeviceScan(null, { allowDuplicates: false, scanMode: plx?.ScanMode.Balanced }, (err, d) => {
           if (err) {
             diag.error('findKnown', err);
             return finish(null);
           }
           if (!d) return;
-          const r: ScanResult = { id: d.id, name: d.name ?? d.localName ?? null, rssi: d.rssi ?? null, services: (d.serviceUUIDs ?? []).map(normUuid) };
+          const r = toScanResult(d);
           diag.seen(r);
           if (match(r)) finish(r);
         }),
@@ -210,6 +230,8 @@ export const transport: BleTransport = {
     const m = getManager();
     if (!m) throw new Error(loadError ?? 'BLE indisponible');
     await m.stopDeviceScan();
+    // Android : connecter juste après l'arrêt du scan provoque souvent l'erreur GATT 133 → courte pause.
+    if (Platform.OS === 'android' && !opts.wait) await new Promise((r) => setTimeout(r, 150));
     const t0 = Date.now();
     // Déjà connecté (restauré par iOS, ou lien Android resté ouvert) : on reprend l'appareil tel quel,
     // au lieu d'un connectToDevice qui échouerait (« already connected ») sur Android.

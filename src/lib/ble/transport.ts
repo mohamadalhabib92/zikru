@@ -69,10 +69,10 @@ export const transport: BleTransport = {
     }
     return { ok: true };
   },
-  async choose({ services, namePrefixes, acceptAll }) {
+  async choose({ services, namePrefixes, filterServices, acceptAll }) {
     const b = bt();
     if (!b) throw new Error('Bluetooth web indisponible');
-    const filters = namePrefixes.map((namePrefix) => ({ namePrefix }));
+    const filters: { namePrefix?: string; services?: string[] }[] = [...namePrefixes.map((namePrefix) => ({ namePrefix })), ...(filterServices ?? []).map((s) => ({ services: [s] }))];
     diag.log('choose', `sélecteur ${acceptAll || filters.length === 0 ? 'tous appareils' : `préfixes ${namePrefixes.join(', ')}`} · services ${services.join(', ') || '—'}`);
     const d = await b.requestDevice(acceptAll || filters.length === 0 ? { acceptAllDevices: true, optionalServices: services } : { filters, optionalServices: services });
     known.set(d.id, d);

@@ -3,11 +3,11 @@
  * événements du scan, de la connexion, des abonnements et dernière erreur.
  * Alimenté par les transports (web / natif) et par le gestionnaire ; lu par l'écran /ble-diag.
  */
-import type { GattChar } from './core';
+import { classifyDevice, type Bytes, type DeviceKind, type GattChar } from './core';
 
 export type DiagLevel = 'info' | 'warn' | 'error';
 export type DiagEntry = { t: number; level: DiagLevel; tag: string; msg: string };
-export type DiagSeen = { id: string; name: string | null; rssi: number | null; services: string[]; count: number; last: number };
+export type DiagSeen = { id: string; name: string | null; rssi: number | null; services: string[]; count: number; last: number; appearance: number | null; kind: DeviceKind; reason: string | null };
 
 const MAX = 300;
 let entries: DiagEntry[] = [];
@@ -51,16 +51,25 @@ export const diag = {
   error(tag: string, e: unknown) {
     diag.log(tag, errMsg(e), 'error');
   },
-  seen(r: { id: string; name: string | null; rssi: number | null; services?: string[] }) {
+  seen(r: { id: string; name: string | null; rssi: number | null; services?: string[]; appearance?: number | null; manufacturerId?: number | null; manufacturerData?: Bytes | null }) {
     const p = seen.get(r.id);
     const isNew = !p;
+    const name = r.name ?? p?.name ?? null;
+    const services = [...new Set([...(p?.services ?? []), ...(r.services ?? [])])];
+    const appearance = r.appearance ?? p?.appearance ?? null;
+    const cl = classifyDevice({ name, services, appearance, manufacturerId: r.manufacturerId, manufacturerData: r.manufacturerData });
+    // Un appareil reconnu une fois le reste (les annonces alternent nom / données fabricant).
+    const kind = cl.kind === 'other' && p && p.kind !== 'other' ? p.kind : cl.kind;
     seen.set(r.id, {
       id: r.id,
-      name: r.name ?? p?.name ?? null,
+      name,
       rssi: r.rssi ?? p?.rssi ?? null,
-      services: [...new Set([...(p?.services ?? []), ...(r.services ?? [])])],
+      services,
       count: (p?.count ?? 0) + 1,
       last: Date.now(),
+      appearance,
+      kind,
+      reason: kind === cl.kind ? cl.reason : (p?.reason ?? null),
     });
     if (isNew) diag.log('scan', `vu ${r.name ?? '(sans nom)'} · ${r.id} · RSSI ${r.rssi ?? '?'}${r.services?.length ? ` · ${r.services.join(', ')}` : ''}`);
     else emit();

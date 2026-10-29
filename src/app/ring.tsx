@@ -53,6 +53,22 @@ export default function BluetoothCounterScreen() {
           <Spacer />
         </>
       ) : null}
+      {s.similar && !connected ? (
+        <>
+          <Notice
+            tone="warning"
+            icon="help-circle-outline"
+            title={`« ${s.similar.name ?? 'Appareil sans nom'} » détecté avec un autre identifiant`}
+            text={`Même ${s.similar.by === 'nom' ? 'nom' : 'service'} que votre compteur, mais identifiant différent (${s.similar.id}${s.similar.rssi != null ? ` · ${s.similar.rssi} dBm` : ''}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.`}
+          />
+          <Spacer h={8} />
+          <Row wrap>
+            <Button title="C’est le mien" icon="checkmark-outline" onPress={() => void bleCounter.confirmSimilar()} />
+            <Button title="Pas le mien" icon="close-outline" variant="ghost" onPress={() => bleCounter.rejectSimilar()} />
+          </Row>
+          <Spacer />
+        </>
+      ) : null}
       {connected && s.needsConfirm && !s.learn.active ? (
         <>
           <Notice
@@ -119,7 +135,7 @@ export default function BluetoothCounterScreen() {
         ) : (
           <Row wrap>
             {web ? (
-              <Button title="Rechercher un compteur" icon="bluetooth-outline" loading={busy} disabled={!!av && !av.ok} onPress={() => void bleCounter.choose(true)} />
+              <Button title="Rechercher un compteur" icon="bluetooth-outline" loading={busy} disabled={!!av && !av.ok} onPress={() => void bleCounter.choose()} />
             ) : (
               <Button title={s.scanning ? 'Recherche…' : 'Rechercher'} icon="search-outline" loading={s.scanning} disabled={!!av && !av.ok && av.kind !== 'disabled' && av.kind !== 'denied'} onPress={() => void bleCounter.startScan()} />
             )}
@@ -134,17 +150,27 @@ export default function BluetoothCounterScreen() {
         <>
           <Spacer />
           <H2>Appareils à proximité</H2>
-          <Muted>Tous les appareils Bluetooth LE à proximité sont listés ; les compteurs probables (nom tasbih, zikr, ring, iQibla, BW…, ou service connu) apparaissent en premier. Appuyez une fois sur le bouton de l’appareil pour le réveiller.</Muted>
+          <Muted>Seuls les compteurs de dhikr (tasbih, zikr, iQibla, BW…, bague ZKR-R1) et les écouteurs sont listés ; les autres appareils Bluetooth sont ignorés. Appuyez une fois sur le bouton du compteur pour le réveiller.</Muted>
+          {s.hiddenCount > 0 ? <Muted>{`${s.hiddenCount} appareil(s) non reconnu(s) masqué(s). Votre compteur n’apparaît pas ? Bouton « Diagnostic » › « Afficher tous les appareils ».`}</Muted> : null}
           <Spacer h={8} />
-          {s.scanResults.map((r) => (
-            <ListItem
-              key={r.id}
-              title={`${r.likely ? '★ ' : ''}${r.name ?? 'Sans nom'}`}
-              subtitle={`${r.likely ? `Compteur probable (${r.reason}) · ` : ''}${r.id}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
-              icon={r.likely ? 'radio-button-on-outline' : 'bluetooth-outline'}
-              onPress={() => void bleCounter.connectTo(r.id)}
-            />
-          ))}
+          {s.scanResults.map((r) =>
+            r.kind === 'audio' ? (
+              <ListItem
+                key={r.id}
+                title={r.name ?? 'Écouteurs'}
+                subtitle={`Écouteurs — gérés par le système, pas un compteur. La récitation passe par la sortie audio choisie dans les réglages du téléphone.${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
+                icon="headset-outline"
+              />
+            ) : (
+              <ListItem
+                key={r.id}
+                title={`${r.likely ? '★ ' : ''}${r.name ?? 'Sans nom'}`}
+                subtitle={`${r.likely ? `Compteur (${r.reason}) · ` : 'Hors liste (mode diagnostic) · '}${r.id}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
+                icon={r.likely ? 'radio-button-on-outline' : 'bluetooth-outline'}
+                onPress={() => void bleCounter.connectTo(r.id)}
+              />
+            ),
+          )}
         </>
       ) : null}
 

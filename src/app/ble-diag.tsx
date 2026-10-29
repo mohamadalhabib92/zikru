@@ -8,11 +8,11 @@ import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 import appJson from '../../app.json';
-import { servicesToRequest, profileById, shortUuid } from '@/lib/ble/core';
+import { isDeviceVisible, servicesToRequest, profileById, shortUuid } from '@/lib/ble/core';
 import { diag } from '@/lib/ble/diag';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
 import { transport } from '@/lib/ble/transport';
-import { Badge, Body, Button, Card, Eyebrow, H2, Muted, Notice, Row, Screen, Spacer } from '@/ui/kit';
+import { Badge, Body, Button, Card, Eyebrow, H2, Muted, Notice, Row, Screen, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 
 const mono = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
@@ -124,11 +124,24 @@ export default function BleDiagScreen() {
         </>
       )}
       <Spacer h={8} />
-      {d.seen.length === 0 ? <Muted>Aucun appareil vu pour l’instant.</Muted> : null}
-      {d.seen.slice(0, 40).map((x) => (
+      <Toggle
+        label="Afficher tous les appareils"
+        hint="Dépannage uniquement, non mémorisé. Par défaut, Zikru ignore tout ce qui n’est ni un compteur de dhikr (tasbih, bague ZKR-R1…) ni des écouteurs, et ne s’y connecte jamais automatiquement."
+        value={s.showAllDevices}
+        onChange={(v) => bleCounter.setShowAllDevices(v)}
+      />
+      {(() => {
+        const vis = d.seen.filter((x) => isDeviceVisible(x.kind, { known: s.devices.some((k) => k.id === x.id), showAll: s.showAllDevices }));
+        const hidden = d.seen.length - vis.length;
+        return (
+          <>
+            {d.seen.length === 0 ? <Muted>Aucun appareil vu pour l’instant.</Muted> : null}
+            {hidden > 0 ? <Muted>{hidden} appareil(s) non reconnu(s) masqué(s) (ni compteur, ni écouteurs).</Muted> : null}
+            {vis.slice(0, 40).map((x) => (
         <Card key={x.id} style={{ marginBottom: 8, padding: 12 }}>
           <Row style={{ justifyContent: 'space-between' }}>
             <Body style={{ flex: 1, fontWeight: '600' }}>{x.name ?? '(sans nom)'}</Body>
+            <Badge label={x.kind === 'counter' ? 'compteur' : x.kind === 'audio' ? 'écouteurs' : 'non reconnu'} tone={x.kind === 'counter' ? 'success' : x.kind === 'audio' ? 'info' : 'neutral'} />
             <Badge label={x.rssi != null ? `${x.rssi} dBm` : 'RSSI ?'} tone={x.rssi == null ? 'neutral' : x.rssi > -65 ? 'success' : x.rssi > -85 ? 'warning' : 'danger'} />
           </Row>
           <Text style={{ color: t.muted, fontFamily: mono, fontSize: 11 }} selectable>
@@ -139,13 +152,21 @@ export default function BleDiagScreen() {
               {x.services.join('\n')}
             </Text>
           ) : null}
-          {!web ? (
+          {x.reason || x.appearance != null ? (
+            <Text style={{ color: t.muted, fontFamily: mono, fontSize: 11 }} selectable>
+              {[x.reason, x.appearance != null ? `apparence 0x${x.appearance.toString(16).padStart(4, '0')}` : null].filter(Boolean).join(' · ')}
+            </Text>
+          ) : null}
+          {!web && x.kind !== 'audio' ? (
             <Row wrap style={{ marginTop: 6 }}>
               <Button title="Connecter" icon="bluetooth-outline" small variant="ghost" onPress={() => void bleCounter.connectTo(x.id)} />
             </Row>
           ) : null}
         </Card>
-      ))}
+            ))}
+          </>
+        );
+      })()}
 
       <Spacer />
       <H2>Services et caractéristiques</H2>
