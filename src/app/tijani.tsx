@@ -174,7 +174,7 @@ function DaySchedule() {
           ))}
           <Line x1={X(mins(now))} y1={34} x2={X(mins(now))} y2={axisY + 4} stroke={b.gold} strokeWidth={3} />
           <SvgText x={Math.min(w - 30, X(mins(now)) + 4)} y={40} fontSize={10} fontWeight="800" fill={b.goldDeep}>
-            Maintenant
+            {L('Maintenant')}
           </SvgText>
         </Svg>
       </View>
