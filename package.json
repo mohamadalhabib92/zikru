@@ -50,7 +50,7 @@
     "privacy:html": "node scripts/gen-privacy-html.mjs",
     "build:web": "expo export -p web && node scripts/pwa-postbuild.mjs",
     "icons": "python3 scripts/make-icons.py",
-    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs && node scripts/test-zikr.mjs && node scripts/test-notify.mjs && node scripts/test-quran.mjs && node scripts/test-pages.mjs && node scripts/test-srs.mjs && node scripts/test-khatma.mjs && node scripts/test-privacy.mjs && node scripts/test-tasbih-log.mjs",
+    "test": "node scripts/test-hijri.mjs && node scripts/test-ble.mjs && node scripts/test-abjad.mjs && node scripts/test-zikr.mjs && node scripts/test-notify.mjs && node scripts/test-quran.mjs && node scripts/test-pages.mjs && node scripts/test-srs.mjs && node scripts/test-khatma.mjs && node scripts/test-privacy.mjs && node scripts/test-tasbih-log.mjs && node scripts/test-recitation-queue.mjs",
     "lint": "expo lint"
   },
   "private": true
