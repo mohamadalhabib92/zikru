@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { LBtn, fmt } from '@/components/zikr/parts';
 import { useData } from '@/lib/data';
@@ -8,9 +9,12 @@ import { uid } from '@/lib/storage';
 import { closeSession, type Tasbih } from '@/lib/tasbih-core';
 import { advance, dayKey, itemAbjad, markDone, progress, type PracticeState, type Zikr } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
+import { FATIHA_EN, isFatiha, withFatiha } from '@/lib/fatiha';
+import { useSettings } from '@/lib/settings';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { L, useUiLang } from '@/lib/l10n';
 
 function Bar({ ratio, color, h = 8 }: { ratio: number; color: string; h?: number }) {
   return (
@@ -36,9 +40,14 @@ function Bar({ ratio, color, h = 8 }: { ratio: number; color: string; h?: number
 export default function Practice() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const lang = useUiLang();
   const { zikrs, update, systems, opts, ready: zr } = useZikrs();
   const { tasbih, setTasbih, increment, ready: dr } = useData();
-  const z = zikrs.find((x) => x.id === id);
+  const { s: settings } = useSettings();
+  const fatihaOn = settings.fatihaFirst !== false;
+  const stored = zikrs.find((x) => x.id === id);
+  // Al-Fatiha 1× en première étape (réglage, actif par défaut) ; la composition enregistrée n’est pas modifiée.
+  const z = useMemo(() => (stored ? { ...stored, items: withFatiha(stored.items, fatihaOn) } : undefined), [stored, fatihaOn]);
   const [st, setSt] = useState<PracticeState>({ step: 0, count: 0 });
   const [finished, setFinished] = useState(false);
   const zRef = useRef<Zikr | undefined>(z);
@@ -178,6 +187,8 @@ export default function Practice() {
 
   const items = z.items;
   const cur = items[Math.min(st.step, items.length - 1)];
+  // Al-Fātiḥa : sens anglais Pickthall (domaine public) ; en arabe, le texte coranique suffit.
+  const meaning = cur && isFatiha(cur) ? (lang === 'en' ? FATIHA_EN : lang === 'ar' ? undefined : cur.fr) : cur?.fr;
   const g = progress(items, st.step, st.count);
   const today = z.done?.[dayKey()] ?? 0;
 
@@ -193,13 +204,13 @@ export default function Practice() {
           flexWrap: 'wrap',
         }}
       >
-        <Text style={{ color: b.green, fontWeight: '900' }}>{finished ? 'Terminé' : `Étape ${st.step + 1} / ${items.length}`}</Text>
+        <Text style={{ color: b.green, fontWeight: '900' }}>{finished ? 'Terminé' : L('Étape {a} / {b}', { a: st.step + 1, b: items.length })}</Text>
         <BleStatusChip showIdle />
       </View>
-      {z.niyya ? <LMuted style={{ fontStyle: 'italic', marginTop: 4 }}>{`Intention : ${z.niyya}`}</LMuted> : null}
+      {z.niyya ? <LMuted style={{ fontStyle: 'italic', marginTop: 4 }}>{L('Intention : {x}', { x: z.niyya })}</LMuted> : null}
       <View style={{ marginTop: 10, gap: 4 }}>
         <Bar ratio={g.ratio} color={b.green} />
-        <LMuted style={{ fontSize: 11 }}>{`${fmt(g.done)} / ${fmt(g.total)} au total`}</LMuted>
+        <LMuted style={{ fontSize: 11 }}>{L('{a} / {b} au total', { a: fmt(g.done), b: fmt(g.total) })}</LMuted>
       </View>
 
       {finished ? (
@@ -216,7 +227,7 @@ export default function Practice() {
             Composition terminée
           </Text>
           <Text style={{ color: b.green, fontSize: 22, marginTop: 6 }}>تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ</Text>
-          <LMuted style={{ marginTop: 6, textAlign: 'center' }}>{`${today}× aujourd’hui${z.goal ? ` · objectif ${z.goal.perDay}` : ''} · sessions ajoutées à l’historique du tasbih`}</LMuted>
+          <LMuted style={{ marginTop: 6, textAlign: 'center' }}>{L('{n}× aujourd’hui', { n: today }) + (z.goal ? ' · ' + L('objectif {g}', { g: z.goal.perDay }) : '') + ' · ' + L('sessions ajoutées à l’historique du tasbih')}</LMuted>
           <View
             style={{
               flexDirection: 'row',
@@ -255,12 +266,12 @@ export default function Practice() {
                 {cur.tr}
               </Text>
             ) : null}
-            {cur.fr ? <LMuted style={{ marginTop: 4 }}>{cur.fr}</LMuted> : null}
+            {meaning ? <LMuted style={{ marginTop: 4 }}>{meaning}</LMuted> : null}
             <LMuted style={{ fontSize: 11, marginTop: 6 }}>{systems.map((s) => `abjad ${s} ${fmt(itemAbjad(cur, s, opts))}`).join(' · ')}</LMuted>
           </LCard>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Compter. ${st.count} sur ${cur.reps}`}
+            accessibilityLabel={L('Compter. {a} sur {b}', { a: st.count, b: cur.reps })}
             onPress={increment}
             style={({ pressed }) => ({
               alignSelf: 'center',
