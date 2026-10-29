@@ -1343,6 +1343,7 @@ export const UI_STRINGS: Record<string, [en: string, ar: string]> = {
   "priere salat horaires adhan": ["prayer salat times adhan priere horaires","صلاة مواقيت أذان prayer salat adhan"],
   "priée": ["prayed","صُلِّيَت"],
   "qibla boussole kaaba direction": ["qibla compass kaaba direction boussole","قبلة بوصلة كعبة اتجاه qibla kaaba"],
+  "recherche…": ["searching…","جارٍ البحث…"],
   "recommandée": ["recommended","مستحبّة"],
   "reconnexion": ["reconnecting","إعادة الاتصال"],
   "reglages parametres langue theme sombre clair": ["settings preferences language theme dark light reglages parametres","إعدادات تفضيلات لغة سمة داكن فاتح settings language theme"],

@@ -34,7 +34,7 @@ function Icon({ icon, label, onPress, disabled, color = b.inkMuted }: { icon: Ic
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={L(label)}
       accessibilityState={{ disabled: !!disabled }}
       onPress={disabled ? undefined : onPress}
       hitSlop={4}
@@ -298,7 +298,7 @@ export default function EditZikr() {
                 </View>
               </View>
             ))}
-            <LMuted>{`${fmt(totals[0].totalReps)} répétitions au total · options ة = ${prefs.ta === 'ha' ? 'ه (5)' : 'ت (400)'}, ء = ${prefs.hamza}`}</LMuted>
+            <LMuted>{L('{n} répétitions au total · options ة = {t}, ء = {h}', { n: fmt(totals[0].totalReps), t: prefs.ta === 'ha' ? 'ه (5)' : 'ت (400)', h: String(prefs.hamza) })}</LMuted>
           </LCard>
         </>
       ) : null}

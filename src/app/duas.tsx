@@ -50,7 +50,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
           <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16, marginTop: 2 }}>{v.title}</Text>
           {v.when ? <LMuted style={{ fontSize: 12, marginTop: 2 }}>{v.when}</LMuted> : null}
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} onPress={onFav} hitSlop={10} style={{ padding: 4 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={L(fav ? 'Retirer des favoris' : 'Ajouter aux favoris')} onPress={onFav} hitSlop={10} style={{ padding: 4 }}>
           <Ionicons name={fav ? 'star' : 'star-outline'} size={22} color={fav ? b.gold : b.inkMuted} />
         </Pressable>
       </View>

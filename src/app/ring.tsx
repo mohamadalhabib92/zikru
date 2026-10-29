@@ -41,7 +41,7 @@ export default function BluetoothCounterScreen() {
     <Screen>
       {/* Le titre est déjà dans l'en-tête de navigation : pas de second H1 ici. */}
       <Row wrap style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <Badge label={s.status === 'reconnexion' ? 'recherche…' : s.status} tone={STATUS_TONE[s.status]} />
+        <Badge label={L(s.status === 'reconnexion' ? 'recherche…' : s.status)} tone={STATUS_TONE[s.status]} />
         <Button title="Diagnostic" icon="pulse-outline" small variant="ghost" onPress={() => router.push('/ble-diag')} />
       </Row>
       <Muted>Tasbih électronique, anneau de dhikr ou télécommande : chaque appui ajoute +1 au compteur de session ({tasbih.count}{tasbih.target ? ` / ${tasbih.target}` : ''}).</Muted>
@@ -298,8 +298,8 @@ export default function BluetoothCounterScreen() {
             showSoftInputOnFocus={false}
             style={{ borderWidth: 1, borderColor: t.border, borderRadius: 12, padding: 12, color: t.text, marginTop: 8 }}
           />
-          <Muted>Touches : {s.prefs.hidKeys.map(keyLabel).join(', ')}</Muted>
-          {s.lastKey ? <Muted>Dernière touche reçue : {keyLabel(s.lastKey)}</Muted> : null}
+          <Muted>Touches : {s.prefs.hidKeys.map((k) => L(keyLabel(k))).join(', ')}</Muted>
+          {s.lastKey ? <Muted>Dernière touche reçue : {L(keyLabel(s.lastKey))}</Muted> : null}
           <Spacer h={8} />
           <Row wrap>
             <Button title={s.capturingKey ? 'Appuyez sur la télécommande…' : 'Apprendre une touche'} icon="keypad-outline" small variant="ghost" onPress={() => bleCounter.captureKey()} />
@@ -314,8 +314,8 @@ export default function BluetoothCounterScreen() {
             directement : Zikru écoute donc leurs touches quand l’app est au premier plan.
           </Muted>
           <Toggle label="Compter les touches du clavier / de la télécommande" value={s.prefs.hidEnabled} onChange={(v) => bleCounter.setPrefs({ hidEnabled: v })} />
-          <Muted>Touches : {s.prefs.hidKeys.map(keyLabel).join(', ')}</Muted>
-          {s.lastKey ? <Muted>Dernière touche reçue : {keyLabel(s.lastKey)}</Muted> : null}
+          <Muted>Touches : {s.prefs.hidKeys.map((k) => L(keyLabel(k))).join(', ')}</Muted>
+          {s.lastKey ? <Muted>Dernière touche reçue : {L(keyLabel(s.lastKey))}</Muted> : null}
           <Spacer h={8} />
           <Row wrap>
             <Button title={s.capturingKey ? 'Appuyez sur la télécommande…' : 'Apprendre une touche'} icon="keypad-outline" small variant="ghost" onPress={() => bleCounter.captureKey()} />
