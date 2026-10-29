@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { useAyahFlow } from '@/components/quran/AyahFlow';
@@ -20,11 +21,13 @@ import { SURAHS } from '@/lib/surahs';
 import { useRecitation } from '@/lib/use-recitation';
 import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
+import { NuraniText } from '@/components/quran/NuraniText';
+import { L } from '@/lib/l10n';
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1);
 
-type PageProps = { page: number; all: string[]; width: number; height: number; pal: Pal; size: number; lineH: number; hl: Marks['hl']; playing: string; onAyah: (s: number, a: number) => void };
-const MushafPage = memo(function MushafPage({ page, all, width, height, pal, size, lineH, hl, playing, onAyah }: PageProps) {
+type PageProps = { page: number; all: string[]; width: number; height: number; pal: Pal; size: number; lineH: number; nurani?: boolean; muqattaat?: boolean; hl: Marks['hl']; playing: string; onAyah: (s: number, a: number) => void };
+const MushafPage = memo(function MushafPage({ page, all, width, height, pal, size, lineH, hl, playing, onAyah, nurani, muqattaat }: PageProps) {
   const [start, end] = pageRange(page);
   // segments : un bloc par sourate présente sur la page
   const blocks: { s: number; from: number; idx: number[] }[] = [];
@@ -39,7 +42,7 @@ const MushafPage = memo(function MushafPage({ page, all, width, height, pal, siz
     <View style={{ width, height }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 140, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 }}>
-          <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{`Juz’ ${juzOfIndex(gi)} · Hizb ${hizbOfIndex(gi)}`}</Text>
+          <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{L('Juz’ {j} · Hizb {h}', { j: juzOfIndex(gi), h: hizbOfIndex(gi) })}</Text>
           <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{SURAHS[fromIndex(gi)[0] - 1][2]}</Text>
         </View>
         <View style={{ backgroundColor: pal.card, borderRadius: 18, borderWidth: 1, borderColor: alpha(pal.gold, 0.45), paddingHorizontal: 14, paddingVertical: 12 }}>
@@ -60,9 +63,9 @@ const MushafPage = memo(function MushafPage({ page, all, width, height, pal, siz
                   const h = hl[k];
                   const on = playing === k;
                   return (
-                    <Text key={i} onPress={() => onAyah(s, a)} accessibilityRole="button" accessibilityLabel={`Verset ${s}:${a}`} style={on ? { backgroundColor: alpha(pal.accent, 0.22), color: pal.ink } : h ? { backgroundColor: alpha(h, pal.dark ? 0.25 : 0.35) } : undefined}>
+                    <Text key={i} onPress={() => onAyah(s, a)} accessibilityRole="button" accessibilityLabel={L('Verset {s}:{a}', { s, a })} style={on ? { backgroundColor: alpha(pal.accent, 0.22), color: pal.ink } : h ? { backgroundColor: alpha(h, pal.dark ? 0.25 : 0.35) } : undefined}>
                       {rubStartAt(i) ? <Text style={{ color: pal.gold }}>{'۞ '}</Text> : null}
-                      {all[i]}
+                      <NuraniText text={all[i]} surah={s} ayah={a} nurani={!!nurani} muqattaat={!!muqattaat} gold={pal.gold} ink={pal.ink} />
                       <Text style={{ color: pal.gold }}>{` \u06DD${arNum(a)} `}</Text>
                     </Text>
                   );
@@ -71,7 +74,7 @@ const MushafPage = memo(function MushafPage({ page, all, width, height, pal, siz
             </View>
           ))}
         </View>
-        <Text style={{ color: pal.muted, textAlign: 'center', marginTop: 10, fontSize: 16, fontWeight: '700' }} accessibilityLabel={`Page ${page}`}>
+        <Text style={{ color: pal.muted, textAlign: 'center', marginTop: 10, fontSize: 16, fontWeight: '700' }} accessibilityLabel={L('Page {p}', { p: page })}>
           {`${arNum(page)}`}
         </Text>
       </ScrollView>
@@ -144,24 +147,24 @@ export default function Mushaf() {
   const [s0] = fromIndex(pageRange(page)[0]);
   const pageDoneInKhatma = kst ? page - k!.from + 1 <= k!.done : false;
   const renderItem = useCallback(
-    ({ item }: { item: number }) => (all ? <MushafPage page={item} all={all} width={width} height={h} pal={pal} size={size} lineH={pr.lineH} hl={m.hl} playing={playing} onAyah={(s, a) => flow.open({ s, a, ar: all[gIndex(s, a)] })} /> : null),
+    ({ item }: { item: number }) => (all ? <MushafPage page={item} all={all} width={width} height={h} pal={pal} size={size} lineH={pr.lineH} nurani={pr.nurani} muqattaat={pr.muqattaat} hl={m.hl} playing={playing} onAyah={(s, a) => flow.open({ s, a, ar: all[gIndex(s, a)] })} /> : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [all, width, h, pal.bg, size, pr.lineH, m.hl, playing],
+    [all, width, h, pal.bg, size, pr.lineH, pr.nurani, pr.muqattaat, m.hl, playing],
   );
 
   return (
     <View style={{ flex: 1, backgroundColor: pal.bg }}>
       <Stack.Screen
         options={{
-          title: `${SURAHS[s0 - 1][2]} · p. ${page}`,
+          title: L('{s} · p. {p}', { s: SURAHS[s0 - 1][2], p: page }),
           headerStyle: { backgroundColor: pal.bg },
           headerTintColor: pal.ink,
           headerRight: () => (
             <View style={{ flexDirection: 'row', gap: 4 }}>
-              <Pressable accessibilityRole="button" accessibilityLabel="Mode verset par verset" hitSlop={8} onPress={() => router.push({ pathname: '/quran/[n]', params: { n: String(s0), a: String(fromIndex(pageRange(page)[0])[1]) } })} style={{ padding: 8 }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Mode verset par verset")} hitSlop={8} onPress={() => router.push({ pathname: '/quran/[n]', params: { n: String(s0), a: String(fromIndex(pageRange(page)[0])[1]) } })} style={{ padding: 8 }}>
                 <Ionicons name="list-outline" size={22} color={pal.ink} />
               </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Réglages d’affichage" hitSlop={8} onPress={() => setSettings(true)} style={{ padding: 8 }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Réglages d’affichage")} hitSlop={8} onPress={() => setSettings(true)} style={{ padding: 8 }}>
                 <Ionicons name="text-outline" size={22} color={pal.ink} />
               </Pressable>
             </View>
@@ -210,10 +213,10 @@ export default function Mushaf() {
             ) : null}
             <QBtn icon="chevron-forward" a11y="Page précédente" onPress={() => goPage(page - 1)} pal={pal} disabled={page <= 1} />
           </View>
-          {kst?.today ? <Text style={{ color: pal.muted, fontSize: 11, marginTop: 6, backgroundColor: alpha(pal.bg, 0.8), paddingHorizontal: 8, borderRadius: 8 }}>{`Wird du jour : p. ${kst.today.from}–${kst.today.to} · khatma ${Math.round(kst.progress * 100)} %`}</Text> : null}
+          {kst?.today ? <Text style={{ color: pal.muted, fontSize: 11, marginTop: 6, backgroundColor: alpha(pal.bg, 0.8), paddingHorizontal: 8, borderRadius: 8 }}>{L('Wird du jour : p. {a}–{b} · khatma {p} %', { a: kst.today.from, b: kst.today.to, p: Math.round(kst.progress * 100) })}</Text> : null}
         </View>
       ) : null}
-      <AudioBar rec={rec} pal={pal} extra={`Page ${page}`} />
+      <AudioBar rec={rec} pal={pal} extra={L('Page {p}', { p: page })} />
       <ReaderSettings visible={settings} onClose={() => setSettings(false)} pal={pal} />
       {flow.sheets}
     </View>

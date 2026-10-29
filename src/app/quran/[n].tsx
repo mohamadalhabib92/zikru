@@ -1,8 +1,10 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { useAyahFlow } from '@/components/quran/AyahFlow';
+import { NuraniText } from '@/components/quran/NuraniText';
 import { surahSlice, useEdition, useTranslationId, useUthmani } from '@/components/quran/data';
 import { useReaderKeepAwake } from '@/components/quran/keep-awake';
 import { readerPalette } from '@/components/quran/palette';
@@ -17,6 +19,7 @@ import { SURAHS } from '@/lib/surahs';
 import { useRecitation } from '@/lib/use-recitation';
 import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
+import { L } from '@/lib/l10n';
 
 /** Lecteur verset par verset : texte uthmani, traduction et translittération optionnelles, récitation suivie. */
 export default function SurahReader() {
@@ -81,7 +84,7 @@ export default function SurahReader() {
   const header = (
     <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 14 }}>
       <View style={{ alignSelf: 'stretch', borderRadius: 20, borderWidth: 1, borderColor: alpha(pal.gold, 0.5), backgroundColor: pal.card, paddingVertical: 16, paddingHorizontal: 14, alignItems: 'center' }}>
-        <Text style={{ color: pal.gold, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 }}>{`SOURATE ${n} · ${meta[5] === 'M' ? 'MECQUOISE' : 'MÉDINOISE'} · ${meta[4]} VERSETS`}</Text>
+        <Text style={{ color: pal.gold, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 }}>{L('SOURATE {n} · {k} · {v} VERSETS', { n, k: L(meta[5] === 'M' ? 'MECQUOISE' : 'MÉDINOISE'), v: meta[4] })}</Text>
         <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 30, lineHeight: 64 }}>{meta[1]}</Text>
         <Text style={{ color: pal.muted, fontSize: 14, fontWeight: '600' }}>{`${meta[2]} — ${meta[3]}`}</Text>
         {n !== 1 && n !== 9 ? <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 24, lineHeight: 54, marginTop: 6 }}>{BASMALA_UTHMANI}</Text> : null}
@@ -104,10 +107,10 @@ export default function SurahReader() {
           headerTintColor: pal.ink,
           headerRight: () => (
             <View style={{ flexDirection: 'row', gap: 4 }}>
-              <Pressable accessibilityRole="button" accessibilityLabel="Mode page (mushaf)" hitSlop={8} onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(pageOf(n, top)) } })} style={{ padding: 8 }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Mode page (mushaf)")} hitSlop={8} onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(pageOf(n, top)) } })} style={{ padding: 8 }}>
                 <Ionicons name="book-outline" size={22} color={pal.ink} />
               </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Réglages d’affichage" hitSlop={8} onPress={() => setSettings(true)} style={{ padding: 8 }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Réglages d’affichage")} hitSlop={8} onPress={() => setSettings(true)} style={{ padding: 8 }}>
                 <Ionicons name="text-outline" size={22} color={pal.ink} />
               </Pressable>
             </View>
@@ -115,9 +118,9 @@ export default function SurahReader() {
         }}
       />
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: pal.line }} accessibilityRole="summary">
-        <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{`Juz’ ${juzOfIndex(gi0)}`}</Text>
-        <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{`Hizb ${hizbOfIndex(gi0)}`}</Text>
-        <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{`Page ${pageOfIndex(gi0)}`}</Text>
+        <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{L('Juz’ {n}', { n: juzOfIndex(gi0) })}</Text>
+        <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{L('Hizb {n}', { n: hizbOfIndex(gi0) })}</Text>
+        <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{L('Page {n}', { n: pageOfIndex(gi0) })}</Text>
         <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{`${top}/${meta[4]}`}</Text>
       </View>
       {!ar ? (
@@ -157,7 +160,7 @@ export default function SurahReader() {
             return (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Verset ${a}. Actions`}
+                accessibilityLabel={L('Verset {n}. Actions', { n: a })}
                 onPress={() => flow.open({ s: n, a, ar: text, tr: t })}
                 style={({ pressed }) => ({
                   borderRadius: 18,
@@ -184,14 +187,14 @@ export default function SurahReader() {
                     </View>
                   ) : null}
                   <View style={{ flex: 1 }} />
-                  {note ? <Ionicons name="document-text" size={16} color={pal.muted} accessibilityLabel="Note" /> : null}
+                  {note ? <Ionicons name="document-text" size={16} color={pal.muted} accessibilityLabel={L("Note")} /> : null}
                   {bm ? <Ionicons name="bookmark" size={16} color={bm.color} accessibilityLabel={`Marque-page ${bm.name}`} /> : null}
-                  <Pressable accessibilityRole="button" accessibilityLabel={playing && rec.playing ? 'Pause' : `Écouter le verset ${a}`} hitSlop={8} onPress={() => (playing ? (rec.playing ? rec.pause() : rec.resume()) : play(a))} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.accent, 0.1) }}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={playing && rec.playing ? L('Pause') : L('Écouter le verset {n}', { n: a })} hitSlop={8} onPress={() => (playing ? (rec.playing ? rec.pause() : rec.resume()) : play(a))} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.accent, 0.1) }}>
                     <Ionicons name={playing && rec.playing ? 'pause' : 'play'} size={16} color={pal.accent} />
                   </Pressable>
                 </View>
                 <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: p.arSize, lineHeight: Math.round(p.arSize * p.lineH), textAlign: 'right', writingDirection: 'rtl', marginTop: 6 }}>
-                  {text}
+                  <NuraniText text={text} surah={n} ayah={a} nurani={p.nurani} muqattaat={p.muqattaat} gold={pal.gold} ink={pal.ink} />
                   <Text style={{ color: pal.gold }}>{` \u06DD${arNum(a)}`}</Text>
                 </Text>
                 {p.showTl && tl.lines?.[a - 1] ? <Text style={{ color: pal.muted, fontStyle: 'italic', fontSize: p.trSize - 1, lineHeight: Math.round((p.trSize - 1) * 1.5), marginTop: 4 }}>{tl.lines[a - 1]}</Text> : null}
@@ -216,7 +219,7 @@ export default function SurahReader() {
                 {n < 114 ? <QBtn label={`${SURAHS[n][2]} →`} onPress={() => router.replace(`/quran/${n + 1}`)} pal={pal} /> : null}
               </View>
               <Text style={{ color: pal.muted, fontSize: 11, textAlign: 'center' }}>
-                {`Texte : Tanzil (uthmani, CC BY 3.0) · Traduction : ${trId.label} via alquran.cloud${p.showTl ? ' · Translittération : alquran.cloud' : ''} · Touchez un verset pour ses actions`}
+                {`${L('Texte : Tanzil (uthmani, CC BY 3.0) · Traduction : {t} via alquran.cloud', { t: trId.label })}${p.showTl ? L(' · Translittération : alquran.cloud') : ''} · ${L('Touchez un verset pour ses actions')}`}
               </Text>
             </View>
           }
