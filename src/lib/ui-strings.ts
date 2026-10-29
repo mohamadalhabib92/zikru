@@ -1447,6 +1447,7 @@ export const UI_STRINGS: Record<string, [en: string, ar: string]> = {
   "Éléments ({n})": ["Items ({n})","العناصر ({n})"],
   "Éléments : {n}": ["Items: {n}","العناصر: {n}"],
   "Émeraude": ["Emerald","زمردي"],
+  "Énumération : at-Tirmidhī 3507 (gharīb, isnad jugé faible) · « Allah a 99 noms » : al-Bukhārī 7392, Muslim 2677": ["Enumeration: at-Tirmidhī 3507 (gharīb, chain judged weak) · “Allah has 99 names”: al-Bukhārī 7392, Muslim 2677","السرد: الترمذي 3507 (غريب، وإسناده ضعيف) · «إن لله تسعة وتسعين اسمًا»: البخاري 7392، مسلم 2677"],
   "Étape {a} / {b}": ["Step {a} / {b}","الخطوة {a} / {b}"],
   "Étape {a} sur {b}": ["Step {a} of {b}","الخطوة {a} من {b}"],
   "Étapes": ["Steps","الخطوات"],

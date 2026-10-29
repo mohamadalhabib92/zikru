@@ -12,7 +12,8 @@ import { Arabic, LCard, LMuted, Pill } from '@/ui/light';
 import { useLayout } from '@/ui/ds';
 import { alpha, brand as b, isDark } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
-import { L } from '@/lib/l10n';
+import { L, useUiLang } from '@/lib/l10n';
+import { NAMES_EN } from '@/lib/i18n-content/names';
 
 const norm = (s: string) =>
   s
@@ -27,12 +28,13 @@ export default function Names() {
   const [q, setQ] = useState(typeof qp.q === 'string' ? qp.q : '');
   const [draft, setDraft] = useState<DraftItem | null>(null);
   const { cols } = useLayout();
+  const lang = useUiLang();
   const goldFill = isDark() ? '#A8841F' : b.goldDeep;
   const list = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return NAMES;
     const num = parseInt(nq, 10);
-    return NAMES.filter((x) => (Number.isFinite(num) ? x.n === num || String(computeAbjad(nameBare(x.ar), repSys, opts).total) === nq : norm(`${x.tr} ${x.fr} ${x.ar}`).includes(nq)));
+    return NAMES.filter((x) => (Number.isFinite(num) ? x.n === num || String(computeAbjad(nameBare(x.ar), repSys, opts).total) === nq : norm(`${x.tr} ${x.fr} ${NAMES_EN[x.n - 1] ?? ''} ${x.ar}`).includes(nq)));
   }, [q, repSys, opts.taMarbuta, opts.hamza]);
 
   return (
@@ -116,7 +118,7 @@ export default function Names() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{x.tr}</Text>
-                  <LMuted style={{ fontSize: 13 }}>{x.fr}</LMuted>
+                  {lang === 'ar' ? null : <LMuted style={{ fontSize: 13 }}>{lang === 'en' ? NAMES_EN[x.n - 1] ?? x.fr : x.fr}</LMuted>}
                 </View>
                 <Arabic size={28} style={{ color: b.green }}>
                   {x.ar}
@@ -189,7 +191,7 @@ export default function Names() {
         {!list.length ? <LMuted>Aucun résultat.</LMuted> : null}
         <LMuted
           style={{ marginTop: 8, fontSize: 12 }}
-        >{L('{ref}. L’énumération des 99 Noms provient de la version d’at-Tirmidhī ; les savants en ont discuté l’authenticité (elle serait une insertion d’un rapporteur), d’autres listes existent. Sens en français indicatif.', { ref: NAMES_REF })}</LMuted>
+        >{L('{ref}. L’énumération des 99 Noms provient de la version d’at-Tirmidhī ; les savants en ont discuté l’authenticité (elle serait une insertion d’un rapporteur), d’autres listes existent. Sens en français indicatif.', { ref: L(NAMES_REF) })}</LMuted>
         <ProvenanceBadges set="names" id="enumeration" />
       </View>
       <AddToZikrSheet item={draft} onClose={() => setDraft(null)} />
