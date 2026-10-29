@@ -65,6 +65,7 @@ function Root() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
+        <Stack.Screen name="privacy" options={{ title: 'Confidentialité' }} />
         <Stack.Screen name="ring" options={{ title: tr.ring }} />
         <Stack.Screen name="ble-diag" options={{ title: 'Diagnostic Bluetooth' }} />
         <Stack.Screen name="qibla" options={{ title: tr.qibla_title }} />

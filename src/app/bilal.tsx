@@ -1,7 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
+import { AiConsentSheet } from '@/components/AiConsentSheet';
 import { askBilal, BilalError, bilalErrorFr, type ChatMsg } from '@/lib/bilal';
+import { useConsent } from '@/lib/consent';
+import { canSendToAI } from '@/lib/privacy';
 import { useAuth } from '@/lib/community/auth';
 import { periodFor, PERIODS, REFLECTIONS } from '@/lib/reflections';
 import { usePersistentState } from '@/lib/storage';
@@ -15,6 +18,8 @@ const STARTERS = ['Comment être plus régulier dans mon wird ?', 'Je me sens lo
 export default function Bilal() {
   const router = useRouter();
   const auth = useAuth();
+  const [consent, choose, consentReady] = useConsent();
+  const allowed = canSendToAI(consent, consentReady);
   const [msgs, setMsgs] = usePersistentState<ChatMsg[]>('bilal-chat', []);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -26,7 +31,7 @@ export default function Bilal() {
 
   const send = async (text: string) => {
     const t = text.trim();
-    if (!t || busy) return;
+    if (!t || busy || !allowed) return;
     setErr(null);
     const next: ChatMsg[] = [...msgs, { role: 'user', content: t }];
     setMsgs(next.slice(-40));
@@ -43,6 +48,21 @@ export default function Bilal() {
       setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 50);
     }
   };
+
+  // Consentement explicite avant tout envoi à l'IA (fail closed : rien tant que le stockage n'est pas lu).
+  if (!consentReady) return <View style={{ flex: 1, backgroundColor: b.cream }} />;
+  if (!allowed) {
+    return (
+      <AiConsentSheet
+        onAccept={() => choose('ai', true)}
+        onDecline={() => {
+          choose('ai', false);
+          if (router.canGoBack()) router.back();
+          else router.replace('/');
+        }}
+      />
+    );
+  }
 
   if (auth.enabled && auth.ready && !auth.session) {
     return (

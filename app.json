@@ -3,7 +3,7 @@
     "name": "Zikru",
     "slug": "zikru",
     "scheme": "zikru",
-    "version": "1.0.22",
+    "version": "1.0.23",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -20,7 +20,7 @@
         "NSBluetoothAlwaysUsageDescription": "Zikru utilise le Bluetooth pour se connecter à votre compteur de tasbih ou anneau de dhikr et compter chaque appui.",
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "fr",
-        "NSLocationWhenInUseUsageDescription": "Zikru utilise votre position pour calculer les horaires de prière et la direction de la qibla. Le calcul se fait sur votre appareil ; la position n'est envoyée à aucun serveur.",
+        "NSLocationWhenInUseUsageDescription": "Zikru utilise votre position pour calculer sur l’appareil les horaires de prière et la qibla. Si vous activez la météo, une position arrondie (≈ 10 km) est envoyée à Open-Meteo (Suisse). Aucun suivi publicitaire.",
         "NSMotionUsageDescription": "Cette app n'utilise pas les données de mouvement ; cette mention est requise par le module de localisation.",
         "NSLocationTemporaryUsageDescriptionDictionary": {
           "ExpoLocationFullAccuracy": "La position précise permet un résultat plus exact."
@@ -33,7 +33,64 @@
       "privacyManifests": {
         "NSPrivacyTracking": false,
         "NSPrivacyTrackingDomains": [],
-        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeName",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeCoarseLocation",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailsOrTextMessages",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherUserContent",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeSensitiveInfo",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ],
         "NSPrivacyAccessedAPITypes": [
           {
             "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
@@ -123,9 +180,9 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Zikru utilise votre position pour calculer les horaires de prière et la direction de la qibla. Le calcul se fait sur votre appareil ; la position n'est envoyée à aucun serveur.",
-          "locationAlwaysAndWhenInUsePermission": "Zikru utilise votre position pour calculer les horaires de prière et la direction de la qibla. Le calcul se fait sur votre appareil ; la position n'est envoyée à aucun serveur.",
-          "locationAlwaysPermission": "Zikru utilise votre position pour calculer les horaires de prière et la direction de la qibla. Le calcul se fait sur votre appareil ; la position n'est envoyée à aucun serveur.",
+          "locationWhenInUsePermission": "Zikru utilise votre position pour calculer sur l’appareil les horaires de prière et la qibla. Si vous activez la météo, une position arrondie (≈ 10 km) est envoyée à Open-Meteo (Suisse). Aucun suivi publicitaire.",
+          "locationAlwaysAndWhenInUsePermission": "Zikru utilise votre position pour calculer sur l’appareil les horaires de prière et la qibla. Si vous activez la météo, une position arrondie (≈ 10 km) est envoyée à Open-Meteo (Suisse). Aucun suivi publicitaire.",
+          "locationAlwaysPermission": "Zikru utilise votre position pour calculer sur l’appareil les horaires de prière et la qibla. Si vous activez la météo, une position arrondie (≈ 10 km) est envoyée à Open-Meteo (Suisse). Aucun suivi publicitaire.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }

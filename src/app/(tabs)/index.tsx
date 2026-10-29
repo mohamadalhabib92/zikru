@@ -14,6 +14,9 @@ import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } fro
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { periodFor, PERIODS, REFLECTIONS } from '@/lib/reflections';
 import { useSettings } from '@/lib/settings';
+import { useConsent } from '@/lib/consent';
+import { canFetchWeather, canSendToAI, undecided } from '@/lib/privacy';
+import { privacyText } from '@/lib/privacy-text';
 import { usePersistentState } from '@/lib/storage';
 import { SURAHS } from '@/lib/surahs';
 import { PRACTICES } from '@/lib/tijani';
@@ -57,6 +60,10 @@ export default function Home() {
   const [reflIdx, setReflIdx] = useState(() => new Date().getDate());
   const [aiText, setAiText] = usePersistentState<{ key: string; text: string } | null>('bilal-reflection', null);
   const [aiBusy, setAiBusy] = useState(false);
+  const [consent, choose, consentReady] = useConsent();
+  const aiOk = canSendToAI(consent, consentReady);
+  const weatherOk = canFetchWeather(consent, consentReady);
+  const pt = privacyText(s.lang);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -65,13 +72,18 @@ export default function Home() {
   useEffect(() => {
     let alive = true;
     setWErr(false);
+    // Météo seulement après consentement explicite ; la position envoyée est arrondie (~10 km).
+    if (!weatherOk) {
+      setWeather(null);
+      return;
+    }
     getWeather(s.place.lat, s.place.lng, s.place.label)
       .then((w) => alive && setWeather(w))
       .catch(() => alive && setWErr(true));
     return () => {
       alive = false;
     };
-  }, [s.place.lat, s.place.lng, s.place.label]);
+  }, [s.place.lat, s.place.lng, s.place.label, weatherOk]);
 
   const { next, list, maghrib } = useMemo(() => {
     const today = computeDay(now, s.place, s.method, s.madhab);
@@ -83,9 +95,9 @@ export default function Home() {
   const period = periodFor(now);
   const pool = REFLECTIONS[period];
   const aiKey = `${dayKey(now)}-${period}`;
-  const reflection = aiText?.key === aiKey ? aiText.text : pool[reflIdx % pool.length];
+  const reflection = aiOk && aiText?.key === aiKey ? aiText.text : pool[reflIdx % pool.length];
   const refresh = async (force = true) => {
-    if (aiUnavailable || aiBusy) {
+    if (aiUnavailable || aiBusy || !aiOk) {
       setReflIdx((i) => i + 1);
       return;
     }
@@ -101,9 +113,9 @@ export default function Home() {
     }
   };
   useEffect(() => {
-    if (aiText?.key !== aiKey && !aiUnavailable) void refresh(false);
+    if (aiOk && aiText?.key !== aiKey && !aiUnavailable) void refresh(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiKey]);
+  }, [aiKey, aiOk]);
 
   let greg = now.toDateString();
   try {
@@ -463,7 +475,22 @@ export default function Home() {
       <LCard style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }} label={tr.weather}>
         <IconBadge icon={((wm?.icon?.replace('-outline', '') ?? 'cloud') as IconName)} color={weather?.isDay === false ? b.indigo : b.wazifa} />
         <View style={{ flex: 1 }}>
-          {weather ? (
+          {!consentReady ? null : undecided(consent, 'weather') ? (
+            <View testID="weather-consent" style={{ gap: 8 }}>
+              <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{pt.weather_title}</Text>
+              <LMuted>{pt.weather_text}</LMuted>
+              <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                <Pressable accessibilityRole="button" onPress={() => choose('weather', true)} style={{ backgroundColor: b.green, borderRadius: 18, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
+                  <Text style={{ color: '#fff', fontWeight: '700' }}>{pt.weather_accept}</Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" onPress={() => choose('weather', false)} style={{ borderRadius: 18, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
+                  <Text style={{ color: b.ink, fontWeight: '600' }}>{pt.weather_decline}</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : !weatherOk ? (
+            <LMuted>{pt.weather_off}</LMuted>
+          ) : weather ? (
             <>
               <Text style={{ color: b.ink, fontWeight: '800', fontSize: 18 }}>
                 {temp(weather.temp)}°{unit} <Text style={{ color: b.inkMuted, fontWeight: '500', fontSize: 14 }}>· {wm?.label}</Text>

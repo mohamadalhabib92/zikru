@@ -42,26 +42,26 @@ Zikru, votre compagnon spirituel au quotidien.
 Zikru is a daily spiritual companion: offline prayer times calculated on device, qibla compass, persistent tasbih counter with haptics, support for Bluetooth tasbih counters and dhikr rings, sourced dhikr and a Hijri calendar. French, English, German and Arabic interface.
 
 ## Classification par âge
-4+ — réponses au questionnaire : aucune violence, aucun contenu sexuel, pas de jeux d'argent, pas de navigation web non filtrée, pas de contenu médical, pas de messagerie entre utilisateurs.
+Voir `store/app-privacy-checklist.md` §3. Recommandé : **13+** — Messaging and Chat = Yes, User-Generated Content = Yes, Parental Controls = Yes (mode Famille), aucune violence, aucun contenu sexuel, pas de jeux d'argent, pas de navigation web non filtrée, pas de publicité. Signalement/blocage (P6) requis par la guideline 1.2 avant d'activer la Communauté en production.
 
 ## Confidentialité de l'app (étiquettes « nutrition »)
-- **Collecte de données : « Nous ne collectons pas de données »** (Data Not Collected). Tout est stocké uniquement sur l'appareil et n'est transmis ni à l'éditeur ni à des tiers (au sens d'Apple, il n'y a donc pas de « collecte »).
-- Suivi (tracking) : Non. Pas d'identifiant publicitaire.
-- À revoir si un backend (Supabase, Stripe, API) est activé dans une version future.
+Réponses exactes : `store/app-privacy-checklist.md` §1. Résumé :
+- **Données collectées** (toutes : App Functionality, aucun tracking) : Email Address, Name, User ID, Sensitive Info, Emails or Text Messages, Other User Content — liés à l'utilisateur, uniquement si un compte (facultatif) est créé ou si Bilal est utilisé ; Coarse Location — non liée, uniquement si la météo est activée (≈ 10 km, Open-Meteo).
+- **Non collectées** : position précise (reste sur l'appareil), identifiants d'appareil, diagnostics, données d'usage, achats, santé.
+- **Suivi (tracking)** : Non. Pas d'identifiant publicitaire, pas de demande ATT.
+- URL de la politique : https://mohamadalhabib92.github.io/zikru/privacy/
 
-Données stockées localement (pour information) :
-- Vos compteurs de tasbih, objectifs et historique ;
-- Votre ville ou position (pour les horaires et la qibla), vos réglages de calcul et de langue ;
-- L'identifiant du compteur Bluetooth que vous avez associé.
+Données qui restent sur l'appareil (pour information) : compteurs de tasbih, objectifs et historique ; ville ou position (horaires et qibla) ; réglages ; identifiant du compteur Bluetooth associé ; conversation avec Bilal.
 
 Autorisations :
-- Localisation « pendant l'utilisation » : facultative, pour calculer les horaires et la qibla sur l'appareil. Vous pouvez saisir une ville à la place.
-- Bluetooth : facultatif, pour se connecter à votre compteur de tasbih ou bague de dhikr. Seuls les appuis du compteur sont lus.
+- Localisation « pendant l'utilisation » : facultative, calcul local des horaires et de la qibla. Si la météo est activée, une position arrondie (≈ 10 km) est envoyée à Open-Meteo. Saisie manuelle d'une ville possible.
+- Bluetooth : facultatif, pour lire les appuis d'un compteur de tasbih ou d'une bague de dhikr.
+- Notifications : facultatives, planifiées sur l'appareil.
 
 ## Notes pour l'équipe de révision (App Review)
-Aucun compte, fonctionne hors ligne. Le Bluetooth sert uniquement à lire les appuis d'un compteur de tasbih ou d'une bague de dhikr (une simulation est disponible dans l'écran Tasbih pour tester sans appareil). La localisation sert uniquement au calcul local des horaires et de la qibla.
+L'app fonctionne sans compte et hors ligne (horaires, qibla, tasbih, Coran). Un compte e-mail (code à usage unique) n'est requis que pour la Communauté / Famille ; il peut être supprimé dans l'app (Réglages › Confidentialité › Supprimer mon compte). L'assistant Bilal (IA) demande un consentement explicite avant tout envoi et peut être désactivé dans Réglages › Confidentialité. La météo est facultative et demande aussi un consentement. Le Bluetooth sert uniquement à lire les appuis d'un compteur (une simulation est disponible dans l'écran Tasbih). Aucune publicité, aucun suivi.
 
-Contact révision : à compléter (prénom, nom, téléphone, e-mail de Mohamed). Compte de démonstration : non requis.
+Contact révision : à compléter (prénom, nom, téléphone, e-mail de Mohamed). Compte de démonstration : à fournir si la Communauté est visible (YOUR_DEMO_EMAIL — code OTP).
 
 ## Captures d'écran à fournir
 - iPhone 6,9 pouces (1320 × 2868 ou 1290 × 2796) : 3 à 10 captures.

@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Madhab } from '@/lib/fiqh';
 import { LANGS } from '@/lib/i18n';
+import { privacyText } from '@/lib/privacy-text';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES } from '@/lib/prayer';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
@@ -109,6 +110,7 @@ export default function Onboarding() {
           }}
         />
         {gpsErr ? <Text style={{ color: b.rust, marginTop: 8, textAlign: 'center' }}>Localisation indisponible — choisissez une ville.</Text> : null}
+        <Text style={{ color: b.inkMuted, marginTop: 8, textAlign: 'center', fontSize: 13 }}>{privacyText(s.lang).location_note}</Text>
         <Text style={{ color: b.inkMuted, marginTop: 16, marginBottom: 8, fontWeight: '600' }}>{tr.choose_city}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {CITIES.map((c) => {
