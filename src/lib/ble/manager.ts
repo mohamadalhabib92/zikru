@@ -6,6 +6,8 @@
 import { useSyncExternalStore } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 import { loadJSON, saveJSON } from '../storage';
+import { diag, errMsg } from './diag';
+import { bleMsg, friendlyBleError } from './messages';
 import {
   analyzeLearn,
   candidateChars,
@@ -136,6 +138,7 @@ class BleCounterManager {
   private appState: AppStateStatus = (AppState.currentState as AppStateStatus | null) ?? 'active';
   private pendingSeq = 0;
   private stopScan: (() => void) | null = null;
+  private scanTimer: ReturnType<typeof setTimeout> | null = null;
   private keyHandler: ((e: KeyboardEvent) => void) | null = null;
   private loaded = false;
 
@@ -212,13 +215,18 @@ class BleCounterManager {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (/cancel|chosen|NotFoundError/i.test(msg)) return this.set({ status: this.link ? 'connecté' : 'déconnecté' });
-      this.set({ status: 'erreur', error: msg });
+      diag.error('choose', e);
+      this.set({ status: 'erreur', error: friendlyBleError(e) });
     }
   }
-  async startScan() {
+  /** opts.services : filtre de service (diagnostic) ; par défaut aucun filtre. */
+  async startScan(opts: { services?: string[]; ms?: number } = {}) {
     if (!transport.scan) return;
     const av = await this.refreshAvailability();
-    if (!av.ok) return;
+    if (!av.ok) {
+      diag.log('scan', `impossible : ${av.reason}`, 'warn');
+      return;
+    }
     this.stopScanning();
     this.set({ scanning: true, scanResults: [], error: null });
     const seen = new Map<string, ScanResult>();
@@ -234,14 +242,22 @@ class BleCounterManager {
           const list = [...seen.values()].sort((a, b) => Number(!!b.likely) - Number(!!a.likely) || Number(!!b.name) - Number(!!a.name) || (b.rssi ?? -999) - (a.rssi ?? -999));
           this.set({ scanResults: list.slice(0, 60) });
         },
-        (e) => this.set({ error: e.message, scanning: false }),
+        (e) => {
+          this.stopScanning();
+          this.set({ error: e.message, scanning: false });
+        },
+        opts.services?.length ? { services: opts.services } : undefined,
       );
-      setTimeout(() => this.stopScanning(), 15000);
+      // Un seul minuteur actif : un ancien minuteur ne doit pas couper un nouveau scan.
+      this.scanTimer = setTimeout(() => this.stopScanning(), opts.ms ?? 15000);
     } catch (e) {
-      this.set({ scanning: false, error: e instanceof Error ? e.message : String(e) });
+      diag.error('scan', e);
+      this.set({ scanning: false, error: bleMsg('scanFailed', { m: friendlyBleError(e) }) });
     }
   }
   stopScanning() {
+    if (this.scanTimer) clearTimeout(this.scanTimer);
+    this.scanTimer = null;
     this.stopScan?.();
     this.stopScan = null;
     if (this.s.scanning) this.set({ scanning: false });
@@ -302,12 +318,14 @@ class BleCounterManager {
     } catch (e) {
       if (seq !== this.connectSeq) return false;
       const msg = e instanceof Error ? e.message : String(e);
+      diag.log('connect', `${silent ? 'reconnexion silencieuse' : 'connexion'} échouée : ${errMsg(e)}`, silent ? 'warn' : 'error');
       await this.teardown();
       if (silent) {
         this.set({ status: 'reconnexion' });
         return false;
       }
-      this.set({ status: 'erreur', error: `Connexion impossible : ${msg}` });
+      const f = friendlyBleError(e);
+      this.set({ status: 'erreur', error: f === msg ? bleMsg('connectFailed', { m: msg }) : f });
       this.scheduleKeeper();
       return false;
     } finally {
@@ -328,15 +346,19 @@ class BleCounterManager {
   }
   private async subscribeAll(link: BleLink, profile: DeviceProfile) {
     const targets = candidateChars(link.chars);
+    let failed = 0;
     for (const c of targets) {
       try {
         const off = await link.subscribe(c.service, c.uuid, (b) => this.onNotify(c.service, c.uuid, b, profile));
         this.unsub.push(off);
-      } catch {
-        /* caractéristique refusée (liste de blocage web, chiffrement…) : ignorée */
+      } catch (e) {
+        // caractéristique refusée (liste de blocage web, chiffrement/appairage…) : signalée dans le diagnostic
+        failed++;
+        diag.log('notify', `${c.service} / ${c.uuid} refusée : ${errMsg(e)}`, 'warn');
       }
     }
-    if (targets.length === 0) this.set({ error: 'Aucune caractéristique de notification accessible. Sur le web, ajoutez l’UUID du service ci-dessous ; si c’est un anneau-télécommande, utilisez le mode clavier.' });
+    if (targets.length === 0) this.set({ error: bleMsg('noNotify') });
+    else if (failed === targets.length) this.set({ error: bleMsg('subFailed', { n: failed }) });
   }
   private async readBattery(link: BleLink) {
     const c = link.chars.find((x) => sameUuid(x.service, STD.battery) && sameUuid(x.uuid, STD.batteryLevel));

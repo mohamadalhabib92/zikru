@@ -20,7 +20,7 @@ export default function Prayers() {
   const { s, t: tr } = useSettings();
   const g = useGrowth();
   const router = useRouter();
-  const { tablet } = useLayout();
+  const { tablet } = useLayout({ inTabs: true });
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);

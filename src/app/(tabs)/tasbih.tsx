@@ -22,7 +22,7 @@ export default function TasbihScreen() {
   const [scale] = useState(() => new Animated.Value(1));
   const done = tasbih.target > 0 && tasbih.count > 0 && tasbih.count % tasbih.target === 0;
 
-  const { width } = useLayout();
+  const { width } = useLayout({ inTabs: true });
   const ring = Math.min(300, Math.max(220, width - 80));
   const progress = tasbih.target > 0 ? (tasbih.count % tasbih.target === 0 && tasbih.count > 0 ? 1 : (tasbih.count % tasbih.target) / tasbih.target) : 0;
   const prev = useRef(tasbih.count);

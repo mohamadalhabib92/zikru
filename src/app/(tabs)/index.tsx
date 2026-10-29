@@ -43,7 +43,7 @@ export default function Home() {
   const g = useGrowth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { tablet, width } = useLayout();
+  const { tablet, wide, width } = useLayout({ inTabs: true });
   const [now, setNow] = useState(() => new Date());
   const [weather, setWeather] = useState<Weather | null>(null);
   const [wErr, setWErr] = useState(false);
@@ -217,7 +217,7 @@ export default function Home() {
                 {done}/{total}
               </Text>
             </ProgressRing>
-            <Text style={{ color: b.ink, fontWeight: '700', fontSize: 14 }} numberOfLines={1}>
+            <Text style={{ color: b.ink, fontWeight: '700', fontSize: 14 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
               {p.name}
             </Text>
           </Pressable>
@@ -265,10 +265,10 @@ export default function Home() {
               Continuer la lecture
             </Text>
           </View>
-          <Text style={{ color: b.heroText, fontWeight: '800', fontSize: 16 }} numberOfLines={1}>
+          <Text style={{ color: b.heroText, fontWeight: '800', fontSize: 16 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
             {surah ? `${surah[2]} · ${quranLast!.n}:${quranLast!.ayah}` : 'Al-Fātiḥa'}
           </Text>
-          <Text style={{ color: b.heroMuted, fontSize: 12 }} numberOfLines={1}>
+          <Text style={{ color: b.heroMuted, fontSize: 12 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
             {kst && !kst.finished ? `Khatma ${Math.round(kst.progress * 100)} % · ${kst.today ? `p. ${kst.today.from}–${kst.today.to}` : ''}` : surah ? `Page ${quranLast!.page ?? pageOf(quranLast!.n, quranLast!.ayah)} · ${qStreak.current} j de suite` : 'Mushaf, récitation, tafsir'}
           </Text>
           {kst && !kst.finished ? (
@@ -289,10 +289,10 @@ export default function Home() {
               Révision du jour
             </Text>
           </View>
-          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }} numberOfLines={1}>
+          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
             {tracked ? (hqN ? `${hqN} verset${hqN > 1 ? 's' : ''} à réviser` : 'À jour ✓') : 'Mémoriser le Coran'}
           </Text>
-          <Text style={{ color: b.inkMuted, fontSize: 12 }} numberOfLines={1}>
+          <Text style={{ color: b.inkMuted, fontSize: 12 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
             {tracked ? `Sabaq ${hq.sabaq.length} · Sabqi ${hq.sabqi.length} · Manzil ${hq.manzil.length}` : 'Répétition, masquage, révision espacée'}
           </Text>
         </Pressable>
@@ -401,7 +401,8 @@ export default function Home() {
     </FadeIn>
   );
 
-  const cols = width >= 1200 ? 8 : tablet ? 4 : 4;
+  // 4 colonnes partout : en deux colonnes la grille n'occupe que la moitié droite (libellés tronqués à 8).
+  const cols = 4;
   const explore: { icon: IconName; label: string; href: Href; color: string }[] = [
     { icon: 'book', label: 'Qur’an', href: '/quran', color: b.green },
     { icon: 'hand-left', label: 'Du‘as', href: '/duas', color: b.blue },
@@ -425,7 +426,7 @@ export default function Home() {
             style={({ pressed }) => ({ alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 16, backgroundColor: pressed ? alpha(x.color, 0.08) : 'transparent' })}
           >
             <IconBadge icon={x.icon} color={x.color} size={50} />
-            <Text style={{ color: b.ink, fontSize: 12, fontWeight: '600', textAlign: 'center' }} numberOfLines={1}>
+            <Text style={{ color: b.ink, fontSize: 12, fontWeight: '600', textAlign: 'center' }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
               {x.label}
             </Text>
           </Pressable>
@@ -497,11 +498,11 @@ export default function Home() {
   return (
     <View style={{ flex: 1, backgroundColor: b.cream }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 40 + insets.bottom }}>
-        <Container max={tablet ? 1180 : 720} style={{ paddingHorizontal: tablet ? 28 : 16 }}>
+        <Container max={wide ? 1180 : 760} style={{ paddingHorizontal: tablet ? 28 : 16 }}>
           {/* Barre du haut */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: b.inkMuted, fontSize: 13, fontWeight: '600' }} numberOfLines={1}>
+              <Text style={{ color: b.inkMuted, fontSize: 13, fontWeight: '600' }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
                 {greg} · {hijri}
               </Text>
               <Text accessibilityRole="header" style={{ color: b.ink, fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }}>
@@ -514,7 +515,7 @@ export default function Home() {
           <View style={{ marginBottom: 12, flexDirection: 'row' }}>
             <BleStatusChip />
           </View>
-          {tablet ? (
+          {wide ? (
             <View style={{ flexDirection: 'row', gap: 24, alignItems: 'flex-start' }}>
               <View style={{ flex: 1.1 }}>
                 {hero}

@@ -1,11 +1,13 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Text, TextInput, View } from 'react-native';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
 import { fieldLabel, isValidUuid, keyLabel, PROFILES, shortUuid } from '@/lib/ble/core';
+import { bleMsg } from '@/lib/ble/messages';
 import { useData } from '@/lib/data';
 import { useSettings } from '@/lib/settings';
-import { Badge, Body, Button, Card, Chip, Divider, Eyebrow, Field, H1, H2, ListItem, Muted, Notice, Row, Screen, Segmented, Spacer, Toggle } from '@/ui/kit';
+import { Badge, Body, Button, Card, Chip, Divider, Eyebrow, Field, H2, ListItem, Muted, Notice, Row, Screen, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 
 const STATUS_TONE = { connecté: 'success', connexion: 'info', reconnexion: 'warning', déconnecté: 'neutral', erreur: 'danger' } as const;
@@ -35,9 +37,10 @@ export default function BluetoothCounterScreen() {
 
   return (
     <Screen>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <H1>{tr.ring}</H1>
+      {/* Le titre est déjà dans l'en-tête de navigation : pas de second H1 ici. */}
+      <Row wrap style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <Badge label={s.status === 'reconnexion' ? 'recherche…' : s.status} tone={STATUS_TONE[s.status]} />
+        <Button title="Diagnostic" icon="pulse-outline" small variant="ghost" onPress={() => router.push('/ble-diag')} />
       </Row>
       <Muted>Tasbih électronique, anneau de dhikr ou télécommande : chaque appui ajoute +1 au compteur de session ({tasbih.count}{tasbih.target ? ` / ${tasbih.target}` : ''}).</Muted>
       <Muted>{STATUS_HELP[s.status]}</Muted>
@@ -72,8 +75,8 @@ export default function BluetoothCounterScreen() {
         <>
           <Notice
             tone={av.kind === 'disabled' ? 'info' : av.kind === 'unsupported' ? 'warning' : 'danger'}
-            title={av.kind === 'expo-go' ? 'Build natif requis' : av.kind === 'disabled' ? 'Bluetooth désactivé' : 'Bluetooth indisponible'}
-            text={av.kind === 'disabled' && s.devices.length ? 'Activez le Bluetooth : vos compteurs mémorisés se reconnecteront automatiquement.' : av.reason}
+            title={av.kind === 'expo-go' ? 'Build natif requis' : av.kind === 'disabled' ? (av.reason === bleMsg('notReady') ? 'Bluetooth pas encore prêt' : 'Bluetooth désactivé') : av.kind === 'denied' ? 'Autorisation Bluetooth requise' : 'Bluetooth indisponible'}
+            text={av.kind === 'disabled' && s.devices.length && av.reason !== bleMsg('notReady') ? 'Activez le Bluetooth : vos compteurs mémorisés se reconnecteront automatiquement.' : av.reason}
             icon="bluetooth-outline"
           />
           <Spacer />
@@ -320,6 +323,8 @@ export default function BluetoothCounterScreen() {
       </Muted>
 
       <Divider />
+      <Button title="Diagnostic Bluetooth (journal, RSSI, services)" icon="pulse-outline" variant="ghost" onPress={() => router.push('/ble-diag')} />
+      <Spacer h={8} />
       <View>
         <Eyebrow>Test sans appareil</Eyebrow>
         <Button title={`Simuler un appui (+1) · ${tr.simulation}`} icon="finger-print-outline" variant="ghost" small onPress={() => bleCounter.simulate()} />

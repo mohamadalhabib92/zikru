@@ -1,5 +1,6 @@
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
+import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { useData } from '@/lib/data';
 import { usePrayerReminders } from '@/lib/reminders';
@@ -10,6 +11,9 @@ export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
   const { ready: dataReady } = useData();
   usePrayerReminders();
+  const { width } = useWindowDimensions();
+  // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
+  const sidebar = hasSidebar(width);
   if (!ready || !dataReady)
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
@@ -28,10 +32,17 @@ export default function TabsLayout() {
         headerTintColor: t.text,
         headerTitleStyle: { fontWeight: '700', fontSize: 17 },
         headerShadowVisible: false,
-        tabBarStyle: { backgroundColor: t.surface, borderTopColor: t.border, minHeight: 60 },
-        tabBarActiveTintColor: t.primary,
+        tabBarPosition: sidebar ? 'left' : 'bottom',
+        tabBarLabelPosition: sidebar ? 'beside-icon' : undefined,
+        tabBarStyle: sidebar
+          ? { backgroundColor: t.surface, borderColor: t.border, minWidth: SIDEBAR_WIDTH, width: SIDEBAR_WIDTH, paddingTop: 24 }
+          : { backgroundColor: t.surface, borderTopColor: t.border, minHeight: 60 },
+        tabBarActiveTintColor: sidebar ? t.onPrimary : t.primary,
+        tabBarActiveBackgroundColor: sidebar ? t.primary : undefined,
         tabBarInactiveTintColor: t.muted,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        // Les libellés d'onglets ne grossissent pas au-delà de la barre (iOS affiche la grande vignette d'accessibilité à l'appui long).
+        tabBarAllowFontScaling: false,
+        tabBarLabelStyle: sidebar ? { fontSize: 15, fontWeight: '600' } : { fontSize: 11, fontWeight: '700' },
         sceneStyle: { backgroundColor: t.bg },
       }}
     >

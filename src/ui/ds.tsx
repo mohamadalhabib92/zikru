@@ -18,10 +18,22 @@ export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'lig
   } catch {}
 }
 
-/** Largeur responsive : téléphone, tablette (≥ 768), bureau (≥ 1200). */
-export function useLayout() {
-  const { width } = useWindowDimensions();
-  return { width, tablet: width >= 768, desktop: width >= 1200, cols: width >= 1200 ? 3 : width >= 768 ? 2 : 1 };
+/** Barre latérale des onglets : iPad paysage, grand iPad portrait, ordinateur (fenêtre ≥ 1024). */
+export const SIDEBAR_MIN_WINDOW = 1024;
+export const SIDEBAR_WIDTH = 232;
+export function hasSidebar(windowWidth: number) {
+  return windowWidth >= SIDEBAR_MIN_WINDOW;
+}
+
+/**
+ * Largeur responsive : téléphone, tablette (≥ 768), bureau (≥ 1200).
+ * `inTabs` : écran affiché à côté de la barre latérale, on raisonne sur la largeur réellement disponible
+ * (sinon les colonnes deviennent trop étroites sur iPad en paysage / Split View).
+ */
+export function useLayout(opts?: { inTabs?: boolean }) {
+  const { width: win } = useWindowDimensions();
+  const width = opts?.inTabs && hasSidebar(win) ? win - SIDEBAR_WIDTH : win;
+  return { width, windowWidth: win, sidebar: hasSidebar(win), tablet: width >= 768, wide: width >= 960, desktop: width >= 1200, cols: width >= 1200 ? 3 : width >= 768 ? 2 : 1 };
 }
 
 /** Conteneur centré à largeur maximale. */
@@ -72,11 +84,11 @@ export function Tile({ icon, title, subtitle, onPress, color = b.green, style }:
     >
       <IconBadge icon={icon} color={color} size={38} />
       <View>
-        <Text style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
+        <Text maxFontSizeMultiplier={1.3} style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={2}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={{ color: b.inkMuted, fontSize: 12, marginTop: 2 }} numberOfLines={2}>
+          <Text maxFontSizeMultiplier={1.3} style={{ color: b.inkMuted, fontSize: 12, marginTop: 2 }} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}

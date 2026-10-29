@@ -8,6 +8,8 @@ export interface BleLink {
   id: string;
   name: string | null;
   chars: GattChar[];
+  /** MTU négocié (Android ; iOS le négocie seul). */
+  mtu?: number | null;
   subscribe(service: string, characteristic: string, cb: (b: Bytes) => void): Promise<() => void>;
   read(service: string, characteristic: string): Promise<Bytes | null>;
   write?(service: string, characteristic: string, data: Bytes): Promise<void>;
@@ -36,7 +38,9 @@ export interface BleTransport {
   /** Web : ouvre le sélecteur du navigateur, puis connecte. */
   choose?(opts: { services: string[]; namePrefixes: string[]; acceptAll: boolean }): Promise<string>;
   /** Natif : scan BLE ; renvoie une fonction d'arrêt. */
-  scan?(onResult: (r: ScanResult) => void, onError: (e: Error) => void): Promise<() => void>;
+  scan?(onResult: (r: ScanResult) => void, onError: (e: Error) => void, opts?: { services?: string[] }): Promise<() => void>;
+  /** État brut de l'adaptateur (diagnostic) : PoweredOn, Unauthorized, Unknown… */
+  rawState?(): Promise<string>;
   connect(id: string, opts: ConnectOpts): Promise<BleLink>;
   /** Annule une connexion en cours / en attente. */
   cancel?(id: string): Promise<void>;

@@ -14,7 +14,7 @@ export type HubSection = { title: string; items: HubItem[] };
 export function Hub({ title, eyebrow, sections, top }: { title: string; eyebrow?: string; sections: HubSection[]; top?: ReactNode }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { tablet, desktop } = useLayout();
+  const { tablet, desktop } = useLayout({ inTabs: true });
   const { t: tr } = useSettings();
   const cols = desktop ? 3 : tablet ? 2 : 1;
   return (

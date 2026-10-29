@@ -4,11 +4,12 @@ import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { Platform, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/lib/community/auth';
 import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
+import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
@@ -28,6 +29,15 @@ function Root() {
   const scheme: Scheme = s.appearance === 'light' || s.appearance === 'dark' ? s.appearance : sys === 'dark' ? 'dark' : 'light';
   // Les jetons sont réécrits AVANT le rendu des enfants ; la clé force un redessin complet.
   applyScheme(scheme);
+  // Messages Bluetooth (transports hors React) dans la langue de l'interface.
+  setBleLang(s.lang);
+  const rtl = isRTL(s.lang);
+  useEffect(() => {
+    // Web : dir/lang sur <html> (lecteurs d'écran, sélection, barres de défilement côté droit en arabe).
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    document.documentElement.lang = s.lang;
+    document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+  }, [s.lang, rtl]);
   const [fontsLoaded] = useFonts({ Amiri_400Regular, Amiri_700Bold, AmiriQuran_400Regular });
   const [fontTimeout, setFontTimeout] = useState(false);
   useEffect(() => {
@@ -40,7 +50,7 @@ function Root() {
   }, [scheme]);
   if (!fontsLoaded && !fontTimeout) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
-    <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: isRTL(s.lang) ? 'rtl' : 'ltr' }}>
+    <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -56,6 +66,7 @@ function Root() {
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
         <Stack.Screen name="ring" options={{ title: tr.ring }} />
+        <Stack.Screen name="ble-diag" options={{ title: 'Diagnostic Bluetooth' }} />
         <Stack.Screen name="qibla" options={{ title: tr.qibla_title }} />
         <Stack.Screen name="dhikr" options={{ title: tr.dhikr_title }} />
         <Stack.Screen name="settings" options={{ title: tr.settings_title }} />

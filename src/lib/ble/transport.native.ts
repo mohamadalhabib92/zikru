@@ -4,6 +4,8 @@
  */
 import { PermissionsAndroid, Platform } from 'react-native';
 import { b64ToBytes, normUuid, type Bytes, type GattChar } from './core';
+import { diag, errMsg } from './diag';
+import { bleMsg } from './messages';
 import type { Availability, BleLink, BleTransport, ScanResult } from './types';
 
 type Plx = typeof import('react-native-ble-plx');
@@ -29,12 +31,14 @@ function getManager() {
       restoreStateIdentifier: RESTORE_ID,
       restoreStateFunction: (st) => {
         restoredIds = (st?.connectedPeripherals ?? []).map((d) => d.id);
+        diag.log('restore', `iOS a restauré ${restoredIds.length} appareil(s)`);
         restoreSubs.forEach((f) => f(restoredIds ?? []));
       },
     });
     return manager;
   } catch (e) {
     loadError = e instanceof Error ? e.message : String(e);
+    diag.log('init', `module ble-plx indisponible : ${loadError}`, 'error');
     return null;
   }
 }
@@ -53,52 +57,99 @@ async function androidPermissions(prompt: boolean): Promise<boolean> {
   if (Platform.OS !== 'android') return true;
   const api = typeof Platform.Version === 'number' ? Platform.Version : parseInt(String(Platform.Version), 10);
   const P = PermissionsAndroid.PERMISSIONS;
+  // Android 12+ : « Appareils à proximité » (neverForLocation) ; avant : localisation précise obligatoire pour scanner.
   const perms = api >= 31 ? [P.BLUETOOTH_SCAN, P.BLUETOOTH_CONNECT] : [P.ACCESS_FINE_LOCATION];
   if (!prompt) {
     const ok = await Promise.all(perms.map((p) => PermissionsAndroid.check(p)));
     return ok.every(Boolean);
   }
   const res = await PermissionsAndroid.requestMultiple(perms);
-  return perms.every((p) => res[p] === PermissionsAndroid.RESULTS.GRANTED);
+  const ok = perms.every((p) => res[p] === PermissionsAndroid.RESULTS.GRANTED);
+  if (!ok) diag.log('perm', `Android API ${api} : ${perms.map((p) => `${p.split('.').pop()}=${res[p]}`).join(', ')}`, 'warn');
+  return ok;
 }
+
+/** Attend un état CoreBluetooth / Android stable (Unknown/Resetting → état définitif). */
+function settledState(m: import('react-native-ble-plx').BleManager, first: string, ms: number): Promise<string> {
+  if (first !== 'Unknown' && first !== 'Resetting') return Promise.resolve(first);
+  return new Promise<string>((resolve) => {
+    let done = false;
+    const finish = (x: string) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      sub.remove();
+      resolve(x);
+    };
+    const timer = setTimeout(() => finish(first), ms);
+    const sub = m.onStateChange((x) => {
+      if (x !== 'Unknown' && x !== 'Resetting') finish(x);
+    }, true);
+  });
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(Object.assign(new Error(`${label} : délai dépassé (${ms} ms)`), { errorCode: 3 })), ms);
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e: unknown) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
+
+const ANDROID_MTU = 185;
+const DISCOVERY_MS = 15000;
 
 export const transport: BleTransport = {
   platform: 'native',
   mode: 'scan',
+  async rawState() {
+    const m = getManager();
+    if (!m) return 'NoModule';
+    return String(await m.state());
+  },
   async availability(opts): Promise<Availability> {
     const m = getManager();
-    if (!m) return { ok: false, kind: 'expo-go', reason: 'Module Bluetooth absent : Expo Go ne l’inclut pas. Installez un build de développement ou EAS de Zikru.' };
-    if (!(await androidPermissions(opts?.prompt !== false))) return { ok: false, kind: 'denied', reason: 'Autorisation Bluetooth refusée. Activez « Appareils à proximité » dans les réglages Android.' };
-    let st: string = await m.state();
-    if (st === 'Unknown' || st === 'Resetting') {
-      // Juste après la création du gestionnaire, CoreBluetooth n'a pas encore d'état : courte attente.
-      st = await new Promise<string>((resolve) => {
-        const timer = setTimeout(() => {
-          sub.remove();
-          resolve(st);
-        }, 2500);
-        const sub = m.onStateChange((x) => {
-          if (x === 'Unknown' || x === 'Resetting') return;
-          clearTimeout(timer);
-          sub.remove();
-          resolve(x);
-        }, true);
-      });
-    }
+    if (!m) return { ok: false, kind: 'expo-go', reason: bleMsg('expoGo') };
+    const prompt = opts?.prompt !== false;
+    if (!(await androidPermissions(prompt))) return { ok: false, kind: 'denied', reason: bleMsg('deniedAndroid') };
+    // iOS : à la première utilisation, l'état reste « Unknown » tant que l'alerte d'autorisation est affichée.
+    // Attendre la réponse de l'utilisateur (jusqu'à 30 s) au lieu de conclure « Bluetooth désactivé ».
+    const first = String(await m.state());
+    const st = await settledState(m, first, prompt ? 30000 : 2500);
+    if (st !== first || st !== 'PoweredOn') diag.log('state', `état ${first} → ${st}`, st === 'PoweredOn' ? 'info' : 'warn');
     if (st === 'PoweredOn') return { ok: true };
-    if (st === 'Unauthorized') return { ok: false, kind: 'denied', reason: 'Accès Bluetooth refusé : autorisez Zikru dans Réglages > Confidentialité > Bluetooth.' };
-    if (st === 'Unsupported') return { ok: false, kind: 'unsupported', reason: 'Cet appareil ne prend pas en charge le Bluetooth basse consommation.' };
-    return { ok: false, kind: 'disabled', reason: 'Bluetooth désactivé : activez-le puis réessayez.' };
+    if (st === 'Unauthorized') return { ok: false, kind: 'denied', reason: Platform.OS === 'android' ? bleMsg('deniedAndroid') : bleMsg('deniedIos') };
+    if (st === 'Unsupported') return { ok: false, kind: 'unsupported', reason: bleMsg('unsupported') };
+    if (st === 'Unknown' || st === 'Resetting') return { ok: false, kind: 'disabled', reason: bleMsg('notReady') };
+    return { ok: false, kind: 'disabled', reason: bleMsg('off') };
   },
-  async scan(onResult, onError) {
+  async scan(onResult, onError, opts) {
     const m = getManager();
     if (!m) throw new Error(loadError ?? 'BLE indisponible');
-    // Aucun filtre de service : tous les appareils BLE à proximité sont listés (les compteurs probables sont mis en avant par l'écran).
-    await m.startDeviceScan(null, { allowDuplicates: false }, (err, d) => {
-      if (err) return onError(new Error(err.message));
-      if (d) onResult({ id: d.id, name: d.name ?? d.localName ?? null, rssi: d.rssi ?? null, services: (d.serviceUUIDs ?? []).map(normUuid) });
+    const filter = opts?.services?.length ? opts.services : null;
+    diag.log('scan', filter ? `début (filtre : ${filter.join(', ')})` : 'début (sans filtre de service)');
+    // Par défaut aucun filtre : la ZKR-R1 et la plupart des compteurs n'annoncent pas leur service principal.
+    await m.startDeviceScan(filter, { allowDuplicates: false }, (err, d) => {
+      if (err) {
+        diag.error('scan', err);
+        return onError(new Error(err.errorCode === 601 ? bleMsg('locationOff') : bleMsg('scanFailed', { m: errMsg(err) })));
+      }
+      if (d) {
+        const r = { id: d.id, name: d.name ?? d.localName ?? null, rssi: d.rssi ?? null, services: (d.serviceUUIDs ?? []).map(normUuid) };
+        diag.seen(r);
+        onResult(r);
+      }
     });
     return () => {
+      diag.log('scan', 'arrêt');
       void m.stopDeviceScan();
     };
   },
@@ -111,7 +162,10 @@ export const transport: BleTransport = {
   onStateChange(cb) {
     const m = getManager();
     if (!m) return () => {};
-    const sub = m.onStateChange((st) => cb(st === 'PoweredOn'), false);
+    const sub = m.onStateChange((st) => {
+      diag.log('state', `adaptateur : ${st}`);
+      cb(st === 'PoweredOn');
+    }, false);
     return () => sub.remove();
   },
   onRestore(cb) {
@@ -136,9 +190,13 @@ export const transport: BleTransport = {
       const timer = setTimeout(() => finish(null), ms);
       Promise.resolve(
         m.startDeviceScan(null, { allowDuplicates: false }, (err, d) => {
-          if (err) return finish(null);
+          if (err) {
+            diag.error('findKnown', err);
+            return finish(null);
+          }
           if (!d) return;
           const r: ScanResult = { id: d.id, name: d.name ?? d.localName ?? null, rssi: d.rssi ?? null, services: (d.serviceUUIDs ?? []).map(normUuid) };
+          diag.seen(r);
           if (match(r)) finish(r);
         }),
       ).catch(() => finish(null));
@@ -152,35 +210,66 @@ export const transport: BleTransport = {
     const m = getManager();
     if (!m) throw new Error(loadError ?? 'BLE indisponible');
     await m.stopDeviceScan();
-    // Déjà connecté (ex. restauré par iOS) : on reprend l'appareil tel quel.
-    let dev = (await m.isDeviceConnected(id).catch(() => false)) && Platform.OS === 'ios' ? ((await m.devices([id]).catch(() => []))[0] ?? null) : null;
+    const t0 = Date.now();
+    // Déjà connecté (restauré par iOS, ou lien Android resté ouvert) : on reprend l'appareil tel quel,
+    // au lieu d'un connectToDevice qui échouerait (« already connected ») sur Android.
+    let dev = (await m.isDeviceConnected(id).catch(() => false)) ? ((await m.devices([id]).catch(() => []))[0] ?? null) : null;
+    if (dev) diag.log('connect', `${id} déjà connecté : reprise`);
     if (!dev) {
+      const android = Platform.OS === 'android';
       // iOS : connexion par identifiant mémorisé (CoreBluetooth retrouve le périphérique sans scan).
-      const o = opts.wait ? (Platform.OS === 'android' ? { autoConnect: true } : {}) : { timeout: opts.timeoutMs ?? 12000 };
-      dev = await m.connectToDevice(id, o);
+      // Android : MTU demandé dès la connexion (trames > 20 octets).
+      const o = opts.wait ? (android ? { autoConnect: true } : {}) : { timeout: opts.timeoutMs ?? 12000, ...(android ? { requestMTU: ANDROID_MTU } : {}) };
+      diag.log('connect', `${id} · ${opts.wait ? 'en attente (sans délai)' : `délai ${opts.timeoutMs ?? 12000} ms`}`);
+      try {
+        dev = await m.connectToDevice(id, o);
+      } catch (e) {
+        diag.error('connect', e);
+        throw e;
+      }
+      if (android && opts.wait) dev = await dev.requestMTU(ANDROID_MTU).catch(() => dev!);
     }
-    await dev.discoverAllServicesAndCharacteristics();
+    const d = dev;
+    try {
+      await withTimeout(d.discoverAllServicesAndCharacteristics(), DISCOVERY_MS, 'Découverte des services');
+    } catch (e) {
+      diag.error('discover', e);
+      // Lien à moitié ouvert : on le ferme pour ne pas bloquer la tentative suivante (iOS comme Android).
+      await m.cancelDeviceConnection(id).catch(() => {});
+      throw Object.assign(new Error(errMsg(e)), { errorCode: (e as { errorCode?: number }).errorCode ?? 300 });
+    }
     const chars: GattChar[] = [];
-    for (const s of await dev.services()) {
+    for (const s of await d.services()) {
       for (const c of await s.characteristics()) {
         chars.push({ service: normUuid(s.uuid), uuid: normUuid(c.uuid), notify: c.isNotifiable || c.isIndicatable, read: c.isReadable });
       }
     }
+    const mtu = typeof d.mtu === 'number' ? d.mtu : null;
+    diag.log('connect', `connecté à ${d.name ?? d.localName ?? id} en ${Date.now() - t0} ms${mtu ? ` · MTU ${mtu}` : ''}`);
+    diag.setGatt({ id: d.id, name: d.name ?? d.localName ?? null, chars, mtu });
     const link: BleLink = {
-      id: dev.id,
-      name: dev.name ?? dev.localName ?? null,
+      id: d.id,
+      name: d.name ?? d.localName ?? null,
       chars,
+      mtu,
       async subscribe(s, c, cb) {
         const sub = m.monitorCharacteristicForDevice(id, s, c, (err, ch) => {
-          if (!err && ch?.value) cb(b64ToBytes(ch.value));
+          if (err) {
+            // 2 = annulé (déconnexion / désabonnement normal) ; le reste est signalé.
+            if (err.errorCode !== 2 && err.errorCode !== 201) diag.log('notify', `${c} : ${errMsg(err)}`, 'error');
+            return;
+          }
+          if (ch?.value) cb(b64ToBytes(ch.value));
         });
+        diag.log('notify', `abonné ${s} / ${c}`);
         return () => sub.remove();
       },
       async read(s, c) {
         try {
           const ch = await m.readCharacteristicForDevice(id, s, c);
           return b64ToBytes(ch.value);
-        } catch {
+        } catch (e) {
+          diag.log('read', `${c} : ${errMsg(e)}`, 'warn');
           return null;
         }
       },
@@ -188,7 +277,10 @@ export const transport: BleTransport = {
         await m.writeCharacteristicWithResponseForDevice(id, s, c, bytesToB64(data));
       },
       onDisconnect(cb) {
-        const sub = m.onDeviceDisconnected(id, () => cb());
+        const sub = m.onDeviceDisconnected(id, (err) => {
+          diag.log('disconnect', err ? `déconnecté : ${errMsg(err)}` : 'déconnecté', err ? 'warn' : 'info');
+          cb();
+        });
         return () => sub.remove();
       },
       async disconnect() {

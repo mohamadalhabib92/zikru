@@ -5,6 +5,8 @@
  * est sur la liste de blocage (les anneaux-télécommandes passent par le mode clavier).
  */
 import { normUuid, type Bytes, type GattChar } from './core';
+import { diag, errMsg } from './diag';
+import { bleMsg } from './messages';
 import type { Availability, BleLink, BleTransport, ScanResult } from './types';
 
 // Types minimaux (lib.dom n'inclut pas Web Bluetooth)
@@ -61,7 +63,7 @@ export const transport: BleTransport = {
       };
     }
     try {
-      if (b.getAvailability && !(await b.getAvailability())) return { ok: false, kind: 'disabled', reason: 'Bluetooth désactivé ou absent sur cet appareil.' };
+      if (b.getAvailability && !(await b.getAvailability())) return { ok: false, kind: 'disabled', reason: bleMsg('off') };
     } catch {
       /* certains navigateurs n'implémentent pas getAvailability */
     }
@@ -71,8 +73,10 @@ export const transport: BleTransport = {
     const b = bt();
     if (!b) throw new Error('Bluetooth web indisponible');
     const filters = namePrefixes.map((namePrefix) => ({ namePrefix }));
+    diag.log('choose', `sélecteur ${acceptAll || filters.length === 0 ? 'tous appareils' : `préfixes ${namePrefixes.join(', ')}`} · services ${services.join(', ') || '—'}`);
     const d = await b.requestDevice(acceptAll || filters.length === 0 ? { acceptAllDevices: true, optionalServices: services } : { filters, optionalServices: services });
     known.set(d.id, d);
+    diag.seen({ id: d.id, name: d.name ?? null, rssi: null });
     return d.id;
   },
   async canReconnect(id) {
@@ -132,6 +136,8 @@ export const transport: BleTransport = {
     const gatt = d.gatt;
     const ms = opts?.timeoutMs ?? 12000;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    diag.log('connect', `${d.name ?? id} · délai ${ms} ms`);
+    const t0 = Date.now();
     const server = await Promise.race([
       gatt.connect(),
       new Promise<never>((_, rej) => {
@@ -141,23 +147,35 @@ export const transport: BleTransport = {
           } catch {
             /* ignoré */
           }
-          rej(new Error('Appareil hors de portée (délai dépassé)'));
+          rej(Object.assign(new Error('Appareil hors de portée (délai dépassé)'), { errorCode: 3 }));
         }, ms);
       }),
-    ]).finally(() => timer && clearTimeout(timer));
+    ])
+      .catch((e: unknown) => {
+        diag.error('connect', e);
+        throw e;
+      })
+      .finally(() => timer && clearTimeout(timer));
     const chars: GattChar[] = [];
     const handles = new Map<string, BtChar>();
     let services: BtService[] = [];
-    try {
-      services = await server.getPrimaryServices();
-    } catch {
-      services = [];
+    for (let i = 0; i < 2; i++) {
+      try {
+        services = await server.getPrimaryServices();
+        break;
+      } catch (e) {
+        // Chrome : « GATT Server is disconnected » juste après connect() ; une nouvelle tentative suffit souvent.
+        diag.log('discover', `getPrimaryServices : ${errMsg(e)}`, i ? 'error' : 'warn');
+        if (i === 0 && !server.connected) await gatt.connect().catch(() => {});
+        services = [];
+      }
     }
     for (const s of services) {
       let cs: BtChar[] = [];
       try {
         cs = await s.getCharacteristics();
-      } catch {
+      } catch (e) {
+        diag.log('discover', `${normUuid(s.uuid)} : ${errMsg(e)}`, 'warn');
         continue;
       }
       for (const c of cs) {
@@ -166,6 +184,8 @@ export const transport: BleTransport = {
         chars.push({ service: normUuid(s.uuid), uuid: normUuid(c.uuid), notify: c.properties.notify || c.properties.indicate, read: c.properties.read });
       }
     }
+    diag.log('connect', `connecté à ${d.name ?? id} en ${Date.now() - t0} ms`);
+    diag.setGatt({ id: d.id, name: d.name ?? null, chars });
     const get = (s: string, c: string) => handles.get(normUuid(s) + '|' + normUuid(c));
     const link: BleLink = {
       id: d.id,
@@ -176,7 +196,14 @@ export const transport: BleTransport = {
         if (!ch) throw new Error('Caractéristique introuvable');
         const h = (e: Event) => cb(toBytes((e.target as BtChar).value));
         ch.addEventListener('characteristicvaluechanged', h);
-        await ch.startNotifications();
+        try {
+          await ch.startNotifications();
+        } catch (e) {
+          ch.removeEventListener('characteristicvaluechanged', h);
+          diag.log('notify', `${c} : ${errMsg(e)}`, 'error');
+          throw e;
+        }
+        diag.log('notify', `abonné ${s} / ${c}`);
         return () => {
           ch.removeEventListener('characteristicvaluechanged', h);
           if (server.connected) void ch.stopNotifications().catch(() => {});
@@ -196,7 +223,10 @@ export const transport: BleTransport = {
         if (ch) await ch.writeValue(data as unknown as BufferSource);
       },
       onDisconnect(cb) {
-        const h = () => cb();
+        const h = () => {
+          diag.log('disconnect', 'déconnecté');
+          cb();
+        };
         d.addEventListener('gattserverdisconnected', h);
         return () => d.removeEventListener('gattserverdisconnected', h);
       },

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { isRTL } from '@/lib/i18n';
+import { useSettings } from '@/lib/settings';
 import Svg, { Circle, Defs, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { hhmm, type PrayerKey } from '@/lib/prayer';
 
@@ -7,6 +9,7 @@ type P = { key: PrayerKey; time: Date };
 /** Illustration du ciel : dégradé selon l'heure, arc du soleil (lever → coucher), points des prières. */
 export function SkyArc({ list, now, names }: { list: P[]; now: Date; names: Record<PrayerKey, string> }) {
   const [w, setW] = useState(340);
+  const lang = useSettings().s.lang;
   const H = 190;
   const get = (k: PrayerKey) => list.find((x) => x.key === k)!.time.getTime();
   const rise = get('sunrise');
@@ -27,6 +30,9 @@ export function SkyArc({ list, now, names }: { list: P[]; now: Date; names: Reco
   const [top, bottom] = !day ? (nearEdge ? ['#1B1F4F', '#C8735A'] : ['#0A1236', '#2B2F66']) : nearEdge ? ['#3D4F9A', '#F0A46B'] : ['#3B82C4', '#CFE8F7'];
   const sun = pos(t);
   const dots: PrayerKey[] = ['sunrise', 'dhuhr', 'asr', 'maghrib'];
+  // Web en arabe : le texte SVG hérite de dir="rtl", où « start » / « end » s'inversent ; on garde des ancrages physiques.
+  const rtlWeb = Platform.OS === 'web' && isRTL(lang);
+  const A = rtlWeb ? ({ start: 'end', end: 'start' } as const) : ({ start: 'start', end: 'end' } as const);
   return (
     <View onLayout={(e) => setW(Math.max(260, e.nativeEvent.layout.width))} style={{ borderRadius: 18, overflow: 'hidden' }} accessibilityLabel="Course du soleil et horaires de prière">
       <Svg width={w} height={H}>
@@ -56,7 +62,7 @@ export function SkyArc({ list, now, names }: { list: P[]; now: Date; names: Reco
         })}
         {dots.map((k, i) => {
           const p = pos(get(k));
-          const anchor = i === 0 ? 'start' : i === dots.length - 1 ? 'end' : 'middle';
+          const anchor = i === 0 ? A.start : i === dots.length - 1 ? A.end : 'middle';
           const dy = k === 'dhuhr' ? -12 : k === 'asr' ? -12 : 18;
           return (
             <SvgText key={k + 'l'} x={p.x + (i === 0 ? -4 : i === dots.length - 1 ? 4 : 0)} y={p.y + dy} fill="#FFFFFF" fontSize={11} fontWeight="700" textAnchor={anchor}>
@@ -75,8 +81,8 @@ export function SkyArc({ list, now, names }: { list: P[]; now: Date; names: Reco
             <Circle cx={w - 41} cy={30} r={11} fill={top} />
           </>
         )}
-        <SvgText x={12} y={H - 14} fill="#FFFFFF" fontSize={12} fontWeight="700">{`${names.fajr} ${hhmm(new Date(get('fajr')))}`}</SvgText>
-        <SvgText x={w - 12} y={H - 14} fill="#FFFFFF" fontSize={12} fontWeight="700" textAnchor="end">{`${names.isha} ${hhmm(new Date(get('isha')))}`}</SvgText>
+        <SvgText x={12} y={H - 14} fill="#FFFFFF" fontSize={12} fontWeight="700" textAnchor={A.start}>{`${names.fajr} ${hhmm(new Date(get('fajr')))}`}</SvgText>
+        <SvgText x={w - 12} y={H - 14} fill="#FFFFFF" fontSize={12} fontWeight="700" textAnchor={A.end}>{`${names.isha} ${hhmm(new Date(get('isha')))}`}</SvgText>
       </Svg>
     </View>
   );

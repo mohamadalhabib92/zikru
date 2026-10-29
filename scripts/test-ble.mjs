@@ -14,6 +14,7 @@ async function load(rel, name) {
   return import(f);
 }
 const c = await load('../src/lib/ble/core.ts', 'core.mjs');
+const msgs = await load('../src/lib/ble/messages.ts', 'messages.mjs');
 const tc = await load('../src/lib/tasbih-core.ts', 'tasbih-core.mjs');
 
 let fail = 0;
@@ -241,6 +242,27 @@ test('tasbih : appuis, cycles 33/99/100, sessions', () => {
   const bt = tc.closeSession(tc.applyClicks(t, 3, 'bluetooth').next, 's2', 'x');
   assert.equal(bt.sessions[0].source, 'bluetooth');
   assert.equal(tc.closeSession(t, 's3', 'x'), t);
+});
+
+test('anneau ZKR-R1 reconnu par son nom', () => {
+  assert.equal(c.likelyCounter('ZKR-R1').likely, true);
+  assert.equal(c.likelyCounter('zkr r1 ring').likely, true);
+});
+
+test('messages BLE : erreurs ble-plx traduites (fr / en / ar)', () => {
+  msgs.setBleLang('fr');
+  assert.match(msgs.friendlyBleError(Object.assign(new Error('Operation timed out'), { errorCode: 3 })), /délai dépassé/);
+  assert.match(msgs.friendlyBleError(Object.assign(new Error('BluetoothLE is in unknown state'), { errorCode: 103 })), /autorisation/);
+  assert.match(msgs.friendlyBleError(Object.assign(new Error('Device X not found'), { errorCode: 204 })), /introuvable/);
+  assert.match(msgs.friendlyBleError(Object.assign(new Error('Device X was disconnected'), { errorCode: 201 })), /interrompue/);
+  assert.equal(msgs.friendlyBleError(new Error('quelque chose')), 'quelque chose');
+  msgs.setBleLang('en');
+  assert.match(msgs.bleMsg('off'), /Bluetooth is off/);
+  assert.equal(msgs.bleMsg('connectFailed', { m: 'x' }), 'Could not connect: x');
+  msgs.setBleLang('ar');
+  assert.match(msgs.bleMsg('off'), /البلوتوث/);
+  msgs.setBleLang('de');
+  assert.match(msgs.bleMsg('off'), /désactivé/, 'repli français');
 });
 
 if (fail) {

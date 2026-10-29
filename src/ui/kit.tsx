@@ -140,7 +140,7 @@ export function Button({
       ) : (
         <>
           {icon ? <Ionicons name={icon} size={small ? 16 : 18} color={fg} /> : null}
-          <Text style={[S().btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>
+          <Text maxFontSizeMultiplier={1.35} style={[S().btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>
         </>
       )}
     </Pressable>
@@ -173,7 +173,7 @@ export function Chip({ label, active, onPress, color }: { label: string; active?
         pressed && { opacity: 0.8 },
       ]}
     >
-      <Text style={{ color: active ? (color ? '#fff' : t.onPrimary) : t.text, fontWeight: '600', fontSize: 14 }}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.35} style={{ color: active ? (color ? '#fff' : t.onPrimary) : t.text, fontWeight: '600', fontSize: 14, flexShrink: 1, textAlign: 'center' }}>{label}</Text>
     </Pressable>
   );
 }
@@ -189,7 +189,7 @@ export function Badge({ label, tone = 'neutral' }: { label: string; tone?: 'neut
   const [bg, fg] = map[tone];
   return (
     <View style={[S().badge, { backgroundColor: bg }]}>
-      <Text style={{ color: fg, fontSize: 12, fontWeight: '700', letterSpacing: 0.3 }}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={{ color: fg, fontSize: 12, fontWeight: '700', letterSpacing: 0.3 }}>{label}</Text>
     </View>
   );
 }
@@ -225,7 +225,7 @@ export function Segmented<T extends string | number>({ options, value, onChange,
               accessibilityState={{ checked: on }}
               style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
             >
-              <Text style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14 }}>{o.label}</Text>
+              <Text maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14, textAlign: 'center' }}>{o.label}</Text>
             </Pressable>
           );
         })}
@@ -296,7 +296,7 @@ export function ListItem({ title, subtitle, right, icon, onPress }: { title: str
         </View>
       ) : null}
       <View style={{ flex: 1 }}>
-        <Text style={[S().body, { fontWeight: '600' }]} numberOfLines={1}>
+        <Text style={[S().body, { fontWeight: '600' }]} numberOfLines={2}>
           {title}
         </Text>
         {subtitle ? (
@@ -365,11 +365,15 @@ const makeStyles = () => StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
+    maxWidth: '100%',
+    paddingVertical: 8,
+    flexShrink: 1,
   },
   btnSmall: { minHeight: 44, paddingHorizontal: 14 },
-  btnText: { fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+  // flexShrink : un libellé long (allemand, arabe, Dynamic Type) passe à la ligne au lieu d'être rogné.
+  btnText: { fontSize: 16, fontWeight: '700', letterSpacing: 0.2, flexShrink: 1, textAlign: 'center' },
   iconBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  chip: { minHeight: 44, paddingHorizontal: 14, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  chip: { minHeight: 44, maxWidth: '100%', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, alignSelf: 'flex-start' },
   label: { color: t.muted, fontSize: 13, fontWeight: '600', marginBottom: 6, letterSpacing: 0.3 },
   input: {

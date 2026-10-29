@@ -376,7 +376,7 @@ export function fieldLabel(f: CounterField | undefined): string {
 
 // ---------------------------------------------------------------- Reconnaissance au scan
 /** Motifs de nom fréquents des compteurs de dhikr, anneaux et tasbih électroniques (indice, pas une garantie). */
-export const COUNTER_NAME_RE = /tasbi|tasbe|tesbi|tesbe|zikr|dhikr|thikr|zekr|subha|misbaha|masbaha|iqibla|qibla|bstwsh|ring|counter|compteur|clicker|tally|noor|jood|^bw/i;
+export const COUNTER_NAME_RE = /tasbi|tasbe|tesbi|tesbe|zikr|zkr|dhikr|thikr|zekr|subha|misbaha|masbaha|iqibla|qibla|bstwsh|ring|counter|compteur|clicker|tally|noor|jood|^bw/i;
 /** Services de profils connus (documentés) et services génériques fréquents sur ces accessoires. */
 export function likelyCounter(name: string | null | undefined, services: string[] = []): { likely: boolean; reason: string | null } {
   const n = (name ?? '').trim();
