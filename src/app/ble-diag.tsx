@@ -50,7 +50,7 @@ export default function BleDiagScreen() {
     Système: os,
     Transport: transport.platform,
     'État adaptateur': raw,
-    Disponibilité: s.availability ? (s.availability.ok ? 'OK' : `${s.availability.kind} — ${s.availability.reason}`) : '—',
+    Disponibilité: s.availability ? (s.availability.ok ? 'OK' : `${s.availability.kind} — ${L(s.availability.reason)}`) : '—',
     Statut: s.status,
     Reconnexion: `${s.auto}${s.autoTarget ? ` (${s.autoTarget})` : ''}`,
     Profil: s.prefs.profileId,

@@ -27,7 +27,7 @@ function Action({ icon, label, onPress, active, color = COLOR }: { icon: IconNam
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={L(label)}
       onPress={onPress}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: active ? color : b.line, backgroundColor: active ? color + '18' : b.paper, opacity: pressed ? 0.8 : 1 })}
     >

@@ -59,7 +59,7 @@ export default function HifzSession() {
   const [rp] = useShared(readerPrefs);
   const pal = readerPalette(rp.theme);
   useReaderKeepAwake(rp.keepAwake, 'hifz');
-  const title = review ? 'Révision du jour' : 'Mémorisation';
+  const title = L(review ? 'Révision du jour' : 'Mémorisation');
   return (
     <View style={{ flex: 1, backgroundColor: pal.bg }}>
       <Stack.Screen options={{ title, headerStyle: { backgroundColor: pal.bg }, headerTintColor: pal.ink, headerTitleStyle: { color: pal.ink } }} />
