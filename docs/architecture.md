@@ -1,7 +1,7 @@
 # Zikru — Architecture & feuille de route
 
-Version 0.1 · 28.10.2026 · document de travail pour Mohamed (fondateur)
-Statut : proposition d'architecture. Rien de ce qui est décrit ici n'est encore en production, sauf mention contraire. Le code P1 est dans `docs/p1-groups/` (testé, non appliqué).
+Version 0.2 · 29.10.2026 (modèle économique et droits gratuit/premium) · document de travail pour Mohamed (fondateur)
+Statut : proposition d'architecture. Rien de ce qui est décrit ici n'est encore en production, sauf mention contraire. Le code P1 est dans `docs/p1-groups/` et le système de droits P1a dans `docs/entitlements/` (testés, non appliqués).
 
 > Ce document contient des éléments juridiques (marques, protection des données, licences). Ce n'est pas un avis juridique. Faire valider par un mandataire en propriété intellectuelle et un avocat suisse en protection des données avant tout dépôt ou lancement.
 
@@ -13,9 +13,10 @@ Statut : proposition d'architecture. Rien de ce qui est décrit ici n'est encore
 4. Modèle de données (esquisse SQL + RLS)
 5. Sécurité, menaces, nLPD/RGPD, anti-abus
 6. Juridique et propriété intellectuelle
-7. Feuille de route P0 → P6
-8. Code P1 (groupes + compteur temps réel)
-9. Questions ouvertes
+7. Modèle économique & droits (gratuit / premium)
+8. Feuille de route P0 → P6
+9. Code P1 et P1a
+10. Questions ouvertes
 
 ---
 
@@ -32,7 +33,7 @@ Statut : proposition d'architecture. Rien de ce qui est décrit ici n'est encore
 | Chiffrement de bout en bout | OpenMLS (Rust, RFC 9420, licence MIT) dans une crate `zikru-crypto`, liée via uniffi (Swift + Kotlin) | Groupes natifs, multi-appareils, licence permissive | libsignal : AGPL-3.0 (voir 1.4) |
 | Backend | Supabase, projet en `eu-central-2` (Zurich) : Postgres + RLS, Auth, Realtime (broadcast privé + presence), Edge Functions | Déjà en place, données hébergées en Suisse | Serveur maison : plus d'exploitation |
 | Edge Functions | `attest` (App Attest / Play Integrity), `mls-ds` (service de distribution MLS), `ring-verify` (P5) | Logique qui ne doit pas tourner sur le client | — |
-| IA « Bilal » | Inchangée (Edge Function existante, quota en base) | — | — |
+| IA « Bilal » | Edge Function existante inchangée ; quota quotidien lu dans `plan_limits` (P1a) | Quota modifiable sans nouvelle version | Quota codé en dur |
 
 ### 1.2 App mobile (Expo)
 
@@ -252,7 +253,9 @@ Les groupes P1 réutilisent les tables existantes (`circles`, `circle_members`, 
 
 ```sql
 -- ===== Existant (rappel) =====
--- circles(id, name, max_members 2..50, rules, …)          = groupes
+-- circles(id, name, max_members, rules, …)                = groupes
+--   P1a : max_members devient facultatif (null = le plan du propriétaire décide)
+-- plans, plan_limits, app_config, user_entitlements          = droits (P1a, voir section 7)
 -- circle_members(circle_id, user_id, role founder|moderator|member, …)
 -- shared_goals(id, scope_type, circle_id|family_id, target, status, …)
 -- sharing_preferences(user_id, scope, mode nothing|participation|counter)
@@ -412,6 +415,7 @@ Ce qui suit est une liste de travail, pas un avis juridique.
 
 ### 5.5 Anti-abus
 
+- Limites de produit (taille des groupes, nombre de groupes créés, quota Bilal) : dans `plan_limits` / `app_config`, appliquées par le serveur (section 7.3).
 - Limites de débit en SQL (`private.hit`) : 240 lots d'événements/heure, 30 invitations/heure, 20 invitations actives par groupe, 12 appareils par compte.
 - CAPTCHA à l'inscription et à la connexion (hCaptcha ou Turnstile via Supabase Auth).
 - Attestation (P4) exigée pour : créer un groupe, envoyer un message, enregistrer une bague, apparaître dans un classement.
@@ -481,14 +485,110 @@ Points d'attention :
 
 ---
 
-## 7. Feuille de route
+## 7. Modèle économique & droits
+
+Décision de Mohamed (29.10.2026) : Zikru est gratuite au lancement. Il n'y a pas de prix de CHF 5. Les revenus viendront de la vente de la bague ZKR-R1, puis d'un abonnement premium ajouté plus tard. Aucun paiement n'est activé aujourd'hui. Le système de droits côté serveur est prêt, mais inerte.
+
+### 7.1 Gratuit et premium
+
+| Fonction | Gratuit (au lancement) | Premium (plus tard) |
+|---|---|---|
+| Compteur de dhikr | Illimité | Illimité |
+| Bibliothèque d'invocations (textes arabes exacts, sources) | Complète | Complète |
+| Connexion de la bague ZKR-R1 et des montres | Oui | Oui |
+| Adhésion aux groupes | Illimitée | Illimitée |
+| Création de groupes | Taille limitée : 4 membres, créateur inclus (configurable sur le serveur) | Grands groupes (taille à fixer ; 50 provisoire en base) |
+| Messagerie chiffrée de bout en bout (OpenMLS) | Oui | Oui |
+| Rappels | Oui | Oui |
+| Assistant El Ghaly Bilal | Quota quotidien (30 messages, valeur actuelle) | Illimité, avec un garde-fou anti-abus côté serveur |
+| Outils d'administration avancés | — | Oui |
+| Statistiques détaillées | — | Oui |
+| Thèmes | — | Oui |
+
+### 7.2 Principes du produit
+
+1. Aucune publicité, ni dans l'app, ni dans les notifications, ni dans les montres.
+2. Aucune revente de données, et aucun partage à des fins publicitaires. Cela vaut aussi pour les données agrégées ou « anonymisées ».
+3. Une fonction gratuite ne devient jamais payante. Le premium ajoute des fonctions ; il n'en retire aucune. Cette règle rejoint la règle 3.1.2(a) d'Apple : on ne retire pas aux utilisateurs existants une fonction principale qu'ils ont déjà.
+4. Le culte n'est jamais limité. Le compteur, les invocations, les rappels et la messagerie restent gratuits et sans quota.
+5. La bague est la source de revenus principale. L'abonnement est un complément, pas une condition pour pratiquer.
+6. Antériorité (grandfathering) : baisser une limite ne retire jamais personne d'un groupe.
+
+### 7.3 Système de droits côté serveur (P1a)
+
+Code : `docs/entitlements/sql/20261029110000_p1a_droits.sql`, testé, non appliqué. Toutes les limites sont dans la base. On peut les changer sans publier une nouvelle version de l'app.
+
+| Table | Rôle | Accès client |
+|---|---|---|
+| `plans` | `free` (par défaut, rang 0), `premium` (rang 10) | Lecture |
+| `plan_limits` | Clé/valeur JSON par plan : `max_group_members_created` = 4, `max_groups_created` = 20, `bilal_daily_quota` = 30, `advanced_admin_tools`, `detailed_stats`, `themes`. La valeur `null` signifie « illimité ». | Lecture |
+| `app_config` | Réglages globaux : `payments_enabled` (false), `max_group_members_hard` (500), surcharges `limits.<plan>.<clé>` | Aucun |
+| `user_entitlements` | `user_id`, `plan_id`, `source` ('manual', 'storekit', 'play', 'promo'), `external_ref`, `valid_from`, `valid_until`, `revoked_at` | Lecture de ses propres lignes |
+
+Résolution d'une limite :
+1. On prend le droit actif de plus haut rang : non révoqué, `valid_from` ≤ maintenant < `valid_until`, ou sans échéance.
+2. Les droits « storekit » et « play » sont ignorés tant que `payments_enabled` = false. Seuls « manual » et « promo » comptent.
+3. La valeur vient d'abord de la surcharge `app_config` `limits.<plan>.<clé>`, sinon de `plan_limits` pour ce plan, sinon du plan par défaut.
+
+RPC :
+- `get_my_entitlements()` renvoie le plan, la source, l'échéance, `payments_enabled`, toutes les limites effectives et une `config_version` (pour le cache client).
+- `group_capacity(circle)` renvoie la limite, le nombre de membres, `full` et `over_limit`. Elle est réservée aux membres.
+- `bilal_consume()` lit maintenant `bilal_daily_quota` dans le plan. Son contrat ne change pas (< 0 = quota épuisé), donc la fonction Edge `bilal` n'a pas besoin d'être modifiée.
+
+Application de la limite de membres :
+- C'est le déclencheur `circle_members_guard` qui l'applique. Il couvre tous les chemins d'entrée : les liens P1 (`join_group`), les codes existants (`accept_invitation`) et la création d'un groupe.
+- Il verrouille la ligne du groupe (`for update`), compte les membres (créateur inclus) et compare ce nombre à la limite du plan du propriétaire. Le propriétaire est le fondateur actuel, sinon le créateur du groupe.
+- Le verrou sérialise deux entrées simultanées sur la dernière place. La seconde recompte et voit la première.
+- En cas de refus, il lève l'erreur SQLSTATE `ZKG01` avec un `detail` JSON (`limit`, `members`). Le client teste ce code, jamais le texte. Toute la transaction est annulée et le jeton d'invitation n'est pas consommé.
+- `circles.max_members` devient une réduction facultative choisie par le fondateur. La valeur `null` signifie que le plan décide. La capacité effective est min(plan, `max_members`, plafond technique).
+- Le nombre de groupes créés est lu dans `max_groups_created` (erreur `ZKG02`).
+
+Antériorité (grandfathering) :
+- La limite n'est vérifiée qu'à l'insertion d'un nouveau membre. Baisser une limite, perdre ou laisser expirer le premium, ou transmettre le rôle de fondateur à un compte gratuit ne retire personne.
+- Le groupe garde ses membres et passe en `over_limit`. Les nouvelles entrées sont refusées tant que le nombre de membres n'est pas repassé sous la limite.
+- Un membre qui quitte un tel groupe ne peut pas y revenir tant que la limite n'est pas respectée. C'est un choix assumé, simple à expliquer. On pourra le changer.
+
+Exemples de changement en production, sans nouvelle version de l'app (par un administrateur, en SQL ou depuis le tableau de bord) :
+
+```sql
+-- Passer les groupes gratuits à 6 membres pour tout le monde :
+insert into public.app_config (key, value) values ('limits.free.max_group_members_created', '6')
+  on conflict (key) do update set value = excluded.value;
+-- Offrir le premium 30 jours (promotion, test, partenaire) :
+insert into public.user_entitlements (user_id, plan_id, source, valid_until, note)
+  values ('YOUR_USER_ID', 'premium', 'promo', now() + interval '30 days', 'lancement bague');
+```
+
+Côté client (`docs/entitlements/client/`) :
+- Le hook `useEntitlements(userId)` lit `get_my_entitlements()` au démarrage, au retour au premier plan et quand le cache a plus de 6 h.
+- Le cache est stocké dans AsyncStorage, avec une clé par compte.
+- Aucune limite n'est codée en dur. Quand on ne sait rien (premier lancement hors-ligne), la limite est « inconnue » : l'interface ne bloque pas et laisse le serveur trancher (`ZKG01`). Les fonctions premium inconnues restent désactivées.
+- `useGroup` expose `capacity` (via `group_capacity`) et renvoie les erreurs avec leur code (`GroupError`).
+
+### 7.4 Paiements (travail futur, non activé)
+
+| Sujet | Plan |
+|---|---|
+| iOS | StoreKit 2 : abonnement auto-renouvelable. `appAccountToken` = `user_id`, pour relier l'achat au compte. |
+| Android | Google Play Billing Library : abonnement. `obfuscatedAccountId` = haché du `user_id`. |
+| Validation | Uniquement côté serveur, par une Edge Function. App Store Server API (transactions signées JWS) et App Store Server Notifications V2 ; Google Play Developer API (`purchases.subscriptionsv2`) et Real-time Developer Notifications (Pub/Sub). Elle écrit `user_entitlements` (source 'storekit' ou 'play', `external_ref`, `valid_until`). Le client n'écrit jamais ses droits. |
+| Activation | Mettre `payments_enabled` à true, seulement une fois la validation testée en sandbox. |
+| Règles Apple | 3.1.1 : le premium numérique doit passer par l'achat intégré (IAP). 3.1.3(e) : la bague, bien physique, se vend hors IAP (site web, Apple Pay ou carte). 3.1.4 : si l'achat de la bague débloque du premium, une option IAP doit aussi exister. 3.1.2(a) : l'abonnement doit apporter une valeur continue. |
+| Règles Google | Les biens physiques ne passent pas par Play Billing. Le premium numérique y passe. |
+| TVA suisse | À vérifier avec une fiduciaire. Points à voir : l'assujettissement (seuil de CHF 100 000 de chiffre d'affaires) pour les ventes de la bague, et le traitement de la TVA sur les abonnements vendus via l'App Store et Google Play (qui collecte et reverse, dans quels pays). Rien n'est supposé ici. |
+| Restauration et partage | Restauration des achats ; abonnement valable sur tous les appareils du compte (règle Apple 3.1.2(a)). |
+
+---
+
+## 8. Feuille de route
 
 Estimations en semaines-personne pour un développeur expérimenté (assisté par des agents), hors délais d'attente des stores, des audits et du matériel. Ce sont des ordres de grandeur.
 
 | Phase | Contenu | Effort estimé | Dépend de |
 |---|---|---|---|
-| P0 | Bugs (barres latérales iPad, boutons coupés, BLE) — en cours en parallèle ; publication Android sur Google Play | 1–2 sem. + délais Google | — |
-| P1 | Groupes, invitations, compteur temps réel, dédoublonnage | 3–4 sem. (code de référence déjà écrit) | P0 |
+| P0 | Bugs (barres latérales iPad, boutons coupés, BLE) — en cours en parallèle ; publication Android sur Google Play. À terminer et valider avant de brancher P1. | 1–2 sem. + délais Google | — |
+| P1a | Droits gratuit/premium côté serveur (tables, RPC, limite de 4 membres configurable, quota Bilal lu dans le plan, hook client) — sans paiement | 1 sem. (code de référence écrit et testé) | P0 validé |
+| P1 | Groupes, invitations, compteur temps réel, dédoublonnage | 3–4 sem. (code de référence déjà écrit) | P0 validé, P1a |
 | P2 | Apple Watch + Wear OS | 6–10 sem. | P1 |
 | P3 | Messagerie E2EE (MLS) + signalements/blocages | 10–16 sem. + audit externe | P1 |
 | P4 | Durcissement, App Attest / Play Integrity, journal d'audit | 3–5 sem. | P1 |
@@ -500,6 +600,14 @@ Estimations en semaines-personne pour un développeur expérimenté (assisté pa
 - Tests : captures iPad toutes tailles, portrait/paysage ; tests BLE sur 2 iPhone + 2 Android.
 - Sécurité : clé de téléversement Play conservée hors dépôt ; aucune clé secrète dans l'app.
 - Acceptation : aucun bouton coupé sur iPad ; app Android publiée. Remarque : un compte développeur personnel récent doit faire un test fermé (au moins 12 testeurs pendant 14 jours) avant la production ; un compte d'organisation (société, numéro D-U-N-S requis) n'a pas cette obligation. Niveau d'API cible : celui exigé par Google au moment du dépôt.
+
+Règle d'ordonnancement : les correctifs P0 sont terminés et validés sur appareils réels (critères d'acceptation P0 ci-dessous) avant tout branchement de P1a/P1 dans l'app. Les migrations P1a et P1 sont appliquées ensemble, dans cet ordre, d'abord sur une branche Supabase de test.
+
+### P1a — Droits gratuit / premium (sans paiement)
+- Livrables : migration `20261029110000_p1a_droits.sql` ; hook `useEntitlements` ; affichage « 3 / 4 membres » via `group_capacity` ; message clair sur l'erreur `ZKG01` ; écran « Ce qui est gratuit » qui reprend les principes de la section 7.2.
+- Tests : `docs/entitlements/sql/tests/p1a_droits_test.sql` (4e membre accepté, 5e refusé `ZKG01`, hausse par `app_config` et par `plan_limits` sans nouvelle version, premium manuel, droits storekit inertes, antériorité, quota Bilal, cloisonnement) ; jest de la logique client.
+- Sécurité : aucun client ne peut écrire ses droits ni lire `app_config` ; les paiements restent coupés (`payments_enabled` = false).
+- Acceptation : passer la limite gratuite de 4 à 5 en base permet immédiatement un 5e membre, sans publier l'app ; le baisser ne retire personne.
 
 ### P1 — Groupes + compteur temps réel
 - Livrables : migration P1, hooks `useGroup` / `useGroupCounter`, écrans groupe, invitation par lien/QR, séance en direct.
@@ -539,7 +647,7 @@ Estimations en semaines-personne pour un développeur expérimenté (assisté pa
 
 ---
 
-## 8. Code P1 (groupes + compteur temps réel)
+## 9. Code P1 (groupes + compteur temps réel) et P1a (droits)
 
 Emplacement : `docs/p1-groups/` (voir son `README.md`). Statut : non appliqué en production, non branché dans l'app.
 
@@ -550,8 +658,11 @@ Emplacement : `docs/p1-groups/` (voir son `README.md`). Statut : non appliqué e
 | File hors-ligne (logique pure) | `client/counterQueue.ts` |
 | Hooks React Native | `client/useGroupCounter.ts`, `client/useGroup.ts` |
 | Tests jest | `client/__tests__/counterQueue.test.ts` |
+| P1a : migration droits | `docs/entitlements/sql/20261029110000_p1a_droits.sql` |
+| P1a : tests SQL | `docs/entitlements/sql/tests/p1a_droits_test.sql` (lancés par le même `run-pglite.mjs`, base neuve par suite) |
+| P1a : client | `docs/entitlements/client/entitlements.ts` (logique pure), `useEntitlements.ts`, `__tests__/entitlements.test.ts` |
 
-Résultats au 28.10.2026 : tests SQL tous verts ; jest 11/11 ; les deux hooks passent `tsc --strict` contre les dépendances de l'app. Dépendance à ajouter à l'intégration : `expo-crypto`.
+Résultats au 29.10.2026 : suites SQL P1 et P1a toutes vertes (PGlite) ; jest 11/11 (file) + 6/6 (droits) ; les hooks passent `tsc --strict` contre les dépendances de l'app. Dépendance à ajouter à l'intégration : `expo-crypto`.
 
 Principe du dédoublonnage :
 
@@ -582,6 +693,19 @@ export function displayTotal(serverTotal: number, s: QueueState, goalId: string)
 }
 ```
 
+Limite de membres appliquée par le serveur (extrait du déclencheur P1a) :
+
+```sql
+perform 1 from public.circles where id = new.circle_id for update;   -- sérialise les entrées
+cap := private.group_member_cap(new.circle_id);                       -- plan du propriétaire, surcharges app_config
+select count(*) into n from public.circle_members where circle_id = new.circle_id;  -- créateur inclus
+if n >= cap then
+  raise exception 'Ce groupe est complet (% membres maximum, créateur inclus)', cap
+    using errcode = 'ZKG01', detail = jsonb_build_object('limit', cap, 'members', n)::text;
+end if;
+-- Vérifié à l'insertion seulement : baisser une limite ne retire jamais personne.
+```
+
 Usage dans un écran :
 
 ```tsx
@@ -591,9 +715,11 @@ const { total, target, pending, live, tap } = useGroupCounter(goalId);
 
 ---
 
-## 9. Questions ouvertes pour Mohamed
+## 10. Questions ouvertes pour Mohamed
 
-1. Taille maximale d'un groupe : on garde 50 (valeur actuelle en base) ou on vise des groupes de plusieurs centaines (impact sur Realtime et MLS) ?
+Réglé le 29.10.2026 : taille des groupes gratuits (4, configurable), prix de l'app (gratuite), modèle économique (bague + premium plus tard).
+
+1. Premium : taille des « grands groupes » (50 provisoire en base ; plafond technique 500) et prix/périodicité de l'abonnement, à fixer avant d'activer les paiements.
 2. Partage par défaut à l'entrée dans un groupe : « participation » (proposé) ou « rien » ?
 3. Messagerie : texte seul en V1, ou aussi vocaux et images (stockage, modération, coût) ?
 4. Comptes enfants (Famille) : messagerie uniquement à l'intérieur de la famille ?
@@ -605,7 +731,10 @@ const { total, target, pending, live, tap } = useGroupCounter(goalId);
 10. Fournisseur IA de Bilal et pays de traitement : à documenter dans le registre ; d'accord pour ne jamais envoyer de messages privés à l'IA ?
 11. Analytics / rapports de plantage : lesquels (respect de la vie privée, hébergement) ?
 12. Durée de conservation des événements bruts de compteur (90 jours proposés) ?
+13. Nombre de groupes qu'un compte gratuit peut créer : garder 20 (valeur actuelle) ? Et un membre parti d'un groupe au-dessus de la limite (après une baisse) peut-il revenir ?
+14. Bague : l'achat de la bague donne-t-il du premium (par exemple 12 mois) ? Si oui, une option IAP équivalente est exigée par Apple (règle 3.1.4).
+15. Premium « illimité » pour Bilal : accepter un garde-fou de coût invisible (par exemple quelques centaines de messages par jour) contre les abus ?
 
 ---
 
-Sources des taxes et faits vérifiés (consultées le 28.10.2026) : https://www.ige.ch/fr/ (taxes marques et designs), https://euipo.europa.eu/ (taxes marque de l'UE), https://www.wipo.int/madrid/fr/fees/sched.html (barème Madrid, en vigueur depuis le 1er février 2023), https://github.com/openmls/openmls (licence, avis de sécurité), https://supabase.com/docs (Realtime Authorization, Auth CAPTCHA).
+Sources des taxes et faits vérifiés (consultées le 28.10.2026 ; règles Apple le 29.10.2026, version du 16.10.2026) : https://developer.apple.com/app-store/review/guidelines/ (3.1.1, 3.1.2, 3.1.3(e), 3.1.4), https://www.ige.ch/fr/ (taxes marques et designs), https://euipo.europa.eu/ (taxes marque de l'UE), https://www.wipo.int/madrid/fr/fees/sched.html (barème Madrid, en vigueur depuis le 1er février 2023), https://github.com/openmls/openmls (licence, avis de sécurité), https://supabase.com/docs (Realtime Authorization, Auth CAPTCHA).

@@ -5,7 +5,8 @@
 -- supabase/migrations/. Relire, tester (docs/p1-groups/sql/tests), puis le déplacer dans
 -- supabase/migrations/ et l'appliquer d'abord sur une branche / un projet de test.
 --
--- Dépend de : 20261027220000_communautes_famille_proches.sql (+ 2210, 2220).
+-- Dépend de : 20261027220000_communautes_famille_proches.sql (+ 2210, 2220)
+--            et de docs/entitlements/sql/20261029110000_p1a_droits.sql (droits gratuit/premium).
 -- Choix : un « groupe de zikr » = un cercle (niveau 2) existant. Rôles : founder = administrateur,
 -- moderator = modérateur, member = membre. On étend l'existant au lieu de dupliquer des tables.
 --
@@ -118,7 +119,7 @@ end $$;
 -- d'autre (ni membres, ni objectifs). Même message pour « inexistant », « expiré », « révoqué ».
 create or replace function private.preview_group_invite(p_token text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare i public.group_invites; c public.circles; n int;
+declare i public.group_invites; c public.circles; n int; cap int;
 begin
   if (select auth.uid()) is null then raise exception 'Connexion requise' using errcode = '42501'; end if;
   perform private.hit('invite:preview', 60, 3600);
@@ -127,8 +128,9 @@ begin
     return jsonb_build_object('valid', false); end if;
   select * into c from public.circles where id = i.circle_id;
   select count(*) into n from public.circle_members where circle_id = c.id;
+  cap := private.group_member_cap(c.id);  -- P1a : capacité effective (plan du propriétaire), jamais une constante
   return jsonb_build_object('valid', true, 'circle_id', c.id, 'name', c.name, 'description', c.description,
-    'rules', c.rules, 'members', n, 'max_members', c.max_members, 'role', i.role, 'expires_at', i.expires_at,
+    'rules', c.rules, 'members', n, 'max_members', cap, 'full', n >= cap, 'role', i.role, 'expires_at', i.expires_at,
     'already_member', private.is_circle_member(c.id));
 end $$;
 
@@ -149,7 +151,9 @@ begin
   select * into c from public.circles where id = i.circle_id;
   if c.rules is not null and not coalesce(p_accept_rules, false) then
     raise exception 'Le règlement du groupe doit être accepté' using errcode = '22023'; end if;
-  -- Le déclencheur circle_members_guard applique la limite de membres et l'interdiction des mineurs.
+  -- Le déclencheur circle_members_guard (redéfini en P1a) verrouille la ligne du groupe, compte les membres
+  -- (créateur inclus) et compare à la limite du plan du propriétaire : SQLSTATE ZKG01 si complet.
+  -- Il refuse aussi les mineurs. Toute l'opération est annulée en cas de refus (jeton non consommé).
   insert into public.circle_members (circle_id, user_id, display_name, role, rules_accepted_at)
     values (i.circle_id, me, nm, i.role, case when c.rules is not null then now() end);
   -- Par défaut : on montre la participation, pas le nombre (choix modifiable : set_group_sharing).
