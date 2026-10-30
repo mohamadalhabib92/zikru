@@ -1,12 +1,12 @@
 # Spec Communautés Zikru (Mohamed, 27.10.2026)
 Cercles concentriques : 1 Famille (Usra), 2 Proches (Ahbab, ≤50), 3 Communauté locale (Halqa/Jama'a, 1 modérateur/100), 4 Réseau régional/thématique (orgs vérifiées), 5 Oumma mondiale (compteur agrégé anonyme, total + nb pays).
 Famille : privé, invitation, rôles Parent admin (1-2)/Adulte/Enfant/Grand-parent invité ; comptes enfants gérés (contenu âge, pas de messagerie hors famille, contrôle parental temps/contacts/communautés) ; wird familial, objectifs communs, zikr du soir ensemble à distance (bague ou app), mode enfant doux sans comparaison, calendrier spirituel familial, encouragements privés sans compteurs publics ; multi-familles.
-Proches : invitation ou lien limité, fondateur+modérateur, règlement accepté, objectifs, sessions live, messagerie chiffrée.
+Proches : invitation ou lien limité, fondateur+modérateur, règlement accepté, objectifs, sessions live, messages chiffrés en transit et accessibles aux seuls membres (chiffrement de bout en bout prévu plus tard).
 Locale : mosquée/zawiya/asso ; page avec horaires présentiel/distance ; rôles Fondateur, Guide (imam, muqaddim, enseignant), Modérateurs, Membres ; langues, mixité, âge min, visibilité privée/sur demande/publique.
 Régionale : regroupe communautés, création orgs vérifiées, zikr collectif simultané agrégé.
 Mondiale : Laylat al-Qadr, Mawlid, Achoura, du'a catastrophes ; organisé par Zikru/orgs vérifiées, modération renforcée.
 Passerelles : famille rejoint en un geste (contribution au nom de la famille ou anonyme) ; session niveau supérieur suivie depuis niveau inférieur ; partage par cercle rien/participation/compteur ; accueil « Ma famille », « Mes cercles », « Mes communautés », « Événements ».
-Sécurité : Famille découverte jamais/vérif aucune/messagerie chiffrée/mineurs gérés parent ; Proches jamais/aucune/entre adultes/mineurs si parent présent ; Locale optionnelle/recommandée/limitée guide↔membre/groupes jeunesse encadrés ; Régionale oui/obligatoire/non/événements encadrés ; Mondiale oui/obligatoire Zikru/non/participation anonyme.
+Sécurité : Famille découverte jamais/vérif aucune/messages chiffrés en transit, membres seulement/mineurs gérés parent ; Proches jamais/aucune/entre adultes/mineurs si parent présent ; Locale optionnelle/recommandée/limitée guide↔membre/groupes jeunesse encadrés ; Régionale oui/obligatoire/non/événements encadrés ; Mondiale oui/obligatoire Zikru/non/participation anonyme.
 Modèle : Family, FamilyMember, ParentalControl, Circle, Community, Network, GlobalEvent, CircleLink, SharingPreference, AggregatedCounter.
 
 ---
@@ -23,7 +23,7 @@ Le client n'utilise que la clé publique (publishable) ; aucune clé service_rol
 | `families` | nom, wird familial | membres ; modification par les parents |
 | `family_members` | rôle `parent/adult/child/guest`, enfants gérés sans compte (`user_id` nul) | membres de la famille ; gestion par les parents ; un enfant ne peut pas quitter seul |
 | `parental_controls` | messagerie `none/parents/family`, minutes/jour, niveau de contenu | parents (écriture), l'enfant concerné (lecture) |
-| `circles` / `circle_members` | ≤ 50 membres, fondateur/modérateur/membre, règlement à accepter | membres uniquement ; adultes uniquement |
+| `circles` / `circle_members` | plafond serveur : 4 personnes créateur inclus en version gratuite (`app_config` + `user_entitlements`), fondateur/modérateur/membre, règlement à accepter | membres uniquement ; adultes uniquement |
 | `invitations` | code de 10 caractères, rôle, nb d'utilisations, expiration | créateur/admins ; aperçu et acceptation via RPC `preview_invitation` / `accept_invitation` |
 | `shared_goals` / `goal_contributions` / `aggregated_counters` | objectifs communs, contributions idempotentes (`client_id`), totaux agrégés | membres du cercle/de la famille ; contributions masquées selon le partage |
 | `zikr_sessions` / `zikr_session_counts` | zikr en direct (Realtime) | membres ; fin de session par le lanceur ou un responsable |
@@ -43,6 +43,7 @@ Fonctions `SECURITY DEFINER` uniquement dans le schéma `private` (non exposé) 
 
 ### Écarts connus / à venir
 - Mineurs : pas de cercles Proches en v1 (spec : « si parent présent ») — à ouvrir plus tard.
-- Messagerie : chiffrée en transit (TLS) + RLS, pas de chiffrement de bout en bout.
+- Messagerie : chiffrée en transit (TLS) + RLS (accessible aux seuls membres concernés), pas encore de chiffrement de bout en bout (prévu, voir architecture §1.4). L'équipe technique peut techniquement lire la base ; elle ne le fait que pour traiter un signalement (copie figée du contenu signalé).
+- Sécurité de la messagerie (lot A/B, 30.10.2026) : contrôle parental « Aucun » bloque envoi et réception, défaut « Parents seulement » ; invités ↔ enfants interdits ; débits limités (messages, sessions, invitations, essais de code) ; codes d'invitation stockés hachés ; signalement avec motif, blocage réciproque, filtre de base (liens, termes), purge automatique (pg_cron `zikru-purge-expired`). Voir `docs/moderation.md` et `docs/dpia-communautes.md`.
 - Limite de temps parentale : affichée à l'enfant, pas encore bloquante.
 - Niveaux 3 Locale, 4 Régionale, 5 Oumma : les colonnes `scope_type` (`family`/`circle`, déjà `community`/`network`/`global` pour `aggregated_counters`) des objectifs, sessions, invitations et préférences sont prévues pour s'étendre à `community`/`network`/`global`.

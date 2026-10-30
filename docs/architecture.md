@@ -58,6 +58,8 @@ Wear OS (Kotlin / Compose) :
 
 ### 1.4 Chiffrement de bout en bout (E2EE)
 
+> État actuel (octobre 2026) : **pas encore en place**. Les encouragements et sessions sont chiffrés en transit (TLS) et protégés par RLS (accessibles aux seuls membres), mais stockés en clair côté serveur. Ce qui suit est la cible.
+
 Recommandation : OpenMLS partout, y compris pour les messages privés (DM) sous forme de groupes MLS à 2 membres.
 
 - OpenMLS : implémentation Rust de MLS (RFC 9420), licence MIT. Audit de sécurité indépendant par SRLabs (rapport publié en 2026, financé par la Sovereign Tech Agency) ; des avis de sécurité ont encore été publiés ensuite (GitHub Security Advisories du dépôt `openmls/openmls`). Conséquence : épingler les versions, suivre les avis, mettre à jour vite.
