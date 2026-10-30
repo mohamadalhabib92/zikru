@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Image, Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { ItemPicker } from '@/components/zikr/Picker';
 import { LBtn, fmt, shareZikr } from '@/components/zikr/parts';
@@ -12,7 +12,8 @@ import { isFatiha } from '@/lib/fatiha';
 import { useSettings } from '@/lib/settings';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, Pill, SectionLabel } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { prunePhotos } from '@/lib/ocr';
+import { brand as b, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
 const SYSC: Record<AbjadSystem, string> = {
@@ -89,6 +90,12 @@ export default function EditZikr() {
   const z = zikrs.find((x) => x.id === id);
   const [picker, setPicker] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [photoOpen, setPhotoOpen] = useState<string | null>(null);
+  // Photos d’origine (locales) : supprime à l’ouverture celles qui ne servent plus à aucun élément.
+  useEffect(() => {
+    if (ready) prunePhotos(zikrs.flatMap((x) => x.items.map((i) => i.photo).filter((u): u is string => !!u)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
 
   if (!z) {
     return (
@@ -211,9 +218,26 @@ export default function EditZikr() {
                   {L(KIND_LABEL[it.kind] ?? String(it.kind ?? '')).toUpperCase()}
                 </Text>
                 <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15 }}>{it.label}</Text>
-                {it.ref ? <LMuted style={{ fontSize: 11 }}>{it.ref}</LMuted> : null}
+                {it.unverified ? (
+                  <Text style={{ color: t.warning, fontSize: 11, fontWeight: '700' }} accessibilityLabel={L('Non vérifié — source à vérifier')}>
+                    {'⚠ ' + L('Non vérifié — source à vérifier')}
+                  </Text>
+                ) : it.ref ? (
+                  <LMuted style={{ fontSize: 11 }}>{it.ref}</LMuted>
+                ) : null}
+                {it.via && !it.unverified ? <LMuted style={{ fontSize: 11 }}>{it.via === 'photo' ? 'Importé d’une photo · vérifié dans le Coran' : 'Collé · vérifié dans le Coran'}</LMuted> : null}
               </View>
+              {it.photo ? (
+                <Pressable accessibilityRole="imagebutton" accessibilityLabel={L(photoOpen === it.id ? 'Réduire la photo d’origine' : 'Agrandir la photo d’origine')} onPress={() => setPhotoOpen((x) => (x === it.id ? null : it.id))} hitSlop={6}>
+                  <Image source={{ uri: it.photo }} style={{ width: 48, height: 48, borderRadius: 8, backgroundColor: b.paper }} />
+                </Pressable>
+              ) : null}
             </View>
+            {it.photo && photoOpen === it.id ? (
+              <View style={{ marginTop: 8 }}>
+                <Image source={{ uri: it.photo }} resizeMode="contain" style={{ width: '100%', height: 280, borderRadius: 12, backgroundColor: b.paper }} accessible accessibilityLabel={L('Photo d’origine (gardée sur l’appareil)')} />
+              </View>
+            ) : null}
             <Arabic size={21} style={{ marginTop: 6 }}>
               {it.ar}
             </Arabic>

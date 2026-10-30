@@ -17,15 +17,17 @@ import { useZikrs } from '@/lib/zikrs';
 import { Ionicons } from '@/ui/kit';
 import { Arabic, LMuted, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
+import { ImportText } from './ImportText';
 import { AbjadBadge, LBtn, nameItem, type DraftItem } from './parts';
 
-type Tab = 'names' | 'quran' | 'verse' | 'dua' | 'salat' | 'free';
+type Tab = 'names' | 'quran' | 'verse' | 'import' | 'dua' | 'salat' | 'free';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'names', label: 'Noms d’Allah' },
   { id: 'quran', label: 'Du‘as coraniques' },
   { id: 'dua', label: 'Du‘as prophétiques' },
   { id: 'salat', label: 'Ṣalawāt ﷺ' },
   { id: 'verse', label: 'Verset au choix' },
+  { id: 'import', label: 'Coller / photo' },
   { id: 'free', label: 'Texte libre' },
 ];
 const norm = (s: string) =>
@@ -484,6 +486,7 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
               ))
             : null}
           {tab === 'verse' ? <VersePicker onAdd={add} /> : null}
+          {tab === 'import' ? <ImportText onAdd={add} /> : null}
           {tab === 'free' ? <FreeText onAdd={add} /> : null}
         </ScrollView>
       </View>

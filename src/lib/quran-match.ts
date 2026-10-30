@@ -185,8 +185,14 @@ function align(q: string[], ref: string[]): { cost: number; from: number; to: nu
     for (let j = 1; j <= m; j++) {
       const same = q[i - 1] === ref[j - 1] ? 0 : skel(q[i - 1]) === skel(ref[j - 1]) ? 0.5 : 1;
       let best = prev[j - 1] + same, s = prevS[j - 1];
-      if (prev[j] + 1 < best) (best = prev[j] + 1), (s = prevS[j]);
-      if (cur[j - 1] + 1 < best) (best = cur[j - 1] + 1), (s = curS[j - 1]);
+      if (prev[j] + 1 < best) {
+        best = prev[j] + 1;
+        s = prevS[j];
+      }
+      if (cur[j - 1] + 1 < best) {
+        best = cur[j - 1] + 1;
+        s = curS[j - 1];
+      }
       cur[j] = best;
       curS[j] = s;
     }
@@ -194,7 +200,11 @@ function align(q: string[], ref: string[]): { cost: number; from: number; to: nu
     prevS = curS;
   }
   let cost = Infinity, to = 0;
-  for (let j = 1; j <= m; j++) if (prev[j] < cost) (cost = prev[j]), (to = j);
+  for (let j = 1; j <= m; j++)
+    if (prev[j] < cost) {
+      cost = prev[j];
+      to = j;
+    }
   return { cost, from: prevS[to], to: to - 1 };
 }
 
@@ -215,7 +225,10 @@ function nearHit(idx: QuranIndex, words: string[]): { i0: number; i1: number; co
     if (lo > 0 && idx.verses[lo - 1].s === s) lo--;
     const ref: string[] = [], owner: number[] = [];
     for (let i = lo; i < idx.verses.length && idx.verses[i].s === s && i <= c + 20; i++) {
-      for (const w of idx.simpleWords[i]) (ref.push(w), owner.push(i));
+      for (const w of idx.simpleWords[i]) {
+        ref.push(w);
+        owner.push(i);
+      }
       if (i >= c && ref.length >= words.length + 8) break;
     }
     const r = align(words, ref);
