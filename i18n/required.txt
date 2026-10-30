@@ -78,3 +78,4 @@ src/ui/Text.tsx
 src/ui/ds.tsx
 src/ui/kit.tsx
 src/ui/light.tsx
+src/components/zikr/ImportText.tsx
