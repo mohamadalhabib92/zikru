@@ -14,7 +14,7 @@ export const CONTROLLER = 'Mohamed El Habib Ba, Chemin de la Suettaz 17, 1008 Pr
 
 const fr: Policy = {
   title: 'Politique de confidentialité de Zikru',
-  updated: 'Dernière mise à jour : 29 octobre 2026 (version 1.0.24)',
+  updated: 'Dernière mise à jour : 30 octobre 2026 (version 1.0.24)',
   lead: 'Zikru fonctionne sans compte et sans publicité. Sans compte, vos compteurs, réglages et lectures restent sur votre appareil. Certaines fonctions facultatives envoient des données à des serveurs : elles sont décrites ci-dessous, une par une, et les plus sensibles ne s’activent qu’avec votre accord explicite.',
   sections: [
     {
@@ -56,6 +56,8 @@ const fr: Policy = {
         'Ces données peuvent révéler votre pratique religieuse : ce sont des données sensibles (art. 5 let. c nLPD, art. 9 RGPD). Nous ne les traitons qu’avec votre consentement explicite, pour faire fonctionner ces fonctions, et seuls les membres que vous rejoignez y ont accès (règles d’accès au niveau de la base de données).',
         'Hébergement : Supabase (Supabase Inc., États-Unis, sous-traitant), base de données hébergée à Zurich (Suisse, région eu-central-2). L’e-mail de connexion est envoyé par le service d’authentification de Supabase.',
         'Votre session de connexion est conservée sur l’appareil pour vous éviter de vous reconnecter ; elle est effacée à la déconnexion.',
+        'Messages d’encouragement et sessions : chiffrés en transit et accessibles aux seuls membres concernés ; ils ne sont pas encore chiffrés de bout en bout (prévu). Les liens sont refusés et un filtre de base écarte les insultes graves. Un enfant n’échange par défaut qu’avec ses parents, et un parent peut tout couper.',
+        'Sécurité et modération : vous pouvez signaler un contenu ou une personne et bloquer quelqu’un. Un signalement transmet à l’équipe Zikru une copie du contenu signalé, votre identifiant, le motif et votre précision ; la personne signalée n’en est pas informée. Des compteurs techniques limitent les abus (envois, invitations, essais de code). Contact modération : mohamadalhabib@live.com.',
       ],
     },
     {
@@ -102,6 +104,7 @@ const fr: Policy = {
         'Données locales : jusqu’à ce que vous les effaciez (Réglages › Réinitialiser) ou désinstalliez l’app.',
         'Compte : tant que vous le gardez. « Supprimer mon compte » (Communauté) efface immédiatement votre compte et les données qui y sont liées, ainsi que les familles dont vous êtes le seul parent. Les sauvegardes techniques de l’hébergeur sont écrasées selon son cycle de rotation.',
         'Quota Bilal : compteur journalier supprimé avec le compte.',
+        'Communautés (suppression automatique chaque nuit) : messages d’encouragement après 365 jours ; sessions en direct terminées après 90 jours ; invitations expirées ou révoquées après 30 jours ; signalements 365 jours après leur traitement ; compteurs anti-abus après 2 jours.',
         'Prestataires : Open-Meteo, 90 jours pour les journaux ; Anthropic, en principe 30 jours.',
       ],
     },
@@ -123,7 +126,7 @@ const fr: Policy = {
     {
       id: 'security',
       h: '12. Sécurité',
-      p: ['Connexions chiffrées (HTTPS), connexion sans mot de passe, règles d’accès par utilisateur dans la base de données, aucune clé secrète dans l’application.'],
+      p: ['Connexions chiffrées (HTTPS), connexion sans mot de passe, règles d’accès par utilisateur dans la base de données, codes d’invitation enregistrés sous forme hachée, aucune clé secrète dans l’application. Les messages ne sont pas encore chiffrés de bout en bout.'],
     },
     {
       id: 'changes',
@@ -135,7 +138,7 @@ const fr: Policy = {
 
 const en: Policy = {
   title: 'Zikru privacy policy',
-  updated: 'Last updated: 29 October 2026 (version 1.0.24)',
+  updated: 'Last updated: 30 October 2026 (version 1.0.24)',
   lead: 'Zikru works without an account and without ads. Without an account, your counters, settings and reading stay on your device. Some optional features send data to servers: each is described below, and the most sensitive ones only turn on with your explicit consent.',
   sections: [
     {
@@ -177,6 +180,8 @@ const en: Policy = {
         'This data may reveal your religious practice: it is sensitive data (Swiss FADP art. 5(c), GDPR art. 9). We only process it with your explicit consent, to run these features, and only the members you join can access it (database-level access rules).',
         'Hosting: Supabase (Supabase Inc., USA, processor), database hosted in Zurich (Switzerland, region eu-central-2). The sign-in email is sent by Supabase’s authentication service.',
         'Your sign-in session is kept on the device so you do not have to sign in again; it is erased when you sign out.',
+        'Encouragement messages and sessions: encrypted in transit and accessible only to the members concerned; they are not yet end-to-end encrypted (planned). Links are refused and a basic filter blocks severe insults. By default a child only exchanges messages with their parents, and a parent can turn messaging off entirely.',
+        'Safety and moderation: you can report content or a person and block someone. A report sends the Zikru team a copy of the reported content, your account ID, the reason and your note; the reported person is not told. Technical counters limit abuse (messages, invitations, code attempts). Moderation contact: mohamadalhabib@live.com.',
       ],
     },
     {
@@ -223,6 +228,7 @@ const en: Policy = {
         'Local data: until you erase it (Settings › Reset) or uninstall the app.',
         'Account: as long as you keep it. “Delete my account” (Community) immediately erases your account and linked data, and families where you are the only parent. The host’s technical backups are overwritten on its rotation cycle.',
         'Bilal quota: daily counter deleted with the account.',
+        'Communities (automatic deletion every night): encouragement messages after 365 days; ended live sessions after 90 days; expired or revoked invitations after 30 days; reports 365 days after they are handled; anti-abuse counters after 2 days.',
         'Providers: Open-Meteo, 90 days for logs; Anthropic, normally 30 days.',
       ],
     },
@@ -244,7 +250,7 @@ const en: Policy = {
     {
       id: 'security',
       h: '12. Security',
-      p: ['Encrypted connections (HTTPS), password-less sign-in, per-user access rules in the database, no secret keys in the app.'],
+      p: ['Encrypted connections (HTTPS), password-less sign-in, per-user access rules in the database, invitation codes stored hashed, no secret keys in the app. Messages are not yet end-to-end encrypted.'],
     },
     {
       id: 'changes',
@@ -257,7 +263,7 @@ const en: Policy = {
 
 const ar: Policy = {
   title: 'سياسة الخصوصية لتطبيق ذكرو',
-  updated: 'آخر تحديث: 29 أكتوبر 2026 (الإصدار 1.0.24)',
+  updated: 'آخر تحديث: 30 أكتوبر 2026 (الإصدار 1.0.24)',
   lead: 'يعمل ذكرو بدون حساب وبدون إعلانات. بدون حساب، تبقى عدّاداتك وإعداداتك وقراءتك على جهازك. بعض الميزات الاختيارية ترسل بيانات إلى خوادم: نصفها أدناه واحدةً واحدة، ولا تعمل أكثرها حساسيةً إلا بموافقتك الصريحة.',
   sections: [
     {
@@ -299,6 +305,8 @@ const ar: Policy = {
         'قد تكشف هذه البيانات ممارستك الدينية، فهي بيانات حساسة (المادة 5 ج من القانون السويسري لحماية البيانات، والمادة 9 من اللائحة الأوروبية). لا نعالجها إلا بموافقتك الصريحة لتشغيل هذه الميزات، ولا يطّلع عليها إلا الأعضاء الذين تنضم إليهم (قواعد وصول على مستوى قاعدة البيانات).',
         'الاستضافة: Supabase (شركة Supabase Inc. في الولايات المتحدة، بصفتها معالجًا من الباطن)، وقاعدة البيانات مستضافة في زيورخ (سويسرا، منطقة eu-central-2). ويُرسَل بريد تسجيل الدخول عبر خدمة المصادقة لدى Supabase.',
         'تُحفظ جلسة تسجيل الدخول على الجهاز حتى لا تحتاج إلى تسجيل الدخول من جديد، وتُمسح عند تسجيل الخروج.',
+        'رسائل التشجيع والجلسات: مشفّرة أثناء النقل ولا يطّلع عليها إلا الأعضاء المعنيون، وليست مشفّرة بعدُ تشفيرًا تامًّا بين الطرفين (مخطَّط له). الروابط مرفوضة، ويحجب مرشّح أساسي الشتائم الجسيمة. لا يراسل الطفل افتراضيًا إلا والديه، ويمكن للوالد إيقاف المراسلة كليًا.',
+        'الأمان والإشراف: يمكنك الإبلاغ عن محتوى أو شخص وحظر أحد. يرسل البلاغ إلى فريق Zikru نسخة من المحتوى المبلَّغ عنه ومعرّف حسابك والسبب وملاحظتك، ولا يُعلَم الشخص المبلَّغ عنه. وتحدّ عدّادات تقنية من الإساءة (الرسائل والدعوات ومحاولات الرموز). عنوان الإشراف: mohamadalhabib@live.com.',
       ],
     },
     {
@@ -345,6 +353,7 @@ const ar: Policy = {
         'البيانات المحلية: حتى تمسحها (الإعدادات › إعادة التعيين) أو تحذف التطبيق.',
         'الحساب: ما دمت تحتفظ به. يمسح خيار «حذف حسابي» (المجتمع) حسابك والبيانات المرتبطة به فورًا، وكذلك العائلات التي أنت وليّها الوحيد. وتُستبدل النسخ الاحتياطية التقنية لدى المستضيف حسب دورتها.',
         'حصة بلال: عدّاد يومي يُحذف مع الحساب.',
+        'المجتمعات (حذف تلقائي كل ليلة): رسائل التشجيع بعد 365 يومًا؛ الجلسات المباشرة المنتهية بعد 90 يومًا؛ الدعوات المنتهية أو الملغاة بعد 30 يومًا؛ البلاغات بعد 365 يومًا من معالجتها؛ عدّادات مكافحة الإساءة بعد يومين.',
         'المزوّدون: Open-Meteo، 90 يومًا للسجلات؛ Anthropic، عادةً 30 يومًا.',
       ],
     },
@@ -366,7 +375,7 @@ const ar: Policy = {
     {
       id: 'security',
       h: '12. الأمان',
-      p: ['اتصالات مشفّرة (HTTPS)، وتسجيل دخول بدون كلمة مرور، وقواعد وصول لكل مستخدم في قاعدة البيانات، ولا مفاتيح سرية داخل التطبيق.'],
+      p: ['اتصالات مشفّرة (HTTPS)، وتسجيل دخول بدون كلمة مرور، وقواعد وصول لكل مستخدم في قاعدة البيانات، ورموز الدعوة محفوظة بصيغة مجزّأة (hash)، ولا مفاتيح سرية داخل التطبيق. الرسائل ليست مشفّرة بعدُ تشفيرًا تامًّا بين الطرفين.'],
     },
     {
       id: 'changes',
