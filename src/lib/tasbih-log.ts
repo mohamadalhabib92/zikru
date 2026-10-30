@@ -111,7 +111,10 @@ export function recordClicks(doc: TasbihDoc, n: number, src: ClickSource, at: nu
   const seq = doc.seq + 1;
   const ev: TasbihEvent = { dev: doc.dev, i: seq, n: k, s: src, a: at, d: doc.t.dhikrId };
   if (cursor) ev.b = cursor;
-  const { next, cycleCompleted } = applyClicks(doc.t, k, src);
+  const r = applyClicks(doc.t, k, src);
+  const cycleCompleted = r.cycleCompleted;
+  // dates du premier / dernier appui de la session en cours (regroupement de l'historique, appuis hors ligne)
+  const next = { ...r.next, firstAt: doc.t.count > 0 && doc.t.firstAt != null ? Math.min(doc.t.firstAt, at) : at, lastAt: doc.t.count > 0 ? Math.max(doc.t.lastAt ?? at, at) : at };
   const out = compact({
     ...doc,
     seq,
