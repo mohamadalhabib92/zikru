@@ -51,8 +51,9 @@ export default function Join() {
           <Muted>{p.scope_type === 'family' ? 'Famille' : 'Cercle de proches'}</Muted>
           <H2>{p.name}</H2>
           <Muted>
-            Rôle : {roleFr(p.role ?? '')} · {p.members} membre(s){p.max_members ? ` / ${p.max_members}` : ''}
+            {L('Rôle : {role}', { role: roleFr(p.role ?? '') })} · {p.max_members ? L('{n} / {max} personnes', { n: p.members ?? 0, max: p.max_members }) : L('{n} personne(s)', { n: p.members ?? 0 })}
           </Muted>
+          {p.full ? <Notice tone="warning" title="Groupe complet" text={L('Ce groupe est complet ({n} personnes maximum, créateur inclus).', { n: p.max_members ?? 0 })} /> : null}
           {p.expires_at ? <Muted>Valable jusqu’au {new Date(p.expires_at).toLocaleDateString('fr-CH')}</Muted> : null}
           <Spacer />
           {p.role === 'child' ? <Notice tone="info" title="Compte enfant" text="Vos parents gèrent vos réglages. Vous ne pourrez pas rejoindre de cercles en dehors de la famille." /> : null}
@@ -69,7 +70,7 @@ export default function Join() {
             title="Rejoindre"
             icon="enter-outline"
             loading={busy}
-            disabled={!name.trim() || (p.scope_type === 'circle' && !!p.rules && !accept)}
+            disabled={!!p.full || !name.trim() || (p.scope_type === 'circle' && !!p.rules && !accept)}
             onPress={async () => {
               setBusy(true);
               try {

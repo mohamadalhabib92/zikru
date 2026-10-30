@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { LocalGroups } from '@/components/LocalGroups';
-import { confirmAsk, ErrorNote, useLoad } from '@/components/community/parts';
+import { BlockedList, confirmAsk, ErrorNote, ModerationContact, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
@@ -52,6 +52,9 @@ export default function Community() {
       <JoinWithCode />
       <Spacer />
       <Account />
+      <Spacer />
+      <BlockedList />
+      <ModerationContact />
       <Spacer />
       <Button variant="ghost" icon="phone-portrait-outline" title={showLocal ? 'Masquer les groupes locaux' : 'Groupes locaux (hors-ligne)'} onPress={() => setShowLocal(!showLocal)} />
       {showLocal ? <LocalGroups /> : null}

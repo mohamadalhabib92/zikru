@@ -2,7 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
-import { ErrorNote, fmt, ProgressBar } from '@/components/community/parts';
+import { ErrorNote, fmt, ProgressBar, ReportButton } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { onClicks } from '@/lib/community/clicks';
@@ -152,6 +152,9 @@ export default function LiveScreen() {
       ) : (
         <Button variant="secondary" icon="arrow-back" title="Retour" onPress={() => router.back()} />
       )}
+      {session ? (
+        <ReportButton target="session" targetId={sid} scope={session.scope_type} scopeId={(session.scope_type === 'family' ? session.family_id : session.circle_id) ?? undefined} label="Signaler cette session" />
+      ) : null}
       <View style={{ height: 20 }} />
     </Screen>
   );

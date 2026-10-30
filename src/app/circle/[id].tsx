@@ -2,14 +2,14 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
-import { confirmAsk, EncouragementsPanel, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
+import { BlockButton, confirmAsk, EncouragementsPanel, ModerationContact, ReportButton, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { Badge, Button, Card, Eyebrow, Field, H1, H2, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
-/** Cercle de proches (Ahbab) : 50 membres maximum, sur invitation, règlement accepté. */
+/** Cercle de proches (Ahbab) : nombre de personnes fixé par le serveur (4 en version gratuite, créateur inclus), sur invitation, règlement accepté. */
 export default function CircleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const cid = String(id);
@@ -17,6 +17,7 @@ export default function CircleScreen() {
   const circle = useLoad(() => api.getCircle(cid), [cid]);
   const members = useLoad(() => api.circleMembers(cid), [cid]);
   const goals = useLoad(() => api.listGoals('circle', cid), [cid]);
+  const cap = useLoad(() => api.groupCapacity(cid), [cid, members.data?.length]);
   const me = members.data?.find((m) => m.user_id === userId);
   const isMod = me?.role === 'founder' || me?.role === 'moderator';
   const isFounder = me?.role === 'founder';
@@ -24,7 +25,6 @@ export default function CircleScreen() {
   const [editRules, setEditRules] = useState(false);
   const [rules, setRules] = useState('');
   const name = circle.data?.name ?? 'Cercle';
-  const count = members.data?.length ?? 0;
 
   return (
     <Screen>
@@ -32,9 +32,12 @@ export default function CircleScreen() {
       <Eyebrow>Mes cercles · Ahbab</Eyebrow>
       <H1>{name}</H1>
       {circle.data?.description ? <Muted>{circle.data.description}</Muted> : null}
-      <Muted>
-        {count} / {circle.data?.max_members ?? 50} membres
-      </Muted>
+      {cap.data ? (
+        <Muted>
+          {L('{n} / {max} personnes', { n: cap.data.members, max: cap.data.limit })}
+          {cap.data.full ? ` · ${L('complet')}` : ''}
+        </Muted>
+      ) : null}
       <ErrorNote error={circle.error || members.error} onRetry={() => (circle.reload(), members.reload())} />
       <Spacer />
 
@@ -103,11 +106,17 @@ export default function CircleScreen() {
               />
             </Row>
           ) : null}
+          {m.user_id !== userId ? (
+            <Row wrap gap={4} style={{ marginTop: 4 }}>
+              <ReportButton target="member" targetId={m.user_id} scope="circle" scopeId={cid} canBlock who={m.display_name} />
+              <BlockButton userId={m.user_id} name={m.display_name} />
+            </Row>
+          ) : null}
         </Card>
       ))}
       {err ? <Muted style={{ color: t.danger }}>{err}</Muted> : null}
       <Spacer />
-      {isMod && count < (circle.data?.max_members ?? 50) ? (
+      {isMod && cap.data && !cap.data.full ? (
         <InvitePanel
           scope="circle"
           scopeId={cid}
@@ -117,9 +126,16 @@ export default function CircleScreen() {
             ...(isFounder ? [{ label: 'Modérateur', value: 'moderator' }] : []),
           ]}
         />
-      ) : isMod ? (
-        <Muted>Le cercle est complet (50 membres maximum).</Muted>
+      ) : isMod && cap.data?.full ? (
+        <Muted>{L('Le cercle est complet ({n} personnes maximum, créateur inclus).', { n: cap.data.limit })}</Muted>
       ) : null}
+      <Spacer />
+      <Card>
+        <H2>Sécurité</H2>
+        <Muted>Un problème dans ce cercle ? Signalez-le : la modération reçoit une copie du contenu signalé.</Muted>
+        <ReportButton target="circle" targetId={cid} label="Signaler ce cercle" />
+        <ModerationContact />
+      </Card>
       <Spacer />
       {me ? (
         <View>

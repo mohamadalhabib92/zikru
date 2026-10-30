@@ -37,11 +37,24 @@ export default function FamilyScreen() {
 
   if (kid) return <KidMode family={name} memberId={kid.memberId} childName={kid.name} goals={(goals.data ?? []).filter((g) => g.status === 'active')} onExit={() => setKid(null)} />;
 
-  // Destinataires des encouragements (un enfant restreint « parents » n'écrit qu'aux parents).
+  // Destinataires des encouragements — mêmes règles que le serveur (can_message) :
+  // enfant « Aucun » : personne ; « Parents seulement » (défaut) : parents ; « Famille » : la famille sans les invités.
+  // Un invité n'écrit jamais à un enfant.
   const myPc = isChild ? pcs.data?.find((p) => p.child_member_id === me?.id) : undefined;
+  const pcOf = (memberId?: string) => pcs.data?.find((p) => p.child_member_id === memberId)?.messaging ?? 'parents';
+  const myRole = me?.role;
   const recipients = (members.data ?? [])
     .filter((m) => m.user_id && m.user_id !== userId)
-    .filter((m) => (myPc?.messaging === 'none' ? false : myPc?.messaging === 'parents' ? m.role === 'parent' : true))
+    .filter((m) => {
+      if (isChild) {
+        const mode = pcOf(me?.id);
+        return mode === 'none' ? false : mode === 'parents' ? m.role === 'parent' : m.role !== 'guest' && m.role !== 'child';
+      }
+      if (m.role !== 'child') return true;
+      if (myRole === 'guest') return false;
+      const mode = pcOf(m.id);
+      return mode === 'none' ? false : mode === 'parents' ? myRole === 'parent' : true;
+    })
     .map((m) => ({ userId: m.user_id as string, name: m.display_name }));
 
   return (
@@ -154,7 +167,7 @@ function MemberRow({ m, isParent, isMe, pc, familyId, onChanged }: { m: api.Fami
         child_member_id: m.id,
         family_id: familyId,
         daily_minutes_limit: pc?.daily_minutes_limit ?? null,
-        messaging: pc?.messaging ?? 'family',
+        messaging: pc?.messaging ?? 'parents',
         content_level: pc?.content_level ?? 'enfant',
         ...patch,
       })
@@ -191,16 +204,25 @@ function MemberRow({ m, isParent, isMe, pc, familyId, onChanged }: { m: api.Fami
             <>
               <Eyebrow>Contrôle parental</Eyebrow>
               {m.user_id ? (
-                <Segmented
-                  label="Messages"
+                <>
+                  <Segmented
+                    label="Messages"
                   options={[
                     { label: 'Aucun', value: 'none' },
                     { label: 'Parents', value: 'parents' },
                     { label: 'Famille', value: 'family' },
                   ]}
-                  value={pc?.messaging ?? 'family'}
+                  value={pc?.messaging ?? 'parents'}
                   onChange={(v: api.ParentalControl['messaging']) => void save({ messaging: v })}
                 />
+                  <Muted style={{ fontSize: 12 }}>
+                    {(pc?.messaging ?? 'parents') === 'none'
+                      ? 'Aucun : ni envoi ni réception de messages.'
+                      : (pc?.messaging ?? 'parents') === 'parents'
+                        ? 'Parents : échanges seulement avec les parents.'
+                        : 'Famille : échanges avec la famille, jamais avec les invités.'}
+                  </Muted>
+                </>
               ) : null}
               <Segmented
                 label="Contenu"

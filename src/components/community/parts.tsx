@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, Share, View } from 'react-native';
+import { Alert, Linking, Platform, Share, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { PWA_URL } from '@/lib/backend';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
-import { Badge, Button, Card, Chip, Field, H2, Muted, Notice, Row, Segmented, Spacer } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Field, H2, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
@@ -251,6 +251,7 @@ export function InvitePanel({ scope, scopeId, scopeName, roles }: { scope: api.S
   return (
     <Card>
       <H2>Inviter</H2>
+      <Muted>Pour la sécurité, le code n’est conservé que sur cet appareil. Partagez-le maintenant ou créez-en un nouveau plus tard.</Muted>
       <Segmented label="Rôle" options={roles} value={role} onChange={setRole} />
       <Segmented
         label="Utilisations"
@@ -297,12 +298,16 @@ export function InvitePanel({ scope, scopeId, scopeName, roles }: { scope: api.S
           {list.data.map((i) => (
             <Row key={i.id} style={{ justifyContent: 'space-between', marginTop: 6 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: t.text, fontWeight: '700', letterSpacing: 1 }}>{i.code}</Text>
+                {i.code ? (
+                  <Text style={{ color: t.text, fontWeight: '700', letterSpacing: 1 }}>{i.code}</Text>
+                ) : (
+                  <Muted style={{ fontSize: 12 }}>Code visible seulement sur l’appareil qui l’a créé</Muted>
+                )}
                 <Muted style={{ fontSize: 12 }}>
-                  {roleFr(i.role)} · {i.uses}/{i.max_uses} · jusqu’au {new Date(i.expires_at).toLocaleDateString('fr-CH')}
+                  {roleFr(i.role)} · {i.uses}/{i.max_uses} · {L('jusqu’au {d}', { d: new Date(i.expires_at).toLocaleDateString('fr-CH') })}
                 </Muted>
               </View>
-              <Button small variant="ghost" icon="share-outline" title="Partager" onPress={() => share(i.code)} />
+              {i.code ? <Button small variant="ghost" icon="share-outline" title="Partager" onPress={() => share(i.code as string)} /> : null}
               <Button small variant="ghost" icon="close" title="Révoquer" onPress={() => void api.revokeInvitation(i.id).then(list.reload).catch(() => {})} />
             </Row>
           ))}
@@ -402,19 +407,23 @@ const KINDS = [
 ];
 
 /** Encouragements privés (jamais publics, jamais de compteur). */
-export function EncouragementsPanel({ scope, scopeId, recipients }: { scope: api.ScopeType; scopeId: string; recipients: { userId: string; name: string }[] }) {
+export function EncouragementsPanel({ scope, scopeId, recipients: allRecipients }: { scope: api.ScopeType; scopeId: string; recipients: { userId: string; name: string }[] }) {
   const { userId } = useAuth();
   const list = useLoad(() => api.listEncouragements(scope, scopeId), [scope, scopeId]);
+  const blocks = useLoad(() => api.listBlocks(), [scope, scopeId]);
+  const blocked = new Set((blocks.data ?? []).map((b) => b.blocked_id));
+  const recipients = allRecipients.filter((r) => !blocked.has(r.userId));
   const [to, setTo] = useState<string | null>(null);
   const [kind, setKind] = useState('bravo');
   const [body, setBody] = useState(KINDS[0].text);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const nameOf = (id: string) => (id === userId ? 'Moi' : (recipients.find((r) => r.userId === id)?.name ?? 'Membre'));
+  const nameOf = (id: string) => (id === userId ? L('Moi') : (allRecipients.find((r) => r.userId === id)?.name ?? L('Membre')));
   return (
     <Card>
       <H2>Encouragements</H2>
       <Muted>Messages privés et bienveillants, visibles seulement par l’expéditeur et le destinataire (et les parents pour les enfants).</Muted>
+      <Muted style={{ fontSize: 12 }}>Chiffrés en transit, accessibles aux seuls membres concernés (pas encore de chiffrement de bout en bout). Pas de liens.</Muted>
       <Spacer h={8} />
       {recipients.length ? (
         <>
@@ -467,21 +476,205 @@ export function EncouragementsPanel({ scope, scopeId, recipients }: { scope: api
       )}
       {list.data?.length ? (
         <View style={{ marginTop: 12 }}>
-          {list.data.slice(0, 15).map((e) => (
-            <View key={e.id} style={{ marginBottom: 8 }}>
-              <Muted style={{ fontSize: 12 }}>
-                {nameOf(e.sender_id)} → {nameOf(e.recipient_id)} · {new Date(e.created_at).toLocaleString('fr-CH', { dateStyle: 'short', timeStyle: 'short' })}
-              </Muted>
-              <Text
-                style={{ color: t.text, fontWeight: e.recipient_id === userId && !e.read_at ? '700' : '400' }}
-                onPress={() => (e.recipient_id === userId && !e.read_at ? void api.markRead(e.id).then(list.reload).catch(() => {}) : undefined)}
-              >
-                {e.body}
-              </Text>
-            </View>
-          ))}
+          {list.data.slice(0, 15).map((e) => {
+            const unread = e.recipient_id === userId && !e.read_at;
+            const fromOther = e.sender_id !== userId;
+            return (
+              <View key={e.id} style={{ marginBottom: 8 }}>
+                <Muted style={{ fontSize: 12 }}>
+                  {nameOf(e.sender_id)} → {nameOf(e.recipient_id)} · {new Date(e.created_at).toLocaleString('fr-CH', { dateStyle: 'short', timeStyle: 'short' })}
+                </Muted>
+                <Text style={{ color: t.text, fontWeight: unread ? '700' : '400' }}>{e.body}</Text>
+                <Row wrap gap={4}>
+                  {unread ? (
+                    <Button
+                      small
+                      variant="ghost"
+                      icon="checkmark"
+                      title="Marquer comme lu"
+                      accessibilityLabel={L('Marquer comme lu le message de {name}', { name: nameOf(e.sender_id) })}
+                      onPress={() => void api.markRead(e.id).then(list.reload).catch(() => {})}
+                    />
+                  ) : null}
+                  {fromOther ? (
+                    <ReportButton
+                      target="message"
+                      targetId={e.id}
+                      scope={scope}
+                      scopeId={scopeId}
+                      canBlock
+                      who={nameOf(e.sender_id)}
+                      onDone={() => (void list.reload(), void blocks.reload())}
+                    />
+                  ) : null}
+                </Row>
+              </View>
+            );
+          })}
         </View>
       ) : null}
+    </Card>
+  );
+}
+
+const REASONS: { value: api.ReportReason; label: string }[] = [
+  { value: 'harassment', label: 'Harcèlement' },
+  { value: 'spam', label: 'Spam' },
+  { value: 'hate', label: 'Haine' },
+  { value: 'sexual', label: 'Contenu sexuel' },
+  { value: 'violence', label: 'Violence ou menace' },
+  { value: 'self_harm', label: 'Personne en danger' },
+  { value: 'impersonation', label: 'Usurpation d’identité' },
+  { value: 'child_safety', label: 'Sécurité d’un enfant' },
+  { value: 'other', label: 'Autre' },
+];
+
+/** Contact de la modération (adresse lue sur le serveur). */
+export function ModerationContact() {
+  const [mail, setMail] = useState(api.MODERATION_EMAIL_FALLBACK);
+  useEffect(() => {
+    void api.moderationContact().then(setMail);
+  }, []);
+  return (
+    <Button
+      small
+      variant="ghost"
+      icon="mail-outline"
+      title={L('Écrire à la modération : {m}', { m: mail })}
+      accessibilityLabel={L('Écrire à la modération par e-mail')}
+      onPress={() => void Linking.openURL('mailto:' + mail + '?subject=' + encodeURIComponent(L('Zikru – modération'))).catch(() => {})}
+    />
+  );
+}
+
+/** Bouton « Signaler » qui ouvre le choix du motif ; bloque la personne si demandé (côté serveur, dans les deux sens). */
+export function ReportButton({
+  target,
+  targetId,
+  scope,
+  scopeId,
+  canBlock,
+  who,
+  label = 'Signaler',
+  onDone,
+}: {
+  target: api.ReportTarget;
+  targetId: string;
+  scope?: api.ScopeType;
+  scopeId?: string;
+  /** Proposer de bloquer l'auteur en même temps. */
+  canBlock?: boolean;
+  /** Nom affiché (pour les lecteurs d'écran). */
+  who?: string;
+  label?: string;
+  onDone?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState<api.ReportReason | null>(null);
+  const [details, setDetails] = useState('');
+  const [block, setBlock] = useState(!!canBlock);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  if (sent) return <Muted style={{ fontSize: 12 }}>Merci, signalement envoyé à la modération.</Muted>;
+  if (!open)
+    return (
+      <Button
+        small
+        variant="ghost"
+        icon="flag-outline"
+        title={label}
+        accessibilityLabel={who ? L('Signaler {name}', { name: who }) : L(label)}
+        onPress={() => setOpen(true)}
+      />
+    );
+  return (
+    <View style={{ marginTop: 6, padding: 10, borderRadius: 12, backgroundColor: t.surfaceAlt, width: '100%' }}>
+      <Text style={{ color: t.text, fontWeight: '700' }}>Pourquoi signalez-vous ?</Text>
+      <Spacer h={6} />
+      <Row wrap gap={6}>
+        {REASONS.map((r) => (
+          <Chip key={r.value} label={r.label} active={reason === r.value} onPress={() => setReason(r.value)} />
+        ))}
+      </Row>
+      <Field label="Précisions (facultatif)" value={details} onChangeText={setDetails} maxLength={1000} multiline />
+      {canBlock ? <Toggle label="Bloquer aussi cette personne" hint="Vous ne verrez plus ses messages et elle ne pourra plus vous écrire." value={block} onChange={setBlock} /> : null}
+      {reason === 'self_harm' || reason === 'child_safety' ? (
+        <Notice tone="warning" title="En cas de danger immédiat" text="Appelez les secours : 112 (Europe), 117 police et 147 aide aux jeunes (Suisse)." />
+      ) : null}
+      {err ? <Muted style={{ color: t.danger }}>{err}</Muted> : null}
+      <Row gap={8}>
+        <Button
+          small
+          icon="flag"
+          title="Envoyer le signalement"
+          disabled={!reason}
+          loading={busy}
+          onPress={async () => {
+            if (!reason) return;
+            setBusy(true);
+            try {
+              await api.reportContent(target, targetId, reason, { details, scope, scopeId, block: !!canBlock && block });
+              setSent(true);
+              onDone?.();
+            } catch (e) {
+              setErr(api.frError(e));
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+        <Button small variant="ghost" title="Annuler" onPress={() => setOpen(false)} />
+      </Row>
+      <ModerationContact />
+    </View>
+  );
+}
+
+/** Bouton « Bloquer » (avec confirmation). */
+export function BlockButton({ userId, name, onDone }: { userId: string; name: string; onDone?: () => void }) {
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <View>
+      <Button
+        small
+        variant="ghost"
+        icon="ban-outline"
+        title="Bloquer"
+        accessibilityLabel={L('Bloquer {name}', { name })}
+        onPress={() =>
+          confirmAsk(L('Bloquer {name} ?', { name }), 'Vous ne verrez plus ses messages et elle ne pourra plus vous écrire. Elle n’est pas prévenue. Vous pourrez débloquer dans Communauté.', 'Bloquer', () =>
+            void api.blockUser(userId).then(() => onDone?.()).catch((e) => setErr(api.frError(e))),
+          )
+        }
+      />
+      {err ? <Muted style={{ color: t.danger }}>{err}</Muted> : null}
+    </View>
+  );
+}
+
+/** Personnes bloquées (Communauté). */
+export function BlockedList() {
+  const { userId } = useAuth();
+  const list = useLoad(() => (userId ? api.listBlocks() : Promise.resolve([] as api.Block[])), [userId]);
+  if (!list.data?.length) return null;
+  return (
+    <Card>
+      <H2>Personnes bloquées</H2>
+      <Muted>Elles ne peuvent plus vous écrire et vous ne voyez plus leurs messages.</Muted>
+      {list.data.map((b) => (
+        <Row key={b.blocked_id} style={{ justifyContent: 'space-between', marginTop: 6 }}>
+          <Text style={{ color: t.text, flex: 1 }}>{b.blocked_name || L('Membre')}</Text>
+          <Button
+            small
+            variant="ghost"
+            title="Débloquer"
+            accessibilityLabel={L('Débloquer {name}', { name: b.blocked_name || L('Membre') })}
+            onPress={() => userId && void api.unblockUser(userId, b.blocked_id).then(list.reload).catch(() => {})}
+          />
+        </Row>
+      ))}
+      <ErrorNote error={list.error} onRetry={list.reload} />
     </Card>
   );
 }

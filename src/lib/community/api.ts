@@ -4,6 +4,8 @@
  * qu'appeler les tables / RPC autorisées pour l'utilisateur connecté.
  * Niveaux futurs (Locale, Régionale, Oumma) : ajouter un ScopeType ici.
  */
+import { L } from '../l10n';
+import { loadJSON, saveJSON } from '../storage';
 import { supabase } from '../supabase';
 
 export type ScopeType = 'family' | 'circle';
@@ -13,7 +15,7 @@ export type SharingMode = 'nothing' | 'participation' | 'counter';
 
 export type Family = { id: string; name: string; wird: string | null; created_at: string };
 export type FamilyMember = { id: string; family_id: string; user_id: string | null; display_name: string; role: FamilyRole; managed_by: string | null };
-export type Circle = { id: string; name: string; description: string | null; rules: string | null; max_members: number; created_at: string };
+export type Circle = { id: string; name: string; description: string | null; rules: string | null; max_members: number | null; created_at: string };
 export type CircleMember = { circle_id: string; user_id: string; display_name: string; role: CircleRole; rules_accepted_at: string | null };
 export type Goal = {
   id: string;
@@ -40,29 +42,64 @@ export type CalendarEvent = { id: string; family_id: string; title: string; kind
 export type Encouragement = { id: string; scope_type: ScopeType; family_id: string | null; circle_id: string | null; sender_id: string; recipient_id: string; kind: string; body: string; created_at: string; read_at: string | null };
 export type ZikrSession = { id: string; scope_type: ScopeType; family_id: string | null; circle_id: string | null; title: string; formula: string | null; target: number | null; status: 'live' | 'ended'; started_by: string | null; started_at: string };
 export type SessionCount = { session_id: string; user_id: string; display_name: string; count: number };
-export type InvitePreview = { valid: boolean; scope_type?: ScopeType; name?: string; role?: string; rules?: string | null; members?: number; max_members?: number; expires_at?: string; reason?: string };
+export type InvitePreview = { valid: boolean; scope_type?: ScopeType; name?: string; role?: string; rules?: string | null; members?: number; max_members?: number | null; full?: boolean; expires_at?: string; reason?: string };
+export type GroupCapacity = { limit: number; members: number; full: boolean; over_limit: boolean };
+export type ReportReason = 'spam' | 'harassment' | 'hate' | 'sexual' | 'violence' | 'self_harm' | 'impersonation' | 'child_safety' | 'other';
+export type ReportTarget = 'message' | 'member' | 'circle' | 'session';
+export type Block = { blocked_id: string; blocked_name: string; created_at: string };
 
-export class CommunityError extends Error {}
+/** Erreur déjà traduite pour l'affichage ; `code` = SQLSTATE serveur (ZKG01 groupe complet, ZKR01 débit, ZKF01 filtre…). */
+export class CommunityError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
 
 function sb() {
-  if (!supabase) throw new CommunityError('Serveur non configuré.');
+  if (!supabase) throw new CommunityError(L('Serveur non configuré.'));
   return supabase;
 }
 
-/** Traduit les erreurs serveur en français lisible. */
+type PgError = { message?: string; code?: string; details?: string | null };
+const detailOf = (e: PgError): Record<string, unknown> => {
+  try {
+    return e.details ? (JSON.parse(e.details) as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+};
+const waitText = (s: number) => (s >= 3600 ? L('{n} h', { n: Math.ceil(s / 3600) }) : s >= 60 ? L('{n} min', { n: Math.ceil(s / 60) }) : L('{n} s', { n: Math.max(1, Math.ceil(s)) }));
+
+/** Message lisible (fr/en/ar) pour une erreur serveur : d'après le code SQLSTATE, pas d'après le texte. */
 export function frError(e: unknown): string {
-  const m = (e as { message?: string })?.message ?? String(e);
-  if (/network|fetch|Failed to fetch/i.test(m)) return 'Pas de connexion. Réessayez quand vous serez en ligne.';
-  if (/row-level security|permission denied|not allowed|interdit/i.test(m)) return 'Action non autorisée pour votre rôle.';
-  if (/complet|full|max_members/i.test(m)) return 'Ce cercle est complet (50 membres maximum).';
-  if (/expir/i.test(m)) return 'Cette invitation a expiré.';
-  if (/invalid|invalide/i.test(m)) return 'Code invalide.';
-  return m.length < 160 ? m : 'Une erreur est survenue.';
+  if (e instanceof CommunityError) return e.message;
+  const pe = (e ?? {}) as PgError;
+  const m = pe.message ?? String(e);
+  const d = detailOf(pe);
+  switch (pe.code) {
+    case 'ZKG01':
+      return L('Ce groupe est complet ({n} personnes maximum, créateur inclus).', { n: Number(d.limit) || 4 });
+    case 'ZKG02':
+      return L('Vous avez atteint la limite de {n} groupes créés.', { n: Number(d.limit) || 0 });
+    case 'ZKR01':
+      return L('Trop de tentatives. Réessayez dans {t}.', { t: waitText(Number(d.retry_after_s) || 60) });
+    case 'ZKF01':
+      return L(m);
+    case 'ZKN01':
+      return L('Ce nom est déjà utilisé dans ce cercle');
+  }
+  if (/network|fetch|Failed to fetch/i.test(m)) return L('Pas de connexion. Réessayez quand vous serez en ligne.');
+  if (/row-level security|permission denied/i.test(m)) return L('Action non autorisée pour votre rôle.');
+  if (/expir/i.test(m)) return L('Cette invitation a expiré.');
+  if (/^invalid$|invalide/i.test(m)) return L('Code invalide.');
+  return m.length < 160 ? L(m) : L('Une erreur est survenue.');
 }
 
-async function q<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
+async function q<T>(p: PromiseLike<{ data: T | null; error: PgError | null }>): Promise<T> {
   const { data, error } = await p;
-  if (error) throw new CommunityError(frError(error));
+  if (error) throw new CommunityError(frError(error), error.code);
   return data as T;
 }
 
@@ -92,20 +129,74 @@ export const setCircleRole = (circleId: string, userId: string, role: CircleRole
 export const addManagedChild = (familyId: string, name: string) => q<string>(sb().rpc('add_managed_child', { p_family: familyId, p_display_name: name }));
 
 // ---------- Invitations ----------
+// Le serveur ne garde que l'empreinte (hash) des codes : le code en clair n'est connu qu'au moment de la création.
+// On le garde sur cet appareil pour pouvoir le repartager ; ailleurs, il faut créer une nouvelle invitation.
+const INVITE_CODES = 'community/invite-codes';
+type LocalCode = { code: string; expires_at: string };
+async function localCodes(): Promise<Record<string, LocalCode>> {
+  const all = await loadJSON<Record<string, LocalCode>>(INVITE_CODES, {});
+  const now = Date.now();
+  return Object.fromEntries(Object.entries(all).filter(([, v]) => Date.parse(v.expires_at) > now));
+}
 export async function createInvitation(scope: ScopeType, scopeId: string, role: string, maxUses = 1, days = 7) {
-  const rows = await q<{ code: string; expires_at: string }[]>(
+  const rows = await q<{ id: string; code: string; expires_at: string }[]>(
     sb().rpc('create_invitation', { p_scope: scope, p_scope_id: scopeId, p_role: role, p_max_uses: maxUses, p_days: days }),
   );
-  return rows[0];
+  const r = rows[0];
+  if (r) await saveJSON(INVITE_CODES, { ...(await localCodes()), [r.id]: { code: r.code, expires_at: r.expires_at } });
+  return r;
 }
-export const previewInvitation = (code: string) => q<InvitePreview>(sb().rpc('preview_invitation', { p_code: code.trim().toUpperCase() }));
-export const acceptInvitation = (code: string, displayName: string, acceptRules: boolean) =>
-  q<{ scope_type: ScopeType; id: string }>(sb().rpc('accept_invitation', { p_code: code.trim().toUpperCase(), p_display_name: displayName, p_accept_rules: acceptRules }));
-export const listInvitations = (scope: ScopeType, id: string) =>
-  q<{ id: string; code: string; role: string; uses: number; max_uses: number; expires_at: string; revoked_at: string | null }[]>(
-    sb().from('invitations').select('id,code,role,uses,max_uses,expires_at,revoked_at').eq(scopeCol(scope), id).is('revoked_at', null).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }),
+const normCode = (code: string) => code.trim().toUpperCase();
+export const previewInvitation = (code: string) => q<InvitePreview>(sb().rpc('preview_invitation', { p_code: normCode(code) }));
+export async function acceptInvitation(code: string, displayName: string, acceptRules: boolean) {
+  const r = await q<{ scope_type: ScopeType; id: string } | { error: string }>(
+    sb().rpc('accept_invitation', { p_code: normCode(code), p_display_name: displayName, p_accept_rules: acceptRules }),
   );
+  if ('error' in r) throw new CommunityError(L('Code invalide.'));
+  return r;
+}
+export type Invitation = { id: string; code: string | null; role: string; uses: number; max_uses: number; expires_at: string; revoked_at: string | null };
+export async function listInvitations(scope: ScopeType, id: string): Promise<Invitation[]> {
+  const rows = await q<Omit<Invitation, 'code'>[]>(
+    sb().from('invitations').select('id,role,uses,max_uses,expires_at,revoked_at').eq(scopeCol(scope), id).is('revoked_at', null).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }),
+  );
+  const codes = await localCodes();
+  return rows.map((r) => ({ ...r, code: codes[r.id]?.code ?? null }));
+}
 export const revokeInvitation = (id: string) => q(sb().from('invitations').update({ revoked_at: new Date().toISOString() }).eq('id', id));
+/** Places du cercle (limite décidée par le serveur ; 4 personnes, créateur inclus, en version gratuite). */
+export const groupCapacity = (circleId: string) => q<GroupCapacity>(sb().rpc('group_capacity', { p_circle: circleId }));
+
+// ---------- Modération ----------
+export const reportContent = (
+  target: ReportTarget,
+  targetId: string,
+  reason: ReportReason,
+  o: { details?: string; scope?: ScopeType; scopeId?: string; block?: boolean } = {},
+) =>
+  q<string>(
+    sb().rpc('report_content', {
+      p_target_type: target,
+      p_target_id: targetId,
+      p_reason: reason,
+      p_details: o.details?.trim() || null,
+      p_scope_type: o.scope ?? null,
+      p_scope_id: o.scopeId ?? null,
+      p_block: !!o.block,
+    }),
+  );
+export const blockUser = (userId: string) => q(sb().rpc('block_user', { p_user: userId }));
+export const unblockUser = (myId: string, userId: string) => q(sb().from('blocks').delete().eq('blocker_id', myId).eq('blocked_id', userId));
+export const listBlocks = () => q<Block[]>(sb().from('blocks').select('blocked_id,blocked_name,created_at').order('created_at', { ascending: false }));
+export const MODERATION_EMAIL_FALLBACK = 'mohamadalhabib@live.com';
+export async function moderationContact(): Promise<string> {
+  try {
+    const r = await q<{ email?: string }>(sb().rpc('moderation_contact'));
+    return r?.email || MODERATION_EMAIL_FALLBACK;
+  } catch {
+    return MODERATION_EMAIL_FALLBACK;
+  }
+}
 
 // ---------- Contrôle parental ----------
 export const parentalControls = (familyId: string) =>
@@ -138,7 +229,7 @@ export async function insertContributions(userId: string, rows: ContributionRow[
   const { error } = await sb()
     .from('goal_contributions')
     .upsert(rows.map((r) => ({ ...r, user_id: userId, member_id: r.member_id ?? null })), { onConflict: 'client_id', ignoreDuplicates: true });
-  if (error) throw new CommunityError(error.message);
+  if (error) throw new CommunityError(frError(error), error.code);
 }
 
 // ---------- Calendrier ----------
