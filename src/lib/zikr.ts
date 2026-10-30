@@ -16,7 +16,15 @@ export type ZikrItem = {
   tr?: string;
   fr?: string;
   reps: number;
+  /** Texte importé par copier-coller ou photo (reconnaissance de texte sur l’appareil). */
+  via?: 'paste' | 'photo';
+  /** Vrai si le texte n’a pas été reconnu tel quel dans le Coran : à présenter « non vérifié », jamais comme sourcé. */
+  unverified?: boolean;
+  /** Photo d’origine (fichier local de l’appareil, jamais envoyé ni partagé). */
+  photo?: string;
 };
+/** Mention ajoutée aux textes importés non reconnus dans le Coran. */
+export const UNVERIFIED_NOTE = 'Non vérifié — source à vérifier';
 export type ZikrGoal = { perDay: number; moment?: string };
 export type Zikr = {
   id: string;
@@ -151,7 +159,8 @@ export function exportText(z: Zikr, systems: AbjadSystem[], opts: AbjadOptions =
     L.push(it.ar);
     if (it.tr) L.push(it.tr);
     if (it.fr) L.push(it.fr);
-    if (it.ref) L.push(`(${it.ref})`);
+    if (it.unverified) L.push(`⚠ ${UNVERIFIED_NOTE}`);
+    else if (it.ref) L.push(`(${it.ref})`);
     L.push(`Abjad : ${systems.map((s) => `${itemAbjad(it, s, opts)} (${SYS_LABEL[s]})`).join(' · ')}`);
     L.push('');
   });

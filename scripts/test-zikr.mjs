@@ -160,6 +160,10 @@ eq('markDone ×2', z.markDone(z.markDone(Z, '2026-10-28'), '2026-10-28').done, {
 const txt = z.exportText({ ...Z, items: [it('l', 'يَا لَطِيفُ', 129)] }, ['mashriqi', 'maghribi']);
 eq('export : total', txt.includes('Total abjad mashriqi : 140 par récitation · 18060 avec les répétitions'), true);
 eq('export : intention', txt.includes('Intention : Pour Allah'), true);
+const imp = z.exportText({ ...Z, items: [{ ...it('i', 'نص منقول', 1), ref: 'Texte personnel', via: 'photo', unverified: true, photo: 'file:///x.jpg' }] }, ['mashriqi']);
+eq('export : texte importé non vérifié signalé', imp.includes('Non vérifié — source à vérifier'), true);
+eq('export : pas de source affichée pour un texte non vérifié', imp.includes('(Texte personnel)'), false);
+eq('export : la photo n’est jamais partagée', imp.includes('file://'), false);
 
 if (fail) {
   console.error(`${fail} échec(s)`);
