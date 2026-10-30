@@ -165,6 +165,14 @@ export async function listInvitations(scope: ScopeType, id: string): Promise<Inv
 }
 export const revokeInvitation = (id: string) => q(sb().from('invitations').update({ revoked_at: new Date().toISOString() }).eq('id', id));
 /** Places du cercle (limite décidée par le serveur ; 4 personnes, créateur inclus, en version gratuite). */
+/** Droits du compte (plan, limites lues dans la base). */
+export type MyEntitlements = { plan: string; limits: Record<string, unknown>; payments_enabled: boolean };
+export const myEntitlements = () => q<MyEntitlements>(sb().rpc('get_my_entitlements'));
+/** Personnes maximum dans un cercle créé par ce compte (créateur inclus), ou null si inconnu. */
+export const myGroupCap = async () => {
+  const n = Number((await myEntitlements()).limits?.max_group_members_created);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
 export const groupCapacity = (circleId: string) => q<GroupCapacity>(sb().rpc('group_capacity', { p_circle: circleId }));
 
 // ---------- Modération ----------

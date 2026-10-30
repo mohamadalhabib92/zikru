@@ -178,11 +178,12 @@ function MyCircles() {
   const [rules, setRules] = useState('Bienveillance, discrétion et sincérité. Pas de comparaison, pas de jugement.');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const cap = useLoad(() => api.myGroupCap(), []);
   if (profile?.is_minor) return null; // les mineurs ne rejoignent pas de cercles (protection)
   return (
     <View>
       <H2>Mes cercles</H2>
-      <Muted>Vos proches (Ahbab) : 50 personnes maximum, sur invitation uniquement.</Muted>
+      <Muted>{cap.data ? L('Vos proches (Ahbab) : {n} personnes maximum par cercle, créateur inclus, sur invitation uniquement.', { n: cap.data }) : 'Vos proches (Ahbab) : petits cercles, sur invitation uniquement.'}</Muted>
       <ErrorNote error={list.error} onRetry={list.reload} />
       {list.data?.map((c) => (
         <ListItem key={c.id} icon="people-outline" title={c.name} subtitle={c.description ?? 'Cercle privé'} onPress={() => router.push(`/circle/${c.id}`)} />
