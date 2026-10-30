@@ -42,7 +42,7 @@ export default function Practice() {
   const router = useRouter();
   const lang = useUiLang();
   const { zikrs, update, systems, opts, ready: zr } = useZikrs();
-  const { tasbih, setTasbih, increment, ready: dr } = useData();
+  const { tasbih, setTasbih, increment, content, ready: dr } = useData();
   const { s: settings } = useSettings();
   const fatihaOn = settings.fatihaFirst !== false;
   const stored = zikrs.find((x) => x.id === id);
@@ -83,6 +83,9 @@ export default function Practice() {
       ...t,
       count,
       deviceCount: Math.min(t.deviceCount ?? 0, count),
+      // reste d'une rafale Bluetooth reporté sur l'étape suivante : sa séance commence maintenant
+      firstAt: count > 0 ? Date.now() : undefined,
+      lastAt: count > 0 ? Date.now() : undefined,
       dhikrId: label(k),
       target: it.reps,
     };
@@ -92,7 +95,10 @@ export default function Practice() {
   useEffect(() => {
     if (started.current || !z || !dr || !z.items.length) return;
     started.current = true;
-    prev.current = { dhikrId: tasbih.dhikrId, target: tasbih.target };
+    // Après un arrêt brutal de l'app pendant une pratique, le tasbih peut encore porter un libellé
+    // « composition · étape » : on ne le restaure pas comme dhikr précédent.
+    const known = content.some((c) => c.id === tasbih.dhikrId);
+    prev.current = known ? { dhikrId: tasbih.dhikrId, target: tasbih.target } : { dhikrId: 'subhanallah', target: 33 };
     lastTotal.current = tasbih.total;
     setTasbih((t) => aim(closeSession(t, uid('s'), now()), 0));
   }, [z?.id, dr]);

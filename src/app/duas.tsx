@@ -6,6 +6,7 @@ import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { useData } from '@/lib/data';
+import { resetCount } from '@/lib/tasbih-core';
 import { DUA_CATS, DUAS_LIST, duaCatLabel, type Dua } from '@/lib/duas';
 import { usePersistentState } from '@/lib/storage';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
@@ -128,7 +129,7 @@ export default function Duas() {
   };
   const toTasbih = (d: Dua) => {
     if (tasbih.count > 0) saveSession();
-    setTasbih((t) => ({ ...t, count: 0, target: d.reps ?? t.target }));
+    setTasbih((t) => ({ ...resetCount(t), target: d.reps ?? t.target }));
     router.push('/tasbih');
   };
 

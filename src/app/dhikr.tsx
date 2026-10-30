@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Text } from '@/ui/Text';
 import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
+import { resetCount, switchDhikr } from '@/lib/tasbih-core';
 import { isPending } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 import { Badge, Button, Card, Empty, Eyebrow, Muted, Notice, Row, Screen, Spacer } from '@/ui/kit';
@@ -45,7 +46,7 @@ export default function Dhikr() {
               variant="secondary"
               icon="ellipse-outline"
               onPress={() => {
-                setTasbih((x) => ({ ...x, dhikrId: i.id, count: 0, target: i.defaultCount && i.defaultCount > 1 ? i.defaultCount : x.target }));
+                setTasbih((x) => switchDhikr(resetCount(x), i.id, i.defaultCount && i.defaultCount > 1 ? i.defaultCount : x.target));
                 router.push('/tasbih');
               }}
             />

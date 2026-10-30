@@ -50,7 +50,8 @@ const addClicks = (n: number, source: ClickSource, cursor?: BleCursor) => {
 };
 const setTasbih = (f: (t: Tasbih) => Tasbih) => tasbihStore.set(f);
 const increment = () => addClicks(1, 'manuel');
-const saveSession = () => tasbihStore.set((t) => closeSession(t, uid('s'), new Date().toISOString()));
+/** Bouton « Enregistrer la session » : ligne séparée et close (les fins d'étape automatiques, elles, se regroupent). */
+const saveSession = () => tasbihStore.set((t) => closeSession(t, uid('s'), new Date().toISOString(), { explicit: true }));
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [content, setContent, r1] = usePersistentState<ContentItem[]>('content', SEED_CONTENT);
