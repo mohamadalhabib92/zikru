@@ -1,0 +1,89 @@
+# Communautés lot A/B (30.10.2026) : plafond, signalement, blocage, modération, messages serveur (ar : traduction à relire)
+{n} / {max} personnes	{n} / {max} people	{n} / {max} أشخاص
+{n} personne(s)	{n} person(s)	{n} شخص
+complet	full	مكتمل
+Le cercle est complet ({n} personnes maximum, créateur inclus).	This circle is full ({n} people maximum, creator included).	الحلقة مكتملة (الحد الأقصى {n} أشخاص، بمن فيهم المنشئ).
+Ce groupe est complet ({n} personnes maximum, créateur inclus).	This group is full ({n} people maximum, creator included).	هذه المجموعة مكتملة (الحد الأقصى {n} أشخاص، بمن فيهم المنشئ).
+Groupe complet	Group full	المجموعة مكتملة
+Sécurité	Safety	الأمان
+Un problème dans ce cercle ? Signalez-le : la modération reçoit une copie du contenu signalé.	A problem in this circle? Report it: moderators receive a copy of the reported content.	هل هناك مشكلة في هذه الحلقة؟ أبلِغ عنها: يتلقى فريق الإشراف نسخة من المحتوى المبلَّغ عنه.
+Signaler ce cercle	Report this circle	الإبلاغ عن هذه الحلقة
+Signaler cette session	Report this session	الإبلاغ عن هذه الجلسة
+Aucun : ni envoi ni réception de messages.	None: no messages sent or received.	لا أحد: لا إرسال ولا استقبال للرسائل.
+Parents : échanges seulement avec les parents.	Parents: messages with parents only.	الوالدان: مراسلة الوالدين فقط.
+Famille : échanges avec la famille, jamais avec les invités.	Family: messages with the family, never with guests.	العائلة: مراسلة العائلة، وليس الضيوف أبدًا.
+Rôle : {role}	Role: {role}	الدور: {role}
+Pour la sécurité, le code n’est conservé que sur cet appareil. Partagez-le maintenant ou créez-en un nouveau plus tard.	For safety, the code is only kept on this device. Share it now, or create a new one later.	للأمان، لا يُحفظ الرمز إلا على هذا الجهاز. شاركه الآن أو أنشئ رمزًا جديدًا لاحقًا.
+Code visible seulement sur l’appareil qui l’a créé	Code only visible on the device that created it	الرمز لا يظهر إلا على الجهاز الذي أنشأه
+jusqu’au {d}	until {d}	حتى {d}
+Chiffrés en transit, accessibles aux seuls membres concernés (pas encore de chiffrement de bout en bout). Pas de liens.	Encrypted in transit, accessible only to the members concerned (not yet end-to-end encrypted). No links.	مشفّرة أثناء النقل، ولا يطّلع عليها إلا الأعضاء المعنيون (ليست مشفّرة بعدُ تشفيرًا تامًّا بين الطرفين). لا روابط.
+Marquer comme lu	Mark as read	وضع علامة «مقروء»
+Marquer comme lu le message de {name}	Mark {name}’s message as read	وضع علامة «مقروء» على رسالة {name}
+Harcèlement	Harassment	تحرّش أو مضايقة
+Spam	Spam	رسائل مزعجة
+Haine	Hate	كراهية
+Contenu sexuel	Sexual content	محتوى جنسي
+Violence ou menace	Violence or threat	عنف أو تهديد
+Personne en danger	Someone in danger	شخص في خطر
+Usurpation d’identité	Impersonation	انتحال هوية
+Sécurité d’un enfant	Child safety	سلامة طفل
+Autre	Other	أخرى
+Écrire à la modération : {m}	Contact moderation: {m}	مراسلة الإشراف: {m}
+Écrire à la modération par e-mail	Email the moderation team	مراسلة فريق الإشراف بالبريد الإلكتروني
+Zikru – modération	Zikru – moderation	Zikru – الإشراف
+Signaler	Report	إبلاغ
+Merci, signalement envoyé à la modération.	Thank you, your report was sent to the moderators.	شكرًا، أُرسل البلاغ إلى فريق الإشراف.
+Signaler {name}	Report {name}	الإبلاغ عن {name}
+Pourquoi signalez-vous ?	Why are you reporting?	لماذا تُبلِغ؟
+Précisions (facultatif)	Details (optional)	تفاصيل (اختياري)
+Bloquer aussi cette personne	Also block this person	حظر هذا الشخص أيضًا
+Vous ne verrez plus ses messages et elle ne pourra plus vous écrire.	You will no longer see their messages and they will no longer be able to write to you.	لن ترى رسائله بعد الآن ولن يتمكّن من مراسلتك.
+En cas de danger immédiat	If someone is in immediate danger	في حالة خطر داهم
+Appelez les secours : 112 (Europe), 117 police et 147 aide aux jeunes (Suisse).	Call emergency services: 112 (Europe), 117 police and 147 youth helpline (Switzerland).	اتصل بالطوارئ: 112 (أوروبا)، 117 الشرطة و147 خط مساعدة الشباب (سويسرا).
+Envoyer le signalement	Send report	إرسال البلاغ
+Bloquer	Block	حظر
+Bloquer {name}	Block {name}	حظر {name}
+Bloquer {name} ?	Block {name}?	حظر {name}؟
+Vous ne verrez plus ses messages et elle ne pourra plus vous écrire. Elle n’est pas prévenue. Vous pourrez débloquer dans Communauté.	You will no longer see their messages and they will no longer be able to write to you. They are not notified. You can unblock them in Community.	لن ترى رسائله ولن يتمكّن من مراسلتك، ولن يُبلَّغ بذلك. يمكنك إلغاء الحظر من قسم المجتمع.
+Personnes bloquées	Blocked people	الأشخاص المحظورون
+Elles ne peuvent plus vous écrire et vous ne voyez plus leurs messages.	They can no longer write to you and you no longer see their messages.	لم يعد بإمكانهم مراسلتك، ولم تعد ترى رسائلهم.
+Débloquer	Unblock	إلغاء الحظر
+Débloquer {name}	Unblock {name}	إلغاء حظر {name}
+{n} h	{n} h	{n} ساعة
+{n} min	{n} min	{n} دقيقة
+{n} s	{n} s	{n} ثانية
+Vous avez atteint la limite de {n} groupes créés.	You have reached the limit of {n} groups created.	بلغت الحد الأقصى وهو {n} مجموعة منشأة.
+Trop de tentatives. Réessayez dans {t}.	Too many attempts. Try again in {t}.	محاولات كثيرة جدًا. أعد المحاولة بعد {t}.
+Trop de tentatives. Réessayez dans un moment.	Too many attempts. Try again in a moment.	محاولات كثيرة جدًا. أعد المحاولة بعد قليل.
+Serveur non configuré.	Server not configured.	الخادم غير مهيّأ.
+Pas de connexion. Réessayez quand vous serez en ligne.	No connection. Try again when you are online.	لا يوجد اتصال. أعد المحاولة عند الاتصال بالإنترنت.
+Action non autorisée pour votre rôle.	This action is not allowed for your role.	هذا الإجراء غير مسموح لدورك.
+Cette invitation a expiré.	This invitation has expired.	انتهت صلاحية هذه الدعوة.
+Code invalide.	Invalid code.	رمز غير صالح.
+Une erreur est survenue.	Something went wrong.	حدث خطأ.
+Ce nom est déjà utilisé dans ce cercle	This name is already used in this circle	هذا الاسم مستعمل في هذه الحلقة
+Ce texte contient un terme non autorisé. Merci de le reformuler.	This text contains a word that is not allowed. Please rephrase it.	يحتوي هذا النص على لفظ غير مسموح به. يُرجى إعادة صياغته.
+Ce message contient un terme non autorisé. Merci de le reformuler.	This message contains a word that is not allowed. Please rephrase it.	تحتوي هذه الرسالة على لفظ غير مسموح به. يُرجى إعادة صياغتها.
+Les liens ne sont pas autorisés dans les encouragements.	Links are not allowed in encouragements.	الروابط غير مسموح بها في رسائل التشجيع.
+Seul le fondateur peut inviter un modérateur	Only the founder can invite a moderator	المؤسس وحده يمكنه دعوة مشرف
+Une invitation révoquée ne peut pas être réactivée	A revoked invitation cannot be reactivated	لا يمكن إعادة تفعيل دعوة ملغاة
+Indiquez votre prénom	Enter your first name	أدخل اسمك الأول
+Réservé aux membres du groupe	Members of the group only	للأعضاء في المجموعة فقط
+Réservé au fondateur et aux modérateurs	Founder and moderators only	للمؤسس والمشرفين فقط
+Réservé aux parents de la famille	Parents of the family only	لوالدي العائلة فقط
+Action impossible	Action not possible	الإجراء غير ممكن
+Cercle introuvable	Circle not found	الحلقة غير موجودة
+Membre introuvable	Member not found	العضو غير موجود
+Message introuvable	Message not found	الرسالة غير موجودة
+Personne introuvable	Person not found	الشخص غير موجود
+Session introuvable	Session not found	الجلسة غير موجودة
+Motif inconnu	Unknown reason	سبب غير معروف
+Portée inconnue	Unknown scope	نطاق غير معروف
+Type inconnu	Unknown type	نوع غير معروف
+Rôle inconnu	Unknown role	دور غير معروف
+Vous faites déjà partie de ce cercle	You are already in this circle	أنت عضو في هذه الحلقة بالفعل
+Vous faites déjà partie de cette famille	You are already in this family	أنت عضو في هذه العائلة بالفعل
+Le règlement du cercle doit être accepté	The circle rules must be accepted	يجب قبول قواعد الحلقة
+Invitation déjà utilisée par ce compte	This account has already used this invitation	استعمل هذا الحساب هذه الدعوة من قبل
+Les comptes enfants restent dans leur famille	Child accounts stay in their family	تبقى حسابات الأطفال ضمن عائلتها
+Ce compte est adulte dans une autre famille	This account is an adult in another family	هذا الحساب بالغ في عائلة أخرى
