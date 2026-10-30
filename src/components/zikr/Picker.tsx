@@ -358,7 +358,7 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
             <Text style={{ color: '#1B1405', fontWeight: '800' }}>Terminé</Text>
           </Pressable>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, padding: 12 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 0 }} contentContainerStyle={{ gap: 8, padding: 12 }}>
           {TABS.map((t) => (
             <Pill
               key={t.id}
