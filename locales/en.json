@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Zikru uses the camera only when you photograph a zikr: the text is recognised on your phone and the photo stays on the device, never uploaded.",
+    "NSPhotoLibraryUsageDescription": "Zikru opens the photo you choose to recognise its text on the device. Nothing is uploaded."
+  }
+}

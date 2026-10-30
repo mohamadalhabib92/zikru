@@ -24,7 +24,9 @@
         "NSMotionUsageDescription": "Cette app n'utilise pas les données de mouvement ; cette mention est requise par le module de localisation.",
         "NSLocationTemporaryUsageDescriptionDictionary": {
           "ExpoLocationFullAccuracy": "La position précise permet un résultat plus exact."
-        }
+        },
+        "NSCameraUsageDescription": "Zikru utilise l’appareil photo seulement si vous photographiez un zikr : le texte est reconnu sur votre téléphone et la photo reste sur l’appareil, sans envoi.",
+        "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé."
       },
       "buildNumber": "1",
       "config": {
@@ -186,6 +188,14 @@
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
+          "cameraPermission": "Zikru utilise l’appareil photo seulement si vous photographiez un zikr : le texte est reconnu sur votre téléphone et la photo reste sur l’appareil, sans envoi.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
@@ -201,6 +211,11 @@
       "eas": {
         "projectId": "92e1bb51-c48f-41ed-9131-13a6ed6bdb22"
       }
+    },
+    "locales": {
+      "fr": "./locales/fr.json",
+      "en": "./locales/en.json",
+      "ar": "./locales/ar.json"
     }
   }
 }

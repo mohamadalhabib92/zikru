@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Zikru utilise l’appareil photo seulement si vous photographiez un zikr : le texte est reconnu sur votre téléphone et la photo reste sur l’appareil, sans envoi.",
+    "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé."
+  }
+}
