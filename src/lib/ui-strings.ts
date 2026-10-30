@@ -1379,6 +1379,7 @@ export const UI_STRINGS: Record<string, [en: string, ar: string]> = {
   "{n} aujourd’hui": ["{n} today","{n} اليوم"],
   "{n} dhikr": ["{n} dhikr","{n} ذكر"],
   "{n} dhikr avant {name} ({fr})": ["{n} dhikr before {name} ({fr})","{n} ذكر قبل {name} ({fr})"],
+  "{n} enregistrements regroupés": ["{n} entries grouped","{n} تسجيلات مجمّعة"],
   "{n} formule · {r} rép.": ["{n} formula · {r} reps","عدد الصيغ: {n} · التكرارات: {r}"],
   "{n} formules · {r} rép.": ["{n} formulas · {r} reps","عدد الصيغ: {n} · التكرارات: {r}"],
   "{n} invocations · {c} catégories · sources indiquées": ["{n} supplications · {c} categories · sources given","{n} دعاءً · {c} فئة · مع ذكر المصادر"],

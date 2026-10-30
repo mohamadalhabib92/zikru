@@ -1,6 +1,6 @@
 import { BleStatusChip } from '@/components/BleStatusChip';
-import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { approvedOnly } from '@/lib/content';
@@ -12,13 +12,31 @@ import { ProgressRing, tapHaptic, useLayout } from '@/ui/ds';
 import { Arabic } from '@/ui/light';
 import { brand as b, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { uid } from '@/lib/storage';
+import { closeSession, groupSessions, resetCount, switchDhikr } from '@/lib/tasbih-core';
 
 export default function TasbihScreen() {
   const { t: tr } = useSettings();
-  const { tasbih, setTasbih, increment, saveSession, content } = useData();
+  const { tasbih, setTasbih, increment, saveSession, content, ready } = useData();
   const router = useRouter();
   const approved = approvedOnly(content);
   const current = approved.find((c) => c.id === tasbih.dhikrId) ?? approved[0];
+  // Historique affiché : lignes consécutives du même dhikr et de la même source (< 5 min) regroupées.
+  // Non destructif : les lignes enregistrées, le journal des appuis et le total ne changent pas.
+  const history = useMemo(() => groupSessions(tasbih.sessions), [tasbih.sessions]);
+  // Libellé « composition · étape » resté après un arrêt brutal pendant une pratique : à l'arrivée sur
+  // l'onglet, la séance en cours est enregistrée sous ce libellé puis le tasbih revient sur un dhikr connu.
+  const known = useRef({ ids: new Set<string>(), fallback: 'subhanallah' });
+  useEffect(() => {
+    known.current = { ids: new Set(content.map((c) => c.id)), fallback: approved[0]?.id ?? 'subhanallah' };
+  }, [content, approved]);
+  const onFocus = useCallback(() => {
+    if (!ready) return;
+    const k = known.current;
+    if (k.ids.size === 0) return;
+    setTasbih((x) => (k.ids.has(x.dhikrId) ? x : switchDhikr(closeSession(x, uid('s'), new Date().toISOString()), k.fallback, 33)));
+  }, [ready, setTasbih]);
+  useFocusEffect(onFocus);
   const ble = useBleCounter();
   const bleOn = ble.status === 'connecté';
   const [scale] = useState(() => new Animated.Value(1));
@@ -85,7 +103,7 @@ export default function TasbihScreen() {
       <Spacer />
       <Row wrap>
         {approved.map((c) => (
-          <Chip key={c.id} label={c.transliteration ?? c.arabic} active={c.id === current?.id} onPress={() => setTasbih((x) => ({ ...x, dhikrId: c.id, target: c.defaultCount && c.defaultCount > 1 ? c.defaultCount : x.target }))} />
+          <Chip key={c.id} label={c.transliteration ?? c.arabic} active={c.id === current?.id} onPress={() => setTasbih((x) => switchDhikr(x, c.id, c.defaultCount && c.defaultCount > 1 ? c.defaultCount : x.target))} />
         ))}
       </Row>
       <Spacer />
@@ -93,17 +111,20 @@ export default function TasbihScreen() {
       <Spacer h={8} />
       <Row>
         <Button title={tr.save_session} icon="bookmark-outline" onPress={saveSession} disabled={tasbih.count === 0} style={{ flex: 1 }} />
-        <Button title={tr.reset} icon="refresh" variant="ghost" onPress={() => setTasbih((x) => ({ ...x, count: 0, deviceCount: 0 }))} disabled={tasbih.count === 0} />
+        <Button title={tr.reset} icon="refresh" variant="ghost" onPress={() => setTasbih(resetCount)} disabled={tasbih.count === 0} />
       </Row>
       <Spacer h={20} />
       <H2>{tr.history}</H2>
       <Muted>Total : {tasbih.total}</Muted>
       <Spacer h={8} />
-      {tasbih.sessions.length === 0 ? (
+      {history.length === 0 ? (
         <Muted>{tr.no_history}</Muted>
       ) : (
-        tasbih.sessions.slice(0, 20).map((s) => {
+        history.slice(0, 20).map((s) => {
           const c = content.find((x) => x.id === s.dhikrId);
+          const end = new Date(s.at).toLocaleString('fr-CH');
+          const start = s.start && s.start !== s.at ? new Date(s.start).toLocaleString('fr-CH') : null;
+          const when = start ? (start.slice(0, 10) === end.slice(0, 10) ? `${start} – ${end.slice(-8)}` : `${start} – ${end}`) : end;
           return (
             <Card key={s.id} style={{ marginBottom: 8, paddingVertical: 12 }}>
               <Row style={{ justifyContent: 'space-between' }}>
@@ -111,8 +132,9 @@ export default function TasbihScreen() {
                 <Text style={{ color: t.primary, fontWeight: '700' }}>{s.count}</Text>
               </Row>
               <Muted>
-                {new Date(s.at).toLocaleString('fr-CH')}
-                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? 'compteur Bluetooth' : L('mixte ({n} via compteur)', { n: s.deviceCount ?? 0 })}` : ''}
+                {when}
+                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? L('compteur Bluetooth') : L('mixte ({n} via compteur)', { n: s.deviceCount ?? 0 })}` : ''}
+                {(s.parts ?? 1) > 1 ? ` · ${L('{n} enregistrements regroupés', { n: s.parts ?? 1 })}` : ''}
               </Muted>
             </Card>
           );
