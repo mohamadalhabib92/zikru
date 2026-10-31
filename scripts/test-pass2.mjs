@@ -3,8 +3,8 @@
 import assert from 'node:assert/strict';
 import { loadLib } from './load-lib.mjs';
 
-const M = await loadLib(['adhkar', 'duas', 'review-sheet'], 'pass2');
-const A = M.adhkar, D = M.duas, R = M['review-sheet'];
+const M = await loadLib(['adhkar', 'duas', 'review-sheet', 'notify-plan'], 'pass2');
+const A = M.adhkar, D = M.duas, R = M['review-sheet'], N = M['notify-plan'];
 let ok = 0;
 const t = (name, fn) => {
   fn();
@@ -57,6 +57,52 @@ t('adhkar : progression (sans nombre = 1)', () => {
   const p = Object.fromEntries(list.map((x) => [x.id, A.repsOf(x)]));
   assert.deepEqual(A.momentDone('matin', p), { done: list.length, total: list.length });
   assert.equal(A.momentDone('matin', {}).done, 0);
+});
+
+// ---------- Centre de notifications ----------
+const H = { fajr: [5, 30], sunrise: [7, 5], dhuhr: [12, 20], asr: [15, 0], maghrib: [17, 30], isha: [19, 0] };
+const compute = (d) => Object.entries(H).map(([key, [h, m]]) => ({ key, time: new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m) }));
+const LBL = { prayer: { fajr: 'Fajr', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha' }, place: 'Lieu', atTime: 'Heure', inMin: (n) => `dans ${n} min`, kahfTitle: 'Kahf', kahfBody: '', jumuaTitle: 'Jumua', jumuaBody: '', morningTitle: 'AM', eveningTitle: 'PM', adhkarBody: '', wirdMorning: 'WA', wirdEvening: 'WP', wazifa: 'Waz', hailala: 'Hail', wirdBody: '', quranTitle: 'Coran', quranBody: '', pausedTitle: 'Pause', pausedBody: '', recapTitle: 'Semaine', recapBody: '' };
+const sunday = new Date(2026, 10, 1, 12);
+t('notifications : défauts — heures calmes et bilan désactivés', () => {
+  assert.equal(N.DEFAULT_NOTIF.recap, false);
+  assert.equal(N.DEFAULT_NOTIF.quiet.on, false);
+  assert.ok(!N.eventsForDay(sunday, compute(sunday), N.DEFAULT_NOTIF, LBL).some((e) => e.kind === 'recap'));
+});
+t('notifications : bilan le dimanche seulement, vers /goals', () => {
+  const p = { ...N.DEFAULT_NOTIF, recap: true };
+  const r = N.eventsForDay(sunday, compute(sunday), p, LBL).filter((e) => e.kind === 'recap');
+  assert.equal(r.length, 1);
+  assert.equal(r[0].url, '/goals');
+  assert.equal(r[0].date.getHours(), 19);
+  const mon = new Date(2026, 10, 2, 12);
+  assert.ok(!N.eventsForDay(mon, compute(mon), p, LBL).some((e) => e.kind === 'recap'));
+});
+t('notifications : heures calmes (créneau passant minuit) retirent les rappels secondaires, jamais les adhans', () => {
+  const q = { on: true, from: '22:30', to: '06:30' };
+  assert.ok(N.inQuiet(new Date(2026, 10, 2, 23, 0), q));
+  assert.ok(N.inQuiet(new Date(2026, 10, 2, 5, 0), q));
+  assert.ok(!N.inQuiet(new Date(2026, 10, 2, 6, 30), q));
+  assert.ok(!N.inQuiet(new Date(2026, 10, 2, 12, 0), q));
+  const day = new Date(2026, 10, 2, 12);
+  const prefs = { ...N.DEFAULT_NOTIF, before: 10, adhkar: true, wird: true, quiet: q };
+  const ev = N.eventsForDay(day, compute(day), prefs, LBL);
+  assert.ok(ev.some((e) => e.kind === 'prayer' && e.id.endsWith('-fajr')), 'adhan du Fajr gardé');
+  assert.ok(!ev.some((e) => e.id.endsWith('-fajr-pre')), 'rappel 05:20 retiré');
+  assert.ok(!ev.some((e) => e.id.endsWith('-wird-am')), 'wird 06:00 retiré');
+  assert.ok(ev.some((e) => e.id.endsWith('-adhkar-am')), 'adhkar 06:45 gardé');
+  assert.ok(!N.inQuiet(new Date(2026, 10, 2, 23, 0), { on: true, from: '23:00', to: '23:00' }), 'créneau vide');
+  assert.ok(!N.inQuiet(new Date(2026, 10, 2, 23, 0), { on: true, from: 'xx', to: '06:00' }), 'heure invalide');
+});
+t('notifications : les adhkar ouvrent l’écran du bon moment', () => {
+  const day = new Date(2026, 10, 2, 12);
+  const ev = N.eventsForDay(day, compute(day), { ...N.DEFAULT_NOTIF, adhkar: true }, LBL);
+  assert.equal(ev.find((e) => e.id.endsWith('adhkar-am')).url, '/adhkar?m=matin');
+  assert.equal(ev.find((e) => e.id.endsWith('adhkar-pm')).url, '/adhkar?m=soir');
+});
+t('notifications : plan avec tout activé ≤ 64', () => {
+  const p = N.buildPlan(new Date(2026, 10, 2, 10), compute, { ...N.DEFAULT_NOTIF, before: 10, adhkar: true, wird: true, recap: true, quran: 'isha', quiet: { on: true, from: '22:00', to: '06:00' } }, LBL);
+  assert.ok(p.length <= 64);
 });
 
 console.log(`\n${ok} tests Passe 2 OK`);

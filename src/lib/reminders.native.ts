@@ -22,9 +22,12 @@ Notifications.setNotificationHandler({
 });
 
 const CHANNEL = 'prayers';
+/** Android : canal séparé pour les rappels secondaires (adhkar, wird, Coran, bilal…), réglable à part dans le système. */
+const CHANNEL_OTHER = 'reminders';
 async function ensureChannel() {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: Notifications.AndroidImportance.HIGH, sound: 'default' });
+    await Notifications.setNotificationChannelAsync(CHANNEL_OTHER, { name: 'Rappels (adhkar, wird, Coran, bilan)', importance: Notifications.AndroidImportance.DEFAULT, sound: 'default' });
   }
 }
 
@@ -89,7 +92,7 @@ async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
     await Notifications.scheduleNotificationAsync({
       identifier: e.id,
       content: { title: e.title, body: e.body, sound: 'default', data: { url: e.url, kind: e.kind } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date, channelId: CHANNEL },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date, channelId: e.kind === 'prayer' || e.kind === 'before' || e.kind === 'paused' ? CHANNEL : CHANNEL_OTHER },
     });
   }
   await saveJSON(HASH_KEY, hash);

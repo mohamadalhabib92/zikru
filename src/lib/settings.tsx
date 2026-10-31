@@ -4,7 +4,7 @@ import { DEFAULT_PLACE, DEFAULT_PRAYER_OPTS, type MethodKey, type Place, type Pr
 import { resolveDefaultMethod } from './app-placeholders';
 import { usePersistentState } from './storage';
 import { setUiLang, UiLangContext } from './l10n';
-import { DEFAULT_NOTIF, type NotifPrefs } from './notify-plan';
+import { DEFAULT_NOTIF, DEFAULT_QUIET, type NotifPrefs } from './notify-plan';
 
 export type Settings = {
   lang: Lang;
@@ -40,7 +40,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [s, setS, ready] = usePersistentState<Settings>('settings', DEFAULTS);
   const prayerKey = JSON.stringify(s.prayer ?? null);
   const prayer = useMemo(() => mergePrayer(s.prayer), [prayerKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const merged = { ...DEFAULTS, ...s, notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers } }, prayer };
+  const merged = { ...DEFAULTS, ...s, notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers }, quiet: { ...DEFAULT_QUIET, ...s.notif?.quiet } }, prayer };
   setUiLang(merged.lang);
   return (
     <C.Provider value={{ s: merged, set: (p) => setS((prev) => ({ ...DEFAULTS, ...prev, ...p })), t: DICTS[merged.lang] ?? DICTS.fr, ready }}>

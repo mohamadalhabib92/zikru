@@ -24,6 +24,8 @@ export function planLabels(tr: Dict, place: string): PlanLabels {
     quranBody: tr.quran_rem_b,
     pausedTitle: tr.paused_t,
     pausedBody: tr.paused_b,
+    recapTitle: tr.recap_t,
+    recapBody: tr.recap_b,
   };
 }
 

@@ -23,9 +23,15 @@ export type NotifPrefs = {
   wird: boolean;
   /** Lecture du Coran (khatma / révision hifz) : après le Fajr, après le ‘Isha, ou désactivé. */
   quran?: QuranSlot;
+  /** Heures calmes : aucun rappel secondaire dans le créneau (les adhans restent réglés prière par prière). */
+  quiet?: QuietHours;
+  /** Bilan privé de la semaine, le dimanche à 19 h (désactivé par défaut). */
+  recap?: boolean;
 };
+export type QuietHours = { on: boolean; from: string; to: string };
+export const DEFAULT_QUIET: QuietHours = { on: false, from: '22:30', to: '06:30' };
 export type QuranSlot = 'off' | 'fajr' | 'isha';
-export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off' };
+export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off', quiet: DEFAULT_QUIET, recap: false };
 export const BEFORE_OPTIONS = [0, 5, 10, 15, 30];
 
 export type PlanLabels = {
@@ -49,9 +55,11 @@ export type PlanLabels = {
   quranBody: string;
   pausedTitle: string;
   pausedBody: string;
+  recapTitle?: string;
+  recapBody?: string;
 };
 
-export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'paused' };
+export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'recap' | 'paused' };
 type DayTimes = { key: string; time: Date }[];
 export type ComputeDay = (d: Date) => DayTimes;
 
@@ -88,7 +96,26 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
   const isha = at('isha');
   if (prefs.quran === 'fajr' && fajr) out.push({ id: `${dk}-quran`, date: new Date(fajr.getTime() + 45 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
   if (prefs.quran === 'isha' && isha) out.push({ id: `${dk}-quran`, date: new Date(isha.getTime() + 30 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
-  return out.filter((e) => Number.isFinite(e.date.getTime())).sort((a, b) => a.date.getTime() - b.date.getTime());
+  if (prefs.recap && day.getDay() === 0 && L.recapTitle)
+    out.push({ id: `${dk}-recap`, date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 19, 0), title: L.recapTitle, body: L.recapBody ?? '', url: '/goals', kind: 'recap' });
+  return applyQuiet(out.filter((e) => Number.isFinite(e.date.getTime())), prefs.quiet).sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+const hm = (v: string) => {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(v ?? '');
+  return m && +m[1] < 24 && +m[2] < 60 ? +m[1] * 60 + +m[2] : null;
+};
+/** Vrai si l’heure locale de `d` tombe dans le créneau [from, to[ (qui peut passer minuit). */
+export function inQuiet(d: Date, q?: QuietHours): boolean {
+  if (!q?.on) return false;
+  const a = hm(q.from), b = hm(q.to);
+  if (a == null || b == null || a === b) return false;
+  const x = d.getHours() * 60 + d.getMinutes();
+  return a < b ? x >= a && x < b : x >= a || x < b;
+}
+/** Retire les rappels secondaires tombant dans les heures calmes ; les adhans (kind « prayer ») ne sont jamais retirés ici. */
+export function applyQuiet(ev: PlannedNotif[], q?: QuietHours): PlannedNotif[] {
+  return q?.on ? ev.filter((e) => e.kind === 'prayer' || !inQuiet(e.date, q)) : ev;
 }
 
 /**
