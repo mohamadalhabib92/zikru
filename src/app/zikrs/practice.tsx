@@ -296,8 +296,8 @@ export default function Practice() {
               elevation: 4,
             })}
           >
-            <Text style={{ color: '#fff', fontSize: 58, fontWeight: '900' }}>{st.count}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '800' }}>{`/ ${fmt(cur.reps)}`}</Text>
+            <Text style={{ color: b.onGreen, fontSize: 58, fontWeight: '900' }}>{st.count}</Text>
+            <Text style={{ color: b.onGreen, fontWeight: '800' }}>{`/ ${fmt(cur.reps)}`}</Text>
           </Pressable>
           <View style={{ marginTop: 14 }}>
             <Bar ratio={cur.reps ? st.count / cur.reps : 0} color={b.green} h={6} />

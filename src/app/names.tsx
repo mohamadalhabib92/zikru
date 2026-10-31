@@ -10,7 +10,7 @@ import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, Pill } from '@/ui/light';
 import { useLayout } from '@/ui/ds';
-import { alpha, brand as b, isDark } from '@/ui/theme';
+import { alpha, brand as b } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
 import { L, useUiLang } from '@/lib/l10n';
 import { NAMES_EN } from '@/lib/i18n-content/names';
@@ -29,7 +29,7 @@ export default function Names() {
   const [draft, setDraft] = useState<DraftItem | null>(null);
   const { cols } = useLayout();
   const lang = useUiLang();
-  const goldFill = isDark() ? '#A8841F' : b.goldDeep;
+  const goldFill = b.goldDeep;
   const list = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return NAMES;
@@ -172,10 +172,10 @@ export default function Names() {
                         opacity: pressed ? 0.8 : 1,
                       })}
                     >
-                      <Ionicons name="add" size={15} color="#fff" />
+                      <Ionicons name="add" size={15} color={b.onGreen} />
                       <Text
                         style={{
-                          color: '#fff',
+                          color: b.onGreen,
                           fontWeight: '800',
                           fontSize: 12,
                         }}

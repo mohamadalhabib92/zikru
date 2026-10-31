@@ -7,7 +7,7 @@ import { ABJAD_EXAMPLES, DIFF_LETTERS, MAGHRIBI, MASHRIQI, ORDER_MASHRIQI, compu
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, LTitle, Pill, SectionLabel } from '@/ui/light';
-import { alpha, brand as b, isDark } from '@/ui/theme';
+import { alpha, brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
 // Jetons émeraude / or (clair et sombre) : lus au rendu, car `brand` est réécrit par applyScheme.
@@ -39,7 +39,7 @@ const SYS: Record<AbjadSystem, { label: string; ar: string; color: string; fill:
     },
   },
 };
-const goldFill = () => (isDark() ? '#A8841F' : b.goldDeep);
+const goldFill = () => b.goldDeep;
 const NORM_RULES: [string, string, string][] = [
   ['أ إ آ ٱ', 'ا', '= 1'],
   ['ى', 'ي', '= 10'],

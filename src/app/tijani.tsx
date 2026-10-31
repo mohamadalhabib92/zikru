@@ -218,7 +218,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
         </Arabic>
         <Text style={{ color: b.ink, fontSize: 20, fontWeight: '900', textAlign: 'center' }}>{p.name}</Text>
       </View>
-      <View style={{ flexDirection: 'row', backgroundColor: b.green }}>
+      <View style={{ flexDirection: 'row', backgroundColor: b.greenDeep }}>
         {[
           ['Étapes', String(p.steps.length)],
           ['Faites', String(checked.length)],
@@ -249,7 +249,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
                     {isOn ? (
                       <Ionicons name="checkmark-circle" size={30} color={b.wirdGreen} />
                     ) : (
-                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.green, alignItems: 'center', justifyContent: 'center' }}>
+                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.greenDeep, alignItems: 'center', justifyContent: 'center' }}>
                         <Text style={{ color: b.gold, fontWeight: '900' }}>{i + 1}</Text>
                       </View>
                     )}

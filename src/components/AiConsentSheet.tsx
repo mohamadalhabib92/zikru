@@ -4,7 +4,7 @@ import { Text } from '@/ui/Text';
 import { useSettings } from '@/lib/settings';
 import { privacyText } from '@/lib/privacy-text';
 import { Button, Ionicons } from '@/ui/kit';
-import { brand as b } from '@/ui/theme';
+import { brand as b, onColor } from '@/ui/theme';
 
 /** Consentement explicite avant le premier envoi à l'IA (Bilal). Rien n'est envoyé tant qu'il n'est pas donné. */
 export function AiConsentSheet({ onAccept, onDecline }: { onAccept: () => void; onDecline: () => void }) {
@@ -17,7 +17,7 @@ export function AiConsentSheet({ onAccept, onDecline }: { onAccept: () => void; 
     <ScrollView style={{ flex: 1, backgroundColor: b.cream }} contentContainerStyle={{ padding: 20, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
       <View testID="ai-consent" style={{ backgroundColor: b.paper, borderRadius: 20, borderWidth: 1, borderColor: b.line, padding: 18 }}>
         <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: b.purple, alignItems: 'center', justifyContent: 'center', alignSelf: rtl ? 'flex-end' : 'flex-start' }}>
-          <Ionicons name="shield-checkmark" size={28} color="#fff" />
+          <Ionicons name="shield-checkmark" size={28} color={onColor(b.purple)} />
         </View>
         <Text accessibilityRole="header" style={[{ color: b.ink, fontSize: 21, fontWeight: '900', marginTop: 12 }, dir]}>
           {p.ai_title}

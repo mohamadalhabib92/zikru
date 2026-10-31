@@ -18,7 +18,8 @@ const LIGHT = {
   muted: '#5C6A63',
   primary: '#0E6B4F',
   onPrimary: '#FFFFFF',
-  accent: '#8F6F1E',
+  // Or foncé pour le TEXTE sur fond clair (≥ 4,5:1 ; l’or #D9B65C ne sert qu’aux bordures/icônes/fonds sombres).
+  accent: '#7A5C12',
   border: '#E5DFD3',
   danger: '#B42318',
   dangerBg: '#FDECEA',
@@ -67,8 +68,10 @@ const BRAND_LIGHT = {
   ink: LIGHT.text,
   inkMuted: LIGHT.muted,
   line: LIGHT.border,
-  gold: '#E3BE5A',
-  goldDeep: '#9C7A22',
+  /** Or d’identité #D9B65C : bordures, icônes, et texte UNIQUEMENT sur fond sombre (hero ≥ 6:1). Interdit en texte sur fond clair (≈ 1,8:1). */
+  gold: '#D9B65C',
+  /** Or « texte » : sur fond clair (≥ 5:1 sur cream/paper/goldSoft) ; en sombre = or d’identité. */
+  goldDeep: '#7A5C12',
   goldSoft: '#FBF3DC',
   green: '#0E6B4F',
   greenDeep: '#0A3F30',
@@ -88,10 +91,13 @@ const BRAND_LIGHT = {
   hero: '#0F3D30',
   heroText: '#FBF7EE',
   heroMuted: '#BFD3C9',
+  /** Texte/icône posé sur un fond `green` (blanc en clair, encre sombre en sombre : ≥ 4,5:1 dans les deux). */
+  onGreen: '#FFFFFF',
 };
 const BRAND_DARK: typeof BRAND_LIGHT = {
   ...BRAND_LIGHT,
-  brown: '#123A2E',
+  // « brown » sert de couleur de TEXTE/icône (références, liens) : clair en sombre (≥ 8:1).
+  brown: '#9CC2B2',
   brownDark: '#0B241C',
   brownSoft: '#8DB0A2',
   cream: DARK.bg,
@@ -101,11 +107,12 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
   line: DARK.border,
   goldDeep: '#D9B65C',
   goldSoft: '#2A2414',
-  green: '#23946B',
+  green: '#26A074',
   greenDeep: '#0F3A2C',
   greenSoft: '#3E9A78',
   greenTint: '#13291F',
-  purple: '#4C42A6',
+  purple: '#A49BF5',
+  indigo: '#8B83F0',
   blue: '#4D8FD6',
   blueSoft: '#13243A',
   teal: '#3FA88B',
@@ -115,6 +122,7 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
   hero: '#103428',
   heroText: '#F4EFE4',
   heroMuted: '#A9C3B7',
+  onGreen: '#03140D',
 };
 export const brand = { ...BRAND_LIGHT };
 
@@ -155,3 +163,24 @@ export function elevation(level: 0 | 1 | 2 | 3 = 1): ViewStyle {
 }
 /** Couleur + alpha (hex 6 chiffres). */
 export const alpha = (hex: string, a: number) => hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+
+/** Identité Zikru (référence) : splash, primaire clair, primaire sombre, or. */
+export const identity = { splash: '#0F3D30', primaryLight: '#0E6B4F', primaryDark: '#3DBE8B', gold: '#D9B65C' } as const;
+/** Palettes brutes, exposées pour les tests de contraste (scripts/test-contrast.mjs). */
+export const palettes = { LIGHT, DARK, BRAND_LIGHT, BRAND_DARK };
+const lum = (hex: string) => {
+  const h = hex.replace('#', '');
+  const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+/** Rapport de contraste WCAG 2.x entre deux couleurs hex à 6 chiffres. */
+export function contrast(a: string, b: string): number {
+  const x = lum(a);
+  const y = lum(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+/** Couleur de texte lisible sur un fond donné (blanc ou encre sombre, le meilleur contraste). */
+export function onColor(bg: string): string {
+  if (!/^#[0-9a-f]{6}$/i.test(bg)) return '#FFFFFF';
+  return contrast('#FFFFFF', bg) >= contrast('#03140D', bg) ? '#FFFFFF' : '#03140D';
+}

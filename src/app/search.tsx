@@ -274,8 +274,8 @@ export default function Search() {
                     disabled={dl === 'busy'}
                     style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 46, borderRadius: 12, backgroundColor: b.green, opacity: pressed ? 0.85 : 1 })}
                   >
-                    {dl === 'busy' ? <ActivityIndicator color="#fff" /> : <Ionicons name="download-outline" size={18} color="#fff" />}
-                    <Text style={{ color: '#fff', fontWeight: '800' }}>{`${tr.offline_q_dl} · ${ed.label}`}</Text>
+                    {dl === 'busy' ? <ActivityIndicator color={b.onGreen} /> : <Ionicons name="download-outline" size={18} color={b.onGreen} />}
+                    <Text style={{ color: b.onGreen, fontWeight: '800' }}>{`${tr.offline_q_dl} · ${ed.label}`}</Text>
                   </Pressable>
                   {dl === 'err' ? <LMuted style={{ fontSize: 12 }}>{tr.no_results} (hors ligne).</LMuted> : null}
                 </View>
