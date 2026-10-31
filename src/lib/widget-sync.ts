@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { useData } from './data';
 import { useDispense } from './dispense-context';
 import { toHijri } from './hijri';
+import { useRamadan } from './ramadan-store';
 import { AR_NAMES, computeDay } from './prayer';
 import { useSettings } from './settings';
 import { useShared } from './shared-state';
@@ -20,23 +21,25 @@ export function useWidgetSync() {
   const { content, tasbih, ready: dataReady } = useData();
   const { pausedToday } = useDispense();
   const [prefs, , prefsReady] = useShared(widgetPrefs);
+  const { st: rst, prefs: rp } = useRamadan();
+  const ram = { active: rst.active, imsakMin: rp.imsakMin };
   const lang: WidgetLang = s.lang === 'ar' || s.lang === 'en' ? s.lang : s.lang === 'de' || s.lang === 'de-CH' ? 'de' : 'fr';
-  const latest = useRef({ s, tr, content, prefs, pausedToday, lang });
+  const latest = useRef({ s, tr, content, prefs, pausedToday, lang, ram });
   useEffect(() => {
-    latest.current = { s, tr, content, prefs, pausedToday, lang };
+    latest.current = { s, tr, content, prefs, pausedToday, lang, ram };
   });
 
   // Prières + dhikr du jour + activité en direct : au démarrage, au retour au premier plan, à minuit.
   useEffect(() => {
     if (!widgetsAvailable || !ready || !dataReady || !prefsReady) return;
     const run = () => {
-      const { s: cur, tr: t, content: c, prefs: p, pausedToday: paused, lang: lg } = latest.current;
+      const { s: cur, tr: t, content: c, prefs: p, pausedToday: paused, lang: lg, ram: rm } = latest.current;
       const now = new Date();
       const today = computeDay(now, cur.place, cur.method, cur.madhab, cur.prayer);
       const tomorrow = computeDay(new Date(now.getTime() + 86400000), cur.place, cur.method, cur.madhab, cur.prayer);
       const names = { title: t.w_next, place: cur.place.label, names: { fajr: t.fajr, dhuhr: t.dhuhr, asr: t.asr, maghrib: t.maghrib, isha: t.isha }, namesAr: { fajr: AR_NAMES.fajr, dhuhr: AR_NAMES.dhuhr, asr: AR_NAMES.asr, maghrib: AR_NAMES.maghrib, isha: AR_NAMES.isha } };
       pushWidgets({ timeline: prayerTimeline(today, tomorrow, now, names), dhikr: dhikrProps(c, now, lg, t.w_dhikr, t.w_none) });
-      const live = p.live && !paused ? liveActivityFor(today, tomorrow, now, { ...names, suhur: t.w_suhur, iftar: t.w_iftar }, { on: p.ramadan, hijriMonth: toHijri(now, cur.hijriOffset).month }) : null;
+      const live = p.live && !paused ? liveActivityFor(today, tomorrow, now, { ...names, suhur: t.w_suhur, iftar: t.w_iftar, suhurMargin: t.w_suhur_m.replace('{n}', String(rm.imsakMin)) }, { on: p.ramadan, hijriMonth: toHijri(now, cur.hijriOffset).month, active: rm.active, imsakMin: rm.imsakMin }) : null;
       void syncLiveActivity(live);
     };
     run();
@@ -57,7 +60,7 @@ export function useWidgetSync() {
       sub.remove();
       clearTimeout(timer);
     };
-  }, [ready, dataReady, prefsReady, s.place, s.method, s.madhab, s.prayer, s.lang, s.hijriOffset, prefs.live, prefs.ramadan, pausedToday, content]);
+  }, [ready, dataReady, prefsReady, s.place, s.method, s.madhab, s.prayer, s.lang, s.hijriOffset, s.hijriCalendar, prefs.live, prefs.ramadan, pausedToday, content, ram.active, ram.imsakMin]);
 
   // Tasbih : écriture différée (1,5 s après le dernier appui).
   useEffect(() => {

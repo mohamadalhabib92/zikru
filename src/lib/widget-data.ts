@@ -69,21 +69,30 @@ export function tasbihProps(t: { count: number; target: number; dhikrId: string 
 
 /** Fenêtre de l’activité en direct : seulement si la prochaine prière est à ≤ `windowMin`. */
 export const LIVE_WINDOW_MIN = 120;
-export type RamadanInput = { on: boolean; hijriMonth: number };
+/**
+ * `on` : option des widgets « Ramadan : suhur et iftar ». `active` (Pass 4) : état du mode Ramadan
+ * (calendrier choisi + confirmation locale) — s’il est fourni, il remplace le simple test « mois 9 ».
+ * `imsakMin` : marge choisie par l’utilisateur avant le Fajr (0 / absent = aucune marge).
+ */
+export type RamadanInput = { on: boolean; hijriMonth: number; active?: boolean; imsakMin?: number };
 
 /**
  * Activité en direct (opt-in). Hors Ramadan : la prochaine prière. Pendant Ramadan (si activé) :
  * Fajr devient « fin du suhur » et Maghrib « iftar ». Aucun décalage d’imsak inventé : on affiche
  * l’heure du Fajr calculée, l’utilisateur suit sa mosquée pour la marge de précaution.
  */
-export function liveActivityFor(today: Row[], tomorrow: Row[], now: Date, n: PrayerNames & { suhur: string; iftar: string }, ramadan: RamadanInput, windowMin = LIVE_WINDOW_MIN): PrayerActivityProps | null {
-  const next = upcomingFard(today, tomorrow, now)[0];
+export function liveActivityFor(today: Row[], tomorrow: Row[], now: Date, n: PrayerNames & { suhur: string; iftar: string; suhurMargin?: string }, ramadan: RamadanInput, windowMin = LIVE_WINDOW_MIN): PrayerActivityProps | null {
+  const isRamadan = ramadan.on && (ramadan.active ?? ramadan.hijriMonth === 9);
+  const margin = isRamadan ? Math.max(0, ramadan.imsakMin ?? 0) * 60000 : 0;
+  // Pendant Ramadan, le Fajr compte comme « fin du suhur » dès (Fajr − marge) : on cherche le prochain repère à venir.
+  const target = (r: { key: FardKey; time: Date }) => (r.key === 'fajr' && margin ? new Date(r.time.getTime() - margin) : r.time);
+  const next = upcomingFard(today, tomorrow, now).find((r) => target(r).getTime() > now.getTime());
   if (!next) return null;
-  if (next.time.getTime() - now.getTime() > windowMin * 60000) return null;
-  const isRamadan = ramadan.on && ramadan.hijriMonth === 9;
+  const at = target(next);
+  if (at.getTime() - now.getTime() > windowMin * 60000) return null;
   const kind: PrayerActivityProps['kind'] = isRamadan && next.key === 'fajr' ? 'suhur' : isRamadan && next.key === 'maghrib' ? 'iftar' : 'prayer';
-  const name = kind === 'suhur' ? n.suhur : kind === 'iftar' ? n.iftar : n.names[next.key];
-  return { title: n.title, name, time: hm(next.time), at: next.time.getTime(), from: now.getTime(), place: n.place, kind };
+  const name = kind === 'suhur' ? (margin && n.suhurMargin ? n.suhurMargin : n.suhur) : kind === 'iftar' ? n.iftar : n.names[next.key];
+  return { title: n.title, name, time: hm(at), at: at.getTime(), from: now.getTime(), place: n.place, kind };
 }
 
 export type WidgetPrefs = { live: boolean; ramadan: boolean };

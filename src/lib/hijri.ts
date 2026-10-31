@@ -2,7 +2,10 @@
  * CALENDRIER HÉGIRIEN — SOURCE DE VÉRITÉ UNIQUE (Phase 1, point 1).
  *
  * Tous les écrans affichent la date hégirienne via `toHijri()` / `formatHijri()` de ce module,
- * jamais via Intl ni un autre calcul (Intl « islamic » n'est pas fiable sous Hermes).
+ * jamais via un autre calcul. Option (Pass 4) : calendrier Umm al-Qura, lu hors ligne dans les données
+ * ICU du système (Intl « islamic-umalqura ») UNIQUEMENT si un auto-contrôle sur des dates publiées
+ * réussit au démarrage ; sinon repli automatique et signalé sur le calendrier tabulaire
+ * (Intl « islamic » n'est pas fiable partout, notamment sous Hermes).
  *
  * Méthode : calendrier hégirien tabulaire (arithmétique, époque « civile » du vendredi
  * 16 juillet 622 julien = JDN 1948440), cycle de 30 ans avec 11 années abondantes
@@ -57,14 +60,96 @@ export function jdnToHijri(jdn: number): HijriDate {
   return { year, month, day };
 }
 
-/** Date JS (jour civil local) → date hégirienne, avec décalage utilisateur en jours. */
-export function toHijri(date: Date, offsetDays = 0): HijriDate {
-  return jdnToHijri(gregorianToJdn(date.getFullYear(), date.getMonth() + 1, date.getDate()) + offsetDays);
+// ——— Calendrier choisi : tabulaire (défaut) ou Umm al-Qura (si l’appareil le fournit correctement) ———
+export type HijriCalendar = 'tabular' | 'umalqura';
+let CAL: HijriCalendar = 'tabular';
+let uqFmt: Intl.DateTimeFormat | null | undefined;
+const uqCache = new Map<number, HijriDate | null>();
+
+function uqAt(f: Intl.DateTimeFormat, jdn: number): HijriDate | null {
+  const g = jdnToGregorian(jdn);
+  const p = f.formatToParts(new Date(Date.UTC(g.year, g.month - 1, g.day, 12)));
+  const n = (t: string) => Number(p.find((x) => x.type === t)?.value);
+  const h = { year: n('year'), month: n('month'), day: n('day') };
+  return Number.isInteger(h.year) && h.month >= 1 && h.month <= 12 && h.day >= 1 && h.day <= 30 ? h : null;
+}
+/**
+ * Umm al-Qura via Intl (données ICU de l’appareil, hors ligne) — null si indisponible ou faux.
+ * Auto-contrôle sur des dates publiées du calendrier Umm al-Qura : 1 Ramadan 1444 = 23.03.2023,
+ * 1 Chawwal 1445 = 10.04.2024, 1 Ramadan 1446 = 01.03.2025, 1 Chawwal 1446 = 30.03.2025, 1 Ramadan 1447 = 18.02.2026.
+ */
+function uq(): Intl.DateTimeFormat | null {
+  if (uqFmt !== undefined) return uqFmt;
+  uqFmt = null;
+  try {
+    const f = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { timeZone: 'UTC', year: 'numeric', month: 'numeric', day: 'numeric' });
+    if (f.resolvedOptions().calendar !== 'islamic-umalqura' || typeof f.formatToParts !== 'function') return null;
+    const refs: [number, number, number, number, number][] = [
+      [2023, 3, 23, 1444, 9],
+      [2024, 4, 10, 1445, 10],
+      [2025, 3, 1, 1446, 9],
+      [2025, 3, 30, 1446, 10],
+      [2026, 2, 18, 1447, 9],
+    ];
+    for (const [y, m, d, hy, hm] of refs) {
+      const h = uqAt(f, gregorianToJdn(y, m, d));
+      const prev = uqAt(f, gregorianToJdn(y, m, d) - 1);
+      if (!h || h.year !== hy || h.month !== hm || h.day !== 1 || !prev || prev.month !== hm - 1 || prev.day < 29) return null;
+    }
+    uqFmt = f;
+  } catch {
+    uqFmt = null;
+  }
+  return uqFmt;
+}
+/** true si l’appareil fournit un calendrier Umm al-Qura conforme (auto-contrôle réussi). */
+export const umalquraAvailable = () => uq() !== null;
+/** Calendrier demandé dans Réglages (appelé par SettingsProvider). */
+export function setHijriCalendar(c: HijriCalendar | undefined) {
+  CAL = c === 'umalqura' ? 'umalqura' : 'tabular';
+}
+/** Calendrier réellement utilisé (Umm al-Qura demandé mais indisponible → tabulaire). */
+export function hijriCalendar(): HijriCalendar {
+  return CAL === 'umalqura' && uq() ? 'umalqura' : 'tabular';
+}
+function jdnToHijriCal(jdn: number, cal: HijriCalendar): HijriDate {
+  const f = cal === 'umalqura' ? uq() : null;
+  if (!f) return jdnToHijri(jdn);
+  let h = uqCache.get(jdn);
+  if (h === undefined) {
+    h = uqAt(f, jdn);
+    if (uqCache.size > 800) uqCache.clear();
+    uqCache.set(jdn, h);
+  }
+  return h ?? jdnToHijri(jdn);
+}
+function hijriToJdnCal(h: HijriDate, cal: HijriCalendar): number {
+  const est = hijriToJdn(h.year, h.month, h.day);
+  if (cal !== 'umalqura' || !uq()) return est;
+  for (const k of [0, -1, 1, -2, 2, -3, 3]) {
+    const x = jdnToHijriCal(est + k, cal);
+    if (x.year === h.year && x.month === h.month && x.day === h.day) return est + k;
+  }
+  return est;
 }
 
-export function hijriToDate(h: HijriDate, offsetDays = 0): Date {
-  const g = jdnToGregorian(hijriToJdn(h.year, h.month, h.day) - offsetDays);
+/** Date JS (jour civil local) → date hégirienne, avec décalage utilisateur en jours (calendrier choisi). */
+export function toHijri(date: Date, offsetDays = 0, cal: HijriCalendar = hijriCalendar()): HijriDate {
+  return jdnToHijriCal(gregorianToJdn(date.getFullYear(), date.getMonth() + 1, date.getDate()) + offsetDays, cal);
+}
+
+export function hijriToDate(h: HijriDate, offsetDays = 0, cal: HijriCalendar = hijriCalendar()): Date {
+  const g = jdnToGregorian(hijriToJdnCal(h, cal) - offsetDays);
   return new Date(g.year, g.month - 1, g.day, 12);
+}
+
+/** Longueur d’un mois dans le calendrier choisi (tabulaire : règle fixe ; Umm al-Qura : 29 ou 30 selon la table). */
+export function monthLength(year: number, month: number, cal: HijriCalendar = hijriCalendar()): number {
+  if (cal !== 'umalqura' || !uq()) return daysInHijriMonth(year, month);
+  const a = hijriToJdnCal({ year, month, day: 1 }, cal);
+  const b = hijriToJdnCal(month === 12 ? { year: year + 1, month: 1, day: 1 } : { year, month: month + 1, day: 1 }, cal);
+  const n = b - a;
+  return n === 29 || n === 30 ? n : daysInHijriMonth(year, month);
 }
 
 export const HIJRI_MONTHS: Record<'ar' | 'translit', string[]> = {

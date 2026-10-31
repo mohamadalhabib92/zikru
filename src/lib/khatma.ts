@@ -4,7 +4,7 @@
  * et l’écran indique l’avance / le retard et le rythme nécessaire pour finir à temps.
  */
 import { addDays, dayKey, daysBetween } from './dates';
-import { daysInHijriMonth, hijriToDate, toHijri } from './hijri';
+import { hijriToDate, monthLength, toHijri } from './hijri';
 
 export const MUSHAF_PAGES = 604;
 export type Khatma = {
@@ -92,9 +92,9 @@ export function khatmaStatus(k: Khatma, today: string): KhatmaStatus {
  */
 export function ramadanPlan(today: string, offset = 0): { start: string; days: number; year: number; ongoing: boolean } {
   const h = toHijri(new Date(`${today}T12:00:00`), offset);
-  if (h.month === 9) return { start: today, days: daysInHijriMonth(h.year, 9) - h.day + 1, year: h.year, ongoing: true };
+  if (h.month === 9) return { start: today, days: monthLength(h.year, 9) - h.day + 1, year: h.year, ongoing: true };
   const year = h.month < 9 ? h.year : h.year + 1;
-  return { start: dayKey(hijriToDate({ year, month: 9, day: 1 }, offset)), days: daysInHijriMonth(year, 9), year, ongoing: false };
+  return { start: dayKey(hijriToDate({ year, month: 9, day: 1 }, offset)), days: monthLength(year, 9), year, ongoing: false };
 }
 
 /** Enregistre la lecture d’une page : la progression ne recule jamais. */

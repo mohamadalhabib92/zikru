@@ -1,6 +1,6 @@
 import type { Dict } from './i18n';
 import { computeDay, type MethodKey, type Place, type PrayerOpts } from './prayer';
-import { buildPlan, type NotifPrefs, type PauseFn, type PlanLabels } from './notify-plan';
+import { buildPlan, type FastPlan, type NotifPrefs, type PauseFn, type PlanLabels } from './notify-plan';
 
 export function planLabels(tr: Dict, place: string): PlanLabels {
   return {
@@ -26,11 +26,17 @@ export function planLabels(tr: Dict, place: string): PlanLabels {
     pausedBody: tr.paused_b,
     recapTitle: tr.recap_t,
     recapBody: tr.recap_b,
+    suhurTitle: (end) => tr.ram_suhur_t.replace('{t}', end),
+    suhurBody: (fajr) => tr.ram_suhur_b.replace('{f}', fajr).replace('{p}', place),
+    iftarTitle: tr.ram_iftar,
+    iftarBody: tr.ram_iftar_b,
+    zakatTitle: tr.ram_zakat_t,
+    zakatBody: tr.ram_zakat_b,
   };
 }
 
 export type PlanInput = { place: Place; method: MethodKey; madhab: 'shafi' | 'hanafi'; notif: NotifPrefs; prayer?: PrayerOpts };
-/** `pause` : mode dispense (local) — retire les rappels liés à la prière les jours concernés. */
-export function planFor(now: Date, s: PlanInput, tr: Dict, pause?: PauseFn) {
-  return buildPlan(now, (d) => computeDay(d, s.place, s.method, s.madhab, s.prayer), s.notif, planLabels(tr, s.place.label), 63, 30, pause);
+/** `pause` : mode dispense (local) — retire les rappels liés à la prière les jours concernés. `fast` : rappels du Ramadan (facultatifs). */
+export function planFor(now: Date, s: PlanInput, tr: Dict, pause?: PauseFn, fast?: FastPlan) {
+  return buildPlan(now, (d) => computeDay(d, s.place, s.method, s.madhab, s.prayer), s.notif, planLabels(tr, s.place.label), 63, 30, pause, fast);
 }

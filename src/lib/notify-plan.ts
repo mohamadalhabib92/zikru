@@ -5,6 +5,9 @@
  *  2. puis les rappels secondaires (avant l’adhan, vendredi, adhkar, wird, Coran), jour entier par jour entier, du plus proche au plus lointain ;
  *  3. s’il reste de la place, des jours complets supplémentaires ;
  *  + un dernier rappel « ouvrez Zikru » après le dernier jour couvert.
+ * Ramadan (Pass 4, optionnel) : « fin du suhur » et « iftar » sont PRIORITAIRES comme les adhans (étape 1) ;
+ * si l’adhan du Maghrib est activé, l’iftar le renomme (aucun créneau de plus). Heures calmes respectées,
+ * sauf si l’utilisateur autorise explicitement le suhur / l’iftar pendant ces heures.
  * La planification est refaite à chaque ouverture, changement de réglage et à minuit.
  */
 export type FardKey = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -57,17 +60,45 @@ export type PlanLabels = {
   pausedBody: string;
   recapTitle?: string;
   recapBody?: string;
+  /** Ramadan (facultatif) : « Suhur · fin à {t} », « Fajr calculé : {f} · {lieu} », « Iftar », zakat al-fitr. */
+  suhurTitle?: (end: string) => string;
+  suhurBody?: (fajr: string) => string;
+  iftarTitle?: string;
+  iftarBody?: string;
+  zakatTitle?: string;
+  zakatBody?: string;
 };
 
-export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'recap' | 'paused' };
+/**
+ * Rappels du Ramadan (facultatifs, désactivés par défaut). `isFastDay` vient du mode Ramadan (ramadan.ts).
+ * `imsakMin` : marge choisie par l’utilisateur (0 par défaut, aucune marge inventée).
+ */
+export type FastPlan = {
+  isFastDay: (day: Date) => boolean;
+  suhur: boolean;
+  /** Minutes avant la fin du suhur. */
+  suhurLead: number;
+  imsakMin: number;
+  iftar: boolean;
+  /** Autoriser suhur / iftar pendant les heures calmes (choix explicite). */
+  quietOverride: boolean;
+  /** Rappel zakat al-fitr : jour choisi (AAAA-MM-JJ), à 10:00. */
+  zakatDay?: string | null;
+};
+
+export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'recap' | 'paused' | 'suhur' | 'iftar' | 'zakat' };
+/** Rappels placés en priorité (étape 1 du plan) : adhans + suhur / iftar du Ramadan. */
+export const isPriority = (e: PlannedNotif) => e.kind === 'prayer' || e.kind === 'suhur' || e.kind === 'iftar';
 type DayTimes = { key: string; time: Date }[];
 export type ComputeDay = (d: Date) => DayTimes;
 
 const MIN = 60000;
+const two = (n: number) => String(n).padStart(2, '0');
+const hmOf = (d: Date) => `${two(d.getHours())}:${two(d.getMinutes())}`;
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 /** Événements d’un jour civil, triés. */
-export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: PlanLabels): PlannedNotif[] {
+export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: PlanLabels, fast?: FastPlan): PlannedNotif[] {
   const at = (k: string) => times.find((x) => x.key === k)?.time;
   const dk = dayKey(day);
   const out: PlannedNotif[] = [];
@@ -98,7 +129,20 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
   if (prefs.quran === 'isha' && isha) out.push({ id: `${dk}-quran`, date: new Date(isha.getTime() + 30 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
   if (prefs.recap && day.getDay() === 0 && L.recapTitle)
     out.push({ id: `${dk}-recap`, date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 19, 0), title: L.recapTitle, body: L.recapBody ?? '', url: '/goals', kind: 'recap' });
-  return applyQuiet(out.filter((e) => Number.isFinite(e.date.getTime())), prefs.quiet).sort((a, b) => a.date.getTime() - b.date.getTime());
+  if (fast && fast.isFastDay(day)) {
+    if (fast.suhur && fajr && L.suhurTitle) {
+      const end = new Date(fajr.getTime() - Math.max(0, fast.imsakMin) * MIN);
+      out.push({ id: `${dk}-suhur`, date: new Date(end.getTime() - Math.max(0, fast.suhurLead) * MIN), title: L.suhurTitle(hmOf(end)), body: L.suhurBody?.(hmOf(fajr)) ?? L.place, url: '/ramadan?s=compte', kind: 'suhur' });
+    }
+    if (fast.iftar && maghrib && L.iftarTitle) {
+      const adhan = out.find((e) => e.id === `${dk}-maghrib`);
+      if (adhan) adhan.title = `${L.iftarTitle} · ${adhan.title}`;
+      else out.push({ id: `${dk}-iftar`, date: maghrib, title: `${L.iftarTitle} · ${L.prayer.maghrib}`, body: L.iftarBody ?? L.place, url: '/ramadan?s=compte', kind: 'iftar' });
+    }
+  }
+  if (fast?.zakatDay === dk && L.zakatTitle)
+    out.push({ id: `${dk}-zakat`, date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 10, 0), title: L.zakatTitle, body: L.zakatBody ?? '', url: '/ramadan?s=zakat', kind: 'zakat' });
+  return applyQuiet(out.filter((e) => Number.isFinite(e.date.getTime())), prefs.quiet, fast?.quietOverride).sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 const hm = (v: string) => {
@@ -113,18 +157,22 @@ export function inQuiet(d: Date, q?: QuietHours): boolean {
   const x = d.getHours() * 60 + d.getMinutes();
   return a < b ? x >= a && x < b : x >= a || x < b;
 }
-/** Retire les rappels secondaires tombant dans les heures calmes ; les adhans (kind « prayer ») ne sont jamais retirés ici. */
-export function applyQuiet(ev: PlannedNotif[], q?: QuietHours): PlannedNotif[] {
-  return q?.on ? ev.filter((e) => e.kind === 'prayer' || !inQuiet(e.date, q)) : ev;
+/**
+ * Retire les rappels secondaires tombant dans les heures calmes ; les adhans (kind « prayer ») ne sont jamais retirés ici.
+ * Suhur / iftar : retirés aussi, sauf si `keepFast` (autorisation explicite de l’utilisateur).
+ */
+export function applyQuiet(ev: PlannedNotif[], q?: QuietHours, keepFast = false): PlannedNotif[] {
+  return q?.on ? ev.filter((e) => e.kind === 'prayer' || (keepFast && (e.kind === 'suhur' || e.kind === 'iftar')) || !inQuiet(e.date, q)) : ev;
 }
 
 /**
  * Mode dispense (local) : pour un jour donné, « prayers » retire les rappels liés à la prière
- * (adhan, avant l’adhan, Jumu‘a) ; « all » retire aussi les autres rappels. Aucune règle de fiqh ici : c’est un choix de l’utilisateur.
+ * (adhan, avant l’adhan, Jumu‘a, et suhur / iftar du Ramadan) ; « all » retire aussi les autres rappels.
+ * Aucune règle de fiqh ici : c’est un choix de l’utilisateur.
  */
 export type PauseLevel = 'none' | 'prayers' | 'all';
 export type PauseFn = (day: Date) => PauseLevel;
-const PRAYER_LINKED = (e: PlannedNotif) => e.kind === 'prayer' || e.kind === 'before' || e.id.endsWith('-jumua');
+const PRAYER_LINKED = (e: PlannedNotif) => e.kind === 'prayer' || e.kind === 'before' || e.kind === 'suhur' || e.kind === 'iftar' || e.id.endsWith('-jumua');
 export function applyPause(ev: PlannedNotif[], level: PauseLevel): PlannedNotif[] {
   if (level === 'all') return [];
   if (level === 'prayers') return ev.filter((e) => !PRAYER_LINKED(e));
@@ -138,19 +186,19 @@ export const PRIORITY_DAYS = 8;
  * Plan glissant priorisé (voir en-tête) : jamais plus de `max` (63) + 1 rappel « en pause » ≤ 64.
  * Un jour de rappels secondaires n’est ajouté que s’il tient entièrement (jamais de journée coupée au milieu).
  */
-export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: PlanLabels, max = 63, maxDays = 30, pause?: PauseFn): PlannedNotif[] {
+export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: PlanLabels, max = 63, maxDays = 30, pause?: PauseFn, fast?: FastPlan): PlannedNotif[] {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
   const days: { day: Date; ev: PlannedNotif[] }[] = [];
   for (let i = 0; i < maxDays; i++) {
     const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 12);
-    const ev = eventsForDay(day, compute(day), prefs, L).filter((e) => e.date.getTime() > now.getTime() + 5000);
+    const ev = eventsForDay(day, compute(day), prefs, L, fast).filter((e) => e.date.getTime() > now.getTime() + 5000);
     days.push({ day, ev: applyPause(ev, pause?.(day) ?? 'none') });
   }
   const out: PlannedNotif[] = [];
-  // 1. Adhans des prières obligatoires d’abord.
+  // 1. Adhans des prières obligatoires (et suhur / iftar du Ramadan) d’abord.
   let covered = -1;
   for (let i = 0; i < Math.min(PRIORITY_DAYS, days.length); i++) {
-    const p = days[i].ev.filter((e) => e.kind === 'prayer');
+    const p = days[i].ev.filter(isPriority);
     if (out.length + p.length > max) break;
     out.push(...p);
     covered = i;
@@ -158,7 +206,7 @@ export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: 
   // 2. Rappels secondaires de ces mêmes jours, du plus proche au plus lointain, par jours entiers.
   let complete = true;
   for (let i = 0; i <= covered; i++) {
-    const sec = days[i].ev.filter((e) => e.kind !== 'prayer');
+    const sec = days[i].ev.filter((e) => !isPriority(e));
     if (out.length + sec.length > max) {
       complete = false;
       break;

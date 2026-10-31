@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { planFor } from './reminders-common';
 import { useDispense } from './dispense-context';
+import { useRamadan } from './ramadan-store';
 import { useSettings } from './settings';
 
 /**
@@ -43,12 +44,13 @@ export async function sendTestNotification(title: string, body: string) {
 export function usePrayerReminders() {
   const { s, t: tr, ready } = useSettings();
   const { pause } = useDispense();
+  const { fast } = useRamadan();
   useEffect(() => {
     if (!ready || !s.reminders || !remindersSupported() || Notification.permission !== 'granted') return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
       const now = new Date();
-      const next = planFor(now, s, tr, pause).find((e) => e.kind !== 'paused' && e.date.getTime() > now.getTime() + 1000);
+      const next = planFor(now, s, tr, pause, fast).find((e) => e.kind !== 'paused' && e.date.getTime() > now.getTime() + 1000);
       if (!next) return;
       const delay = Math.min(next.date.getTime() - now.getTime(), 2 ** 31 - 1);
       timer = setTimeout(() => {
@@ -60,5 +62,5 @@ export function usePrayerReminders() {
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, tr, pause]);
+  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, tr, pause, fast]);
 }

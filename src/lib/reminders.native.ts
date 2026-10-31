@@ -5,6 +5,7 @@ import { AppState, Platform } from 'react-native';
 import { planHash } from './notify-plan';
 import { planFor } from './reminders-common';
 import { useDispense } from './dispense-context';
+import { useRamadan } from './ramadan-store';
 import { useSettings } from './settings';
 import { loadJSON, saveJSON } from './storage';
 
@@ -93,7 +94,7 @@ async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
     await Notifications.scheduleNotificationAsync({
       identifier: e.id,
       content: { title: e.title, body: e.body, sound: 'default', data: { url: e.url, kind: e.kind } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date, channelId: e.kind === 'prayer' || e.kind === 'before' || e.kind === 'paused' ? CHANNEL : CHANNEL_OTHER },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date, channelId: e.kind === 'prayer' || e.kind === 'before' || e.kind === 'paused' || e.kind === 'suhur' || e.kind === 'iftar' ? CHANNEL : CHANNEL_OTHER },
     });
   }
   await saveJSON(HASH_KEY, hash);
@@ -103,8 +104,9 @@ export function usePrayerReminders() {
   const { s, t: tr, ready } = useSettings();
   const router = useRouter();
   const { pause } = useDispense();
-  const latest = useRef({ s, tr, pause });
-  latest.current = { s, tr, pause };
+  const { fast } = useRamadan();
+  const latest = useRef({ s, tr, pause, fast });
+  latest.current = { s, tr, pause, fast };
 
   // Ouverture depuis une notification → écran concerné.
   useEffect(() => {
@@ -121,7 +123,7 @@ export function usePrayerReminders() {
     if (!ready) return;
     const run = () => {
       const { s: cur, tr: t } = latest.current;
-      const job = (running ?? Promise.resolve()).then(() => sync(cur.reminders, () => planFor(new Date(), cur, t, latest.current.pause))).catch(() => {});
+      const job = (running ?? Promise.resolve()).then(() => sync(cur.reminders, () => planFor(new Date(), cur, t, latest.current.pause, latest.current.fast))).catch(() => {});
       running = job;
     };
     run();
@@ -141,5 +143,5 @@ export function usePrayerReminders() {
       sub.remove();
       clearTimeout(timer);
     };
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, s.lang, pause]);
+  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, s.lang, pause, fast]);
 }

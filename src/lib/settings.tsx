@@ -5,6 +5,7 @@ import { resolveDefaultMethod } from './app-placeholders';
 import { usePersistentState } from './storage';
 import { setUiLang, UiLangContext } from './l10n';
 import { DEFAULT_NOTIF, DEFAULT_QUIET, type NotifPrefs } from './notify-plan';
+import { setHijriCalendar, type HijriCalendar } from './hijri';
 
 export type Settings = {
   lang: Lang;
@@ -15,6 +16,8 @@ export type Settings = {
   /** true si l’utilisateur a choisi l’Asr lui-même ; sinon il suit l’école de fiqh. */
   asrManual?: boolean;
   hijriOffset: number;
+  /** Calendrier hégirien : tabulaire (défaut) ou Umm al-Qura (si l’appareil le fournit, auto-contrôlé ; sinon repli tabulaire). */
+  hijriCalendar?: HijriCalendar;
   onboarded: boolean;
   /** Apparence : suit le système par défaut. */
   appearance: 'system' | 'light' | 'dark';
@@ -42,6 +45,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const prayer = useMemo(() => mergePrayer(s.prayer), [prayerKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const merged = { ...DEFAULTS, ...s, notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers }, quiet: { ...DEFAULT_QUIET, ...s.notif?.quiet } }, prayer };
   setUiLang(merged.lang);
+  setHijriCalendar(merged.hijriCalendar);
   return (
     <C.Provider value={{ s: merged, set: (p) => setS((prev) => ({ ...DEFAULTS, ...prev, ...p })), t: DICTS[merged.lang] ?? DICTS.fr, ready }}>
       <UiLangContext.Provider value={merged.lang}>{children}</UiLangContext.Provider>
