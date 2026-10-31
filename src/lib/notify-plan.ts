@@ -76,8 +76,8 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
     if (dhuhr) out.push({ id: `${dk}-jumua`, date: new Date(dhuhr.getTime() - 45 * MIN), title: L.jumuaTitle, body: L.jumuaBody, url: '/prayers', kind: 'friday' });
   }
   if (prefs.adhkar) {
-    if (fajr) out.push({ id: `${dk}-adhkar-am`, date: new Date((sunrise ?? fajr).getTime() - 20 * MIN), title: L.morningTitle, body: L.adhkarBody, url: '/dhikr', kind: 'adhkar' });
-    if (asr) out.push({ id: `${dk}-adhkar-pm`, date: new Date(asr.getTime() + 20 * MIN), title: L.eveningTitle, body: L.adhkarBody, url: '/dhikr', kind: 'adhkar' });
+    if (fajr) out.push({ id: `${dk}-adhkar-am`, date: new Date((sunrise ?? fajr).getTime() - 20 * MIN), title: L.morningTitle, body: L.adhkarBody, url: '/adhkar?m=matin', kind: 'adhkar' });
+    if (asr) out.push({ id: `${dk}-adhkar-pm`, date: new Date(asr.getTime() + 20 * MIN), title: L.eveningTitle, body: L.adhkarBody, url: '/adhkar?m=soir', kind: 'adhkar' });
   }
   if (prefs.wird) {
     if (fajr) out.push({ id: `${dk}-wird-am`, date: new Date(fajr.getTime() + 30 * MIN), title: L.wirdMorning, body: L.wirdBody, url: '/tijani?tab=wird', kind: 'wird' });

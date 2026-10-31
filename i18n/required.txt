@@ -17,6 +17,7 @@ src/app/community.tsx
 src/app/config.tsx
 src/app/content-admin.tsx
 src/app/dhikr.tsx
+src/app/adhkar.tsx
 src/app/duas.tsx
 src/app/family/[id].tsx
 src/app/fiqh.tsx

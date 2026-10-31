@@ -18,6 +18,7 @@ export default function More() {
     {
       title: tr.spiritual_path,
       items: [
+        { icon: 'sunny', title: 'Adhkar du jour', sub: 'Matin, soir, après la prière, avant de dormir', href: '/adhkar', color: b.teal },
         { icon: 'leaf', title: 'Tariqa Tijaniyya', sub: 'Wird, wazifa, haylala', href: '/tijani', color: b.green },
         { icon: 'trending-up', title: 'Mon parcours', sub: 'Niveaux, séries, statistiques', href: '/journey', color: b.wirdGreen },
         { icon: 'checkmark-done', title: 'Habitudes', sub: 'Suivi quotidien', href: '/habits', color: b.teal },

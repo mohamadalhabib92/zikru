@@ -15,6 +15,7 @@ import { QURAN_DUAS } from './quran-duas';
 import { FATIHA_AR, FATIHA_EN, FATIHA_FR } from './fatiha';
 import { NURANI_LETTERS, NURANI_MNEMONIC } from './nuraniyya';
 import { FATIHA_ORDER_FLAG, PRACTICES } from './tijani';
+import { ADHKAR_IDS, ADHKAR_MOMENTS, ADHKAR_TO_COMPLETE, adhkarFor, MOMENT_LABEL } from './adhkar';
 
 const TO_REVIEW = 'traduction à relire (Zikru, assistée par machine puis revue)';
 const QD_EN = Object.fromEntries(QURAN_DUAS.map((q) => [q.id, q.en ?? '']));
@@ -129,6 +130,7 @@ export function reviewRows(): ReviewRow[] {
     });
   }
   rows.push(...p5Rows());
+  rows.push(...adhkarRows());
   return rows;
 }
 
@@ -172,6 +174,50 @@ function p5Rows(): ReviewRow[] {
       note: 'Vérifier le libellé arabe exact de chaque recueil avant validation.',
     }),
   );
+  return out;
+}
+
+/** Passe 2 : classement des adhkar par moment (textes déjà présents) et adhkar dont la source manque. */
+function adhkarRows(): ReviewRow[] {
+  const out: ReviewRow[] = [];
+  for (const m of ADHKAR_MOMENTS) {
+    const uid = `adhkar:moment:${m}`;
+    const st = reviewFor(uid).status;
+    out.push({
+      uid,
+      kind: 'texte',
+      group: 'Adhkar — classement par moment',
+      title: `${MOMENT_LABEL[m]} : liste et ordre`,
+      arabic: '',
+      french: adhkarFor(m).map((d, i) => `${i + 1}. ${d.title}${d.reps && d.reps > 1 ? ` ×${d.reps}` : ''} (${d.ref})`).join(' '),
+      english: '',
+      englishState: 'sans objet',
+      source: 'Classement d’après le champ « moment » de chaque invocation de l’app, dans l’esprit de Ḥiṣn al-Muslim (al-Qaḥṭānī) — correspondance à confirmer',
+      grading: 'Voir la ligne de chaque invocation',
+      status: st,
+      statusLabel: REVIEW_LABEL[st],
+      note: `Identifiants : ${ADHKAR_IDS[m].join(', ')}. Vérifier que chaque texte convient à ce moment (ex. formule du matin / du soir) et l’ordre.`,
+    });
+  }
+  for (const x of ADHKAR_TO_COMPLETE) {
+    const r = reviewFor(x.uid);
+    const st: ReviewStatus = r.status === 'a_valider' ? 'source_a_completer' : r.status;
+    out.push({
+      uid: x.uid,
+      kind: 'texte',
+      group: 'Adhkar — à ajouter après vérification',
+      title: x.title,
+      arabic: '',
+      french: '',
+      english: '',
+      englishState: 'sans objet',
+      source: '',
+      grading: '',
+      status: st,
+      statusLabel: REVIEW_LABEL[st],
+      note: `${x.moments.map((m) => MOMENT_LABEL[m]).join(', ')} — ${x.todo}`,
+    });
+  }
   return out;
 }
 
