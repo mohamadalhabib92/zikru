@@ -17,7 +17,7 @@ export type ZikrItem = {
   fr?: string;
   reps: number;
   /** Texte importé par copier-coller ou photo (reconnaissance de texte sur l’appareil). */
-  via?: 'paste' | 'photo';
+  via?: 'paste' | 'photo' | 'pdf';
   /** Vrai si le texte n’a pas été reconnu tel quel dans le Coran : à présenter « non vérifié », jamais comme sourcé. */
   unverified?: boolean;
   /** Photo d’origine (fichier local de l’appareil, jamais envoyé ni partagé). */
