@@ -14,4 +14,5 @@ export { default as Meditation } from './screens/meditation';
 export { default as Jeux } from './screens/jeux';
 export { default as Noms } from './screens/noms';
 export { default as Tajwid } from './screens/tajwid';
+export { default as Gratitude } from './screens/gratitude';
 export { bienEtreRows } from '@/lib/review-bien-etre';

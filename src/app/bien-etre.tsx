@@ -4,7 +4,7 @@ import { ActivityIndicator } from 'react-native';
 import { brand as b } from '@/ui/theme';
 
 /**
- * Route unique et légère du module bien-être (/bien-etre?s=respiration|meditation|jeux|noms|tajwid ; sans « s » : accueil).
+ * Route unique et légère du module bien-être (/bien-etre?s=respiration|meditation|jeux|noms|tajwid|gratitude ; sans « s » : accueil).
  * Écrans, données et traductions sont chargés à la demande, en un seul morceau, hors chargement initial de la PWA.
  */
 const load = () => import('@/components/bien-etre/module');
@@ -15,6 +15,7 @@ const SCREENS = {
   jeux: lazy(() => load().then((m) => ({ default: m.Jeux }))),
   noms: lazy(() => load().then((m) => ({ default: m.Noms }))),
   tajwid: lazy(() => load().then((m) => ({ default: m.Tajwid }))),
+  gratitude: lazy(() => load().then((m) => ({ default: m.Gratitude }))),
 };
 
 export default function BienEtreRoute() {

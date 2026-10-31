@@ -108,3 +108,4 @@ src/components/ramadan/screens/tarawih.tsx
 src/components/ramadan/screens/nuits.tsx
 src/components/ramadan/screens/zakat.tsx
 src/components/ramadan/screens/carte.tsx
+src/components/bien-etre/screens/gratitude.tsx

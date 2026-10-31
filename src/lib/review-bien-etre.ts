@@ -33,6 +33,12 @@ export function bienEtreRows(): ReviewRow[] {
       source: 'Noms : liste de at-Tirmidhī 3507. « Hū » à l’expiration (usage soufi) non proposé : aucune source dans le catalogue.',
       note: 'Avis demandé : convient-il d’associer un Nom au souffle ? Faut-il proposer « Hū » ou « Lā ilāha illā Llāh » (inspiration / expiration), et avec quelle source ?',
     }),
+    row('gratitude:hamd', 'Bien-être — gratitude', 'Clôture du journal de gratitude : « al-ḥamdu li-llāh »', {
+      arabic: 'ٱلْحَمْدُ لِلَّٰهِ',
+      french: 'Après avoir noté jusqu’à trois bienfaits du soir, la séance se clôt sur al-ḥamdu li-llāh (arabe et translittération, sans traduction affichée).',
+      source: 'Formule reprise du catalogue (entrée « alhamdulillah », marquée Exemple) : Ṣaḥīḥ Muslim, n° 597, qui concerne le taḥmīd après la prière. Aucune source propre au remerciement pour les bienfaits dans le catalogue.',
+      note: 'Avis demandé : confirmer la formule pour ce contexte et fournir une référence adaptée (shukr des bienfaits), ou indiquer qu’il faut garder « Source à compléter ».',
+    }),
     row('names:flashcards', 'Bien-être — cartes des 99 Noms', 'Sens des Noms affichés au dos des cartes', {
       source: 'Liste : at-Tirmidhī 3507. Sens : traduction Zikru (fr) et NAMES_EN (en), sans source par sens.',
       note: 'Chaque carte porte la mention « Sens à relire ». Relire les 99 sens (fr, en).',

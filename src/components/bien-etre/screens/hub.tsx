@@ -16,6 +16,7 @@ export default function BienEtre() {
     { icon: 'moon-outline', title: 'Tafakkur & murāqaba', sub: 'Contempler un verset, 3 à 10 min', href: '/bien-etre?s=meditation', color: b.indigo },
     { icon: 'extension-puzzle-outline', title: 'Jeux du Coran', sub: 'Ordre des mots · mot manquant · suite du verset', href: '/bien-etre?s=jeux', color: b.green },
     { icon: 'sparkles-outline', title: 'Cartes des 99 Noms', sub: 'Rappel actif avec répétition espacée', href: '/bien-etre?s=noms', color: b.goldDeep },
+    { icon: 'heart-outline', title: 'Gratitude', sub: 'Trois bienfaits du soir · privé, sans série', href: '/bien-etre?s=gratitude', color: b.goldDeep },
     { icon: 'color-palette-outline', title: 'Tajwid', sub: 'Leçons par règle · quiz', href: '/bien-etre?s=tajwid', color: b.rust },
   ];
   return (
