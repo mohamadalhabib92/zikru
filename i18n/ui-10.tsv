@@ -1,0 +1,32 @@
+# Passe 1 : options des horaires (latitudes élevées, ajustements, mosquée) et pause des rappels (31.10.2026) (ar : traduction à relire)
+Automatique (recommandé)	Automatic (recommended)	تلقائي (موصى به)
+Milieu de la nuit	Middle of the night	منتصف الليل
+Septième de la nuit	Seventh of the night	سُبع الليل
+Angle du crépuscule	Twilight angle	زاوية الشفق
+Latitudes élevées (Fajr et Isha quand la nuit est courte)	High latitudes (Fajr and Isha when nights are short)	خطوط العرض العالية (الفجر والعشاء حين يقصر الليل)
+Ajustements (minutes, ±{n} max)	Adjustments (minutes, ±{n} max)	تعديلات (بالدقائق، ±{n} كحد أقصى)
+{p} : {n} minutes	{p}: {n} minutes	{p}: {n} دقيقة
+Horaires de ma mosquée	My mosque’s times	مواقيت مسجدي
+Horaire de ma mosquée	My mosque’s time	توقيت مسجدي
+Remplace le calcul par les horaires affichés par ta mosquée (format 05:42). Une case vide garde l’horaire calculé.	Replaces the calculation with the times posted by your mosque (format 05:42). An empty box keeps the calculated time.	يستبدل الحساب بالمواقيت التي يعلنها مسجدك (بصيغة 05:42). الخانة الفارغة تُبقي التوقيت المحسوب.
+Nom de la mosquée (facultatif)	Mosque name (optional)	اسم المسجد (اختياري)
+Format attendu : 05:42	Expected format: 05:42	الصيغة المطلوبة: 05:42
+Ces horaires sont répétés chaque jour : pense à les mettre à jour quand ta mosquée change d’horaires.	These times repeat every day: remember to update them when your mosque changes its timetable.	تتكرر هذه المواقيت كل يوم: تذكّر تحديثها عندما يغيّر مسجدك جدوله.
+Horaires calculés : vérifie avec ta mosquée locale.	Calculated times: check with your local mosque.	مواقيت محسوبة: تحقّق منها مع مسجدك المحلي.
+Ajuster les horaires	Adjust times	ضبط المواقيت
+Pause des rappels	Pause reminders	إيقاف التذكيرات مؤقتًا
+Met en pause les rappels de prière et gèle tes séries sans les casser. Reste uniquement sur cet appareil : jamais synchronisé ni partagé.	Pauses prayer reminders and freezes your streaks without breaking them. Stays only on this device: never synced or shared.	يوقف تذكيرات الصلاة مؤقتًا ويجمّد سلاسلك دون أن يقطعها. يبقى على هذا الجهاز فقط: لا يُزامَن ولا يُشارَك أبدًا.
+Mettre aussi en pause les autres rappels	Also pause other reminders	إيقاف التذكيرات الأخرى أيضًا
+Adhkar, wird, Coran, al-Kahf.	Adhkar, wird, Quran, al-Kahf.	الأذكار، الورد، القرآن، الكهف.
+En pause depuis le {a}, reprise automatique le {b}.	Paused since {a}, resumes automatically on {b}.	متوقف منذ {a}، يُستأنف تلقائيًا في {b}.
+En pause depuis le {a}.	Paused since {a}.	متوقف منذ {a}.
+Reprendre maintenant	Resume now	استئناف الآن
+Reprise automatique après (jours, facultatif)	Resume automatically after (days, optional)	الاستئناف التلقائي بعد (أيام، اختياري)
+Laisse vide pour reprendre toi-même.	Leave empty to resume yourself.	اتركه فارغًا لتستأنف بنفسك.
+Entre un nombre entre 1 et {n}.	Enter a number between 1 and {n}.	أدخل رقمًا بين 1 و{n}.
+Mettre en pause	Pause	إيقاف مؤقت
+Effacer l’historique des pauses	Clear pause history	مسح سجل الإيقاف
+Les séries passées pourront alors être recalculées sans ces jours neutres.	Past streaks may then be recalculated without these neutral days.	قد يُعاد حينها حساب السلاسل السابقة دون هذه الأيام المحايدة.
+Règle hautes latitudes choisie dans les réglages : elle remplace la règle recommandée.	High-latitude rule chosen in settings: it replaces the recommended rule.	قاعدة خطوط العرض العالية المختارة في الإعدادات: تحلّ محل القاعدة الموصى بها.
+UOIF : Fajr 12°, Isha 12° (angles de la méthode « Union des organisations islamiques de France », repris par AlAdhan et PrayTimes). Ces angles sont débattus : vérifie avec ta mosquée locale.	UOIF: Fajr 12°, Isha 12° (angles of the “Union des organisations islamiques de France” method, as used by AlAdhan and PrayTimes). These angles are debated: check with your local mosque.	UOIF: الفجر 12°، العشاء 12° (زاويتا طريقة «اتحاد المنظمات الإسلامية في فرنسا» كما تعتمدها AlAdhan وPrayTimes). هاتان الزاويتان محلّ نقاش: تحقّق مع مسجدك المحلي.
+Ajustements (±30 min) et « Horaires de ma mosquée » : appliqués uniquement sur cet appareil, prioritaires sur le calcul.	Adjustments (±30 min) and “My mosque’s times”: applied only on this device, taking priority over the calculation.	التعديلات (±30 دقيقة) و«مواقيت مسجدي»: تُطبَّق على هذا الجهاز فقط، وتتقدّم على الحساب.

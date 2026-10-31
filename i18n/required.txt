@@ -80,3 +80,5 @@ src/ui/ds.tsx
 src/ui/kit.tsx
 src/ui/light.tsx
 src/components/zikr/ImportText.tsx
+src/components/PrayerOptions.tsx
+src/components/DispenseSettings.tsx

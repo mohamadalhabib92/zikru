@@ -9,6 +9,7 @@ import { askBilal, BilalError } from '@/lib/bilal';
 import { useData } from '@/lib/data';
 import { DUAS_LIST } from '@/lib/duas';
 import { dayKey, streak, useGrowth } from '@/lib/growth';
+import { useDispense } from '@/lib/dispense-context';
 import { formatHijri } from '@/lib/hijri';
 import { isKahfTime } from '@/lib/kahf';
 import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } from '@/lib/prayer';
@@ -48,6 +49,7 @@ export default function Home() {
   const { tasbih, content } = useData();
   const { zikrs } = useZikrs();
   const g = useGrowth();
+  const { neutral } = useDispense();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { tablet, wide, width } = useLayout({ inTabs: true });
@@ -90,11 +92,11 @@ export default function Home() {
   }, [s.place.lat, s.place.lng, s.place.label, weatherOk]);
 
   const { next, list, maghrib } = useMemo(() => {
-    const today = computeDay(now, s.place, s.method, s.madhab);
-    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab);
+    const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
+    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { next: withStates(today, now, tomorrow[0].time).next, list: today, maghrib: today.find((x) => x.key === 'maghrib')?.time };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab]);
+  }, [Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab, s.prayer]);
 
   const period = periodFor(now);
   const pool = REFLECTIONS[period];
@@ -110,7 +112,7 @@ export default function Home() {
       const text = await askBilal({ mode: 'reflection', period });
       setAiText({ key: aiKey, text });
     } catch (e) {
-      if (e instanceof BilalError && (e.code === 'not_configured' || e.code === 'auth')) aiUnavailable = true;
+      if (e instanceof BilalError && (e.code === 'not_configured' || e.code === 'auth' || e.code === 'unavailable' || e.code === 'quota')) aiUnavailable = true;
       if (force) setReflIdx((i) => i + 1);
     } finally {
       setAiBusy(false);
@@ -130,7 +132,7 @@ export default function Home() {
   const prayedToday = g.prayed[today] ?? [];
   const names = Object.fromEntries(list.map((p) => [p.key, tr[p.key]])) as Record<PrayerKey, string>;
   const dhikrToday = g.days[today] ?? 0;
-  const st = streak((k) => (g.days[k] ?? 0) > 0);
+  const st = streak((k) => (g.days[k] ?? 0) > 0, new Date(), neutral);
   const kahfTime = kahfReminder && isKahfTime(now, maghrib);
   const greet = now.getHours() < 17 ? tr.greet_morning : tr.greet_evening;
   const doy = dayOfYear(now);
@@ -265,7 +267,7 @@ export default function Home() {
   const hq = dailyQueue(qCards, today);
   const hqN = queueSize(hq);
   const tracked = Object.keys(qCards).length;
-  const qStreak = readStreak(qDays, today);
+  const qStreak = readStreak(qDays, today, neutral);
   const lastHref: Href = quranLast ? (quranLast.mode === 'page' ? { pathname: '/quran/mushaf', params: { p: String(quranLast.page ?? pageOf(quranLast.n, quranLast.ayah)) } } : { pathname: '/quran/[n]', params: { n: String(quranLast.n), a: String(quranLast.ayah) } }) : '/quran';
   const quranCard = (
     <FadeIn delay={80}>

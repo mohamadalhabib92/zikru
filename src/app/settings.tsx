@@ -9,6 +9,8 @@ import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
+import { DispenseSettings } from '@/components/DispenseSettings';
+import { PrayerOptions } from '@/components/PrayerOptions';
 import { useSettings } from '@/lib/settings';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
@@ -58,6 +60,7 @@ export default function SettingsScreen() {
       <Spacer h={20} />
 
       <NotifSettings />
+      <DispenseSettings />
       <H2>{tr.location}</H2>
       <Muted>
         {s.place.label}
@@ -92,6 +95,7 @@ export default function SettingsScreen() {
           <ListItem key={k} title={METHODS[k]} icon={s.method === k ? 'radio-button-on' : 'radio-button-off'} onPress={() => set({ method: k })} />
         ))}
       </Card>
+      <PrayerOptions />
       <Spacer />
       <Segmented
         label={tr.onb_madhab}
