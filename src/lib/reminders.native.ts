@@ -26,8 +26,9 @@ const CHANNEL = 'prayers';
 const CHANNEL_OTHER = 'reminders';
 async function ensureChannel() {
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: Notifications.AndroidImportance.HIGH, sound: 'default' });
-    await Notifications.setNotificationChannelAsync(CHANNEL_OTHER, { name: 'Rappels (adhkar, wird, Coran, bilan)', importance: Notifications.AndroidImportance.DEFAULT, sound: 'default' });
+    const imp = Notifications.AndroidImportance;
+    await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: imp.HIGH, sound: 'default' });
+    await Notifications.setNotificationChannelAsync(CHANNEL_OTHER, { name: 'Rappels (adhkar, wird, Coran, bilan)', importance: imp.DEFAULT, sound: 'default' });
   }
 }
 

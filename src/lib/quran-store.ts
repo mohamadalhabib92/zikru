@@ -54,6 +54,8 @@ export const lastRead = shared<LastRead | null>('quran-last', null);
 export const khatma = shared<Khatma | null>('qr-khatma', null);
 /** Jours où l’utilisateur a lu (AAAA-MM-JJ), pour la série. */
 export const readDays = shared<string[]>('qr-days', []);
+/** Pages terminées par jour (objectif « pages de Coran ») ; 120 jours gardés, local uniquement. */
+export const pagesDay = shared<Record<string, number[]>>('qr-pages-day', {});
 
 export type HifzPrefs = { each: number; times: number; gap: Gap; hide: HideMode; rate: number; reciter: string | null };
 export type HideMode = 'none' | 'first' | 'alt' | 'all' | 'blur';
@@ -66,11 +68,22 @@ const ref = (s: number, a: number) => `${s}:${a}`;
 export const keyOf = ref;
 
 /** Note la lecture d’un verset : dernière lecture, jour de lecture et, si une khatma est en cours, la page. */
+/** Note une page terminée aujourd’hui (objectif du jour, local uniquement). */
+export function logPageRead(page: number, today = dayKey()) {
+  if (!(page >= 1 && page <= 604)) return;
+  const pd = pagesDay.get();
+  const cur = pd[today] ?? [];
+  if (cur.includes(page)) return;
+  const next = { ...pd, [today]: [...cur, page] };
+  pagesDay.set(Object.fromEntries(Object.entries(next).sort(([a], [b]) => (a < b ? 1 : -1)).slice(0, 120)));
+}
+
 export function recordRead(s: number, a: number, mode: 'verse' | 'page', opts: { page?: number; pageDone?: number } = {}) {
   const today = dayKey();
   lastRead.set({ n: s, ayah: a, page: opts.page ?? pageOf(s, a), at: Date.now(), mode });
   const days = readDays.get();
   if (days[days.length - 1] !== today) readDays.set([...days.filter((d) => d !== today), today].slice(-400));
+  if (opts.pageDone) logPageRead(opts.pageDone, today);
   const k = khatma.get();
   if (k && !k.finished && opts.pageDone) {
     const rel = opts.pageDone - k.from + 1;

@@ -83,3 +83,5 @@ src/ui/light.tsx
 src/components/zikr/ImportText.tsx
 src/components/PrayerOptions.tsx
 src/components/DispenseSettings.tsx
+src/app/goals.tsx
+src/components/GoalsLink.tsx

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { GoalsLink } from '@/components/GoalsLink';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey, useGrowth, type Block } from '@/lib/growth';
 import { AR_NAMES, computeDay, hhmm } from '@/lib/prayer';
@@ -36,6 +37,7 @@ export default function Planner() {
         <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>Organisez votre journée autour des prières · {tasks.length ? L('{a}/{b} faites', { a: done, b: tasks.length }) : 'aucune tâche'}</Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
+        <GoalsLink />
         {BLOCKS.map((bl) => {
           const list = tasks.filter((t) => t.block === bl.key);
           const cur = bl.key === currentBlock;

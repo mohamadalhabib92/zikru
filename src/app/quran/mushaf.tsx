@@ -14,7 +14,7 @@ import { dayKey } from '@/lib/dates';
 import { khatmaStatus, markPage } from '@/lib/khatma';
 import { arNum, fromIndex, gIndex, hizbOfIndex, juzOfIndex, juzRange, pageOf, pageRange, rubStartAt, TOTAL_PAGES } from '@/lib/quran-nav';
 import { BASMALA_UTHMANI } from '@/lib/quran-reader-data';
-import { keyOf, khatma as khatmaStore, marks, readerPrefs, recordRead, type Marks } from '@/lib/quran-store';
+import { keyOf, khatma as khatmaStore, logPageRead, marks, readerPrefs, recordRead, type Marks } from '@/lib/quran-store';
 import { buildQueue } from '@/lib/recitation';
 import { useShared } from '@/lib/shared-state';
 import { SURAHS } from '@/lib/surahs';
@@ -207,7 +207,11 @@ export default function Mushaf() {
                 icon={pageDoneInKhatma ? 'checkmark-done' : 'checkmark'}
                 label={pageDoneInKhatma ? 'Lue' : 'Page lue'}
                 active={pageDoneInKhatma}
-                onPress={() => k && setK(markPage(k, page, today))}
+                onPress={() => {
+                  if (!k) return;
+                  setK(markPage(k, page, today));
+                  logPageRead(page);
+                }}
                 pal={pal}
               />
             ) : null}

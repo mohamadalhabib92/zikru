@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { GoalsLink } from '@/components/GoalsLink';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { useData } from '@/lib/data';
 import { bestStreak, dayKey, LEVELS, levelFor, streak, useGrowth } from '@/lib/growth';
@@ -57,6 +58,7 @@ export default function Journey() {
         </Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
+        <GoalsLink />
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
           {[
             { l: 'Aujourd’hui', v: today.toLocaleString('fr-CH'), i: 'today' as IconName, c: b.green },

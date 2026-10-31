@@ -104,6 +104,7 @@ function Root() {
         <Stack.Screen name="hadiths" options={{ title: L("Hadiths") }} />
         <Stack.Screen name="duas" options={{ title: L("Du‘as prophétiques") }} />
         <Stack.Screen name="adhkar" options={{ title: L("Adhkar du jour") }} />
+        <Stack.Screen name="goals" options={{ title: L("Objectifs du jour") }} />
         <Stack.Screen name="abjad" options={{ title: L("Calculateur abjad") }} />
         <Stack.Screen name="names" options={{ title: L("Les 99 Noms d’Allah") }} />
         <Stack.Screen name="zikrs/index" options={{ title: L("Mes zikrs") }} />
