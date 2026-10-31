@@ -11,6 +11,8 @@ export const PLACEHOLDERS = {
   QURAN_TRANSLATIONS_LICENSES: 'YOUR_QURAN_TRANSLATIONS_LICENSES',
   SCHOLAR_VALIDATOR_NAME: 'YOUR_SCHOLAR_VALIDATOR_NAME',
   SUPPORT_EMAIL: 'YOUR_SUPPORT_EMAIL',
+  /** Licence confirmée des annotations de tajwid (couleurs) ; tant qu’elle manque, le mushaf coloré reste masqué. */
+  TAJWID_DATA_LICENSE: 'YOUR_TAJWID_DATA_LICENSE',
 } as const;
 
 export const isPlaceholder = (v: string | null | undefined) => !v || v.trim().startsWith('YOUR_');
