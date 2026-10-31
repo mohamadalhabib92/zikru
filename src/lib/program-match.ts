@@ -84,10 +84,18 @@ export function buildCatalog(): CatalogEntry[] {
   return cached;
 }
 
+export type LooseTarget = { type: 'catalog'; entry: CatalogEntry } | { type: 'quran'; p: QuranProposal };
+/** Correspondance « mêmes lettres » confirmée d’un geste par l’utilisateur : elle compte alors comme reconnue. */
+export const confirmLoose = (m: StepMatch, confirmed: boolean): StepMatch => (m.type === 'loose' && confirmed ? m.target : m);
+
 export type StepMatch =
-  /** loose : mêmes lettres, dans le même ordre, mais espaces différents (texte extrait d’un PDF ou d’une photo). */
-  | { type: 'catalog'; entry: CatalogEntry; loose?: boolean }
-  | { type: 'quran'; p: QuranProposal; loose?: boolean }
+  | { type: 'catalog'; entry: CatalogEntry }
+  | { type: 'quran'; p: QuranProposal }
+  /**
+   * Mêmes lettres, dans le même ordre, mais espaces différents (texte extrait d’un PDF ou d’une photo).
+   * Jamais acceptée d’office : reste « ressemblant, non vérifié » tant que l’utilisateur ne l’a pas confirmée (confirmLoose).
+   */
+  | { type: 'loose'; target: LooseTarget }
   | { type: 'near'; p: QuranProposal }
   | { type: 'ambiguous'; options: CatalogEntry[] }
   | { type: 'none'; reason: 'empty' | 'latin' | 'no-match' | 'too-short' | 'no-index' };
@@ -119,7 +127,7 @@ export function matchStepText(ar: string, latin: string, idx: QuranIndex | null,
     // que MIN_LOOSE lettres, et toujours sur la formule entière : aucune correspondance partielle.
     const flat = k.replace(/ /g, '');
     const loose = flat.length >= MIN_LOOSE ? catalog.filter((e) => e.key.replace(/ /g, '') === flat) : [];
-    if (loose.length === 1) return { type: 'catalog', entry: loose[0], loose: true };
+    if (loose.length === 1) return { type: 'loose', target: { type: 'catalog', entry: loose[0] } };
     if (loose.length > 1) return { type: 'ambiguous', options: loose };
     if (!idx) return { type: 'none', reason: 'no-index' };
     const q = matchQuran(idx, fixPresentation(ar));
@@ -129,7 +137,7 @@ export function matchStepText(ar: string, latin: string, idx: QuranIndex | null,
       const i = v[0];
       const { s, a } = idx.verses[i];
       const ref = `${s}:${a}`;
-      return { type: 'quran', loose: true, p: { level: 'exact', kind: 'ayah', s, a, b: a, ref, official: idx.uth[i].join(' '), whole: true, basmala: false, diff: 0, words: idx.simpleWords[i].length, also: [] } };
+      return { type: 'loose', target: { type: 'quran', p: { level: 'exact', kind: 'ayah', s, a, b: a, ref, official: idx.uth[i].join(' '), whole: true, basmala: false, diff: 0, words: idx.simpleWords[i].length, also: [] } } };
     }
     if (q.level === 'near') return { type: 'near', p: q.best };
     return { type: 'none', reason: q.level === 'none' && q.reason === 'too-short' ? 'too-short' : 'no-match' };

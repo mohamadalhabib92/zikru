@@ -16,7 +16,10 @@ function pdfjs(): Promise<PdfJs> {
     const at = (f: string) => new URL(`${base}/pdfjs/${f}`, window.location.href).href;
     // import() à l’exécution : Metro ne doit pas embarquer pdf.js dans le bundle de l’app.
     const load = new Function('u', 'return import(u)') as (u: string) => Promise<PdfJs>;
-    lib = load(at('pdf.min.mjs')).then((m) => {
+    // Chargé à la demande (premier PDF importé), jamais pré-caché : hors connexion, erreur « pdf-offline ».
+    lib = load(at('pdf.min.mjs')).catch(() => {
+      throw new Error('pdf-offline');
+    }).then((m) => {
       m.GlobalWorkerOptions.workerSrc = at('pdf.worker.min.mjs');
       return m;
     });

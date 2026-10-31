@@ -176,30 +176,41 @@ test('PDF : glyphes sans correspondance (U+0000) → page illisible, jamais devi
   assert.equal(PL.brokenGlyphs([{ str: 'Hello\u0000' }]), false);
 });
 
-test('repli sans espaces : catalogue et verset entier reconnus, signalés « loose »', () => {
+test('repli sans espaces : proposé mais jamais accepté d’office (confirmation de l’utilisateur requise)', () => {
   const cut = ISTI.replace(/ /g, '');
   const m = M.matchStepText(cut, '', idx);
-  assert.equal(m.type, 'catalog');
-  assert.equal(m.entry.id, 'tijani-istighfar');
-  assert.equal(m.loose, true);
+  assert.equal(m.type, 'loose');
+  assert.equal(m.target.type, 'catalog');
+  assert.equal(m.target.entry.id, 'tijani-istighfar');
+  // non confirmé : enregistré comme texte personnel non vérifié, même si « texte officiel » est demandé
+  const before = M.stepToItem({ ar: cut, latin: '', hint: '', count: 100 }, M.confirmLoose(m, false), true, 'pdf');
+  assert.equal(before.unverified, true);
+  assert.equal(before.ar, cut);
+  // confirmé : texte officiel du catalogue
+  const after = M.stepToItem({ ar: cut, latin: '', hint: '', count: 100 }, M.confirmLoose(m, true), true, 'pdf');
+  assert.equal(after.ar, F.istighfar.ar);
+  assert.ok(!after.unverified);
   const q = M.matchStepText('قُلْ هُوَ اللَّهُ أَ حَدٌ', '', idx);
-  assert.equal(q.type, 'quran');
-  assert.equal(q.p.ref, '112:1');
-  assert.equal(q.loose, true);
-  const exact = M.matchStepText(ISTI, '', idx);
-  assert.ok(!exact.loose);
+  assert.equal(q.type, 'loose');
+  assert.equal(q.target.type, 'quran');
+  assert.equal(q.target.p.ref, '112:1');
+  assert.equal(M.stepToItem({ ar: 'قُلْ هُوَ اللَّهُ أَ حَدٌ', latin: '', hint: '', count: 3 }, M.confirmLoose(q, false), true, 'pdf').unverified, true);
+  assert.equal(M.confirmLoose(q, true).type, 'quran');
+  // texte exact : reconnu directement, sans confirmation
+  assert.equal(M.matchStepText(ISTI, '', idx).type, 'catalog');
+  assert.equal(M.confirmLoose(M.matchStepText(ISTI, '', idx), false).type, 'catalog');
 });
 
 test('repli sans espaces : aucune fausse correspondance (lettre changée, texte court, fragment)', () => {
-  assert.equal(M.matchStepText(ISTI.replace(/ /g, '').replace('غ', 'ع'), '', idx).type === 'catalog', false);
-  assert.equal(M.matchStepText('اللهالله', '', idx).type === 'catalog', false);
+  assert.ok(!['catalog', 'loose'].includes(M.matchStepText(ISTI.replace(/ /g, '').replace('غ', 'ع'), '', idx).type));
+  assert.ok(!['catalog', 'loose'].includes(M.matchStepText('اللهالله', '', idx).type));
   const r = M.matchStepText('قلهوالله', '', idx); // début de 112:1 seulement
-  assert.ok(!(r.type === 'quran' && r.loose), r.type);
+  assert.ok(r.type !== 'loose' && r.type !== 'quran', r.type);
   // lettres inversées (extraction PDF défectueuse) : non vérifié, pas de supposition
   const key = M.buildCatalog().find((e) => e.id === 'tijani-fatih').key;
   assert.ok(key.includes('الخاتم'));
   const swapped = key.replace('الخاتم', 'الاختم').replace(/ /g, '');
-  assert.notEqual(M.matchStepText(swapped, '', idx).type, 'catalog');
+  assert.ok(!['catalog', 'loose'].includes(M.matchStepText(swapped, '', idx).type));
 });
 
 let fail = 0;

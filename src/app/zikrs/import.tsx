@@ -18,7 +18,7 @@ import { ocrToLines } from '@/lib/ocr-lines';
 import { closePdf, ocrPdfPage, openPdf, pdfSupport, renderPdfPage, type PdfDoc } from '@/lib/pdf';
 import { pageIsScanned } from '@/lib/pdf-types';
 import { latinDigits, parseProgram, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
-import { matchStepText, stepToItem, type CatalogEntry, type ImportVia, type StepMatch } from '@/lib/program-match';
+import { confirmLoose, matchStepText, stepToItem, type CatalogEntry, type ImportVia, type LooseTarget, type StepMatch } from '@/lib/program-match';
 import { loadQuranIndex, type QuranIndex } from '@/lib/quran-match';
 import { uid } from '@/lib/storage';
 import { moveItem } from '@/lib/zikr';
@@ -46,6 +46,8 @@ type EStep = {
   official: boolean;
   /** Choix de l’utilisateur pour une étape ambiguë (id du catalogue, ou « own »). */
   pick: string | null;
+  /** Correspondance « mêmes lettres, espaces différents » confirmée par l’utilisateur (sinon : non vérifiée). */
+  confirmed: boolean;
 };
 
 const field = () => ({ minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, paddingHorizontal: 12, color: b.ink }) as const;
@@ -68,6 +70,7 @@ const toEdit = (s: ProgramStep, pages: Page[]): EStep => {
     alt: s.alt,
     official: true,
     pick: null,
+    confirmed: false,
   };
 };
 
@@ -86,7 +89,13 @@ function Icon({ icon, label, onPress, disabled }: { icon: IconName; label: strin
   );
 }
 
-function Badge({ m, s }: { m: StepMatch; s: EStep }) {
+function looseName(t: LooseTarget): string {
+  if (t.type === 'quran') return L('Coran {r} (Tanzil)', { r: t.p.ref });
+  return t.entry.kind === 'name' ? L('Catalogue Zikru · Nom d’Allah') : L('Catalogue Zikru · {r}', { r: t.entry.ref });
+}
+
+/** m : correspondance retenue (après choix / confirmation) ; raw : correspondance proposée. */
+function Badge({ m, raw, s }: { m: StepMatch; raw: StepMatch; s: EStep }) {
   let icon: IconName = 'alert-circle-outline';
   let color: string = t.warning;
   let label: string;
@@ -95,13 +104,14 @@ function Badge({ m, s }: { m: StepMatch; s: EStep }) {
     icon = 'checkmark-circle';
     color = b.green;
     label = m.entry.kind === 'name' ? L('Catalogue Zikru · Nom d’Allah') : L('Catalogue Zikru · {r}', { r: m.entry.ref });
-    if (m.loose) label += ' · ' + L('mêmes lettres, espaces du texte lu ignorés');
+    if (raw.type === 'loose') label += ' · ' + L('mêmes lettres, confirmé par vous');
   } else if (m.type === 'quran') {
     icon = 'checkmark-circle';
     color = b.green;
     label = L('Coran {r} (Tanzil)', { r: m.p.ref });
-    if (m.loose) label += ' · ' + L('mêmes lettres, espaces du texte lu ignorés');
-  } else if (m.type === 'near') label = L('Ressemble à Coran {r}, mais ce n’est pas le texte exact · non vérifié', { r: m.p.ref });
+    if (raw.type === 'loose') label += ' · ' + L('mêmes lettres, confirmé par vous');
+  } else if (m.type === 'loose') label = L('Ressemble à {f} : mêmes lettres, espaces différents · non vérifié tant que vous ne confirmez pas', { f: looseName(m.target) });
+  else if (m.type === 'near') label = L('Ressemble à Coran {r}, mais ce n’est pas le texte exact · non vérifié', { r: m.p.ref });
   else if (m.type === 'ambiguous') label = L('Plusieurs formules possibles : choisissez');
   else if (m.reason === 'no-index') label = L('Recherche dans le Coran…');
   else label = L('Non vérifié');
@@ -240,7 +250,7 @@ export default function ImportProgram() {
       else analyse(ps);
     } catch (e) {
       const msg = String((e as Error)?.message ?? '');
-      setNote(msg === 'pdf-too-big' ? L('Ce PDF est trop volumineux (40 Mo au maximum).') : /password|locked|LOCKED/i.test(msg) ? L('Ce PDF est protégé par un mot de passe.') : L('Ce PDF n’a pas pu être lu.'));
+      setNote(msg === 'pdf-offline' ? L('Le lecteur PDF se charge à la demande et n’est pas gardé hors connexion : reconnectez-vous pour importer un PDF, ou collez le texte.') : msg === 'pdf-too-big' ? L('Ce PDF est trop volumineux (40 Mo au maximum).') : /password|locked|LOCKED/i.test(msg) ? L('Ce PDF est protégé par un mot de passe.') : L('Ce PDF n’a pas pu être lu.'));
     } finally {
       setBusy(null);
     }
@@ -280,11 +290,12 @@ export default function ImportProgram() {
   };
   const addIgnored = (l: IgnoredLine) => {
     setIgnored((g) => g.filter((x) => x !== l));
-    setSteps((ss) => [...(ss ?? []), { key: uid(), page: l.page, src: [l.text], ar: /[\u0600-\u06FF]/.test(l.text) ? l.text : '', latin: /[\u0600-\u06FF]/.test(l.text) ? '' : l.text, hint: '', count: '', unsure: false, alt: [], official: true, pick: null }]);
+    setSteps((ss) => [...(ss ?? []), { key: uid(), page: l.page, src: [l.text], ar: /[\u0600-\u06FF]/.test(l.text) ? l.text : '', latin: /[\u0600-\u06FF]/.test(l.text) ? '' : l.text, hint: '', count: '', unsure: false, alt: [], official: true, pick: null, confirmed: false }]);
   };
-  const addEmpty = () => setSteps((ss) => [...(ss ?? []), { key: uid(), page: sel, src: [], ar: '', latin: '', hint: '', count: '', unsure: false, alt: [], official: true, pick: null }]);
+  const addEmpty = () => setSteps((ss) => [...(ss ?? []), { key: uid(), page: sel, src: [], ar: '', latin: '', hint: '', count: '', unsure: false, alt: [], official: true, pick: null, confirmed: false }]);
 
   const resolved = (s: EStep, m: StepMatch): StepMatch => {
+    if (m.type === 'loose') return confirmLoose(m, s.confirmed);
     if (m.type !== 'ambiguous') return m;
     const e = m.options.find((o: CatalogEntry) => o.id === s.pick);
     return e ? { type: 'catalog', entry: e } : m;
@@ -436,7 +447,7 @@ export default function ImportProgram() {
                             <Text style={{ color: '#fff', fontWeight: '900' }}>{i + 1}</Text>
                           </View>
                           <View style={{ flex: 1 }}>
-                            <Badge m={m} s={s} />
+                            <Badge m={r} raw={m} s={s} />
                           </View>
                           {multi ? (
                             <Pressable accessibilityRole="button" accessibilityLabel={L('Voir la page {n}', { n: s.page + 1 })} onPress={() => setSel(s.page)} hitSlop={6} style={{ minHeight: 32, justifyContent: 'center' }}>
@@ -451,11 +462,11 @@ export default function ImportProgram() {
                         ) : null}
                         {s.hint && s.hint !== s.latin ? <LMuted style={{ fontSize: 12 }}>{L('Titre lu : {t}', { t: s.hint })}</LMuted> : null}
                         {s.latin && !s.ar ? (
-                          <TextInput value={s.latin} onChangeText={(v) => upd(s.key, { latin: v, pick: null })} style={[field(), { marginTop: 8 }]} accessibilityLabel={L('Texte de l’étape {n}', { n: i + 1 })} />
+                          <TextInput value={s.latin} onChangeText={(v) => upd(s.key, { latin: v, pick: null, confirmed: false })} style={[field(), { marginTop: 8 }]} accessibilityLabel={L('Texte de l’étape {n}', { n: i + 1 })} />
                         ) : (
                           <TextInput
                             value={s.ar}
-                            onChangeText={(v) => upd(s.key, { ar: v, pick: null })}
+                            onChangeText={(v) => upd(s.key, { ar: v, pick: null, confirmed: false })}
                             placeholder="النص"
                             placeholderTextColor={b.inkMuted}
                             multiline
@@ -471,6 +482,21 @@ export default function ImportProgram() {
                               <LBtn key={o.id} icon={s.pick === o.id ? 'radio-button-on' : 'radio-button-off'} label={o.label} active={s.pick === o.id} onPress={() => upd(s.key, { pick: o.id })} />
                             ))}
                             <LBtn icon={s.pick === 'own' ? 'radio-button-on' : 'radio-button-off'} label="Aucune : garder mon texte (non vérifié)" active={s.pick === 'own'} onPress={() => upd(s.key, { pick: 'own' })} />
+                          </View>
+                        ) : null}
+                        {m.type === 'loose' && !s.confirmed ? (
+                          <View style={{ marginTop: 8, gap: 6 }}>
+                            <LMuted style={{ fontSize: 12, fontWeight: '700' }}>Formule proposée (mêmes lettres que le texte lu, espaces différents)</LMuted>
+                            <Arabic size={18}>{m.target.type === 'catalog' ? m.target.entry.ar : m.target.p.official}</Arabic>
+                            <LMuted style={{ fontSize: 12 }}>Tant que vous ne confirmez pas, l’étape est gardée comme texte personnel non vérifié.</LMuted>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                              <LBtn icon="checkmark-circle-outline" label="Confirmer : c’est bien cette formule" solid onPress={() => upd(s.key, { confirmed: true, official: true })} />
+                            </View>
+                          </View>
+                        ) : null}
+                        {m.type === 'loose' && s.confirmed ? (
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                            <LBtn icon="arrow-undo-outline" label="Annuler la confirmation" onPress={() => upd(s.key, { confirmed: false })} />
                           </View>
                         ) : null}
                         {officialText && s.pick !== 'own' ? (

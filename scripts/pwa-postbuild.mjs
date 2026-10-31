@@ -24,7 +24,9 @@ const files = [];
   }
 })(dist);
 
-const precache = files.filter((f) => !/(^|\/)(sw\.js|404\.html|metadata\.json|\.nojekyll)$/.test(f) && !f.endsWith('.map'));
+// pdf.js (≈ 1,8 Mo) : chargé seulement quand l’utilisateur importe un PDF, jamais pré-caché ni gardé hors-ligne.
+const ON_DEMAND = /^pdfjs\//;
+const precache = files.filter((f) => !/(^|\/)(sw\.js|404\.html|metadata\.json|\.nojekyll)$/.test(f) && !f.endsWith('.map') && !ON_DEMAND.test(f));
 const hash = createHash('sha256');
 for (const f of precache) hash.update(f).update(readFileSync(join(dist, f)));
 const version = hash.digest('hex').slice(0, 12);
@@ -44,7 +46,10 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  // pdf.js : réseau uniquement, à la demande (pas de cache hors-ligne)
+  if (url.pathname.startsWith(BASE + '/pdfjs/')) return;
   if (req.mode === 'navigate') {
     // Réseau d'abord pour les pages, repli hors-ligne sur l'app (SPA)
     e.respondWith(fetch(req).catch(() => caches.match(BASE + '/index.html').then((r) => r || caches.match(BASE + '/'))));
