@@ -3,8 +3,8 @@
 import assert from 'node:assert/strict';
 import { loadLib } from './load-lib.mjs';
 
-const M = await loadLib(['adhkar', 'duas', 'review-sheet', 'notify-plan', 'goals'], 'pass2');
-const A = M.adhkar, D = M.duas, R = M['review-sheet'], N = M['notify-plan'], G = M.goals;
+const M = await loadLib(['adhkar', 'duas', 'review-sheet', 'notify-plan', 'goals', 'widget-data'], 'pass2');
+const A = M.adhkar, D = M.duas, R = M['review-sheet'], N = M['notify-plan'], G = M.goals, W = M['widget-data'];
 let ok = 0;
 const t = (name, fn) => {
   fn();
@@ -192,6 +192,77 @@ t('étapes : khatma terminée une fois, 40 jours de wird une fois par série', (
   assert.equal(w[0].kind, 'wird40');
   assert.equal(G.newMilestones([...a, ...w], { khatma: null, wird: { days: 41, since: '2026-09-20' } }).length, 0);
   assert.equal(G.newMilestones([], { khatma: { start: 'x' }, wird: { days: 39, since: 'y' } }).length, 0);
+});
+
+// ---------- Widgets et activité en direct ----------
+const wat = (d, h, m) => new Date(2026, 10, d, h, m);
+const wday = (d) => [['fajr', 6, 10], ['sunrise', 7, 40], ['dhuhr', 12, 20], ['asr', 14, 50], ['maghrib', 17, 10], ['isha', 18, 45]].map(([key, h, m]) => ({ key, time: wat(d, h, m) }));
+const NAMES = { title: 'Prochaine prière', place: 'Martigny', names: { fajr: 'Fajr', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha' }, namesAr: { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' } };
+t('widgets : prochaine prière sans le lever du soleil, demain après Isha', () => {
+  assert.deepEqual(W.upcomingFard(wday(2), wday(3), wat(2, 7, 0)).map((p) => p.key).slice(0, 2), ['dhuhr', 'asr']);
+  const late = W.upcomingFard(wday(2), wday(3), wat(2, 22, 0));
+  assert.equal(late[0].key, 'fajr');
+  assert.equal(late[0].time.getDate(), 3);
+});
+t('widgets : chronologie — une entrée maintenant puis une à chaque adhan', () => {
+  const now = wat(2, 13, 0);
+  const tl = W.prayerTimeline(wday(2), wday(3), now, NAMES, 4);
+  assert.equal(tl.length, 4);
+  assert.equal(tl[0].date.getTime(), now.getTime());
+  assert.equal(tl[0].props.key, 'asr');
+  assert.equal(tl[0].props.time, '14:50');
+  assert.equal(tl[1].date.getTime(), wat(2, 14, 50).getTime());
+  assert.equal(tl[1].props.key, 'maghrib');
+  assert.equal(tl[1].props.from, tl[1].date.getTime());
+  for (const e of tl) assert.ok(e.props.at > e.props.from && e.props.url === 'zikru:///prayers');
+});
+const item = (id, o = {}) => ({ id, kind: 'dhikr', arabic: 'سُبْحَانَ اللَّهِ', transliteration: 'SubhanAllah', translations: { fr: 'Gloire à Allah' }, source: 'Muslim 597', defaultCount: 33, status: 'approved', ...o });
+t('widgets : dhikr du jour — approuvé ET sourcé uniquement, stable dans la journée', () => {
+  const items = [item('b'), item('a'), item('draft', { status: 'draft' }), item('review', { status: 'in_review' }), item('nosrc', { source: '' }), item('noar', { arabic: ' ' })];
+  assert.deepEqual(W.eligibleDhikr(items).map((i) => i.id), ['a', 'b']);
+  assert.equal(W.dhikrOfDay(items, wat(2, 1, 0)).id, W.dhikrOfDay(items, wat(2, 23, 59)).id);
+  assert.notEqual(W.dhikrOfDay(items, wat(2, 9, 0)).id, W.dhikrOfDay(items, wat(3, 9, 0)).id);
+  assert.equal(W.dhikrOfDay([item('x', { status: 'draft' })], wat(2, 9, 0)), null);
+});
+t('widgets : traduction seulement si présente dans la langue (aucun repli), source toujours là', () => {
+  const fr = W.dhikrProps([item('a')], wat(2, 9, 0), 'fr', 'Dhikr du jour', '—');
+  assert.equal(fr.meaning, 'Gloire à Allah');
+  assert.equal(fr.source, 'Muslim 597');
+  assert.equal(fr.arabic, 'سُبْحَانَ اللَّهِ');
+  assert.equal(W.dhikrProps([item('a')], wat(2, 9, 0), 'en', 't', '—').meaning, '');
+  assert.equal(W.dhikrProps([item('a', { translations: { ar: 'x' } })], wat(2, 9, 0), 'ar', 't', '—').meaning, '');
+  const none = W.dhikrProps([], wat(2, 9, 0), 'fr', 't', 'Aucun contenu approuvé');
+  assert.equal(none.arabic, '');
+  assert.equal(none.empty, 'Aucun contenu approuvé');
+  assert.equal(none.url, 'zikru:///zikrs');
+});
+t('widgets : tasbih en lecture seule, valeurs bornées', () => {
+  assert.deepEqual(W.tasbihProps({ count: 12, target: 33, dhikrId: 'a' }, 'SubhanAllah', 'Tasbih'), { title: 'Tasbih', count: 12, target: 33, dhikr: 'SubhanAllah', url: 'zikru:///tasbih' });
+  const z = W.tasbihProps({ count: -3, target: 0, dhikrId: 'a' }, '', 'Tasbih');
+  assert.equal(z.count, 0);
+  assert.equal(z.target, 0);
+});
+const LN = { ...NAMES, suhur: 'Fin du suhur · Fajr', iftar: 'Iftar · Maghrib' };
+t('activité en direct : seulement dans les 2 h avant la prière', () => {
+  assert.equal(W.liveActivityFor(wday(2), wday(3), wat(2, 8, 0), LN, { on: false, hijriMonth: 9 }), null);
+  const a = W.liveActivityFor(wday(2), wday(3), wat(2, 11, 0), LN, { on: false, hijriMonth: 9 });
+  assert.equal(a.name, 'Dhuhr');
+  assert.equal(a.kind, 'prayer');
+  assert.equal(a.time, '12:20');
+});
+t('activité en direct : ramadan opt-in — suhur = Fajr calculé, iftar = Maghrib, sans marge inventée', () => {
+  const s = W.liveActivityFor(wday(2), wday(3), wat(2, 5, 0), LN, { on: true, hijriMonth: 9 });
+  assert.equal(s.kind, 'suhur');
+  assert.equal(s.time, '06:10');
+  assert.equal(s.at, wat(2, 6, 10).getTime());
+  assert.equal(W.liveActivityFor(wday(2), wday(3), wat(2, 16, 0), LN, { on: true, hijriMonth: 9 }).kind, 'iftar');
+  assert.equal(W.liveActivityFor(wday(2), wday(3), wat(2, 16, 0), LN, { on: true, hijriMonth: 8 }).kind, 'prayer');
+  assert.equal(W.liveActivityFor(wday(2), wday(3), wat(2, 16, 0), LN, { on: false, hijriMonth: 9 }).kind, 'prayer');
+});
+t('widgets : préférences désactivées par défaut, normalisation stricte', () => {
+  assert.deepEqual(W.DEFAULT_WIDGET_PREFS, { live: false, ramadan: false });
+  assert.deepEqual(W.normalizeWidgetPrefs({ live: 'yes', ramadan: true }), { live: false, ramadan: true });
+  assert.deepEqual(W.normalizeWidgetPrefs(null), { live: false, ramadan: false });
 });
 
 console.log(`\n${ok} tests Passe 2 OK`);

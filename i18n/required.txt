@@ -85,3 +85,4 @@ src/components/PrayerOptions.tsx
 src/components/DispenseSettings.tsx
 src/app/goals.tsx
 src/components/GoalsLink.tsx
+src/components/WidgetSettings.tsx

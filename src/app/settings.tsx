@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
+import { WidgetSettings } from '@/components/WidgetSettings';
 import { DispenseSettings } from '@/components/DispenseSettings';
 import { PrayerOptions } from '@/components/PrayerOptions';
 import { useSettings } from '@/lib/settings';
@@ -60,6 +61,7 @@ export default function SettingsScreen() {
       <Spacer h={20} />
 
       <NotifSettings />
+      <WidgetSettings />
       <DispenseSettings />
       <H2>{tr.location}</H2>
       <Muted>
