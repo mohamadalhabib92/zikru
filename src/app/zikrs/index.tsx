@@ -71,6 +71,7 @@ export default function Zikrs() {
             router.push({ pathname: '/zikrs/edit', params: { id: z.id } });
           }}
         />
+        <LBtn icon="document-text-outline" label="Importer un programme (photo, PDF, texte)" onPress={() => router.push('/zikrs/import')} />
         {msg ? <Text style={{ color: b.green, fontWeight: '700', textAlign: 'center' }}>{msg}</Text> : null}
         {ready && !zikrs.length ? (
           <LCard>

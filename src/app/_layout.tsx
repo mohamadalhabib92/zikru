@@ -110,6 +110,7 @@ function Root() {
         <Stack.Screen name="zikrs/index" options={{ title: L("Mes zikrs") }} />
         <Stack.Screen name="zikrs/edit" options={{ title: L("Composer un zikr") }} />
         <Stack.Screen name="zikrs/practice" options={{ title: L("Pratique") }} />
+        <Stack.Screen name="zikrs/import" options={{ title: L("Importer un programme") }} />
         <Stack.Screen name="fiqh" options={{ title: L("Fiqh") }} />
         <Stack.Screen name="journey" options={{ title: L("Mon parcours spirituel") }} />
         <Stack.Screen name="habits" options={{ title: L("Jardin des habitudes") }} />

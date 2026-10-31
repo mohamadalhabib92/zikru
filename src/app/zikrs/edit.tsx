@@ -225,7 +225,13 @@ export default function EditZikr() {
                 ) : it.ref ? (
                   <LMuted style={{ fontSize: 11 }}>{it.ref}</LMuted>
                 ) : null}
-                {it.via && !it.unverified ? <LMuted style={{ fontSize: 11 }}>{it.via === 'photo' ? 'Importé d’une photo · vérifié dans le Coran' : 'Collé · vérifié dans le Coran'}</LMuted> : null}
+                {it.via && !it.unverified ? (
+                  <LMuted style={{ fontSize: 11 }}>
+                    {it.kind === 'verse'
+                      ? it.via === 'photo' ? 'Importé d’une photo · vérifié dans le Coran' : it.via === 'pdf' ? 'Importé d’un PDF · vérifié dans le Coran' : 'Collé · vérifié dans le Coran'
+                      : it.via === 'photo' ? 'Importé d’une photo · reconnu dans le catalogue Zikru' : it.via === 'pdf' ? 'Importé d’un PDF · reconnu dans le catalogue Zikru' : 'Collé · reconnu dans le catalogue Zikru'}
+                  </LMuted>
+                ) : null}
               </View>
               {it.photo ? (
                 <Pressable accessibilityRole="imagebutton" accessibilityLabel={L(photoOpen === it.id ? 'Réduire la photo d’origine' : 'Agrandir la photo d’origine')} onPress={() => setPhotoOpen((x) => (x === it.id ? null : it.id))} hitSlop={6}>
