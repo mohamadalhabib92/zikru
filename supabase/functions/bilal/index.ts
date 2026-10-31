@@ -31,8 +31,14 @@ const PERIOD: Record<string, string> = {
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
+/** Clé du modèle, serveur uniquement (secret Supabase). BILAL_AI_API_KEY (nom §15) ; AI_API_KEY reste accepté. */
+function aiKey(): string | undefined {
+  const k = (Deno.env.get('BILAL_AI_API_KEY') || Deno.env.get('AI_API_KEY') || '').trim();
+  return k && !k.startsWith('YOUR_') ? k : undefined;
+}
+
 async function callModel(messages: Msg[], maxTokens: number): Promise<string> {
-  const key = Deno.env.get('AI_API_KEY')!;
+  const key = aiKey()!;
   const provider = (Deno.env.get('AI_PROVIDER') ?? 'anthropic').toLowerCase();
   if (provider === 'openai') {
     const r = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -64,7 +70,7 @@ Deno.serve(async (req) => {
   const { data: u, error: ue } = await supabase.auth.getUser(token);
   if (ue || !u?.user) return json({ error: 'auth' }, 401);
 
-  if (!Deno.env.get('AI_API_KEY')) return json({ error: 'not_configured' }, 503);
+  if (!aiKey()) return json({ error: 'not_configured' }, 503);
 
   let body: { mode?: string; messages?: Msg[]; period?: string };
   try {
@@ -97,6 +103,9 @@ Deno.serve(async (req) => {
     return json({ text, left });
   } catch (e) {
     console.error(String(e).slice(0, 500));
-    return json({ error: 'upstream' }, 502);
+    // 402 (crédit épuisé), 429, 529 (surcharge), 5xx → « unavailable » : l'app affiche un message calme, le cœur n'est jamais bloqué.
+    const st = Number(/\b(?:openai|anthropic) (\d{3})\b/.exec(String(e))?.[1]);
+    const busy = st === 402 || st === 429 || st === 529 || st >= 500;
+    return json({ error: busy ? 'unavailable' : 'upstream' }, busy ? 503 : 502);
   }
 });

@@ -1,3 +1,6 @@
+-- OBSOLÈTE (31.10.2026) : ce fichier historique n’est PAS le schéma de production.
+-- La source de vérité est supabase/migrations/ (testée par supabase/tests/run-pglite.mjs).
+-- Ne pas exécuter ce fichier sur le projet de production.
 -- Zikru — schéma Supabase minimal (idempotent). À exécuter dans l'éditeur SQL Supabase.
 create extension if not exists pgcrypto;
 
