@@ -36,7 +36,7 @@ export function WidgetSettings() {
             {p.live ? (
               <Toggle
                 label={L('Ramadan : suhur et iftar')}
-                hint={L('Pendant ramadan, affiche la fin du suhur (Fajr) et l’iftar (Maghrib) selon vos horaires calculés, sans marge ajoutée.')}
+                hint={L('Pendant ramadan, affiche la fin du suhur (Fajr, moins la marge que vous avez choisie dans le mode Ramadan, 0 par défaut) et l’iftar (Maghrib) selon vos horaires calculés.')}
                 value={p.ramadan}
                 onChange={(v) => set({ ...p, ramadan: v })}
               />

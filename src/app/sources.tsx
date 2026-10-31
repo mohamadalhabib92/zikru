@@ -1,5 +1,5 @@
 import { L } from '@/lib/l10n';
-import { runHijriSelfTests } from '@/lib/hijri';
+import { hijriCalendar, runHijriSelfTests } from '@/lib/hijri';
 import { useData } from '@/lib/data';
 import { approvedOnly } from '@/lib/content';
 import { METHODS } from '@/lib/prayer';
@@ -35,6 +35,8 @@ export default function Sources() {
       <Card>
         <Body>Calendrier tabulaire arithmétique (cycle de 30 ans, 11 années abondantes, époque civile du 16 juillet 622 julien). Source unique : src/lib/hijri.ts.</Body>
         <Muted>Peut différer de ±1–2 jours de l’observation du croissant ou du calendrier Umm al-Qura : ajustez dans Réglages (actuel : {s.hijriOffset >= 0 ? '+' : ''}{s.hijriOffset} j).</Muted>
+        <Muted>Option Umm al-Qura (Réglages) : tables de l’appareil (Intl, hors ligne), utilisées seulement si elles passent un auto-contrôle ; sinon repli tabulaire. Actuel : {hijriCalendar() === 'umalqura' ? 'Umm al-Qura' : L('tabulaire')}.</Muted>
+        <Muted>Mode Ramadan : le 1er (et le dernier) jour de jeûne se confirment selon votre mosquée ; la confirmation ajuste ce décalage, source unique de l’app.</Muted>
         <Muted>Auto-tests (dates limites 29/30, années abondantes, passage d’année) : {ok}/{tests.length} réussis.</Muted>
       </Card>
       <Spacer />

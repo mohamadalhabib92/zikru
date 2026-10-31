@@ -27,7 +27,7 @@ export default function Validation() {
   const [extra, setExtra] = useState<ReviewRow[]>([]);
   useEffect(() => {
     let alive = true;
-    void import('@/components/bien-etre/module').then((m) => alive && setExtra(m.bienEtreRows()));
+    void Promise.all([import('@/components/bien-etre/module'), import('@/components/ramadan/module')]).then(([m, r]) => alive && setExtra([...m.bienEtreRows(), ...r.ramadanRows()]));
     return () => {
       alive = false;
     };

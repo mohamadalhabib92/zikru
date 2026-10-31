@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BleStatusChip } from '@/components/BleStatusChip';
+import { RamadanBanner } from '@/components/ramadan-banner';
 import { SkyArc } from '@/components/zikru/SkyArc';
 import { askBilal, BilalError } from '@/lib/bilal';
 import { useData } from '@/lib/data';
@@ -552,6 +553,7 @@ export default function Home() {
           <View style={{ marginBottom: 12, flexDirection: 'row' }}>
             <BleStatusChip />
           </View>
+          <RamadanBanner />
           {wide ? (
             <View style={{ flexDirection: 'row', gap: 24, alignItems: 'flex-start' }}>
               <View style={{ flex: 1.1 }}>

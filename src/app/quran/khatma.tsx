@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
@@ -36,12 +36,14 @@ export default function KhatmaScreen() {
   const [days] = useShared(readDays);
   const { s, set } = useSettings();
   const today = dayKey();
-  const [plan, setPlan] = useState(30);
-  const [custom, setCustom] = useState(30);
+  const rp = ramadanPlan(today, s.hijriOffset);
+  // /quran/khatma?plan=ramadan (depuis le module Ramadan) : plan du Ramadan présélectionné
+  const pre = useLocalSearchParams<{ plan?: string }>().plan === 'ramadan';
+  const [plan, setPlan] = useState(pre ? -1 : 30);
+  const [custom, setCustom] = useState(pre ? rp.days : 30);
   const [from, setFrom] = useState(1);
   const [quit, setQuit] = useState(false);
-  const [ramadan, setRamadan] = useState(false);
-  const rp = ramadanPlan(today, s.hijriOffset);
+  const [ramadan, setRamadan] = useState(pre);
   const pal = readerPalette('auto');
   const st = k ? khatmaStatus(k, today) : null;
   const { neutral } = useDispense();

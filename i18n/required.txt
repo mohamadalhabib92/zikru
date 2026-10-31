@@ -98,3 +98,13 @@ src/components/bien-etre/screens/jeux.tsx
 src/components/bien-etre/screens/noms.tsx
 src/components/bien-etre/screens/tajwid.tsx
 src/components/bien-etre/common.tsx
+src/app/ramadan.tsx
+src/components/ramadan-banner.tsx
+src/components/ramadan/common.tsx
+src/components/ramadan/screens/hub.tsx
+src/components/ramadan/screens/compte.tsx
+src/components/ramadan/screens/jeune.tsx
+src/components/ramadan/screens/tarawih.tsx
+src/components/ramadan/screens/nuits.tsx
+src/components/ramadan/screens/zakat.tsx
+src/components/ramadan/screens/carte.tsx

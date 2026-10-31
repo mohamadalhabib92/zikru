@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { umalquraAvailable } from '@/lib/hijri';
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
@@ -120,6 +121,21 @@ export default function SettingsScreen() {
       </Muted>
       <Spacer />
       <Segmented label={tr.hijri_offset} options={[-2, -1, 0, 1, 2].map((n) => ({ label: n > 0 ? `+${n}` : String(n), value: n }))} value={s.hijriOffset} onChange={(v) => set({ hijriOffset: v })} />
+      <Segmented
+        label={L('Calendrier hégirien')}
+        options={[
+          { label: L('Tabulaire (hors ligne)'), value: 'tabular' as const },
+          ...(umalquraAvailable() ? [{ label: L('Umm al-Qura'), value: 'umalqura' as const }] : []),
+        ]}
+        value={umalquraAvailable() ? (s.hijriCalendar ?? 'tabular') : 'tabular'}
+        onChange={(v) => set({ hijriCalendar: v })}
+      />
+      <Muted>
+        {umalquraAvailable()
+          ? L('Umm al-Qura : tables officielles saoudiennes intégrées à l’appareil (hors ligne). Les deux restent des estimations : la mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).')
+          : L('Umm al-Qura indisponible sur cet appareil : calendrier tabulaire utilisé. La mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).')}
+      </Muted>
+      <ListItem title={L('Mode Ramadan')} subtitle={L('Suhur et iftar, jeûne, tarawih, dix dernières nuits')} icon="moon-outline" onPress={() => router.push('/ramadan')} />
       <Spacer h={20} />
 
       <H2>Mes zikrs</H2>
