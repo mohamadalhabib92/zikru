@@ -171,6 +171,8 @@ await test('Translittération : expression entière (2) avant mots épars (1) ; 
   assert.equal(N.tlMatch(keys['112:1'], 'qul huwal'), 2);
   assert.equal(N.tlMatch(keys['112:1'], 'ahad qul'), 1);
   assert.equal(N.tlMatch(keys['112:1'], 'q'), 0);
+  // doublons à la jonction des mots : « huwa allahu » ≈ « huwal laahu »
+  assert.equal(N.tlMatch(keys['112:1'], 'qul huwa allahu ahad'), 2);
   assert.equal(N.squashTl("Rahmaanir Raheem"), 'rahmanir rahim');
 });
 

@@ -236,7 +236,7 @@ export default function Search() {
                         accessibilityLabel={`${SURAHS[v.s - 1][2]} ${v.s}:${v.a}`}
                         onPress={() => {
                           tapHaptic();
-                          router.push(`/quran/${v.s}`);
+                          router.push({ pathname: '/quran/[n]', params: { n: String(v.s), a: String(v.a) } });
                         }}
                         style={({ pressed }) => ({ padding: 12, borderTopWidth: i ? 1 : 0, borderTopColor: b.line, backgroundColor: pressed ? b.greenTint : 'transparent' })}
                       >
@@ -249,6 +249,7 @@ export default function Search() {
                         <Arabic size={20} style={{ marginTop: 6 }}>
                           {v.ar}
                         </Arabic>
+                        {v.tl ? <Text style={{ color: b.inkMuted, fontSize: 13, fontStyle: 'italic', marginTop: 4 }} numberOfLines={2}>{L('Phonétique : {t}', { t: v.tl })}</Text> : null}
                         {v.tr ? (
                           <Text style={{ color: b.ink, lineHeight: 21, marginTop: 4 }} numberOfLines={4}>
                             {v.tr}

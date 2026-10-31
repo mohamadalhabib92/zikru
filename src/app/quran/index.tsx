@@ -6,7 +6,7 @@ import { useTranslationId } from '@/components/quran/data';
 import { dayKey } from '@/lib/dates';
 import { khatmaStatus, streak } from '@/lib/khatma';
 import { useDispense } from '@/lib/dispense-context';
-import { normLat, searchVerses, type VerseHit } from '@/lib/quran-offline';
+import { downloadTranslation, normLat, searchVerses, TRANSLIT_EDITION, type VerseHit } from '@/lib/quran-offline';
 import { hizbPage, hizbRange, juzPage, juzRange, pageOf, pageRange, parseRef, surahPage, fromIndex, OFFSETS } from '@/lib/quran-nav';
 import { hifzCards, khatma, lastRead, marks, readDays } from '@/lib/quran-store';
 import { useShared } from '@/lib/shared-state';
@@ -38,7 +38,8 @@ export default function QuranHub() {
   const due = queueSize(dailyQueue(cards, today));
   const [tab, setTab] = useState<Tab>('surah');
   const [q, setQ] = useState('');
-  const [hits, setHits] = useState<{ q: string; list: VerseHit[]; total: number; translated: boolean } | null>(null);
+  const [hits, setHits] = useState<{ q: string; list: VerseHit[]; total: number; translated: boolean; phonetic?: boolean } | null>(null);
+  const [tlState, setTlState] = useState<'idle' | 'busy' | 'err' | 'ok'>('idle');
   const [busy, setBusy] = useState(false);
 
   const ref = parseRef(q);
@@ -54,7 +55,7 @@ export default function QuranHub() {
     setBusy(true);
     const h = setTimeout(() => {
       searchVerses(t, tr.id, 30)
-        .then((r) => alive && setHits({ q: t, list: r.hits, total: r.total, translated: r.translated }))
+        .then((r) => alive && setHits({ q: t, list: r.hits, total: r.total, translated: r.translated, phonetic: r.phonetic }))
         .finally(() => alive && setBusy(false));
     }, 300);
     return () => {
@@ -62,7 +63,11 @@ export default function QuranHub() {
       clearTimeout(h);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, tr.id]);
+  }, [q, tr.id, tlState]);
+  const getTranslit = () => {
+    setTlState('busy');
+    downloadTranslation(TRANSLIT_EDITION).then(() => setTlState('ok'), () => setTlState('err'));
+  };
 
   const go = (h: Href) => router.push(h);
   const openRef = () => {
@@ -177,9 +182,18 @@ export default function QuranHub() {
               <Text {...arLang} style={{ color: b.ink, fontFamily: fonts.quran, fontSize: 18, lineHeight: 38, textAlign: 'right', writingDirection: 'rtl' }} numberOfLines={2}>
                 {h.ar}
               </Text>
+              {h.tl ? <Text style={{ color: b.inkMuted, fontSize: 13, fontStyle: 'italic' }} numberOfLines={2}>{L('Phonétique : {t}', { t: h.tl })}</Text> : null}
               {h.tr ? <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={2}>{h.tr}</Text> : null}
             </Pressable>
           ))}
+          {hits && hits.phonetic === false && !/[\u0600-\u06FF]/.test(q) ? (
+            <Pressable accessibilityRole="button" disabled={tlState === 'busy'} onPress={getTranslit} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper }}>
+              {tlState === 'busy' ? <ActivityIndicator color={b.green} /> : <Ionicons name="mic-outline" size={18} color={b.green} />}
+              <Text style={{ color: b.ink, fontSize: 13, flex: 1 }}>
+                {tlState === 'err' ? L('Échec du téléchargement — réessayer') : L('Recherche phonétique (ex. « qul huwa allahu ahad ») : télécharger la translittération, ≈ 1,4 Mo, une fois')}
+              </Text>
+            </Pressable>
+          ) : null}
           {hits && hits.total > 8 ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('{n} versets — affinez, ou ouvrez la recherche complète.', { n: hits.total })}</Text> : null}
           {hits && !hits.translated && !/[\u0600-\u06FF]/.test(q) && !surahHits.length ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>La recherche par mot (traduction) nécessite la traduction hors-ligne : Recherche → Télécharger. L’arabe fonctionne toujours.</Text> : null}
         </View>

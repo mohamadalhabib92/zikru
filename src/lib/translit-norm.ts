@@ -26,12 +26,13 @@ export function squashTl(s: string): string {
     .trim();
 }
 /** Clé d’index d’un verset : forme écrasée sans espaces (« al-hamdu lillah » ≈ « alhamdulillah »). */
-export const tlKey = (s: string) => squashTl(s).replace(/ /g, '');
+export const tlKey = (s: string) => squashTl(s).replace(/ /g, '').replace(/([a-z])\1+/g, '$1');
 
 /** 0 = pas de correspondance, 2 = expression entière, 1 = tous les mots (ordre libre). Requête : ≥ 3 lettres. */
 export function tlMatch(key: string, q: string): 0 | 1 | 2 {
   const words = squashTl(q).split(' ').filter((w) => w.length >= 2);
-  const whole = words.join('');
+  // fusion des lettres doublées aussi entre les mots (« huwa allahu » ≈ « huwal laahu »)
+  const whole = words.join('').replace(/([a-z])\1+/g, '$1');
   if (whole.length < 3) return 0;
   if (key.includes(whole)) return 2;
   return words.length > 1 && words.every((w) => key.includes(w)) ? 1 : 0;

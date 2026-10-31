@@ -1,8 +1,10 @@
+import { L } from '@/lib/l10n';
 import { runHijriSelfTests } from '@/lib/hijri';
 import { useData } from '@/lib/data';
 import { approvedOnly } from '@/lib/content';
 import { METHODS } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
+import { QURAN_TEXT_SOURCE, RECITATION_SOURCE, TRANSLATION_SOURCES } from '@/lib/quran-licenses';
 import { Body, Card, H1, H2, Muted, Notice, Screen, Spacer } from '@/ui/kit';
 
 export default function Sources() {
@@ -46,6 +48,18 @@ export default function Sources() {
         <Muted>Récitations diffusées verset par verset à l’écoute, jamais incluses dans l’app : EveryAyah.com, avec secours cdn.islamic.network (Islamic Network). Les droits des récitations appartiennent à leurs récitateurs et éditeurs. Les récitateurs Warsh sont proposés en audio ; le texte affiché reste celui de Hafs (aucun texte Warsh sous licence libre vérifiée n’est intégré).</Muted>
         <Muted>Translittération et tafsirs (At-Tafsir al-Muyassar, Jalalayn) : api.alquran.cloud ; Tafsir as-Sa‘di et Ibn Kathir abrégé : api.quran.com. Chargés à la demande ; un tafsir est une explication humaine, pas le texte révélé.</Muted>
         <Muted>Mémorisation : répétition espacée SM-2 (P. Wozniak, 1987) organisée en sabaq, sabqi et manzil. Toutes vos données (marque-pages, notes, khatma, mémorisation) restent sur l’appareil.</Muted>
+      </Card>
+      <Spacer />
+      <H2>Licences du Coran (texte, traductions, audio)</H2>
+      <Card>
+        <Body>Statut de chaque source utilisée par le lecteur. « À confirmer » : consultable avec sa source affichée, mais jamais incrustée dans une image partagée tant que la licence n’est pas confirmée.</Body>
+        {[QURAN_TEXT_SOURCE, ...Object.values(TRANSLATION_SOURCES), RECITATION_SOURCE].map((x) => (
+          <Muted key={x.id}>
+            {`• ${x.name} — ${x.by} : ${x.licence} (${L(x.status === 'verified' ? 'vérifiée' : 'à confirmer')})`}
+          </Muted>
+        ))}
+        <Muted>Téléchargements audio hors ligne : copies privées sur votre appareil, jamais partagées ni renvoyées ; supprimables à tout moment (Coran → Téléchargements audio).</Muted>
+        <Muted>Recherche phonétique : la translittération est une aide pour retrouver un verset ; elle peut contenir des irrégularités, le texte arabe reste la référence.</Muted>
       </Card>
       <Spacer />
       <H2>Textes et traductions</H2>

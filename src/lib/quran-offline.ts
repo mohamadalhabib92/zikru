@@ -6,11 +6,15 @@ import { SURAHS } from './surahs';
 import { stripBasmala } from './quran';
 import { readText, writeText } from './text-cache';
 import { hasArabic, normAr } from './ar-norm';
+import { tlKey, tlMatch } from './translit-norm';
 
 export { hasArabic, normAr };
 
 export type Verse = { s: number; a: number; ar: string };
-export type VerseHit = Verse & { tr?: string };
+export type VerseHit = Verse & { tr?: string; /** trouvé par la translittération (aide phonétique) */ tl?: string };
+
+/** Édition de translittération latine (api.alquran.cloud) utilisée pour la recherche phonétique. */
+export const TRANSLIT_EDITION = 'en.transliteration';
 
 /** Latin : minuscules, sans accents ni ponctuation. */
 export function normLat(s: string): string {
@@ -90,9 +94,10 @@ let latIdx: { ed: string; keys: string[] } | null = null;
  * Recherche hors-ligne. Arabe → texte arabe ; latin → traduction (si en cache) ; « 2:255 » ou « 2 255 » → référence.
  * Tous les mots doivent apparaître (ordre libre) ; tri : expression exacte d’abord, puis ordre du Mushaf.
  */
-export async function searchVerses(q: string, edition: string, limit = 40): Promise<{ hits: VerseHit[]; total: number; translated: boolean }> {
+export async function searchVerses(q: string, edition: string, limit = 40): Promise<{ hits: VerseHit[]; total: number; translated: boolean; phonetic?: boolean }> {
   const { verses, keys } = await loadArabic();
   const tr = await cachedTranslation(edition);
+  const tl = await cachedTranslation(TRANSLIT_EDITION);
   const raw = q.trim();
   const ref = raw.match(/^(\d{1,3})\s*[:.\s]\s*(\d{1,3})(?:\s*-\s*(\d{1,3}))?$/);
   if (ref) {
@@ -109,12 +114,12 @@ export async function searchVerses(q: string, edition: string, limit = 40): Prom
   const arabic = hasArabic(raw);
   const nq = arabic ? normAr(raw) : normLat(raw);
   if (nq.length < 2) return { hits: [], total: 0, translated: !!tr };
-  let hay: string[];
+  let hay: string[] = [];
   if (arabic) hay = keys;
   else {
-    if (!tr) return { hits: [], total: 0, translated: false };
-    if (latIdx?.ed !== edition) latIdx = { ed: edition, keys: tr.map(normLat) };
-    hay = latIdx.keys;
+    if (!tr && !tl) return { hits: [], total: 0, translated: false, phonetic: false };
+    if (tr && latIdx?.ed !== edition) latIdx = { ed: edition, keys: tr.map(normLat) };
+    if (tr && latIdx) hay = latIdx.keys;
   }
   const words = nq.split(' ');
   const exact: number[] = [], loose: number[] = [];
@@ -123,9 +128,28 @@ export async function searchVerses(q: string, edition: string, limit = 40): Prom
     if (h.includes(arabic ? nq : ` ${nq}`)) exact.push(i);
     else if (words.length > 1 && words.every((w) => h.includes(arabic ? w : ` ${w}`))) loose.push(i);
   }
-  const all = [...exact, ...loose];
-  return { hits: all.slice(0, limit).map((i) => ({ ...verses[i], tr: tr?.[i] })), total: all.length, translated: !!tr };
+  // Latin : aussi la translittération (si téléchargée) — « bismillah », « ayat al kursi » n’est pas dans la traduction.
+  const tlExact: number[] = [], tlLoose: number[] = [];
+  if (!arabic && tl) {
+    if (!tlIdx) tlIdx = tl.map(tlKey);
+    const seen = new Set([...exact, ...loose]);
+    for (let i = 0; i < tlIdx.length; i++) {
+      if (seen.has(i)) continue;
+      const m = tlMatch(tlIdx[i], raw);
+      if (m === 2) tlExact.push(i);
+      else if (m === 1) tlLoose.push(i);
+    }
+  }
+  const tlSet = new Set([...tlExact, ...tlLoose]);
+  const all = [...exact, ...tlExact, ...loose, ...tlLoose];
+  return {
+    hits: all.slice(0, limit).map((i) => ({ ...verses[i], tr: tr?.[i], tl: tlSet.has(i) ? tl?.[i] : undefined })),
+    total: all.length,
+    translated: !!tr,
+    phonetic: !!tl,
+  };
 }
+let tlIdx: string[] | null = null;
 
 /** Versets d’une sourate depuis le texte embarqué (lecture sans connexion). */
 export async function offlineSurah(s: number, edition?: string): Promise<{ n: number; ar: string; tr: string }[]> {

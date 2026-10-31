@@ -87,3 +87,7 @@ src/app/goals.tsx
 src/components/GoalsLink.tsx
 src/components/WidgetSettings.tsx
 src/app/zikrs/import.tsx
+src/app/quran/downloads.tsx
+src/components/quran/ABSheet.tsx
+src/components/quran/MiniPlayer.tsx
+src/components/quran/SleepSheet.tsx
