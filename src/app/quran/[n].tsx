@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { ABSheet } from '@/components/quran/ABSheet';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { useAyahFlow } from '@/components/quran/AyahFlow';
 import { NuraniText } from '@/components/quran/NuraniText';
@@ -16,10 +17,11 @@ import { keyOf, marks, readerPrefs, recordRead } from '@/lib/quran-store';
 import { buildQueue } from '@/lib/recitation';
 import { useShared } from '@/lib/shared-state';
 import { SURAHS } from '@/lib/surahs';
-import { useRecitation } from '@/lib/use-recitation';
+import { useGlobalRecitation } from '@/lib/recitation-context';
 import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 /** Lecteur verset par verset : texte uthmani, traduction et translittération optionnelles, récitation suivie. */
 export default function SurahReader() {
@@ -39,13 +41,22 @@ export default function SurahReader() {
   const [settings, setSettings] = useState(false);
   const [top, setTop] = useState(startA);
   useReaderKeepAwake(p.keepAwake);
-  const rec = useRecitation({ reciter: p.reciter, rate: p.rate, gap: 0 });
+  const rec = useGlobalRecitation();
+  const [ab, setAb] = useState<number | null>(null);
   const playingA = rec.step && rec.step.s === n ? rec.step.a : 0;
   const list = useRef<FlatList<number>>(null);
-  const flow = useAyahFlow(pal, (t) => play(t.a));
+  // lecture continue : quand la récitation passe à la sourate suivante, le lecteur la suit (si « Suivre la récitation »)
+  const lastS = useRef(rec.step?.s ?? 0);
+  useEffect(() => {
+    const cur = rec.step?.s ?? 0;
+    if (cur && lastS.current === n && cur === n + 1 && rec.playing && p.follow) router.replace(`/quran/${cur}`);
+    lastS.current = cur;
+  }, [rec.step?.s, rec.playing, n, p.follow, router]);
+  const flow = useAyahFlow(pal, (t) => play(t.a), (t) => setAb(t.a));
 
   const data = useMemo(() => Array.from({ length: meta[4] }, (_, i) => i + 1), [meta]);
-  const play = (from: number) => rec.start(buildQueue(data.slice(from - 1).map((a) => [n, a] as [number, number])), 0);
+  // lecture jusqu’à la fin de la sourate, puis sourate suivante si « Lecture continue » est activée
+  const play = (from: number) => rec.start(buildQueue(data.slice(from - 1).map((a) => [n, a] as [number, number])), 0, false, { next: 'surah' });
 
   const scrollTo = useCallback((a: number, animated = true) => {
     try {
@@ -85,9 +96,9 @@ export default function SurahReader() {
     <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 14 }}>
       <View style={{ alignSelf: 'stretch', borderRadius: 20, borderWidth: 1, borderColor: alpha(pal.gold, 0.5), backgroundColor: pal.card, paddingVertical: 16, paddingHorizontal: 14, alignItems: 'center' }}>
         <Text style={{ color: pal.gold, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 }}>{L('SOURATE {n} · {k} · {v} VERSETS', { n, k: L(meta[5] === 'M' ? 'MECQUOISE' : 'MÉDINOISE'), v: meta[4] })}</Text>
-        <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 30, lineHeight: 64 }}>{meta[1]}</Text>
+        <Text {...arLang} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 30, lineHeight: 64 }}>{meta[1]}</Text>
         <Text style={{ color: pal.muted, fontSize: 14, fontWeight: '600' }}>{`${meta[2]} — ${meta[3]}`}</Text>
-        {n !== 1 && n !== 9 ? <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 24, lineHeight: 54, marginTop: 6 }}>{BASMALA_UTHMANI}</Text> : null}
+        {n !== 1 && n !== 9 ? <Text {...arLang} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 24, lineHeight: 54, marginTop: 6 }}>{BASMALA_UTHMANI}</Text> : null}
         {n === 9 ? <Text style={{ color: pal.muted, fontSize: 12, marginTop: 6 }}>Sourate sans basmala d’ouverture</Text> : null}
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, justifyContent: 'center' }}>
@@ -144,7 +155,7 @@ export default function SurahReader() {
               } catch {}
             }, 250);
           }}
-          contentContainerStyle={{ maxWidth: 820, width: '100%', alignSelf: 'center', paddingHorizontal: 14, paddingBottom: rec.pos >= 0 ? 120 : 40 }}
+          contentContainerStyle={{ maxWidth: 820, width: '100%', alignSelf: 'center', paddingHorizontal: 14, paddingBottom: rec.pos >= 0 ? 180 : 40 }}
           ListHeaderComponent={header}
           renderItem={({ item: a }) => {
             const gi = gIndex(n, a);
@@ -161,7 +172,7 @@ export default function SurahReader() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={L('Verset {n}. Actions', { n: a })}
-                onPress={() => flow.open({ s: n, a, ar: text, tr: t })}
+                onPress={() => flow.open({ s: n, a, ar: text, tr: t, trId: trId.id })}
                 style={({ pressed }) => ({
                   borderRadius: 18,
                   padding: 14,
@@ -193,7 +204,7 @@ export default function SurahReader() {
                     <Ionicons name={playing && rec.playing ? 'pause' : 'play'} size={16} color={pal.accent} />
                   </Pressable>
                 </View>
-                <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: p.arSize, lineHeight: Math.round(p.arSize * p.lineH), textAlign: 'right', writingDirection: 'rtl', marginTop: 6 }}>
+                <Text {...arLang} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: p.arSize, lineHeight: Math.round(p.arSize * p.lineH), textAlign: 'right', writingDirection: 'rtl', marginTop: 6 }}>
                   <NuraniText text={text} surah={n} ayah={a} nurani={p.nurani} muqattaat={p.muqattaat} gold={pal.gold} ink={pal.ink} />
                   <Text style={{ color: pal.gold }}>{` \u06DD${arNum(a)}`}</Text>
                 </Text>
@@ -225,7 +236,8 @@ export default function SurahReader() {
           }
         />
       )}
-      <AudioBar rec={rec} pal={pal} />
+      <AudioBar rec={rec} pal={pal} onAB={() => setAb(rec.step && rec.step.s === n ? rec.step.a : 1)} />
+      {ab != null ? <ABSheet visible onClose={() => setAb(null)} s={n} a={ab ?? 1} pal={pal} start={(q, pos, loop) => rec.start(q, pos, loop)} /> : null}
       <ReaderSettings visible={settings} onClose={() => setSettings(false)} pal={pal} />
       {flow.sheets}
     </View>

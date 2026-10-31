@@ -25,8 +25,10 @@ export type ReaderPrefs = {
   nurani: boolean;
   /** Souligner les lettres isolées ouvrant 29 sourates — désactivé par défaut. */
   muqattaat: boolean;
+  /** Enchaîner la sourate suivante à la fin d’une sourate (lecture continue) — activé par défaut. */
+  autoNext: boolean;
 };
-export const DEFAULT_READER: ReaderPrefs = { arSize: 28, trSize: 15, lineH: 2.1, theme: 'auto', showTr: true, showTl: false, keepAwake: true, reciter: 'alafasy', rate: 1, follow: true, nurani: false, muqattaat: false };
+export const DEFAULT_READER: ReaderPrefs = { arSize: 28, trSize: 15, lineH: 2.1, theme: 'auto', showTr: true, showTl: false, keepAwake: true, reciter: 'alafasy', rate: 1, follow: true, nurani: false, muqattaat: false, autoNext: true };
 export const readerPrefs = shared<ReaderPrefs>('qr-prefs', DEFAULT_READER, (v) => ({ ...DEFAULT_READER, ...v }));
 
 export type Bookmark = { id: string; s: number; a: number; name: string; color: string; at: number };

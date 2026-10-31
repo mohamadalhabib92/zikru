@@ -19,6 +19,8 @@ import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
+import { MiniPlayer } from '@/components/quran/MiniPlayer';
+import { RecitationProvider } from '@/lib/recitation-context';
 import { L } from '@/lib/l10n';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
@@ -101,6 +103,7 @@ function Root() {
         <Stack.Screen name="quran/hifz-session" options={{ title: L("Session de mémorisation") }} />
         <Stack.Screen name="quran/bookmarks" options={{ title: L("Marque-pages et notes") }} />
         <Stack.Screen name="quran/khatma" options={{ title: L("Khatma") }} />
+        <Stack.Screen name="quran/downloads" options={{ title: L("Téléchargements audio") }} />
         <Stack.Screen name="hadiths" options={{ title: L("Hadiths") }} />
         <Stack.Screen name="duas" options={{ title: L("Du‘as prophétiques") }} />
         <Stack.Screen name="adhkar" options={{ title: L("Adhkar du jour") }} />
@@ -123,6 +126,7 @@ function Root() {
         <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
       </Stack>
+      <MiniPlayer path={path} />
       <StorageAlert />
     </View>
   );
@@ -139,7 +143,9 @@ export default function Layout() {
               <AuthProvider>
                 <CommunityProvider>
                   <GrowthProvider>
-                    <Root />
+                    <RecitationProvider>
+                      <Root />
+                    </RecitationProvider>
                   </GrowthProvider>
                 </CommunityProvider>
               </AuthProvider>

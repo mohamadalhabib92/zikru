@@ -36,17 +36,45 @@ const sw = `/* Service worker généré par scripts/pwa-postbuild.mjs — versio
 const CACHE = '${app.slug}-${version}';
 const BASE = '${base}';
 const PRECACHE = ${JSON.stringify(urls)};
+// Récitations téléchargées par l'utilisateur (écran « Téléchargements ») : jamais supprimées par une mise à jour.
+const AUDIO = 'zikru-audio-v1';
+const AUDIO_HOSTS = ['everyayah.com', 'cdn.islamic.network'];
+function fromAudioCache(req) {
+  return caches.open(AUDIO).then((c) => c.match(req.url)).then((hit) => {
+    if (!hit) return fetch(req);
+    const range = req.headers.get('range');
+    if (!range) return hit;
+    // Safari demande l'audio par plages (Range) : on répond 206 depuis le fichier en cache.
+    return hit.arrayBuffer().then((buf) => {
+      const m = /bytes=(\d*)-(\d*)/.exec(range) || [];
+      const size = buf.byteLength;
+      let start = m[1] ? Number(m[1]) : 0;
+      let end = m[2] ? Number(m[2]) : size - 1;
+      if (!m[1] && m[2]) { start = Math.max(0, size - Number(m[2])); end = size - 1; }
+      end = Math.min(end, size - 1);
+      if (start > end) return new Response(null, { status: 416, headers: { 'Content-Range': 'bytes */' + size } });
+      return new Response(buf.slice(start, end + 1), {
+        status: 206,
+        headers: { 'Content-Type': 'audio/mpeg', 'Content-Length': String(end - start + 1), 'Content-Range': 'bytes ' + start + '-' + end + '/' + size, 'Accept-Ranges': 'bytes' },
+      });
+    });
+  }).catch(() => fetch(req));
+}
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE && !k.startsWith('zikru-audio')).map((k) => caches.delete(k)))).then(() => self.clients.claim())
   );
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
+  if (req.method === 'GET' && AUDIO_HOSTS.includes(url.hostname) && url.pathname.endsWith('.mp3')) {
+    e.respondWith(fromAudioCache(req));
+    return;
+  }
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
   // pdf.js : réseau uniquement, à la demande (pas de cache hors-ligne)
   if (url.pathname.startsWith(BASE + '/pdfjs/')) return;

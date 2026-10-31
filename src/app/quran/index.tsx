@@ -16,6 +16,7 @@ import { FadeIn, Grid, HeroHeader, ProgressBar, Tile, useLayout } from '@/ui/ds'
 import { Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 type Tab = 'surah' | 'juz' | 'hizb' | 'page';
 const STATUS_COLOR = () => ({ none: b.line, learning: b.gold, review: '#D98A2B', memorised: b.green });
@@ -105,7 +106,7 @@ export default function QuranHub() {
         <HeroHeader>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: b.gold, fontFamily: fonts.quran, fontSize: 26, lineHeight: 56 }}>القرآن الكريم</Text>
+              <Text {...arLang} style={{ color: b.gold, fontFamily: fonts.quran, fontSize: 26, lineHeight: 56 }}>القرآن الكريم</Text>
               <Text style={{ color: b.heroText, fontSize: 22, fontWeight: '900' }}>Le Noble Coran</Text>
               <Text style={{ color: b.heroMuted, marginTop: 2 }}>Texte uthmani · 604 pages · récitation verset par verset</Text>
             </View>
@@ -167,13 +168,13 @@ export default function QuranHub() {
             <Pressable key={s[0]} accessibilityRole="button" onPress={() => go(`/quran/${s[0]}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: b.paper, borderRadius: 14, borderWidth: 1, borderColor: b.line, padding: 12 }}>
               <Text style={{ color: b.green, fontWeight: '900', width: 28 }}>{s[0]}</Text>
               <Text style={{ color: b.ink, fontWeight: '700', flex: 1 }}>{`${s[2]} · ${s[3]}`}</Text>
-              <Text style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18 }}>{s[1].replace(/^سُورَةُ\s*/, '')}</Text>
+              <Text {...arLang} style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18 }}>{s[1].replace(/^سُورَةُ\s*/, '')}</Text>
             </Pressable>
           ))}
           {hits?.list.slice(0, 8).map((h) => (
             <Pressable key={`${h.s}:${h.a}`} accessibilityRole="button" onPress={() => go({ pathname: '/quran/[n]', params: { n: String(h.s), a: String(h.a) } })} style={{ backgroundColor: b.paper, borderRadius: 14, borderWidth: 1, borderColor: b.line, padding: 12, gap: 4 }}>
               <Text style={{ color: b.green, fontWeight: '800', fontSize: 12 }}>{`${SURAHS[h.s - 1][2]} ${h.s}:${h.a}`}</Text>
-              <Text style={{ color: b.ink, fontFamily: fonts.quran, fontSize: 18, lineHeight: 38, textAlign: 'right', writingDirection: 'rtl' }} numberOfLines={2}>
+              <Text {...arLang} style={{ color: b.ink, fontFamily: fonts.quran, fontSize: 18, lineHeight: 38, textAlign: 'right', writingDirection: 'rtl' }} numberOfLines={2}>
                 {h.ar}
               </Text>
               {h.tr ? <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={2}>{h.tr}</Text> : null}
@@ -190,6 +191,11 @@ export default function QuranHub() {
         <Tile icon="calendar" title="Khatma" subtitle={kst && !kst.finished && kst.today ? L('Wird : p. {a}–{b}', { a: kst.today.from, b: kst.today.to }) : L('Planifier une lecture complète')} color={b.teal} onPress={() => go('/quran/khatma')} />
         <Tile icon="bookmarks" title="Marque-pages" subtitle={L('Marque-pages : {b} · notes : {n}', { b: m.bookmarks.length, n: Object.keys(m.notes).length })} color={b.violet} onPress={() => go('/quran/bookmarks')} />
       </Grid>
+      <Pressable accessibilityRole="button" onPress={() => go('/quran/downloads')} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, opacity: pressed ? 0.85 : 1 })}>
+        <Ionicons name="cloud-download-outline" size={20} color={b.green} />
+        <Text style={{ color: b.ink, fontWeight: '700', flex: 1 }}>Téléchargements audio (hors ligne)</Text>
+        <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+      </Pressable>
       <Segmented
         label="Parcourir par"
         options={[
@@ -238,7 +244,7 @@ export default function QuranHub() {
                   {rs && rs.known ? ` · ${L('hifz {p} %', { p: Math.round((rs.known / rs.total) * 100) })}` : ''}
                 </Text>
               </View>
-              {r.ar ? <Text style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18, lineHeight: 36 }}>{r.ar}</Text> : null}
+              {r.ar ? <Text {...arLang} style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18, lineHeight: 36 }}>{r.ar}</Text> : null}
             </Pressable>
           );
         }}

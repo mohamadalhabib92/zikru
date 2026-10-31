@@ -41,7 +41,7 @@ export type Gap = 0 | 2 | 5 | 'x1' | 'x1.5';
 export const gapMs = (g: Gap, durationSec: number) => (g === 'x1' ? durationSec * 1000 : g === 'x1.5' ? durationSec * 1500 : g * 1000);
 
 /** Nombre de versets de la sourate s (0 si hors limites). */
-const ayahCount = (s: number) => SURAHS[s - 1]?.[4] ?? 0;
+export const ayahCount = (s: number) => SURAHS[s - 1]?.[4] ?? 0;
 
 /** Bornes A-B remises dans l’ordre et dans la sourate (A ≤ B, 1 ≤ A, B ≤ nombre de versets). */
 export function abRange(s: number, a: number, b: number): { s: number; a: number; b: number } {

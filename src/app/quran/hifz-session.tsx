@@ -19,6 +19,7 @@ import { SURAHS } from '@/lib/surahs';
 import { useRecitation } from '@/lib/use-recitation';
 import { alpha, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 const HIDES: { label: string; value: HideMode; a11y: string }[] = [
   { label: 'Texte', value: 'none', a11y: 'Texte visible' },
@@ -264,7 +265,7 @@ function Review({ pal }: { pal: Pal }) {
           {prev ? (
             <View style={{ gap: 4 }}>
               <Text style={{ color: pal.muted, fontSize: 12 }}>Verset précédent (indice)</Text>
-              <Text style={{ color: pal.muted, fontFamily: fonts.quran, fontSize: size - 8, lineHeight: (size - 8) * 2, textAlign: 'right', writingDirection: 'rtl' }}>{`${prev} ۝${arNum(a - 1)}`}</Text>
+              <Text {...arLang} style={{ color: pal.muted, fontFamily: fonts.quran, fontSize: size - 8, lineHeight: (size - 8) * 2, textAlign: 'right', writingDirection: 'rtl' }}>{`${prev} ۝${arNum(a - 1)}`}</Text>
             </View>
           ) : null}
           <HideText key={it.k} text={all[it.k]} mode={mode} revealAll={reveal} size={size} lineH={rp.lineH} color={pal.ink} suffix={`۝${arNum(a)}`} />

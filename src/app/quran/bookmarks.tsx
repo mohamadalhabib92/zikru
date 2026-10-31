@@ -11,6 +11,7 @@ import { Container } from '@/ui/ds';
 import { Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 type Row = { key: string; s: number; a: number; color: string; title: string; body?: string; at: number; onRemove?: () => void };
 
@@ -63,7 +64,7 @@ export default function Bookmarks() {
               ) : null}
             </View>
             {all ? (
-              <Text numberOfLines={2} style={{ color: b.ink, fontFamily: fonts.quran, fontSize: 20, lineHeight: 42, textAlign: 'right', writingDirection: 'rtl', backgroundColor: tab === 'hl' ? alpha(r.color, 0.18) : undefined }}>
+              <Text {...arLang} numberOfLines={2} style={{ color: b.ink, fontFamily: fonts.quran, fontSize: 20, lineHeight: 42, textAlign: 'right', writingDirection: 'rtl', backgroundColor: tab === 'hl' ? alpha(r.color, 0.18) : undefined }}>
                 {all[gIndex(r.s, r.a)]}
               </Text>
             ) : null}

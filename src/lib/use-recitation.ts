@@ -15,7 +15,8 @@ import { clearPreloadedSource, preload, useAudioPlayer } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { enableBackgroundAudio } from '@/components/PlayerBar';
-import { ayahFallbackUrl, ayahUrl, gapMs, reciterById, type Gap, type Step } from './recitation';
+import { playableUrl } from './audio-dl';
+import { ayahFallbackUrl, gapMs, reciterById, type Gap, type Step } from './recitation';
 import { advance, createTokenGate, isStalled, nextDistinct, retryPlan, skipTarget } from './recitation-queue';
 import { SURAHS } from './surahs';
 
@@ -23,7 +24,13 @@ export type RecState = { queue: Step[]; pos: number; playing: boolean; loading: 
 const IDLE: RecState = { queue: [], pos: -1, playing: false, loading: false, error: null, loop: false };
 const native = Platform.OS !== 'web';
 
-export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }) {
+export function useRecitation(opts: {
+  reciter: string;
+  rate: number;
+  gap?: Gap;
+  /** Fin de file : renvoie la suite à enchaîner (sourate ou page suivante) ou null pour s’arrêter. */
+  onEnd?: (queue: Step[]) => Step[] | null;
+}) {
   // keepAudioSessionActive : la session iOS reste active entre deux versets (cause racine de l’arrêt).
   const player = useAudioPlayer(null, { updateInterval: 300, keepAudioSessionActive: true });
   const [st, setSt] = useState<RecState>(IDLE);
@@ -62,7 +69,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
     const i = nextDistinct(queue, pos, S.current.loop);
     const step = queue[i];
     if (!step) return;
-    const url = ayahUrl(reciterById(O.current.reciter), step.s, step.a);
+    const url = playableUrl(O.current.reciter, step.s, step.a);
     if (url === preloaded.current) return;
     dropPreload();
     preloaded.current = url;
@@ -101,7 +108,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
       const step = queue[pos];
       if (!step) return;
       const r = reciterById(O.current.reciter);
-      const url = (useFallback ? ayahFallbackUrl(r, step.s, step.a) : null) ?? ayahUrl(r, step.s, step.a);
+      const url = (useFallback ? ayahFallbackUrl(r, step.s, step.a) : null) ?? playableUrl(r.id, step.s, step.a);
       const token = gate.begin();
       lastProgress.current = { t: -1, at: Date.now() };
       update({ queue, pos, playing: true, loading: true, error: null });
@@ -148,6 +155,15 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
       failures.current = 0;
       const nx = advance(cur.queue, cur.pos, cur.loop);
       if (!nx) {
+        let more: Step[] | null = null;
+        try {
+          more = O.current.onEnd?.(cur.queue) ?? null;
+        } catch {}
+        if (more?.length) {
+          update({ loop: false });
+          load(0, more);
+          return;
+        }
         update({ playing: false, pos: -1 });
         try {
           if (native) player.clearLockScreenControls();

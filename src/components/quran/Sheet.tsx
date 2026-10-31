@@ -26,7 +26,7 @@ export function Sheet({ visible, onClose, title, subtitle, pal, children, footer
                 </Text>
                 {subtitle ? <Text style={{ color: pal.muted, fontSize: 13, marginTop: 2 }}>{subtitle}</Text> : null}
               </View>
-              <Pressable accessibilityRole="button" accessibilityLabel={L("Fermer")} onPress={onClose} hitSlop={10} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.muted, 0.15) }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Fermer")} onPress={onClose} hitSlop={10} style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.muted, 0.15) }}>
                 <Ionicons name="close" size={20} color={pal.ink} />
               </Pressable>
             </View>
@@ -56,8 +56,8 @@ export function QBtn({ icon, label, onPress, pal, active, solid, small, disabled
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        minHeight: small ? 32 : 40,
-        minWidth: label ? undefined : small ? 32 : 40,
+        minHeight: small ? 36 : 44,
+        minWidth: label ? undefined : small ? 36 : 44,
         paddingHorizontal: label ? (small ? 10 : 14) : 0,
         borderRadius: 20,
         borderWidth: 1,
