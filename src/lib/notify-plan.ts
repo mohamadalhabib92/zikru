@@ -1,7 +1,11 @@
 /**
  * Planification des rappels (prières + rappels optionnels) — module pur, sans dépendance, testé par scripts/test-notify.mjs.
- * iOS limite à 64 notifications locales programmées : on remplit jour après jour jusqu’à MAX, puis on ajoute
- * un dernier rappel « ouvrez Zikru » ; la planification est refaite à chaque ouverture, changement de réglage et à minuit.
+ * iOS limite à 64 notifications locales programmées. Plan glissant PRIORISÉ :
+ *  1. les adhans des prières obligatoires d’aujourd’hui + 7 jours pleins (≤ 40) passent en premier ;
+ *  2. puis les rappels secondaires (avant l’adhan, vendredi, adhkar, wird, Coran), jour entier par jour entier, du plus proche au plus lointain ;
+ *  3. s’il reste de la place, des jours complets supplémentaires ;
+ *  + un dernier rappel « ouvrez Zikru » après le dernier jour couvert.
+ * La planification est refaite à chaque ouverture, changement de réglage et à minuit.
  */
 export type FardKey = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 export const FARD_KEYS: FardKey[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -62,7 +66,7 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
   const friday = day.getDay() === 5;
   for (const k of FARD_KEYS) {
     const t = at(k);
-    if (!t || !prefs.prayers[k]) continue;
+    if (!t || !Number.isFinite(t.getTime()) || !prefs.prayers[k]) continue;
     out.push({ id: `${dk}-${k}`, date: t, title: `${L.prayer[k]} · ${L.place}`, body: L.atTime, url: '/prayers', kind: 'prayer' });
     if (prefs.before > 0) out.push({ id: `${dk}-${k}-pre`, date: new Date(t.getTime() - prefs.before * MIN), title: `${L.prayer[k]} ${L.inMin(prefs.before)}`, body: L.place, url: '/prayers', kind: 'before' });
   }
@@ -84,27 +88,70 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
   const isha = at('isha');
   if (prefs.quran === 'fajr' && fajr) out.push({ id: `${dk}-quran`, date: new Date(fajr.getTime() + 45 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
   if (prefs.quran === 'isha' && isha) out.push({ id: `${dk}-quran`, date: new Date(isha.getTime() + 30 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
-  return out.sort((a, b) => a.date.getTime() - b.date.getTime());
+  return out.filter((e) => Number.isFinite(e.date.getTime())).sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 /**
- * Plan glissant : à partir de `now`, jour après jour, sans dépasser `max` (63 par défaut, + 1 rappel « en pause »).
- * Un jour n’est ajouté que s’il tient entièrement, pour ne jamais couper une journée au milieu.
+ * Mode dispense (local) : pour un jour donné, « prayers » retire les rappels liés à la prière
+ * (adhan, avant l’adhan, Jumu‘a) ; « all » retire aussi les autres rappels. Aucune règle de fiqh ici : c’est un choix de l’utilisateur.
  */
-export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: PlanLabels, max = 63, maxDays = 30): PlannedNotif[] {
-  const out: PlannedNotif[] = [];
+export type PauseLevel = 'none' | 'prayers' | 'all';
+export type PauseFn = (day: Date) => PauseLevel;
+const PRAYER_LINKED = (e: PlannedNotif) => e.kind === 'prayer' || e.kind === 'before' || e.id.endsWith('-jumua');
+export function applyPause(ev: PlannedNotif[], level: PauseLevel): PlannedNotif[] {
+  if (level === 'all') return [];
+  if (level === 'prayers') return ev.filter((e) => !PRAYER_LINKED(e));
+  return ev;
+}
+
+/** Jours où les adhans passent en priorité : aujourd’hui + 7 jours pleins. */
+export const PRIORITY_DAYS = 8;
+
+/**
+ * Plan glissant priorisé (voir en-tête) : jamais plus de `max` (63) + 1 rappel « en pause » ≤ 64.
+ * Un jour de rappels secondaires n’est ajouté que s’il tient entièrement (jamais de journée coupée au milieu).
+ */
+export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: PlanLabels, max = 63, maxDays = 30, pause?: PauseFn): PlannedNotif[] {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
-  let lastDay = start;
+  const days: { day: Date; ev: PlannedNotif[] }[] = [];
   for (let i = 0; i < maxDays; i++) {
     const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 12);
     const ev = eventsForDay(day, compute(day), prefs, L).filter((e) => e.date.getTime() > now.getTime() + 5000);
-    if (out.length + ev.length > max) break;
-    out.push(...ev);
-    lastDay = day;
+    days.push({ day, ev: applyPause(ev, pause?.(day) ?? 'none') });
   }
-  if (out.length) {
-    const next = new Date(lastDay.getFullYear(), lastDay.getMonth(), lastDay.getDate() + 1, 12);
-    const fajr = compute(next).find((x) => x.key === 'fajr')?.time ?? new Date(next.getTime() - 4 * 3600000);
+  const out: PlannedNotif[] = [];
+  // 1. Adhans des prières obligatoires d’abord.
+  let covered = -1;
+  for (let i = 0; i < Math.min(PRIORITY_DAYS, days.length); i++) {
+    const p = days[i].ev.filter((e) => e.kind === 'prayer');
+    if (out.length + p.length > max) break;
+    out.push(...p);
+    covered = i;
+  }
+  // 2. Rappels secondaires de ces mêmes jours, du plus proche au plus lointain, par jours entiers.
+  let complete = true;
+  for (let i = 0; i <= covered; i++) {
+    const sec = days[i].ev.filter((e) => e.kind !== 'prayer');
+    if (out.length + sec.length > max) {
+      complete = false;
+      break;
+    }
+    out.push(...sec);
+  }
+  // 3. Jours complets supplémentaires tant qu’il reste de la place.
+  if (complete && covered === Math.min(PRIORITY_DAYS, days.length) - 1) {
+    for (let i = covered + 1; i < days.length; i++) {
+      if (out.length + days[i].ev.length > max) break;
+      out.push(...days[i].ev);
+      covered = i;
+    }
+  }
+  out.sort((x, y) => x.date.getTime() - y.date.getTime());
+  if (out.length && covered >= 0) {
+    const last = days[covered].day;
+    const next = new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1, 12);
+    const f = compute(next).find((x) => x.key === 'fajr')?.time;
+    const fajr = f && Number.isFinite(f.getTime()) ? f : new Date(next.getTime() - 4 * 3600000);
     out.push({ id: `${dayKey(next)}-paused`, date: fajr, title: L.pausedTitle, body: L.pausedBody, url: '/settings', kind: 'paused' });
   }
   return out;

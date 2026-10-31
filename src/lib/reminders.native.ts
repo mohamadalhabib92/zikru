@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
 import { planHash } from './notify-plan';
 import { planFor } from './reminders-common';
+import { useDispense } from './dispense-context';
 import { useSettings } from './settings';
 import { loadJSON, saveJSON } from './storage';
 
@@ -97,8 +98,9 @@ async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
 export function usePrayerReminders() {
   const { s, t: tr, ready } = useSettings();
   const router = useRouter();
-  const latest = useRef({ s, tr });
-  latest.current = { s, tr };
+  const { pause } = useDispense();
+  const latest = useRef({ s, tr, pause });
+  latest.current = { s, tr, pause };
 
   // Ouverture depuis une notification → écran concerné.
   useEffect(() => {
@@ -115,7 +117,7 @@ export function usePrayerReminders() {
     if (!ready) return;
     const run = () => {
       const { s: cur, tr: t } = latest.current;
-      const job = (running ?? Promise.resolve()).then(() => sync(cur.reminders, () => planFor(new Date(), cur, t))).catch(() => {});
+      const job = (running ?? Promise.resolve()).then(() => sync(cur.reminders, () => planFor(new Date(), cur, t, latest.current.pause))).catch(() => {});
       running = job;
     };
     run();
@@ -135,5 +137,5 @@ export function usePrayerReminders() {
       sub.remove();
       clearTimeout(timer);
     };
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.notif, s.lang]);
+  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, s.lang, pause]);
 }

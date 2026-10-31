@@ -1,6 +1,6 @@
 import type { Dict } from './i18n';
-import { computeDay, type MethodKey, type Place } from './prayer';
-import { buildPlan, type NotifPrefs, type PlanLabels } from './notify-plan';
+import { computeDay, type MethodKey, type Place, type PrayerOpts } from './prayer';
+import { buildPlan, type NotifPrefs, type PauseFn, type PlanLabels } from './notify-plan';
 
 export function planLabels(tr: Dict, place: string): PlanLabels {
   return {
@@ -27,7 +27,8 @@ export function planLabels(tr: Dict, place: string): PlanLabels {
   };
 }
 
-export type PlanInput = { place: Place; method: MethodKey; madhab: 'shafi' | 'hanafi'; notif: NotifPrefs };
-export function planFor(now: Date, s: PlanInput, tr: Dict) {
-  return buildPlan(now, (d) => computeDay(d, s.place, s.method, s.madhab), s.notif, planLabels(tr, s.place.label));
+export type PlanInput = { place: Place; method: MethodKey; madhab: 'shafi' | 'hanafi'; notif: NotifPrefs; prayer?: PrayerOpts };
+/** `pause` : mode dispense (local) — retire les rappels liés à la prière les jours concernés. */
+export function planFor(now: Date, s: PlanInput, tr: Dict, pause?: PauseFn) {
+  return buildPlan(now, (d) => computeDay(d, s.place, s.method, s.madhab, s.prayer), s.notif, planLabels(tr, s.place.label), 63, 30, pause);
 }
