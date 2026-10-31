@@ -3,8 +3,8 @@
 import assert from 'node:assert/strict';
 import { loadLib } from './load-lib.mjs';
 
-const M = await loadLib(['adhkar', 'duas', 'review-sheet', 'notify-plan', 'goals', 'widget-data'], 'pass2');
-const A = M.adhkar, D = M.duas, R = M['review-sheet'], N = M['notify-plan'], G = M.goals, W = M['widget-data'];
+const M = await loadLib(['adhkar', 'duas', 'review-sheet', 'notify-plan', 'goals', 'widget-data', 'shortcuts'], 'pass2');
+const A = M.adhkar, D = M.duas, R = M['review-sheet'], N = M['notify-plan'], G = M.goals, W = M['widget-data'], S = M.shortcuts;
 let ok = 0;
 const t = (name, fn) => {
   fn();
@@ -263,6 +263,21 @@ t('widgets : préférences désactivées par défaut, normalisation stricte', ()
   assert.deepEqual(W.DEFAULT_WIDGET_PREFS, { live: false, ramadan: false });
   assert.deepEqual(W.normalizeWidgetPrefs({ live: 'yes', ramadan: true }), { live: false, ramadan: true });
   assert.deepEqual(W.normalizeWidgetPrefs(null), { live: false, ramadan: false });
+});
+
+// ---------- Raccourcis (Siri, actions rapides) ----------
+t('raccourcis : liste fermée — une action inconnue ne navigue nulle part', () => {
+  assert.equal(S.pathForShortcut('prayers'), '/prayers');
+  assert.equal(S.pathForShortcut('wird'), '/tijani');
+  assert.equal(S.pathForShortcut('tasbih'), '/tasbih');
+  for (const bad of ['', 'settings', '../auth', '/prayers', null, undefined, 42, { id: 'tasbih' }]) assert.equal(S.pathForShortcut(bad), null);
+  assert.equal(S.SHORTCUTS.length, 3);
+});
+t('raccourcis : invocations Siri traitées une seule fois (livraison au moins une fois)', () => {
+  const seen = new Set();
+  assert.deepEqual(S.freshInvocations([{ id: 'a', name: 'open' }, { id: 'b', name: 'open' }], seen).map((i) => i.id), ['a', 'b']);
+  assert.deepEqual(S.freshInvocations([{ id: 'a', name: 'open' }, { id: 'c', name: 'open' }], seen).map((i) => i.id), ['c']);
+  assert.deepEqual(S.freshInvocations([{ id: 'c', name: 'open' }], seen), []);
 });
 
 console.log(`\n${ok} tests Passe 2 OK`);

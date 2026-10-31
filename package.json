@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.109.0",
     "adhan": "^4.4.6",
     "expo": "~58.0.20",
+    "expo-app-intents": "~0.5.15",
     "expo-audio": "~58.0.10",
     "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.13",

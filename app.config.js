@@ -5,6 +5,7 @@
 // Widgets (Passe 2) : extension WidgetKit iOS + widgets Android via expo-widgets.
 // Interrupteur : ZIKRU_NO_WIDGETS=1 retire entièrement l'extension du projet natif
 // (l'app fonctionne alors sans widgets ; le pont JS devient sans effet).
+// Siri (App Intents, dossier app-intents/) : ZIKRU_NO_SIRI=1 retire le plugin et le module inline.
 const WIDGETS = [
   {
     name: 'NextPrayer',
@@ -49,6 +50,13 @@ module.exports = ({ config }) => {
         },
       ],
     ];
+  }
+  if (process.env.ZIKRU_NO_SIRI !== '1') {
+    const exp = config.experiments || {};
+    const inline = exp.inlineModules || {};
+    const dirs = new Set([...(inline.watchedDirectories || []), 'app-intents']);
+    config.experiments = { ...exp, inlineModules: { ...inline, watchedDirectories: [...dirs] } };
+    config.plugins = [...(config.plugins || []), 'expo-app-intents'];
   }
   return config;
 };

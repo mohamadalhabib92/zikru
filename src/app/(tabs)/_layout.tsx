@@ -5,6 +5,7 @@ import { Ionicons, type IconName } from '@/ui/kit';
 import { useData } from '@/lib/data';
 import { usePrayerReminders } from '@/lib/reminders';
 import { useWidgetSync } from '@/lib/widget-sync';
+import { useShortcuts } from '@/lib/use-shortcuts';
 import { useSettings } from '@/lib/settings';
 import { theme as t } from '@/ui/theme';
 
@@ -13,6 +14,7 @@ export default function TabsLayout() {
   const { ready: dataReady } = useData();
   usePrayerReminders();
   useWidgetSync();
+  useShortcuts({ prayers: tr.w_next, wird: tr.sc_wird, tasbih: tr.sc_tasbih });
   const { width } = useWindowDimensions();
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
