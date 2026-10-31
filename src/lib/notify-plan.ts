@@ -30,11 +30,13 @@ export type NotifPrefs = {
   quiet?: QuietHours;
   /** Bilan privé de la semaine, le dimanche à 19 h (désactivé par défaut). */
   recap?: boolean;
+  /** Gratitude (bien-être) : rappel doux du soir à l’heure choisie, désactivé par défaut ; rappel secondaire (heures calmes respectées). */
+  gratitude?: { on: boolean; at: string };
 };
 export type QuietHours = { on: boolean; from: string; to: string };
 export const DEFAULT_QUIET: QuietHours = { on: false, from: '22:30', to: '06:30' };
 export type QuranSlot = 'off' | 'fajr' | 'isha';
-export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off', quiet: DEFAULT_QUIET, recap: false };
+export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off', quiet: DEFAULT_QUIET, recap: false, gratitude: { on: false, at: '21:00' } };
 export const BEFORE_OPTIONS = [0, 5, 10, 15, 30];
 
 export type PlanLabels = {
@@ -67,6 +69,9 @@ export type PlanLabels = {
   iftarBody?: string;
   zakatTitle?: string;
   zakatBody?: string;
+  /** Gratitude du soir (facultatif). */
+  gratTitle?: string;
+  gratBody?: string;
 };
 
 /**
@@ -86,7 +91,7 @@ export type FastPlan = {
   zakatDay?: string | null;
 };
 
-export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'recap' | 'paused' | 'suhur' | 'iftar' | 'zakat' };
+export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'recap' | 'paused' | 'suhur' | 'iftar' | 'zakat' | 'gratitude' };
 /** Rappels placés en priorité (étape 1 du plan) : adhans + suhur / iftar du Ramadan. */
 export const isPriority = (e: PlannedNotif) => e.kind === 'prayer' || e.kind === 'suhur' || e.kind === 'iftar';
 type DayTimes = { key: string; time: Date }[];
@@ -129,6 +134,11 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
   if (prefs.quran === 'isha' && isha) out.push({ id: `${dk}-quran`, date: new Date(isha.getTime() + 30 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });
   if (prefs.recap && day.getDay() === 0 && L.recapTitle)
     out.push({ id: `${dk}-recap`, date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 19, 0), title: L.recapTitle, body: L.recapBody ?? '', url: '/goals', kind: 'recap' });
+  const g = prefs.gratitude;
+  const [gh, gm] = /^\d{2}:\d{2}$/.test(g?.at ?? '') ? g!.at.split(':').map(Number) : [99, 99];
+  if (g?.on && L.gratTitle && gh < 24 && gm < 60) {
+    out.push({ id: `${dk}-gratitude`, date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), gh, gm), title: L.gratTitle, body: L.gratBody ?? '', url: '/bien-etre?s=gratitude', kind: 'gratitude' });
+  }
   if (fast && fast.isFastDay(day)) {
     if (fast.suhur && fajr && L.suhurTitle) {
       const end = new Date(fajr.getTime() - Math.max(0, fast.imsakMin) * MIN);

@@ -32,6 +32,8 @@ export function planLabels(tr: Dict, place: string): PlanLabels {
     iftarBody: tr.ram_iftar_b,
     zakatTitle: tr.ram_zakat_t,
     zakatBody: tr.ram_zakat_b,
+    gratTitle: tr.grat_t,
+    gratBody: tr.grat_b,
   };
 }
 
