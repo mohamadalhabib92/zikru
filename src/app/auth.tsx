@@ -17,7 +17,9 @@ export default function AuthScreen() {
   const pt = privacyText(s.lang);
   const [consent, choose] = useConsent();
   const agreed = consent.account === true;
-  const [email, setEmail] = useState('');
+  // Adresse déjà utilisée sur cet appareil : pré-remplie (pour « Renvoyer un lien ») tant que rien n’est saisi.
+  const [typed, setEmail] = useState<string | null>(null);
+  const email = typed ?? auth.lastEmail;
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -37,6 +39,7 @@ export default function AuthScreen() {
     setErr(null);
     try {
       await auth.sendCode(email);
+      auth.clearLinkError();
       setSent(true);
       setCool(60);
     } catch (e) {
@@ -51,7 +54,21 @@ export default function AuthScreen() {
       <H1>Connexion</H1>
       <Muted>Pour votre famille et vos cercles. Sans mot de passe : nous vous envoyons un code par e-mail.</Muted>
       <Spacer />
-      {auth.linkError ? <Notice tone="warning" title="Lien de connexion" text={auth.linkError} /> : null}
+      {auth.linkError ? (
+        <View testID="auth-link-error">
+          <Notice tone="warning" title="Lien expiré, renvoyer un lien" text={auth.linkError} />
+          <Spacer h={8} />
+          <Button
+            icon="refresh-outline"
+            title={cool > 0 ? L('Renvoyer un lien ({n} s)', { n: cool }) : 'Renvoyer un lien'}
+            disabled={!valid || !agreed || cool > 0}
+            loading={busy}
+            onPress={send}
+          />
+          {!valid || !agreed ? <Muted style={{ marginTop: 6 }}>Vérifiez votre adresse et cochez l’accord ci-dessous, puis renvoyez.</Muted> : null}
+          <Spacer />
+        </View>
+      ) : null}
       <Card>
         <Field
           label="Adresse e-mail"
@@ -85,10 +102,10 @@ export default function AuthScreen() {
           <Button title="Recevoir un code" icon="mail-outline" disabled={!valid || !agreed} loading={busy} onPress={send} />
         ) : (
           <>
-            <Notice tone="success" title="E-mail envoyé" text="Saisissez le code reçu, ou touchez le lien dans l’e-mail depuis cet appareil. Pensez aux indésirables." />
+            <Notice tone="success" title="E-mail envoyé" text="Saisissez ici le code à 6 chiffres de l’e-mail : c’est le plus sûr. Le lien marche aussi, s’il est ouvert sur cet appareil dans l’heure. Pensez aux indésirables." />
             <Spacer h={8} />
             <Field
-              label="Code reçu"
+              label="Code à 6 chiffres"
               keyboardType="number-pad"
               autoComplete="one-time-code"
               textContentType="oneTimeCode"

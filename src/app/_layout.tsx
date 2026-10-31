@@ -1,12 +1,12 @@
 import { Amiri_400Regular, Amiri_700Bold } from '@expo-google-fonts/amiri';
 import { AmiriQuran_400Regular } from '@expo-google-fonts/amiri-quran';
 import { useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
+import { router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from '@/lib/community/auth';
+import { AuthProvider, useAuth } from '@/lib/community/auth';
 import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
 import { setBleLang } from '@/lib/ble/messages';
@@ -46,6 +46,16 @@ function Root() {
     const id = setTimeout(() => setFontTimeout(true), 2500);
     return () => clearTimeout(id);
   }, []);
+  // Lien de connexion refusé (expiré, déjà utilisé) arrivé sur n'importe quelle page : écran de connexion avec « Renvoyer un lien ».
+  const auth = useAuth();
+  const linkFailed = !!auth.linkError && !auth.session;
+  const path = usePathname();
+  const onAuth = path === '/auth' || path === '/auth-callback';
+  useEffect(() => {
+    if (!linkFailed || onAuth) return;
+    const id = setTimeout(() => router.push('/auth'), 120);
+    return () => clearTimeout(id);
+  }, [linkFailed]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const r = takePendingRoute();
     if (r) setTimeout(() => router.push(r as never), 60);
@@ -103,6 +113,7 @@ function Root() {
         <Stack.Screen name="bilal" options={{ title: L("El Ghaly Bilal") }} />
         <Stack.Screen name="planner" options={{ title: L("Planificateur du jour") }} />
         <Stack.Screen name="auth" options={{ title: L("Connexion") }} />
+        <Stack.Screen name="auth-callback" options={{ title: L("Connexion") }} />
         <Stack.Screen name="join" options={{ title: L("Rejoindre") }} />
         <Stack.Screen name="family/[id]" options={{ title: L("Ma famille") }} />
         <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />

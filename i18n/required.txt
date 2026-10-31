@@ -9,6 +9,7 @@ src/app/_layout.tsx
 src/app/abjad.tsx
 src/app/audit.tsx
 src/app/auth.tsx
+src/app/auth-callback.tsx
 src/app/bilal.tsx
 src/app/ble-diag.tsx
 src/app/circle/[id].tsx

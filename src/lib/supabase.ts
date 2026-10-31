@@ -16,4 +16,5 @@ export const supabase: SupabaseClient | null = backendConfigured
     })
   : null;
 
-export const AUTH_REDIRECT = PWA_URL + 'community';
+/** Retour du lien magique : écran /auth-callback (doit figurer dans « Redirect URLs » de Supabase Auth). */
+export const AUTH_REDIRECT = PWA_URL + 'auth-callback';
