@@ -47,7 +47,8 @@ export type ReviewRow = {
   gradingState?: 'verifie' | 'non_verifie' | 'sans_objet';
 };
 
-export function reviewRows(): ReviewRow[] {
+/** `extra` : lignes de modules chargés à la demande (ex. bienEtreRows du module bien-être). */
+export function reviewRows(extra: ReviewRow[] = []): ReviewRow[] {
   const rows: ReviewRow[] = [];
   for (const p of allProvenance()) {
     const grading =
@@ -131,6 +132,7 @@ export function reviewRows(): ReviewRow[] {
   }
   rows.push(...p5Rows());
   rows.push(...adhkarRows());
+  rows.push(...extra);
   return rows;
 }
 

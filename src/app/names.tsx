@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, nameItem, type DraftItem } from '@/components/zikr/parts';
@@ -13,7 +13,6 @@ import { useLayout } from '@/ui/ds';
 import { alpha, brand as b } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
 import { L, useUiLang } from '@/lib/l10n';
-import { NAMES_EN } from '@/lib/i18n-content/names';
 
 const norm = (s: string) =>
   s
@@ -29,13 +28,22 @@ export default function Names() {
   const [draft, setDraft] = useState<DraftItem | null>(null);
   const { cols } = useLayout();
   const lang = useUiLang();
+  // Sens anglais chargés à la demande (morceau séparé, partagé avec les cartes du module bien-être).
+  const [NAMES_EN, setNamesEn] = useState<string[]>([]);
+  useEffect(() => {
+    let alive = true;
+    void import('@/lib/i18n-content/names').then((m) => alive && setNamesEn(m.NAMES_EN));
+    return () => {
+      alive = false;
+    };
+  }, []);
   const goldFill = b.goldDeep;
   const list = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return NAMES;
     const num = parseInt(nq, 10);
     return NAMES.filter((x) => (Number.isFinite(num) ? x.n === num || String(computeAbjad(nameBare(x.ar), repSys, opts).total) === nq : norm(`${x.tr} ${x.fr} ${NAMES_EN[x.n - 1] ?? ''} ${x.ar}`).includes(nq)));
-  }, [q, repSys, opts.taMarbuta, opts.hamza]);
+  }, [q, repSys, opts.taMarbuta, opts.hamza, NAMES_EN]);
 
   return (
     <Screen padded={false} bg={b.cream}>

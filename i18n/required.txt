@@ -91,3 +91,10 @@ src/app/quran/downloads.tsx
 src/components/quran/ABSheet.tsx
 src/components/quran/MiniPlayer.tsx
 src/components/quran/SleepSheet.tsx
+src/components/bien-etre/screens/hub.tsx
+src/components/bien-etre/screens/respiration.tsx
+src/components/bien-etre/screens/meditation.tsx
+src/components/bien-etre/screens/jeux.tsx
+src/components/bien-etre/screens/noms.tsx
+src/components/bien-etre/screens/tajwid.tsx
+src/components/bien-etre/common.tsx

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { APP_VERSION } from '@/components/zikru/Provenance';
@@ -24,7 +24,15 @@ function download(name: string, text: string, type: string) {
 
 /** Écran discret pour les relecteurs : tout le contenu religieux par statut de validation, avec export. */
 export default function Validation() {
-  const rows = useMemo(() => reviewRows(), []);
+  const [extra, setExtra] = useState<ReviewRow[]>([]);
+  useEffect(() => {
+    let alive = true;
+    void import('@/components/bien-etre/module').then((m) => alive && setExtra(m.bienEtreRows()));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const rows = useMemo(() => reviewRows(extra), [extra]);
   const [kind, setKind] = useState<Kind>('all');
   const [status, setStatus] = useState<ReviewStatus>('a_valider');
   const [limit, setLimit] = useState(40);

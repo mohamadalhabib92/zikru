@@ -23,13 +23,19 @@ export function useUiLang(): Lang {
   return useContext(UiLangContext);
 }
 
+/** Catalogues chargés à la demande (ex. module bien-être) : fusionnés à la consultation. */
+const EXTRA: Record<string, [en: string, ar: string]> = {};
+export function registerUiStrings(d: Record<string, [en: string, ar: string]>) {
+  Object.assign(EXTRA, d);
+}
+
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
 const fill = (s: string, vars?: Record<string, string | number | null | undefined>) => (vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k] ?? "") : m)) : s);
 
 /** Cherche la traduction d'une chaîne française (null si absente du catalogue ou langue sans catalogue). */
 export function lookup(fr: string, lang: Lang = cur): string | null {
   if (lang !== 'en' && lang !== 'ar') return null;
-  const e = UI_STRINGS[fr] ?? UI_STRINGS[norm(fr)];
+  const e = UI_STRINGS[fr] ?? UI_STRINGS[norm(fr)] ?? EXTRA[fr] ?? EXTRA[norm(fr)];
   if (!e) return null;
   return lang === 'en' ? e[0] : e[1];
 }

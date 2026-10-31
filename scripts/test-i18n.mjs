@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { loadLib } from './load-lib.mjs';
 import { extractDeep, walk } from './i18n-scan.mjs';
 
-const { i18n, 'ui-strings': U } = await loadLib(['i18n', 'ui-strings'], 'i18n');
+const { i18n, 'ui-strings': U, 'ui-strings-bien-etre': UBE } = await loadLib(['i18n', 'ui-strings', 'ui-strings-bien-etre'], 'i18n');
 const AR = /[\u0600-\u06FF]/;
 const norm = (s) => s.replace(/\s+/g, ' ').trim();
 
@@ -27,7 +27,7 @@ assert.deepEqual(miss.en, [], 'clés en manquantes : ' + miss.en.join(', '));
 assert.deepEqual(miss.ar, [], 'clés ar manquantes : ' + miss.ar.join(', '));
 
 // 2) Catalogue : chaque entrée a en + ar (arabe en écriture arabe), mêmes variables {…}.
-const CAT = U.UI_STRINGS;
+const CAT = { ...UBE.UI_STRINGS_BIEN_ETRE, ...U.UI_STRINGS };
 for (const [k, [en, ar]] of Object.entries(CAT)) {
   assert.ok(en && en.trim(), 'catalogue : en vide pour « ' + k + ' »');
   assert.ok(ar && AR.test(ar), 'catalogue : ar sans arabe pour « ' + k + ' »');
