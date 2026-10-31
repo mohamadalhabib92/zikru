@@ -3,6 +3,7 @@ import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { useData } from '@/lib/data';
 import { bestStreak, dayKey, LEVELS, levelFor, streak, useGrowth } from '@/lib/growth';
+import { useDispense } from '@/lib/dispense-context';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LTitle, SectionLabel } from '@/ui/light';
 import { alpha, brand as b } from '@/ui/theme';
@@ -14,8 +15,9 @@ export default function Journey() {
   const total = tasbih.total;
   const lvl = levelFor(total);
   const active = Object.keys(g.days).filter((k) => (g.days[k] ?? 0) > 0);
-  const cur = streak((k) => (g.days[k] ?? 0) > 0);
-  const best = Math.max(cur, bestStreak(active));
+  const { neutral } = useDispense();
+  const cur = streak((k) => (g.days[k] ?? 0) > 0, new Date(), neutral);
+  const best = Math.max(cur, bestStreak(active, neutral));
   const today = g.days[dayKey()] ?? 0;
   const last = (n: number) =>
     Array.from({ length: n }, (_, i) => {

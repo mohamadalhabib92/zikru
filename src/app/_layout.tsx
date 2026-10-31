@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/community/auth';
 import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
+import { DispenseProvider } from '@/lib/dispense-context';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
@@ -129,6 +130,7 @@ export default function Layout() {
     <AppErrorBoundary>
       <SafeAreaProvider>
         <SettingsProvider>
+          <DispenseProvider>
           <DataProvider>
             <ZikrProvider>
               <AuthProvider>
@@ -140,6 +142,7 @@ export default function Layout() {
               </AuthProvider>
             </ZikrProvider>
           </DataProvider>
+          </DispenseProvider>
         </SettingsProvider>
       </SafeAreaProvider>
     </AppErrorBoundary>

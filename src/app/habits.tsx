@@ -3,6 +3,7 @@ import { Alert, Platform, Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey, HABIT_PRESETS, streak, useGrowth, type Habit } from '@/lib/growth';
+import { useDispense } from '@/lib/dispense-context';
 import { Button, Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LText, LTitle, SectionLabel } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
@@ -37,7 +38,8 @@ export default function Habits() {
     setTiny('');
     setAdding(false);
   };
-  const st = (h: Habit) => streak((k) => h.done.includes(k));
+  const { neutral } = useDispense();
+  const st = (h: Habit) => streak((k) => h.done.includes(k), new Date(), neutral);
   return (
     <Screen padded={false} bg={b.cream}>
       <PatternBg color={TEAL} style={{ padding: 20 }}>

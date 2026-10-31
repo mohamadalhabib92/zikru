@@ -5,6 +5,7 @@ import { Text } from '@/ui/Text';
 import { useTranslationId } from '@/components/quran/data';
 import { dayKey } from '@/lib/dates';
 import { khatmaStatus, streak } from '@/lib/khatma';
+import { useDispense } from '@/lib/dispense-context';
 import { normLat, searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { hizbPage, hizbRange, juzPage, juzRange, pageOf, pageRange, parseRef, surahPage, fromIndex, OFFSETS } from '@/lib/quran-nav';
 import { hifzCards, khatma, lastRead, marks, readDays } from '@/lib/quran-store';
@@ -30,7 +31,8 @@ export default function QuranHub() {
   const [m] = useShared(marks);
   const tr = useTranslationId();
   const today = dayKey();
-  const st = streak(days, today);
+  const { neutral } = useDispense();
+  const st = streak(days, today, neutral);
   const kst = k ? khatmaStatus(k, today) : null;
   const due = queueSize(dailyQueue(cards, today));
   const [tab, setTab] = useState<Tab>('surah');

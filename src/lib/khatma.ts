@@ -86,15 +86,23 @@ export function markPage(k: Khatma, page: number, today: string): Khatma {
 }
 
 /** Série : jours consécutifs de lecture se terminant aujourd’hui (ou hier, si rien n’est encore lu aujourd’hui) ; et le record. */
-export function streak(days: string[], today: string): { current: number; best: number; todayDone: boolean } {
+export function streak(days: string[], today: string, neutral: (d: string) => boolean = () => false): { current: number; best: number; todayDone: boolean } {
   const set = new Set(days);
   const todayDone = set.has(today);
   let current = 0;
-  for (let d = todayDone ? today : addDays(today, -1); set.has(d); d = addDays(d, -1)) current++;
+  // Jours neutres (mode dispense) : sautés, ni comptés ni cassants.
+  for (let d = todayDone ? today : addDays(today, -1), i = 0; i < 3650 && (set.has(d) || neutral(d)); d = addDays(d, -1), i++) if (set.has(d)) current++;
   const sorted = [...set].sort();
   let best = 0, run = 0, prev = '';
+  const bridged = (a: string, b: string) => {
+    const gap = daysBetween(a, b);
+    if (gap === 1) return true;
+    if (gap < 1 || gap > 366) return false;
+    for (let i = 1; i < gap; i++) if (!neutral(addDays(a, i))) return false;
+    return true;
+  };
   for (const d of sorted) {
-    run = prev && daysBetween(prev, d) === 1 ? run + 1 : 1;
+    run = prev && bridged(prev, d) ? run + 1 : 1;
     best = Math.max(best, run);
     prev = d;
   }
