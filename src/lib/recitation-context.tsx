@@ -80,3 +80,8 @@ export function useGlobalRecitation(): GlobalRec {
 }
 /** Variante tolérante (mini-lecteur, séance hifz) : null hors fournisseur. */
 export const useMaybeGlobalRecitation = () => useContext(Ctx);
+/** Espace à réserver en bas des listes quand le mini-lecteur est affiché (pour ne rien masquer). */
+export const useMiniPlayerInset = () => {
+  const rec = useContext(Ctx);
+  return rec && (rec.pos >= 0 || rec.error) ? 72 : 0;
+};

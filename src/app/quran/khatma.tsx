@@ -133,12 +133,12 @@ export default function KhatmaScreen() {
             <Text style={{ color: b.ink, fontSize: 17, fontWeight: '900' }}>{st.notStarted ? 'Premier wird' : 'Wird du jour'}</Text>
             {st.today ? <Text style={{ color: b.ink }}>{L('Pages {a} à {b} · {s}', { a: st.today.from, b: st.today.to, s: surahAtPage(st.today.from) })}</Text> : null}
             <Text style={{ color: ahead ? b.green : '#D98A2B', fontWeight: '700' }}>
-              {st.delta === 0 ? 'Vous êtes dans les temps.' : ahead ? L('En avance de {n} page(s).', { n: st.delta }) : L('En retard de {n} page(s) : {p} pages/jour pour finir à temps.', { n: -st.delta, p: st.needPerDay })}
+              {st.notStarted ? (st.done ? L('En avance de {n} page(s).', { n: st.done }) : 'Vous pouvez commencer dès maintenant si vous le souhaitez.') : st.delta === 0 ? 'Vous êtes dans les temps.' : ahead ? L('En avance de {n} page(s).', { n: st.delta }) : L('En retard de {n} page(s) : {p} pages/jour pour finir à temps.', { n: -st.delta, p: st.needPerDay })}
             </Text>
             <Button title={L('Lire à partir de la page {p}', { p: st.nextPage })} icon="book-outline" onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(st.nextPage) } })} />
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
               <Button small variant="secondary" title="Page suivante lue" icon="checkmark" onPress={() => setK((c) => (c ? markPage(c, st.nextPage, today) : c))} />
-              {st.today ? <Button small variant="secondary" title="Wird du jour lu" icon="checkmark-done" onPress={() => setK((c) => (c ? markPage(c, st.today!.to, today) : c))} /> : null}
+              {st.today && !st.notStarted ? <Button small variant="secondary" title="Wird du jour lu" icon="checkmark-done" onPress={() => setK((c) => (c ? markPage(c, st.today!.to, today) : c))} /> : null}
             </View>
             <Text style={{ color: b.inkMuted, fontSize: 12 }}>La progression avance aussi automatiquement quand vous tournez les pages du mushaf.</Text>
           </View>

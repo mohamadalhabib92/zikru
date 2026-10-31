@@ -57,7 +57,9 @@ export async function drawVerseCard(c: VerseCard, dark: boolean): Promise<HTMLCa
   ctx.strokeStyle = gold;
   ctx.lineWidth = 3;
   ctx.strokeRect(36, 36, W - 72, cv.height - 72);
-  let y = pad + 40;
+  // bloc (en-tête + arabe + traduction) centré verticalement au-dessus du pied de carte
+  const block = 70 + arLines.length * ar * 1.9 + (trLines.length ? 40 + trLines.length * 48 : 0);
+  let y = pad + 40 + Math.max(0, (cv.height - 200 - pad - 40 - block) / 2);
   // en-tête
   ctx.fillStyle = gold;
   ctx.font = '600 32px system-ui, -apple-system, "Segoe UI", sans-serif';

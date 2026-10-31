@@ -1,3 +1,4 @@
+import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
@@ -14,8 +15,9 @@ export { Ionicons };
 /** Conteneur d'écran défilant, largeur max sur desktop (PWA). */
 export function Screen({ children, scroll = true, padded = true, bg }: { children: ReactNode; scroll?: boolean; padded?: boolean; bg?: string }) {
   const insets = useSafeAreaInsets();
+  const mini = useMiniPlayerInset();
   const inner = (
-    <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom }]}>{children}</View>
+    <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom + mini }]}>{children}</View>
   );
   return (
     <View style={[S().screen, bg ? { backgroundColor: bg } : null]}>

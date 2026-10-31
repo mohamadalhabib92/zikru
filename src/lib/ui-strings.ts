@@ -1575,6 +1575,7 @@ export const UI_STRINGS: Record<string, [en: string, ar: string]> = {
   "Vous ne verrez plus ses messages et elle ne pourra plus vous écrire.": ["You will no longer see their messages and they will no longer be able to write to you.","لن ترى رسائله بعد الآن ولن يتمكّن من مراسلتك."],
   "Vous ne verrez plus ses messages et elle ne pourra plus vous écrire. Elle n’est pas prévenue. Vous pourrez débloquer dans Communauté.": ["You will no longer see their messages and they will no longer be able to write to you. They are not notified. You can unblock them in Community.","لن ترى رسائله ولن يتمكّن من مراسلتك، ولن يُبلَّغ بذلك. يمكنك إلغاء الحظر من قسم المجتمع."],
   "Vous pourrez revenir avec une nouvelle invitation.": ["You can come back with a new invitation.","يمكنك العودة بدعوة جديدة."],
+  "Vous pouvez commencer dès maintenant si vous le souhaitez.": ["You can start right away if you wish.","يمكنك البدء من الآن إن شئت."],
   "Vous serez parent administrateur (2 parents maximum).": ["You will be an admin parent (2 parents maximum).","ستكون وليَّ أمرٍ مسؤولًا (والدان كحد أقصى)."],
   "Vous êtes dans les temps.": ["You are on schedule.","أنت ملتزم بالجدول."],
   "Voyage": ["Travel","السفر"],

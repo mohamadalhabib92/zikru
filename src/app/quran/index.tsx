@@ -1,3 +1,4 @@
+import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, TextInput, View } from 'react-native';
@@ -23,6 +24,7 @@ const STATUS_COLOR = () => ({ none: b.line, learning: b.gold, review: '#D98A2B',
 
 /** Accueil du Coran : reprise, recherche, mushaf, mémorisation, khatma, marque-pages ; index par sourate / juz’ / hizb / page. */
 export default function QuranHub() {
+  const mini = useMiniPlayerInset();
   const router = useRouter();
   const { cols, tablet } = useLayout();
   const [last] = useShared(lastRead);
@@ -232,7 +234,7 @@ export default function QuranHub() {
         numColumns={nCols}
         keyExtractor={(r) => r.key}
         initialNumToRender={20}
-        contentContainerStyle={{ maxWidth: 1120, width: '100%', alignSelf: 'center', paddingBottom: 40 }}
+        contentContainerStyle={{ maxWidth: 1120, width: '100%', alignSelf: 'center', paddingBottom: 40 + mini }}
         columnWrapperStyle={nCols > 1 ? { gap: 10, paddingHorizontal: 16 } : undefined}
         ListHeaderComponent={header}
         ListHeaderComponentStyle={{ marginBottom: 6 }}
