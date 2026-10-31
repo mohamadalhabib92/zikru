@@ -1,4 +1,4 @@
-import { CalculationMethod, Coordinates, HighLatitudeRule, Madhab, PrayerTimes, Qibla } from 'adhan';
+import { CalculationMethod, CalculationParameters, Coordinates, HighLatitudeRule, Madhab, PrayerTimes, Qibla } from 'adhan';
 
 /** Horaires calculés 100 % hors-ligne (bibliothèque open-source « adhan », MIT). Aucun appel réseau. */
 export const METHODS = {
@@ -14,8 +14,40 @@ export const METHODS = {
   Singapore: 'Singapour (20° / 18°)',
   Turkey: 'Diyanet — Turquie',
   Tehran: 'Institut de géophysique, Téhéran',
+  UOIF: 'UOIF / Musulmans de France (12° / 12°)',
 } as const;
 export type MethodKey = keyof typeof METHODS;
+
+/** Méthodes sans fabrique « adhan » : angles publiés (UOIF = 12°/12°, méthode 12 d’AlAdhan / PrayTimes). */
+const CUSTOM: Partial<Record<MethodKey, { fajr: number; isha: number }>> = { UOIF: { fajr: 12, isha: 12 } };
+
+export const isMethodKey = (k: unknown): k is MethodKey => typeof k === 'string' && Object.prototype.hasOwnProperty.call(METHODS, k);
+
+/** Règle hautes latitudes (Fajr/Isha quand le crépuscule ne finit pas) : « auto » = recommandée par adhan selon la latitude. */
+export const HIGH_LAT_RULES = ['auto', 'middleofthenight', 'seventhofthenight', 'twilightangle'] as const;
+export type HighLatChoice = (typeof HIGH_LAT_RULES)[number];
+
+/** Options locales de calcul : ajustements ±minutes et horaires fixes de la mosquée (prioritaires sur le calcul). */
+export type PrayerOpts = {
+  highLat?: HighLatChoice;
+  /** Minutes ajoutées à l’heure calculée (−30…+30), par prière. Sans effet sur un horaire de mosquée. */
+  adjust?: Partial<Record<PrayerKey, number>>;
+  mosque?: { enabled: boolean; name?: string; times: Partial<Record<PrayerKey, string>> };
+};
+export const DEFAULT_PRAYER_OPTS: PrayerOpts = { highLat: 'auto', adjust: {}, mosque: { enabled: false, times: {} } };
+export const ADJUST_LIMIT = 30;
+
+/** « HH:MM » valide → minutes depuis minuit, sinon null. */
+export function parseHHMM(v: string | undefined | null): number | null {
+  const m = /^\s*(\d{1,2})[:h.](\d{2})\s*$/.exec(v ?? '');
+  if (!m) return null;
+  const h = Number(m[1]);
+  const mi = Number(m[2]);
+  return h < 24 && mi < 60 ? h * 60 + mi : null;
+}
+export const clampAdj = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? Math.max(-ADJUST_LIMIT, Math.min(ADJUST_LIMIT, Math.round(n))) : 0);
+
+export type PrayerRow = { key: PrayerKey; time: Date; source: 'calc' | 'mosque' };
 
 export const PRAYER_KEYS = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export type PrayerKey = (typeof PRAYER_KEYS)[number];
@@ -41,17 +73,36 @@ export const CITIES: Place[] = [
 ];
 export const DEFAULT_PLACE: Place = { ...CITIES[0], source: 'example' };
 
-export function computeDay(date: Date, place: Place, method: MethodKey, madhab: 'shafi' | 'hanafi') {
+export function computeDay(date: Date, place: Place, method: MethodKey, madhab: 'shafi' | 'hanafi', opts?: PrayerOpts): PrayerRow[] {
   const coords = new Coordinates(place.lat, place.lng);
-  const params = CalculationMethod[method]();
+  const key = isMethodKey(method) ? method : 'MuslimWorldLeague';
+  const custom = CUSTOM[key];
+  const params = custom ? new CalculationParameters('Other', custom.fajr, custom.isha) : CalculationMethod[key as Exclude<MethodKey, 'UOIF'>]();
   params.madhab = madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
-  params.highLatitudeRule = HighLatitudeRule.recommended(coords);
+  const hl = opts?.highLat;
+  params.highLatitudeRule = hl && hl !== 'auto' && HIGH_LAT_RULES.includes(hl) ? hl : HighLatitudeRule.recommended(coords);
+  for (const k of PRAYER_KEYS) params.adjustments[k] = clampAdj(opts?.adjust?.[k]);
   const pt = new PrayerTimes(coords, date, params);
-  return PRAYER_KEYS.map((key) => ({ key, time: pt[key] as Date }));
+  const rows: PrayerRow[] = PRAYER_KEYS.map((k) => ({ key: k, time: pt[k] as Date, source: 'calc' }));
+  const mosque = opts?.mosque;
+  if (!mosque?.enabled) return rows;
+  // Horaires de ma mosquée : prioritaires, sauf s’ils cassent l’ordre de la journée (saisie erronée → calcul conservé).
+  const out = rows.map((r) => {
+    const min = parseHHMM(mosque.times?.[r.key]);
+    if (min == null) return r;
+    return { key: r.key, time: new Date(date.getFullYear(), date.getMonth(), date.getDate(), Math.floor(min / 60), min % 60, 0, 0), source: 'mosque' as const };
+  });
+  for (let guard = 0; guard < out.length; guard++) {
+    const bad = out.findIndex((r, i) => i > 0 && r.time.getTime() <= out[i - 1].time.getTime());
+    if (bad === -1) break;
+    const j = out[bad].source === 'mosque' ? bad : bad - 1;
+    out[j] = rows[j];
+  }
+  return out;
 }
 
 /** États passé / actuel / prochain — un seul calcul pour tous les écrans. */
-export function withStates(list: { key: PrayerKey; time: Date }[], now: Date, tomorrowFajr: Date) {
+export function withStates<T extends { key: PrayerKey; time: Date }>(list: T[], now: Date, tomorrowFajr: Date) {
   let nextIdx = list.findIndex((p) => p.time.getTime() > now.getTime());
   const currentIdx = nextIdx === -1 ? list.length - 1 : nextIdx - 1;
   const rows = list.map((p, i) => ({

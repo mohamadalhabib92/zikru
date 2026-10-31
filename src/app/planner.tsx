@@ -24,7 +24,7 @@ export default function Planner() {
   const g = useGrowth();
   const day = dayKey();
   const tasks = g.tasks[day] ?? [];
-  const times = useMemo(() => Object.fromEntries(computeDay(new Date(), s.place, s.method, s.madhab).map((x) => [x.key, x.time])), [s.place, s.method, s.madhab]);
+  const times = useMemo(() => Object.fromEntries(computeDay(new Date(), s.place, s.method, s.madhab, s.prayer).map((x) => [x.key, x.time])), [s.place, s.method, s.madhab, s.prayer]);
   const now = new Date();
   const currentBlock = [...BLOCKS].reverse().find((bl) => times[bl.key] <= now)?.key ?? 'isha';
   const [draft, setDraft] = useState<Record<string, string>>({});

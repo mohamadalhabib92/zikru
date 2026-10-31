@@ -130,7 +130,7 @@ function DaySchedule() {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
-  const list = useMemo(() => computeDay(now, s.place, s.method, s.madhab), [now.toDateString(), s.place, s.method, s.madhab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const list = useMemo(() => computeDay(now, s.place, s.method, s.madhab, s.prayer), [now.toDateString(), s.place, s.method, s.madhab, s.prayer]); // eslint-disable-line react-hooks/exhaustive-deps
   const at = (k: PrayerKey) => list.find((x) => x.key === k)!.time;
   const mins = (d: Date) => d.getHours() * 60 + d.getMinutes();
   const pad = 8;

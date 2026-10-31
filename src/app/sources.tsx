@@ -17,6 +17,9 @@ export default function Sources() {
       <Card>
         <Body>Calcul astronomique local, sans réseau, avec la bibliothèque open-source « adhan » (Batoul Apps, licence MIT), algorithmes issus de « Astronomical Algorithms » (Jean Meeus).</Body>
         <Muted>Méthode active : {METHODS[s.method]}. Asr : {s.madhab === 'hanafi' ? 'ombre ×2 (Hanafi)' : 'ombre ×1 (majorité)'}. Règle hautes latitudes : recommandée par adhan selon la latitude.</Muted>
+        {s.prayer?.highLat && s.prayer.highLat !== 'auto' ? <Muted>Règle hautes latitudes choisie dans les réglages : elle remplace la règle recommandée.</Muted> : null}
+        <Muted>UOIF : Fajr 12°, Isha 12° (angles de la méthode « Union des organisations islamiques de France », repris par AlAdhan et PrayTimes). Ces angles sont débattus : vérifie avec ta mosquée locale.</Muted>
+        <Muted>Ajustements (±30 min) et « Horaires de ma mosquée » : appliqués uniquement sur cet appareil, prioritaires sur le calcul.</Muted>
         <Muted>Les heures sont affichées dans le fuseau horaire de l’appareil.</Muted>
       </Card>
       <Spacer />

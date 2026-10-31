@@ -22,7 +22,7 @@ export function NotifSettings() {
       alive = false;
       clearTimeout(id);
     };
-  }, [s.reminders, s.notif, s.place, s.method, s.madhab]);
+  }, [s.reminders, s.notif, s.place, s.method, s.madhab, s.prayer]);
   if (!remindersSupported()) return null;
   return (
     <>

@@ -25,7 +25,7 @@ export default function Kahf() {
   const [reminder, setReminder] = usePersistentState('kahf-reminder', true);
   const [readWeeks, setReadWeeks] = usePersistentState<string[]>('kahf-read', []);
   const now = new Date();
-  const maghrib = useMemo(() => computeDay(now, s.place, s.method, s.madhab).find((x) => x.key === 'maghrib')?.time, [s.place, s.method, s.madhab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const maghrib = useMemo(() => computeDay(now, s.place, s.method, s.madhab, s.prayer).find((x) => x.key === 'maghrib')?.time, [s.place, s.method, s.madhab, s.prayer]); // eslint-disable-line react-hooks/exhaustive-deps
   const week = fridayKey(now);
   const done = readWeeks.includes(week);
 
