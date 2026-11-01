@@ -2,7 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
-import { confirmAsk, EncouragementsPanel, ErrorNote, fmt, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
+import { confirmAsk, DiscussionCard, EncouragementsPanel, ErrorNote, fmt, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
@@ -65,6 +65,8 @@ export default function FamilyScreen() {
       <ErrorNote error={fam.error || members.error} onRetry={() => (fam.reload(), members.reload())} />
       {fam.data ? <Wird family={fam.data} canEdit={isParent} onSaved={fam.reload} /> : null}
       {isChild && myPc?.daily_minutes_limit ? <Notice tone="info" title="Temps conseillé par tes parents" text={L('{n} minutes par jour. Pense à faire des pauses.', { n: myPc.daily_minutes_limit })} /> : null}
+      <Spacer />
+      {members.data && !(isChild && myPc?.messaging === 'none') ? <DiscussionCard scope="family" scopeId={fid} name={name} /> : null}
       <Spacer />
 
       <H2>Objectifs communs</H2>

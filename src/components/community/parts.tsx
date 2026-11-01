@@ -6,7 +6,7 @@ import { PWA_URL } from '@/lib/backend';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
-import { Badge, Button, Card, Chip, Field, H2, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Field, H2, Ionicons, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
@@ -357,6 +357,57 @@ export function SharingPicker({ scope, scopeId }: { scope: api.ScopeType; scopeI
 }
 
 /** Sessions de zikr en direct du lieu. */
+/** Non lus des discussions de groupe (pastilles) ; vide si serveur indisponible, jamais bloquant. */
+export function useGroupUnread() {
+  const { userId } = useAuth();
+  const [rows, setRows] = useState<api.GroupUnread[]>([]);
+  const [tick, setTick] = useState(0);
+  const reload = useCallback(() => setTick((n) => n + 1), []);
+  useEffect(() => {
+    let on = true;
+    void (userId ? api.groupUnread() : Promise.resolve([] as api.GroupUnread[])).then((r) => on && setRows(r));
+    return () => {
+      on = false;
+    };
+  }, [userId, tick]);
+  const of = (scope: api.ScopeType, id: string) => rows.find((r) => r.scope_type === scope && r.scope_id === id);
+  return { rows, of, reload };
+}
+
+/** Pastille ronde « non lus » (99+), discrète si la discussion est en sourdine. */
+export function UnreadBadge({ n, muted }: { n: number; muted?: boolean }) {
+  if (!n) return null;
+  const label = n > 99 ? '99+' : String(n);
+  return (
+    <View accessibilityLabel={L('{n} messages non lus', { n: label })} style={{ minWidth: 24, height: 24, borderRadius: 12, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: muted ? t.surfaceAlt : t.primary }}>
+      <Text style={{ color: muted ? t.muted : t.onPrimary, fontSize: 12, fontWeight: '700' }}>{label}</Text>
+    </View>
+  );
+}
+
+/** Accès à la discussion de groupe (écran chargé à la demande). */
+export function DiscussionCard({ scope, scopeId, name }: { scope: api.ScopeType; scopeId: string; name: string }) {
+  const u = useGroupUnread();
+  const r = u.of(scope, scopeId);
+  return (
+    <Card
+      accessibilityLabel={L('Ouvrir la discussion du groupe') + (r?.unread ? ' · ' + L('{n} messages non lus', { n: r.unread > 99 ? '99+' : r.unread }) : '')}
+      onPress={() => router.push({ pathname: '/discussion', params: { scope, id: scopeId, name } })}
+    >
+      <Row gap={10} style={{ alignItems: 'center' }}>
+        <Ionicons name="chatbubbles-outline" size={22} color={t.primary} />
+        <View style={{ flex: 1 }}>
+          <H2>Discussion</H2>
+          <Muted style={{ fontSize: 12 }}>chiffré en transit, pas encore de bout en bout</Muted>
+        </View>
+        {r?.muted ? <Ionicons name="notifications-off-outline" size={16} color={t.muted} accessibilityLabel={L('En sourdine')} /> : null}
+        <UnreadBadge n={r?.unread ?? 0} muted={r?.muted} />
+        <Ionicons name="chevron-forward" size={18} color={t.muted} />
+      </Row>
+    </Card>
+  );
+}
+
 export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: string }) {
   const { userId } = useAuth();
   const list = useLoad(() => api.liveSessions(scope, scopeId), [scope, scopeId]);
@@ -399,7 +450,7 @@ export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: s
   );
 }
 
-const KINDS = [
+export const KINDS = [
   { value: 'bravo', label: 'Bravo', text: 'Bravo, machā’Allāh ! Continue ainsi.' },
   { value: 'dua', label: 'Du‘a', text: 'Qu’Allah te bénisse et facilite tes affaires.' },
   { value: 'rappel', label: 'Rappel', text: 'Petit rappel affectueux pour ton wird du jour.' },

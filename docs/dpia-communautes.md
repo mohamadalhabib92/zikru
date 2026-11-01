@@ -55,3 +55,12 @@ Accès et export : section Compte. Effacement : suppression du compte. Rectifica
 - Chiffrement de bout en bout : calendrier.
 - Région d'hébergement et sous-traitants (Supabase, e-mail de connexion) à documenter dans la politique de confidentialité.
 - Activer la protection contre les mots de passe divulgués dans Supabase Auth (alerte du conseiller de sécurité).
+
+## 6. Mise à jour Passe 5 — discussion de groupe (01.11.2026, projet)
+
+- **Nouvelle donnée** : texte des messages de groupe (cercles, familles), auteur, date, réponse citée. Finalité : échange entre proches. Pas de publicité, pas de revente, pas de profilage.
+- **Sécurité** : chiffré en transit (TLS), stocké chez Supabase avec RLS ; **pas encore de bout en bout** (dit tel quel dans l'app).
+- **Mineurs** : réglage parental par défaut « Parents », appliqué côté serveur ; liens refusés dans les familles ; invités sans accès aux messages des enfants.
+- **Conservation** : 365 jours, puis effacement automatique ; suppression du compte → suppression de ses messages.
+- **Modération** : signalement avec instantané, blocage, suppression pour tous tracée.
+- **Point ouvert (juridique, Mohamed)** : la politique de confidentialité ne mentionne pas encore les messages de groupe ; à mettre à jour avant l'activation en production.

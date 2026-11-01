@@ -2,6 +2,7 @@ import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { afterLoginRoute } from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useConsent } from '@/lib/consent';
 import { privacyText } from '@/lib/privacy-text';
@@ -26,7 +27,7 @@ export default function AuthScreen() {
   const [err, setErr] = useState<string | null>(null);
   const [cool, setCool] = useState(0);
   useEffect(() => {
-    if (auth.session) router.replace('/community');
+    if (auth.session) void afterLoginRoute().then((r) => router.replace(r as '/community'));
   }, [auth.session]);
   useEffect(() => {
     if (cool <= 0) return;

@@ -72,3 +72,13 @@ Format d'un débit : `{"max": n, "window_s": s}`.
 
 - Pas d'alerte e-mail à l'arrivée d'un signalement : il faut consulter la file régulièrement. Délai cible à fixer.
 - Pas d'outil de modération dans l'app ; les fondateurs et modérateurs de cercle peuvent seulement retirer un membre.
+
+## Passe 5 — discussion de groupe (01.11.2026, migration en attente d'approbation)
+
+- Chaque message de discussion (cercle ou famille) se signale depuis son menu (« Signaler », cible `group_message`) ; le signalement garde un **instantané** du texte, même si l'auteur le supprime ensuite. On peut aussi **bloquer** l'auteur (ses messages disparaissent pour soi ; le signalement reste possible après le blocage).
+- **Suppression pour tous** : l'auteur, ou le fondateur / un modérateur du cercle, ou un parent dans une famille. Une suppression faite par un modérateur est tracée dans `private.moderation_actions` (qui, quand, quel message) ; le texte est effacé côté groupe.
+- **Sourdine** par discussion (`set_group_muted`) : pas de notifications, pastille grise.
+- Filtre de base (`ZKF01`) appliqué aux messages ; liens refusés en famille (protection des enfants), autorisés dans les cercles d'adultes.
+- Limite de débit (`ZKR01`) et suspensions existantes appliquées à la discussion.
+- Conservation : messages **365 jours**, puis purge (`purge_expired`).
+- À décider (Mohamed) : délai de traitement cible des signalements (proposition 24 h), liste des termes bloqués à relire, liste de réactions éventuelles.

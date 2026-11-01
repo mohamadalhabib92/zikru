@@ -45,7 +45,7 @@ export type SessionCount = { session_id: string; user_id: string; display_name: 
 export type InvitePreview = { valid: boolean; scope_type?: ScopeType; name?: string; role?: string; rules?: string | null; members?: number; max_members?: number | null; full?: boolean; expires_at?: string; reason?: string };
 export type GroupCapacity = { limit: number; members: number; full: boolean; over_limit: boolean };
 export type ReportReason = 'spam' | 'harassment' | 'hate' | 'sexual' | 'violence' | 'self_harm' | 'impersonation' | 'child_safety' | 'other';
-export type ReportTarget = 'message' | 'member' | 'circle' | 'session';
+export type ReportTarget = 'message' | 'member' | 'circle' | 'session' | 'group_message';
 export type Block = { blocked_id: string; blocked_name: string; created_at: string };
 
 /** Erreur déjà traduite pour l'affichage ; `code` = SQLSTATE serveur (ZKG01 groupe complet, ZKR01 débit, ZKF01 filtre…). */
@@ -247,12 +247,39 @@ export const createEvent = (familyId: string, userId: string, e: { title: string
   q(sb().from('family_calendar_events').insert({ family_id: familyId, created_by: userId, ...e, notes: e.notes || null }));
 export const deleteEvent = (id: string) => q(sb().from('family_calendar_events').delete().eq('id', id));
 
+// Code d'invitation gardé pendant la connexion (24 h, sur cet appareil) : après le code e-mail ou le lien magique,
+// on revient sur l'invitation au lieu de devoir ressaisir le code.
+const PENDING_JOIN = 'community/pending-join';
+export const rememberPendingJoin = (code: string) => saveJSON(PENDING_JOIN, { code: code.toUpperCase().slice(0, 32), at: Date.now() });
+/** Où aller après la connexion : l'invitation en attente (puis oubliée), sinon Communauté. */
+export async function afterLoginRoute(): Promise<string> {
+  const p = await loadJSON<{ code?: string; at?: number } | null>(PENDING_JOIN, null);
+  if (p?.code && /^[A-Z0-9-]{4,32}$/.test(p.code) && Date.now() - (p.at ?? 0) < 86_400_000) {
+    await saveJSON(PENDING_JOIN, null);
+    return `/join?code=${encodeURIComponent(p.code)}`;
+  }
+  return '/community';
+}
+
 // ---------- Encouragements ----------
 export const listEncouragements = (scope: ScopeType, id: string) =>
   q<Encouragement[]>(sb().from('encouragements').select('id,scope_type,family_id,circle_id,sender_id,recipient_id,kind,body,created_at,read_at').eq(scopeCol(scope), id).order('created_at', { ascending: false }).limit(50));
 export const sendEncouragement = (scope: ScopeType, id: string, senderId: string, recipientId: string, kind: string, body: string) =>
   q(sb().from('encouragements').insert({ scope_type: scope, [scopeCol(scope)]: id, sender_id: senderId, recipient_id: recipientId, kind, body }));
 export const markRead = (id: string) => q(sb().from('encouragements').update({ read_at: new Date().toISOString() }).eq('id', id));
+
+// ---------- Discussion de groupe (Passe 5) : seulement les pastilles « non lus » ici ; le fil est chargé à la demande ----------
+export type GroupUnread = { scope_type: ScopeType; scope_id: string; unread: number; last_at: string | null; muted: boolean };
+/** Non lus par groupe (plafonné à 99). En cas d'erreur ou sans serveur : liste vide, jamais bloquant. */
+export async function groupUnread(): Promise<GroupUnread[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase.rpc('group_unread');
+    return error || !Array.isArray(data) ? [] : (data as GroupUnread[]);
+  } catch {
+    return [];
+  }
+}
 
 // ---------- Zikr en direct ----------
 export const liveSessions = (scope: ScopeType, id: string) =>

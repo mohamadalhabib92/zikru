@@ -109,3 +109,6 @@ src/components/ramadan/screens/nuits.tsx
 src/components/ramadan/screens/zakat.tsx
 src/components/ramadan/screens/carte.tsx
 src/components/bien-etre/screens/gratitude.tsx
+src/components/chat/discussion.tsx
+src/components/chat/module.ts
+src/app/discussion.tsx
