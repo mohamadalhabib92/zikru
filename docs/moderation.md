@@ -82,3 +82,22 @@ Format d'un débit : `{"max": n, "window_s": s}`.
 - Limite de débit (`ZKR01`) et suspensions existantes appliquées à la discussion.
 - Conservation : messages **365 jours**, puis purge (`purge_expired`).
 - À décider (Mohamed) : délai de traitement cible des signalements (proposition 24 h), liste des termes bloqués à relire, liste de réactions éventuelles.
+
+## Passe 6 — file de modération de l'équipe + push des discussions (01.11.2026, migration NON appliquée)
+
+Migration `supabase/migrations/20261101200000_passe6_moderation_push.sql` (dépend de la passe 5, **aucune des deux n'est appliquée en production**). Tests : `supabase/tests/passe6_moderation_push_test.sql` (PGlite, `npm test`).
+
+**File de modération** (écran `/moderation`, lien dans Réglages visible seulement pour le rôle serveur `moderator` ou `admin` de la passe 1, `private.app_roles`) :
+- `moderation_queue_list(statut, limite)` : signalements de toute la plateforme, triés par priorité (`child_safety`, puis `self_harm` / `violence`, puis le reste), avec instantané du contenu et nombre de signalements visant le même compte. **L'identité de la personne qui signale n'est jamais renvoyée** (pas de colonne `reporter_id`).
+- `moderation_set_status` : en cours d'examen / traité / classé sans suite, avec note de décision facultative (≤ 1000 caractères).
+- `platform_delete_group_message` : efface un message signalé pour tout le groupe ; une copie est gardée dans `private.moderation_actions`.
+- Toutes les décisions sont journalisées (`private.moderation_actions` : qui, quand, avant/après).
+- Les modérateurs **de cercle** n'ont pas accès à la file plateforme (testé).
+- Donner le rôle : `insert into private.app_roles(user_id, role) values ('YOUR_USER_UUID','moderator');` — à faire par Mohamed, après application de la migration.
+
+**Push des messages de groupe** (code seulement) :
+- Table `device_push_tokens` (jeton Expo, plateforme, langue) : l'app ne peut ni relire le jeton ni écrire directement ; `register_push_token` / `unregister_push_token` seulement, débit limité (20/jour).
+- `group_push_recipients` (service_role uniquement) : exclut l'auteur, les personnes bloquées dans les deux sens, les discussions en sourdine, les mineurs dans les cercles, les enfants dont le réglage parental est « aucune discussion », et respecte les paires autorisées en famille.
+- Edge Function `push-group-message` (**non déployée**) : la notification contient **seulement le nom du groupe** et « Nouveau message » dans la langue de l'appareil ; jamais le texte, jamais l'auteur. Les jetons refusés par Expo (`DeviceNotRegistered`) sont désactivés.
+- Purge des jetons inactifs depuis 90 jours : `private.purge_push_tokens()` (non planifiée).
+- À créer par Mohamed avant activation : secret `PUSH_WEBHOOK_SECRET=YOUR_PUSH_WEBHOOK_SECRET`, (optionnel) `EXPO_ACCESS_TOKEN=YOUR_EXPO_ACCESS_TOKEN`, webhook de base de données sur INSERT `public.group_messages` → la fonction avec l'en-tête `x-push-secret`, planification de `purge_push_tokens`, identifiants APNs/FCM dans EAS, puis build natif avec `EXPO_PUBLIC_GROUP_PUSH=1`.
