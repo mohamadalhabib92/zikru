@@ -361,17 +361,22 @@ export function SharingPicker({ scope, scopeId }: { scope: api.ScopeType; scopeI
 export function useGroupUnread() {
   const { userId } = useAuth();
   const [rows, setRows] = useState<api.GroupUnread[]>([]);
+  const [available, setAvailable] = useState<boolean | null>(api.groupChatAvailable());
   const [tick, setTick] = useState(0);
   const reload = useCallback(() => setTick((n) => n + 1), []);
   useEffect(() => {
     let on = true;
-    void (userId ? api.groupUnread() : Promise.resolve([] as api.GroupUnread[])).then((r) => on && setRows(r));
+    void (userId ? api.groupUnread() : Promise.resolve([] as api.GroupUnread[])).then((r) => {
+      if (!on) return;
+      setRows(r);
+      setAvailable(api.groupChatAvailable());
+    });
     return () => {
       on = false;
     };
   }, [userId, tick]);
   const of = (scope: api.ScopeType, id: string) => rows.find((r) => r.scope_type === scope && r.scope_id === id);
-  return { rows, of, reload };
+  return { rows, of, reload, available };
 }
 
 /** Pastille ronde « non lus » (99+), discrète si la discussion est en sourdine. */
@@ -389,6 +394,19 @@ export function UnreadBadge({ n, muted }: { n: number; muted?: boolean }) {
 export function DiscussionCard({ scope, scopeId, name }: { scope: api.ScopeType; scopeId: string; name: string }) {
   const u = useGroupUnread();
   const r = u.of(scope, scopeId);
+  if (u.available === null) return null;
+  if (!u.available)
+    return (
+      <Card>
+        <Row gap={10} style={{ alignItems: 'center' }}>
+          <Ionicons name="chatbubbles-outline" size={22} color={t.muted} />
+          <View style={{ flex: 1 }}>
+            <H2>Discussion</H2>
+            <Muted style={{ fontSize: 12 }}>Bientôt disponible pour vos groupes.</Muted>
+          </View>
+        </Row>
+      </Card>
+    );
   return (
     <Card
       accessibilityLabel={L('Ouvrir la discussion du groupe') + (r?.unread ? ' · ' + L('{n} messages non lus', { n: r.unread > 99 ? '99+' : r.unread }) : '')}

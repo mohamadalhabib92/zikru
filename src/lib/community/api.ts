@@ -273,14 +273,40 @@ export const markRead = (id: string) => q(sb().then((c) => c.from('encouragement
 
 // ---------- Discussion de groupe (Passe 5) : seulement les pastilles « non lus » ici ; le fil est chargé à la demande ----------
 export type GroupUnread = { scope_type: ScopeType; scope_id: string; unread: number; last_at: string | null; muted: boolean };
+/** Code d'erreur PostgREST / Postgres signalant que la discussion n'existe pas encore sur le serveur (migration passe 5 non appliquée). */
+export function isMissingFeature(e: { code?: string | null; message?: string | null } | null | undefined): boolean {
+  if (!e) return false;
+  if (e.code && ['PGRST202', 'PGRST205', '42883', '42P01'].includes(e.code)) return true;
+  return /could not find the (function|table)|does not exist/i.test(e.message ?? '');
+}
+const CHAT_AVAIL_KEY = 'group-chat-available';
+let chatAvailable: boolean | null = null;
+/** La discussion de groupe est-elle disponible sur le serveur ? Mis en cache ; hors ligne, on garde la dernière réponse connue (défaut : non). */
+export function groupChatAvailable(): boolean | null {
+  return chatAvailable;
+}
+async function rememberChat(v: boolean) {
+  chatAvailable = v;
+  await saveJSON(CHAT_AVAIL_KEY, v);
+}
 /** Non lus par groupe (plafonné à 99). En cas d'erreur ou sans serveur : liste vide, jamais bloquant. */
 export async function groupUnread(): Promise<GroupUnread[]> {
   const c = await getSupabase();
-  if (!c) return [];
+  if (!c) {
+    chatAvailable = false;
+    return [];
+  }
   try {
     const { data, error } = await c.rpc('group_unread');
-    return error || !Array.isArray(data) ? [] : (data as GroupUnread[]);
+    if (error) {
+      if (isMissingFeature(error)) await rememberChat(false);
+      else if (chatAvailable === null) chatAvailable = await loadJSON<boolean>(CHAT_AVAIL_KEY, false);
+      return [];
+    }
+    await rememberChat(true);
+    return Array.isArray(data) ? (data as GroupUnread[]) : [];
   } catch {
+    if (chatAvailable === null) chatAvailable = await loadJSON<boolean>(CHAT_AVAIL_KEY, false);
     return [];
   }
 }

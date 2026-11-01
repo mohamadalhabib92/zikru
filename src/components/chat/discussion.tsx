@@ -91,6 +91,7 @@ export default function Discussion() {
   const [loading, setLoading] = useState(true);
   const [older, setOlder] = useState<'idle' | 'busy' | 'end'>('idle');
   const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [soon, setSoon] = useState(false);
   const [offline, setOffline] = useState(false);
   const [live, setLive] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -143,6 +144,10 @@ export default function Discussion() {
       setOffline(false);
       if (r.member) void be.markRead(scope, sid).catch(() => {});
     } catch (e) {
+      if (api.isMissingFeature(e as { code?: string; message?: string })) {
+        setSoon(true);
+        return;
+      }
       setLoadErr(api.frError(e));
       setOffline(/connexion|network|fetch|connection|اتصال/i.test(String((e as Error)?.message ?? '')));
     } finally {
@@ -341,6 +346,10 @@ export default function Discussion() {
 
         {loading ? (
           <Muted style={{ padding: 20 }}>Chargement…</Muted>
+        ) : soon ? (
+          <View style={{ padding: 20 }}>
+            <Notice title="Bientôt disponible" text="La discussion de groupe arrive bientôt. Vos groupes, objectifs et encouragements fonctionnent déjà." />
+          </View>
         ) : loadErr ? (
           <View style={{ padding: 20, gap: 8 }}>
             <Notice tone="danger" title="Discussion indisponible" text={loadErr} />
