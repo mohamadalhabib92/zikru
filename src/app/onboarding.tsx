@@ -50,7 +50,7 @@ export default function Onboarding() {
   const Option = ({ active, title, sub, icon, onPress }: { active: boolean; title: string; sub?: string; icon?: IconName; onPress: () => void }) => (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected: active }}
+      accessibilityState={{ selected: active }} aria-checked={active}
       onPress={() => {
         tapHaptic('select');
         onPress();
@@ -128,7 +128,7 @@ export default function Onboarding() {
               <Pressable
                 key={c.label}
                 accessibilityRole="radio"
-                accessibilityState={{ selected: on }}
+                accessibilityState={{ selected: on }} aria-checked={on}
                 onPress={() => set({ place: { ...c, source: 'manual' } })}
                 style={{ paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 20, borderWidth: 1, borderColor: on ? b.green : b.line, backgroundColor: on ? b.green : b.paper }}
               >

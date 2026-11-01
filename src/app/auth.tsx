@@ -84,7 +84,7 @@ export default function AuthScreen() {
         <Pressable
           testID="account-consent"
           accessibilityRole="checkbox"
-          accessibilityState={{ checked: agreed }}
+          accessibilityState={{ checked: agreed }} aria-checked={agreed}
           onPress={() => choose('account', !agreed)}
           style={{ flexDirection: s.lang === 'ar' ? 'row-reverse' : 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 10 }}
         >

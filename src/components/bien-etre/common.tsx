@@ -13,24 +13,8 @@ import { Container, HeroHeader, tapHaptic } from "@/ui/ds";
 import { alpha, brand as b, onColor } from "@/ui/theme";
 import { L } from "@/lib/l10n";
 
-/** Préférence système « Réduire les animations » (iOS, Android, navigateur), suivie en direct. */
-export function useReduceMotion(): boolean {
-  const [on, setOn] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    void AccessibilityInfo.isReduceMotionEnabled()
-      .then((v) => alive && setOn(!!v))
-      .catch(() => {});
-    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", (v) =>
-      setOn(!!v),
-    );
-    return () => {
-      alive = false;
-      sub?.remove?.();
-    };
-  }, []);
-  return on;
-}
+/** Préférence « Réduire les animations » : déplacée dans ui/ds (passe 6), réexportée ici. */
+export { useReduceMotion } from "@/ui/ds";
 
 /** Retour haptique doux ; sur le web, courte vibration quand le navigateur la permet (Android). */
 export function softHaptic(
@@ -173,7 +157,7 @@ export function Choice<T extends string | number>({
           <Pressable
             key={String(o.value)}
             accessibilityRole="radio"
-            accessibilityState={{ selected: on, checked: on }}
+            accessibilityState={{ selected: on, checked: on }} aria-checked={on}
             accessibilityLabel={L(o.label) + (o.sub ? ", " + L(o.sub) : "")}
             onPress={() => {
               softHaptic("select");

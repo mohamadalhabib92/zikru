@@ -130,7 +130,7 @@ export default function Prayers() {
                 ) : (
                   <Pressable
                     accessibilityRole="checkbox"
-                    accessibilityState={{ checked: done }}
+                    accessibilityState={{ checked: done }} aria-checked={done}
                     accessibilityLabel={`${tr[p.key]} ${hhmm(p.time)} — ${done ? L('priée') : L('marquer comme priée')}`}
                     onPress={() => {
                       tapHaptic(done ? 'light' : 'success');

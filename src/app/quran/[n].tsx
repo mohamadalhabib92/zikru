@@ -170,8 +170,10 @@ export default function SurahReader() {
             const t = tr.lines?.[a - 1];
             return (
               <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={L('Verset {n}. Actions', { n: a })}
+                // Passe 6 (a11y) : la carte reste touchable à l'œil, mais n'est plus un « bouton » englobant —
+                // VoiceOver lit le texte du verset et atteint le bouton Écouter ; les actions passent par la pastille n:a.
+                accessible={false}
+                focusable={false}
                 onPress={() => flow.open({ s: n, a, ar: text, tr: t, trId: trId.id })}
                 style={({ pressed }) => ({
                   borderRadius: 18,
@@ -184,9 +186,15 @@ export default function SurahReader() {
                 })}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <View style={{ backgroundColor: alpha(pal.accent, 0.12), borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={L('Verset {n}. Actions', { n: a })}
+                    hitSlop={10}
+                    onPress={() => flow.open({ s: n, a, ar: text, tr: t, trId: trId.id })}
+                    style={{ backgroundColor: alpha(pal.accent, 0.12), borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}
+                  >
                     <Text style={{ color: pal.accent, fontWeight: '800', fontSize: 12 }}>{`${n}:${a}`}</Text>
-                  </View>
+                  </Pressable>
                   {rub ? (
                     <View style={{ backgroundColor: alpha(pal.gold, 0.14), borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
                       <Text style={{ color: pal.gold, fontWeight: '800', fontSize: 12 }}>{`۞ ${rubLabel(rub)}`}</Text>

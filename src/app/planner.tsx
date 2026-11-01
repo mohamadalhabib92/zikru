@@ -65,7 +65,7 @@ export default function Planner() {
               </View>
               {list.map((t) => (
                 <View key={t.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: t.done }} accessibilityLabel={t.title} onPress={() => g.toggleTask(t.id)} style={{ width: 28, height: 28, borderRadius: 8, borderWidth: 2, borderColor: PURPLE, backgroundColor: t.done ? PURPLE : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: t.done }} aria-checked={t.done} accessibilityLabel={t.title} onPress={() => g.toggleTask(t.id)} style={{ width: 28, height: 28, borderRadius: 8, borderWidth: 2, borderColor: PURPLE, backgroundColor: t.done ? PURPLE : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                     {t.done ? <Ionicons name="checkmark" size={18} color="#fff" /> : null}
                   </Pressable>
                   <Text style={{ flex: 1, color: t.done ? b.inkMuted : b.ink, textDecorationLine: t.done ? 'line-through' : 'none' }}>{t.title}</Text>

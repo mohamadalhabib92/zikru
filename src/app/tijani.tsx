@@ -245,7 +245,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
             return (
               <View key={i} style={{ borderRadius: 14, borderWidth: 1, borderColor: isOn ? b.wirdGreen : b.line, backgroundColor: isOn ? b.greenTint : b.paper }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 10 }}>
-                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isOn }} accessibilityLabel={`${L(f.title)} — ${isOn ? L('fait') : L('marquer comme fait')}`} onPress={() => toggle(i)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isOn }} aria-checked={isOn} accessibilityLabel={`${L(f.title)} — ${isOn ? L('fait') : L('marquer comme fait')}`} onPress={() => toggle(i)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                     {isOn ? (
                       <Ionicons name="checkmark-circle" size={30} color={b.wirdGreen} />
                     ) : (

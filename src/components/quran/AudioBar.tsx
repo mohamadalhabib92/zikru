@@ -87,7 +87,7 @@ export function AudioBar({ rec, pal, extra, onAB }: { rec: Rec; pal: Pal; extra?
             {rec.loading && rec.playing ? <ActivityIndicator color={fg} /> : <Ionicons name={rec.playing ? 'pause' : 'play'} size={22} color={fg} />}
           </Pressable>
           {btn('play-skip-forward', 'Verset suivant', () => rec.skip(1))}
-          <Pressable accessibilityRole="switch" accessibilityState={{ checked: rec.loop }} accessibilityLabel={L('Répéter en boucle')} onPress={() => rec.setLoop(!rec.loop)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+          <Pressable accessibilityRole="switch" accessibilityState={{ checked: rec.loop }} aria-checked={rec.loop} accessibilityLabel={L('Répéter en boucle')} onPress={() => rec.setLoop(!rec.loop)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="repeat" size={20} color={rec.loop ? pal.accent : pal.muted} />
           </Pressable>
           {onAB ? (

@@ -87,7 +87,7 @@ const BRAND_LIGHT = {
   rust: '#A3501E',
   wazifa: '#B88A22',
   hailala: '#6B3FB5',
-  wirdGreen: '#2F7D4F',
+  wirdGreen: '#287048', // passe 6 : 5,2:1 sur greenTint (était 4,4)
   hero: '#0F3D30',
   heroText: '#FBF7EE',
   heroMuted: '#BFD3C9',
@@ -107,7 +107,7 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
   line: DARK.border,
   goldDeep: '#D9B65C',
   goldSoft: '#2A2414',
-  green: '#26A074',
+  green: '#2EAC7E', // passe 6 : texte vert ≥ 5:1 sur fonds sombres (était 4,4)
   greenDeep: '#0F3A2C',
   greenSoft: '#3E9A78',
   greenTint: '#13291F',
@@ -118,7 +118,7 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
   teal: '#3FA88B',
   violet: '#9B7BE0',
   rust: '#D07A45',
-  wirdGreen: '#3C9A62',
+  wirdGreen: '#45A86C', // passe 6 : 5,2:1 sur greenTint sombre (était 4,4)
   hero: '#103428',
   heroText: '#F4EFE4',
   heroMuted: '#A9C3B7',

@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Easing, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, type IconName } from './kit';
@@ -10,6 +10,23 @@ import { L } from '@/lib/l10n';
 /** Composants du système de design 1.0.19 (au-dessus de kit/light). */
 
 const native = Platform.OS !== 'web';
+
+/** Préférence système « Réduire les animations » (iOS, Android, navigateur), suivie en direct. */
+export function useReduceMotion(): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void AccessibilityInfo.isReduceMotionEnabled()
+      .then((v) => alive && setOn(!!v))
+      .catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', (v) => setOn(!!v));
+    return () => {
+      alive = false;
+      sub?.remove?.();
+    };
+  }, []);
+  return on;
+}
 /** Retour haptique léger (silencieux sur le web). */
 export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'light') {
   if (!native) return;
@@ -140,7 +157,9 @@ export function ProgressBar({ progress, color = b.green, height = 6 }: { progres
 /** Bloc squelette animé (chargement). */
 export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `${number}%`; h?: number; r?: number; style?: StyleProp<ViewStyle> }) {
   const [o] = useState(() => new Animated.Value(0.45));
+  const reduce = useReduceMotion();
   useEffect(() => {
+    if (reduce) return o.setValue(0.7); // passe 6 : pas de pulsation si « Réduire les animations »
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(o, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: native }),
@@ -149,16 +168,18 @@ export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `$
     );
     loop.start();
     return () => loop.stop();
-  }, [o]);
+  }, [o, reduce]);
   return <Animated.View accessibilityLabel={L("Chargement")} style={[{ width: w, height: h, borderRadius: r, backgroundColor: b.line, opacity: o }, style]} />;
 }
 
 /** Apparition douce (fondu + léger glissement). */
 export function FadeIn({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: StyleProp<ViewStyle> }) {
+  const reduce = useReduceMotion();
   const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
+    if (reduce) return v.setValue(1); // passe 6 : apparition immédiate si « Réduire les animations »
     Animated.timing(v, { toValue: 1, duration: 320, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
-  }, [v, delay]);
+  }, [v, delay, reduce]);
   return <Animated.View style={[{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }, style]}>{children}</Animated.View>;
 }
 

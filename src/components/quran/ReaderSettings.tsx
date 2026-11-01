@@ -20,7 +20,7 @@ const SAMPLE_MUQ = 'الٓمٓ ۝١'; // 2:1 (Tanzil uthmani)
 
 function Row({ label, value, onChange, pal, hint }: { label: string; value: boolean; onChange: (v: boolean) => void; pal: Pal; hint?: string }) {
   return (
-    <Pressable accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={typeof label === "string" ? L(label) : label} onPress={() => onChange(!value)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 }}>
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: value }} aria-checked={value} accessibilityLabel={typeof label === "string" ? L(label) : label} onPress={() => onChange(!value)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 }}>
       <View style={{ flex: 1 }}>
         <Text style={{ color: pal.ink, fontWeight: '600', fontSize: 15 }}>{label}</Text>
         {hint ? <Text style={{ color: pal.muted, fontSize: 12 }}>{hint}</Text> : null}
@@ -86,7 +86,7 @@ export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; on
       <QLabel pal={pal}>RÉCITATEUR</QLabel>
       <View style={{ gap: 6 }}>
         {RECITERS.map((r) => (
-          <Pressable key={r.id} accessibilityRole="radio" accessibilityState={{ checked: p.reciter === r.id }} onPress={() => patch({ reciter: r.id })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 46, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: p.reciter === r.id ? pal.accent : pal.line, backgroundColor: pal.card }}>
+          <Pressable key={r.id} accessibilityRole="radio" accessibilityState={{ checked: p.reciter === r.id }} aria-checked={p.reciter === r.id} onPress={() => patch({ reciter: r.id })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 46, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: p.reciter === r.id ? pal.accent : pal.line, backgroundColor: pal.card }}>
             <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: p.reciter === r.id ? pal.accent : pal.muted, alignItems: 'center', justifyContent: 'center' }}>
               {p.reciter === r.id ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: pal.accent }} /> : null}
             </View>

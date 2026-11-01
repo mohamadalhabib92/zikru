@@ -216,7 +216,7 @@ export function Segmented<T extends string | number>({ options, value, onChange,
               key={String(o.value)}
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
+              accessibilityState={{ checked: on }} aria-checked={on}
               style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
             >
               <Text maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14, textAlign: 'center' }}>{o.label}</Text>
@@ -233,7 +233,7 @@ export function Toggle({ label, value, onChange, hint }: { label: string; value:
     <Pressable
       onPress={() => onChange(!value)}
       accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
+      accessibilityState={{ checked: value }} aria-checked={value}
       accessibilityLabel={typeof label === "string" ? L(label) : label}
       style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, gap: 12 }}
     >

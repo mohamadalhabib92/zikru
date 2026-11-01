@@ -177,7 +177,7 @@ export default function Gratitude() {
                   <Pressable
                     key={c.id}
                     accessibilityRole="checkbox"
-                    accessibilityState={{ checked: on, disabled: off }}
+                    accessibilityState={{ checked: on, disabled: off }} aria-checked={on}
                     accessibilityLabel={L(c.label)}
                     disabled={off}
                     onPress={() => onChip(c.id)}

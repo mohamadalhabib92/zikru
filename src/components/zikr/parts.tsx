@@ -9,7 +9,7 @@ import type { ZikrItem } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { brand as b, onColor } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
 const SYSC = {
@@ -24,7 +24,7 @@ export const fmt = (n: number) => n.toLocaleString('fr-CH');
 
 /** Bouton clair (thème crème). */
 export function LBtn({ icon, label, onPress, active, color = b.green, solid, disabled }: { icon?: IconName; label: string; onPress: () => void; active?: boolean; color?: string; solid?: boolean; disabled?: boolean }) {
-  const fg = solid ? '#fff' : active ? color : b.ink;
+  const fg = solid ? onColor(color) : active ? color : b.ink; // passe 6 : encre choisie pour ≥ 4,5:1 (blanc sur vert sombre = 3,3)
   return (
     <Pressable
       accessibilityRole="button"

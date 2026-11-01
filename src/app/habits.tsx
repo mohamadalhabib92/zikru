@@ -68,7 +68,7 @@ export default function Habits() {
                     🔥 {s} j · {h.done.length} fois au total
                   </Text>
                 </View>
-                <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: ok }} accessibilityLabel={L('{x} fait aujourd’hui', { x: h.title })} onPress={() => g.toggleHabit(h.id)} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: TEAL, backgroundColor: ok ? TEAL : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: ok }} aria-checked={ok} accessibilityLabel={L('{x} fait aujourd’hui', { x: h.title })} onPress={() => g.toggleHabit(h.id)} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: TEAL, backgroundColor: ok ? TEAL : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {ok ? <Ionicons name="checkmark" size={24} color="#fff" /> : null}
                 </Pressable>
               </View>
