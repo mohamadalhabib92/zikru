@@ -9,11 +9,15 @@
  */
 export type Lang = 'fr' | 'en' | 'de' | 'de-CH' | 'ar' | 'ff' | 'wo';
 
-export const LANGS: { code: Lang; label: string; pending?: boolean }[] = [
+/**
+ * - `pending` : aucune traduction disponible (repli français) → masquée des sélecteurs (sauf si déjà choisie).
+ * - `review` : traduction d'interface présente mais NON RELUE par un humain (passe 6 : allemand) → toujours signalée.
+ */
+export const LANGS: { code: Lang; label: string; pending?: boolean; review?: boolean }[] = [
   { code: 'fr', label: 'Français' },
   { code: 'en', label: 'English' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'de-CH', label: 'Deutsch (Schweiz)' },
+  { code: 'de', label: 'Deutsch', review: true },
+  { code: 'de-CH', label: 'Deutsch (Schweiz)', review: true },
   { code: 'ar', label: 'العربية' },
   { code: 'ff', label: 'Pulaar', pending: true },
   { code: 'wo', label: 'Wolof', pending: true },
@@ -33,7 +37,7 @@ const fr = {
   qibla_title: 'Direction de la Qibla', qibla_from_north: 'depuis le nord géographique', compass_live: 'Boussole active', compass_unavailable: 'Boussole indisponible : orientez-vous avec l’angle depuis le nord.',
   last_position: 'Dernière position connue', distance_kaaba: 'Distance jusqu’à la Kaaba',
   tasbih_title: 'Tasbih', tap_to_count: 'Touchez pour compter', reset: 'Réinitialiser', target: 'Objectif', save_session: 'Enregistrer la session', history: 'Historique', no_history: 'Aucune session enregistrée.', cycle_done: 'Objectif atteint',
-  dhikr_title: 'Dhikr', source: 'Source', no_content: 'Aucun contenu approuvé pour le moment.', translation_pending: 'Traduction en attente de validation',
+  dhikr_title: 'Dhikr', source: 'Source', no_content: 'Aucun contenu approuvé pour le moment.', translation_pending: 'Traduction en attente de validation', translation_review: 'Traduction de l’interface pas encore relue par un humain : merci de signaler les erreurs.',
   settings_title: 'Réglages', language: 'Langue', hijri_offset: 'Ajustement hégirien (jours)', audio: 'Voix (adhan / Bilal)', play: 'Écouter', pause: 'Pause', audio_missing: 'Fichier audio non fourni : lecture désactivée (aucun crash).',
   sources_title: 'Sources & Méthodologie', ring: 'Compteur Bluetooth', simulation: 'Simulation', config_missing: 'Configuration manquante', content_admin: 'Workflow de contenu', audit: 'Audit (Phase 0)', reset_data: 'Effacer les données locales',
   onboarding_welcome: 'Bienvenue sur Zikru', onboarding_sub: 'Prière, qibla et dhikr — calme, hors-ligne, sans publicité.', continue: 'Continuer', start: 'Commencer',
@@ -55,7 +59,7 @@ const en: Dict = {
   qibla_title: 'Qibla direction', qibla_from_north: 'from true north', compass_live: 'Compass active', compass_unavailable: 'Compass unavailable: use the angle from north.',
   last_position: 'Last known position', distance_kaaba: 'Distance to the Kaaba',
   tasbih_title: 'Tasbih', tap_to_count: 'Tap to count', reset: 'Reset', target: 'Target', save_session: 'Save session', history: 'History', no_history: 'No saved session yet.', cycle_done: 'Target reached',
-  dhikr_title: 'Dhikr', source: 'Source', no_content: 'No approved content yet.', translation_pending: 'Translation pending approval',
+  dhikr_title: 'Dhikr', source: 'Source', no_content: 'No approved content yet.', translation_pending: 'Translation pending approval', translation_review: 'Interface translation not yet reviewed by a human: please report any errors.',
   settings_title: 'Settings', language: 'Language', hijri_offset: 'Hijri adjustment (days)', audio: 'Voice (adhan / Bilal)', play: 'Play', pause: 'Pause', audio_missing: 'Audio file not provided: playback disabled (no crash).',
   sources_title: 'Sources & Methodology', ring: 'Bluetooth counter', simulation: 'Simulation', config_missing: 'Missing configuration', content_admin: 'Content workflow', audit: 'Audit (Phase 0)', reset_data: 'Erase local data',
   onboarding_welcome: 'Welcome to Zikru', onboarding_sub: 'Prayer, qibla and dhikr — calm, offline, ad-free.', continue: 'Continue', start: 'Start',
@@ -76,7 +80,7 @@ const de: Dict = {
   qibla_title: 'Qibla-Richtung', qibla_from_north: 'von geografisch Nord', compass_live: 'Kompass aktiv', compass_unavailable: 'Kompass nicht verfügbar: Winkel ab Norden verwenden.',
   last_position: 'Letzte bekannte Position', distance_kaaba: 'Entfernung zur Kaaba',
   tasbih_title: 'Tasbih', tap_to_count: 'Tippen zum Zählen', reset: 'Zurücksetzen', target: 'Ziel', save_session: 'Sitzung speichern', history: 'Verlauf', no_history: 'Noch keine Sitzung gespeichert.', cycle_done: 'Ziel erreicht',
-  dhikr_title: 'Dhikr', source: 'Quelle', no_content: 'Noch keine freigegebenen Inhalte.', translation_pending: 'Übersetzung wartet auf Freigabe',
+  dhikr_title: 'Dhikr', source: 'Quelle', no_content: 'Noch keine freigegebenen Inhalte.', translation_pending: 'Übersetzung wartet auf Freigabe', translation_review: 'Übersetzung wird geprüft: Die Oberfläche wurde noch nicht von Menschen gegengelesen. Bitte melden Sie Fehler.',
   settings_title: 'Einstellungen', language: 'Sprache', hijri_offset: 'Hidschri-Anpassung (Tage)', audio: 'Stimme (Adhan / Bilal)', play: 'Abspielen', pause: 'Pause', audio_missing: 'Audiodatei fehlt: Wiedergabe deaktiviert (kein Absturz).',
   sources_title: 'Quellen & Methodik', ring: 'Bluetooth-Zähler', simulation: 'Simulation', config_missing: 'Fehlende Konfiguration', content_admin: 'Inhalts-Workflow', audit: 'Audit (Phase 0)', reset_data: 'Lokale Daten löschen',
   onboarding_welcome: 'Willkommen bei Zikru', onboarding_sub: 'Gebet, Qibla und Dhikr — ruhig, offline, werbefrei.', continue: 'Weiter', start: 'Los geht’s',
@@ -97,7 +101,7 @@ const ar: Dict = {
   qibla_title: 'اتجاه القبلة', qibla_from_north: 'من الشمال الجغرافي', compass_live: 'البوصلة تعمل', compass_unavailable: 'البوصلة غير متاحة: استخدم الزاوية من الشمال.',
   last_position: 'آخر موقع معروف', distance_kaaba: 'المسافة إلى الكعبة',
   tasbih_title: 'التسبيح', tap_to_count: 'المس للعد', reset: 'إعادة', target: 'الهدف', save_session: 'حفظ الجلسة', history: 'السجل', no_history: 'لا توجد جلسات محفوظة.', cycle_done: 'تم بلوغ الهدف',
-  dhikr_title: 'الأذكار', source: 'المصدر', no_content: 'لا يوجد محتوى معتمد بعد.', translation_pending: 'الترجمة بانتظار الاعتماد',
+  dhikr_title: 'الأذكار', source: 'المصدر', no_content: 'لا يوجد محتوى معتمد بعد.', translation_pending: 'الترجمة بانتظار الاعتماد', translation_review: 'لم تتم مراجعة ترجمة الواجهة بعد من قِبل مراجع بشري: يُرجى الإبلاغ عن الأخطاء.',
   settings_title: 'الإعدادات', language: 'اللغة', hijri_offset: 'تعديل التاريخ الهجري (أيام)', audio: 'الصوت (الأذان)', play: 'تشغيل', pause: 'إيقاف مؤقت', audio_missing: 'الملف الصوتي غير متوفر: التشغيل معطّل.',
   sources_title: 'المصادر والمنهجية', ring: 'عداد بلوتوث', simulation: 'محاكاة', config_missing: 'الإعداد ناقص', content_admin: 'سير عمل المحتوى', audit: 'التدقيق (المرحلة 0)', reset_data: 'مسح البيانات المحلية',
   onboarding_welcome: 'مرحبًا بك في ذكرُ', onboarding_sub: 'الصلاة والقبلة والذكر — بهدوء، دون اتصال، دون إعلانات.', continue: 'متابعة', start: 'ابدأ',
@@ -109,3 +113,7 @@ const deCH: Dict = Object.fromEntries(Object.entries(de).map(([k, v]) => [k, v.r
 export const DICTS: Record<Lang, Dict> = { fr, en, de, 'de-CH': deCH, ar, ff: fr, wo: fr };
 export const isRTL = (l: Lang) => l === 'ar';
 export const isPending = (l: Lang) => !!LANGS.find((x) => x.code === l)?.pending;
+/** Traduction d'interface non relue (allemand) : à signaler, jamais présentée comme relue. */
+export const needsReview = (l: Lang) => !!LANGS.find((x) => x.code === l)?.review;
+/** Langues proposées dans les sélecteurs : pulaar et wolof restent masqués (sauf la langue déjà choisie). */
+export const pickableLangs = (current?: Lang) => LANGS.filter((l) => !l.pending || l.code === current);

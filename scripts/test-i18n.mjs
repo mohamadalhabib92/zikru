@@ -6,7 +6,13 @@ import { readFileSync } from 'node:fs';
 import { loadLib } from './load-lib.mjs';
 import { extractDeep, walk } from './i18n-scan.mjs';
 
-const { i18n, 'ui-strings': U, 'ui-strings-bien-etre': UBE, 'ui-strings-ramadan': URA, 'ui-strings-chat': UCH } = await loadLib(['i18n', 'ui-strings', 'ui-strings-bien-etre', 'ui-strings-ramadan', 'ui-strings-chat'], 'i18n');
+const { i18n, 'ui-cat/en': UEN, 'ui-cat/ar': UAR, 'ui-cat/de': UDE, 'ui-strings-bien-etre': UBE, 'ui-strings-ramadan': URA, 'ui-strings-chat': UCH } = await loadLib(
+  ['i18n', 'ui-cat/en', 'ui-cat/ar', 'ui-cat/de', 'ui-strings-bien-etre', 'ui-strings-ramadan', 'ui-strings-chat'],
+  'i18n',
+);
+// Catalogue principal reconstitué [en, ar, de] (un fichier par langue depuis la passe 6).
+const U = { UI_STRINGS: Object.fromEntries(Object.keys(UEN.CAT).map((k) => [k, [UEN.CAT[k], UAR.CAT[k], UDE.CAT[k] ?? '']])) };
+for (const k of Object.keys(UAR.CAT)) assert.ok(k in UEN.CAT, 'catalogue ar : clé absente en anglais « ' + k + ' »');
 const AR = /[\u0600-\u06FF]/;
 const norm = (s) => s.replace(/\s+/g, ' ').trim();
 
@@ -28,10 +34,24 @@ assert.deepEqual(miss.ar, [], 'clés ar manquantes : ' + miss.ar.join(', '));
 
 // 2) Catalogue : chaque entrée a en + ar (arabe en écriture arabe), mêmes variables {…}.
 const CAT = { ...UBE.UI_STRINGS_BIEN_ETRE, ...URA.UI_STRINGS_RAMADAN, ...UCH.UI_STRINGS_CHAT, ...U.UI_STRINGS };
-for (const [k, [en, ar]] of Object.entries(CAT)) {
+let deN = 0;
+const vars = (s) => (s.match(/\{\w+\}/g) ?? []).sort().join();
+for (const [k, [en, ar, de]] of Object.entries(CAT)) {
   assert.ok(en && en.trim(), 'catalogue : en vide pour « ' + k + ' »');
   assert.ok(ar && AR.test(ar), 'catalogue : ar sans arabe pour « ' + k + ' »');
+  if (de) {
+    deN++;
+    assert.equal(vars(de), vars(k), 'catalogue de : variables {…} différentes pour « ' + k + ' »');
+    assert.ok(AR.test(k) || !AR.test(de), 'catalogue de : écriture arabe (absente du français) dans la traduction allemande de « ' + k + ' »');
+  }
 }
+// Allemand : couverture rapportée (non bloquante sauf régression sous le seuil), toujours signalée « non relue ».
+const deCov = Math.round((deN / Object.keys(CAT).length) * 1000) / 10;
+const DE_MIN = Number(process.env.ZIKRU_DE_MIN ?? 99);
+assert.ok(deCov >= DE_MIN, `allemand : couverture ${deCov} % < seuil ${DE_MIN} %`);
+const deLang = i18n.LANGS.find((l) => l.code === 'de');
+const deChLang = i18n.LANGS.find((l) => l.code === 'de-CH');
+assert.ok(deLang?.review && deChLang?.review, 'de / de-CH doivent rester signalés « traduction non relue » (LANGS.review)');
 
 // 3) Écrans couverts (P5) : toute chaîne française doit être au catalogue (ou dans i18n/keep.txt).
 const KEEP = new Set(readFileSync(new URL('../i18n/keep.txt', import.meta.url), 'utf8').split('\n').map(norm).filter((x) => x && !x.startsWith('#')));
@@ -50,7 +70,7 @@ for (const f of all) {
   }
 }
 const dictN = Object.keys(fr).length;
-console.log(`i18n : dictionnaires en/ar ${dictN}/${dictN} clés · catalogue ${Object.keys(CAT).length} chaînes · chaînes d’interface traduites ${ok}/${tot} (${Math.round((ok / tot) * 100)} %) · écrans couverts ${REQUIRED.length}`);
+console.log(`i18n : dictionnaires en/ar ${dictN}/${dictN} clés · catalogue ${Object.keys(CAT).length} chaînes · chaînes d’interface traduites ${ok}/${tot} (${Math.round((ok / tot) * 100)} %) · écrans couverts ${REQUIRED.length} · allemand (non relu) ${deN}/${Object.keys(CAT).length} (${deCov} %)`);
 if (process.argv.includes('--list')) console.log(bad.join('\n'));
 assert.equal(bad.length, 0, `${bad.length} chaîne(s) française(s) non traduite(s) dans les écrans couverts :\n` + bad.slice(0, 40).join('\n'));
 console.log('test-i18n OK');

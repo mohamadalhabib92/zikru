@@ -1,14 +1,60 @@
 /**
  * Traduction des chaînes d'interface écrites en français dans les écrans.
- * - Clé = texte français exact ; valeur = [anglais, arabe] (catalogue `UI_STRINGS`).
+ * - Clé = texte français exact ; un catalogue par langue (src/lib/ui-cat/<lang>.ts), chargé à la demande :
+ *   le français (langue source) ne télécharge rien ; en / ar / de sont chargés au démarrage selon la langue choisie
+ *   (`loadUiCatalog`, attendu par la racine), puis pré-cachés par le service worker (hors-ligne).
  * - `L('…')` / `L('{n} jours', { n })` : traduction explicite (alertes, placeholders, gabarits).
  * - Le composant `Text` de `@/ui/Text` traduit aussi automatiquement les enfants texte connus du catalogue.
  * - Jamais pour les textes religieux (Coran, hadith, du‘a) : ceux-ci ont leurs propres champs sourcés.
- * - Allemand, pulaar, wolof : repli sur le français pour ces chaînes (non couvertes par P5).
+ * - Allemand (de) et suisse alémanique (de-CH, dérivé : « ß » → « ss ») : traduction NON RELUE, signalée dans l'app.
+ * - Pulaar, wolof : masqués (repli sur le français).
  */
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type { Lang } from './i18n';
-import { UI_STRINGS } from './ui-strings';
+
+type CatLang = 'en' | 'ar' | 'de';
+const catLang = (l: Lang): CatLang | null => (l === 'en' || l === 'ar' ? l : l === 'de' || l === 'de-CH' ? 'de' : null);
+const CATS: Partial<Record<CatLang, Record<string, string>>> = {};
+const pending: Partial<Record<CatLang, Promise<void>>> = {};
+/** Charge le catalogue principal de la langue (aucun pour le français). Ne rejette jamais : en cas d'échec, repli français. */
+export function loadUiCatalog(l: Lang): Promise<void> {
+  const c = catLang(l);
+  if (!c || CATS[c]) return Promise.resolve();
+  const imp =
+    c === 'en'
+      ? import('./ui-cat/en')
+      : c === 'ar'
+        ? import('./ui-cat/ar')
+        : import('./ui-cat/de');
+  return (pending[c] ??= imp
+    .then((m) => {
+      CATS[c] = m.CAT;
+    })
+    .catch(() => {
+      delete pending[c];
+    }));
+}
+export const uiCatalogLoaded = (l: Lang) => {
+  const c = catLang(l);
+  return !c || !!CATS[c];
+};
+/** true quand le catalogue de la langue est prêt (ou après 4 s : repli français plutôt qu'un écran vide). */
+export function useUiCatalog(l: Lang): boolean {
+  const [, tick] = useState(0);
+  const [late, setLate] = useState(false);
+  const ok = uiCatalogLoaded(l);
+  useEffect(() => {
+    if (ok) return;
+    let live = true;
+    void loadUiCatalog(l).then(() => live && tick((n) => n + 1));
+    const id = setTimeout(() => live && setLate(true), 4000);
+    return () => {
+      live = false;
+      clearTimeout(id);
+    };
+  }, [l, ok]);
+  return ok || late;
+}
 
 let cur: Lang = 'fr';
 export function setUiLang(l: Lang) {
@@ -24,8 +70,8 @@ export function useUiLang(): Lang {
 }
 
 /** Catalogues chargés à la demande (ex. module bien-être) : fusionnés à la consultation. */
-const EXTRA: Record<string, [en: string, ar: string]> = {};
-export function registerUiStrings(d: Record<string, [en: string, ar: string]>) {
+const EXTRA: Record<string, [en: string, ar: string, de?: string]> = {};
+export function registerUiStrings(d: Record<string, [en: string, ar: string, de?: string]>) {
   Object.assign(EXTRA, d);
 }
 
@@ -34,10 +80,16 @@ const fill = (s: string, vars?: Record<string, string | number | null | undefine
 
 /** Cherche la traduction d'une chaîne française (null si absente du catalogue ou langue sans catalogue). */
 export function lookup(fr: string, lang: Lang = cur): string | null {
-  if (lang !== 'en' && lang !== 'ar') return null;
-  const e = UI_STRINGS[fr] ?? UI_STRINGS[norm(fr)] ?? EXTRA[fr] ?? EXTRA[norm(fr)];
-  if (!e) return null;
-  return lang === 'en' ? e[0] : e[1];
+  const c = catLang(lang);
+  if (!c) return null;
+  const m = CATS[c];
+  let r = m?.[fr] ?? m?.[norm(fr)] ?? null;
+  if (r == null) {
+    const e = EXTRA[fr] ?? EXTRA[norm(fr)];
+    r = e ? (c === 'en' ? e[0] : c === 'ar' ? e[1] : e[2] || null) : null;
+  }
+  // Suisse alémanique : pas de « ß » (orthographe suisse).
+  return r != null && lang === 'de-CH' ? r.replace(/ß/g, 'ss') : r;
 }
 /** Traduit une chaîne française d'interface (gabarit `{var}` accepté). */
 export function L(fr: string, vars?: Record<string, string | number | null | undefined>, lang: Lang = cur): string {
@@ -49,7 +101,7 @@ export function L(fr: string, vars?: Record<string, string | number | null | und
 }
 /** Traduit une chaîne en conservant les espaces de bord (morceaux de texte JSX). */
 export function translatePiece(s: string, lang: Lang): string {
-  if (lang !== 'en' && lang !== 'ar') return s;
+  if (!catLang(lang)) return s;
   const t = s.trim();
   if (!t) return s;
   const r = lookup(t, lang);

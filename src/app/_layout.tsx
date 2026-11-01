@@ -21,7 +21,7 @@ import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
 import { MiniPlayer } from '@/components/quran/MiniPlayer';
 import { RecitationProvider } from '@/lib/recitation-context';
-import { L } from '@/lib/l10n';
+import { L, useUiCatalog } from '@/lib/l10n';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -63,7 +63,9 @@ function Root() {
     const r = takePendingRoute();
     if (r) setTimeout(() => router.push(r as never), 60);
   }, [scheme]);
-  if (!fontsLoaded && !fontTimeout) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
+  // Catalogue d'interface de la langue choisie (chargé à la demande, pré-caché hors-ligne ; rien pour le français).
+  const catReady = useUiCatalog(s.lang);
+  if ((!fontsLoaded && !fontTimeout) || !catReady) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
     <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />

@@ -5,7 +5,7 @@ import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
-import { LANGS } from '@/lib/i18n';
+import { pickableLangs } from '@/lib/i18n';
 import { privacyText } from '@/lib/privacy-text';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES } from '@/lib/prayer';
@@ -82,8 +82,8 @@ export default function Onboarding() {
       <>
         <Title icon="language" title={tr.onb_lang} />
         <View style={{ gap: 8 }}>
-          {LANGS.map((l) => (
-            <Option key={l.code} active={s.lang === l.code} title={l.label} onPress={() => set({ lang: l.code })} />
+          {pickableLangs(s.lang).map((l) => (
+            <Option key={l.code} active={s.lang === l.code} title={l.label} sub={l.review ? tr.translation_review : undefined} onPress={() => set({ lang: l.code })} />
           ))}
         </View>
       </>

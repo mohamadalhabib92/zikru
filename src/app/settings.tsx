@@ -3,7 +3,7 @@ import { umalquraAvailable } from '@/lib/hijri';
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
-import { LANGS } from '@/lib/i18n';
+import { needsReview, pickableLangs } from '@/lib/i18n';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
 import Constants from 'expo-constants';
@@ -54,11 +54,13 @@ export default function SettingsScreen() {
       />
       <H2>{tr.language}</H2>
       <Row wrap>
-        {LANGS.map((l) => (
-          <Chip key={l.code} label={l.pending ? `${l.label} · ⏳` : l.label} active={s.lang === l.code} onPress={() => set({ lang: l.code })} />
+        {pickableLangs(s.lang).map((l) => (
+          <Chip key={l.code} label={l.pending ? `${l.label} · ⏳` : l.review ? `${l.label} · β` : l.label} active={s.lang === l.code} onPress={() => set({ lang: l.code })} />
         ))}
       </Row>
-      <Muted>⏳ = {tr.translation_pending} (repli : français).</Muted>
+      <Muted>β = {tr.translation_review}</Muted>
+      {needsReview(s.lang) ? <Muted>{tr.translation_review}</Muted> : null}
+      {pickableLangs(s.lang).some((l) => l.pending) ? <Muted>⏳ = {tr.translation_pending} (repli : français).</Muted> : null}
       <Spacer h={20} />
 
       <NotifSettings />
@@ -115,7 +117,7 @@ export default function SettingsScreen() {
         onChange={(v) => set({ madhab: v, asrManual: v !== asrForSchool(fiqh) })}
       />
       <Muted>
-        {s.lang === 'fr' || s.lang === 'en' || s.lang === 'ar'
+        {s.lang === 'fr' || s.lang === 'en' || s.lang === 'ar' || s.lang === 'de' || s.lang === 'de-CH'
           ? `${L('Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite).')} ${L(s.asrManual ? 'Choisi manuellement.' : 'Suit l’école choisie ci-dessus.')}`
           : `Separate from the school: shadow ×1 (majority) or ×2 (Hanafi). ${s.asrManual ? 'Set manually.' : 'Follows the school above.'}`}
       </Muted>
