@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, View } from 'react-native';
-import { L } from '@/lib/l10n';
+import { L, useUiLang } from '@/lib/l10n';
 import { useAuth } from '@/lib/community/auth';
 import { isPlatformModerator, moderationBackend, type QueueFilter, type QueueItem, type ReportStatus } from '@/lib/community/moderation-api';
 import { Badge, Body, Button, Card, DemoBanner, Field, H1, Muted, Notice, Row, Screen, Segmented, Spacer } from '@/ui/kit';
@@ -125,6 +125,8 @@ export default function Moderation() {
 }
 
 function ReportCard({ it, onChanged }: { it: QueueItem; onChanged: () => Promise<void> }) {
+  const lang = useUiLang();
+  const loc = lang === 'ar' ? 'ar' : lang === 'en' ? 'en-GB' : lang === 'de' ? 'de-CH' : 'fr-CH';
   const be = moderationBackend();
   const [note, setNote] = useState(it.resolution ?? '');
   const [busy, setBusy] = useState(false);
@@ -153,7 +155,7 @@ function ReportCard({ it, onChanged }: { it: QueueItem; onChanged: () => Promise
       </Row>
       <Spacer h={6} />
       <Muted>
-        {L('Signalé le {d}', { d: new Date(it.created_at).toLocaleString() })}
+        {L('Signalé le {d}', { d: new Date(it.created_at).toLocaleString(loc, { dateStyle: 'medium', timeStyle: 'short' }) })}
         {it.reports_on_user > 1 ? ` · ${L('{n} signalements visant ce compte', { n: it.reports_on_user })}` : ''}
       </Muted>
       {urgent ? <Notice tone="danger" title="Prioritaire" text="Danger possible pour une personne : traiter sans attendre et, si nécessaire, contacter les secours (112 / 144 en Suisse)." /> : null}
