@@ -2,7 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
-import { BlockButton, confirmAsk, DiscussionCard, EncouragementsPanel, ModerationContact, ReportButton, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
+import { BlockButton, CallCard, confirmAsk, DiscussionCard, EncouragementsPanel, ModerationContact, ReportButton, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { Badge, Button, Card, Eyebrow, Field, H1, H2, Muted, Row, Screen, Spacer } from '@/ui/kit';
@@ -41,6 +41,7 @@ export default function CircleScreen() {
       <ErrorNote error={circle.error || members.error} onRetry={() => (circle.reload(), members.reload())} />
       <Spacer />
       {me ? <DiscussionCard scope="circle" scopeId={cid} name={name} /> : null}
+      {me ? <CallCard scope="circle" scopeId={cid} name={name} /> : null}
       <Spacer />
 
       <H2>Objectifs</H2>

@@ -2,11 +2,12 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
-import { confirmAsk, DiscussionCard, EncouragementsPanel, ErrorNote, fmt, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
+import { CallCard, confirmAsk, DiscussionCard, EncouragementsPanel, ErrorNote, fmt, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
+import { callRights, setVideoConsent, videoConsents } from '@/lib/calls/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
-import { Badge, Button, Card, Chip, Eyebrow, Field, H1, H2, Muted, Notice, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Eyebrow, Field, H1, H2, Muted, Notice, Row, Screen, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
@@ -30,6 +31,12 @@ export default function FamilyScreen() {
   const isAdult = me?.role === 'parent' || me?.role === 'adult';
   const isChild = me?.role === 'child' || !!profile?.is_minor;
   const pcs = useLoad(() => (isParent || isChild ? api.parentalControls(fid) : Promise.resolve([] as api.ParentalControl[])), [fid, isParent, isChild]);
+  // Consentement vidéo (appels) : affiché seulement quand les appels sont ouverts côté serveur.
+  const vids = useLoad(async () => {
+    if (!isParent) return null;
+    const r = await callRights('family', fid);
+    return r.rights?.enabled && !r.missing ? await videoConsents(fid) : null;
+  }, [fid, isParent]);
   const [kid, setKid] = useState<{ memberId: string; name: string } | null>(null);
   const [leaveErr, setLeaveErr] = useState<string | null>(null);
   const managed = (members.data ?? []).filter((m) => m.role === 'child' && !m.user_id).map((m) => ({ id: m.id, name: m.display_name }));
@@ -67,6 +74,7 @@ export default function FamilyScreen() {
       {isChild && myPc?.daily_minutes_limit ? <Notice tone="info" title="Temps conseillé par tes parents" text={L('{n} minutes par jour. Pense à faire des pauses.', { n: myPc.daily_minutes_limit })} /> : null}
       <Spacer />
       {members.data && !(isChild && myPc?.messaging === 'none') ? <DiscussionCard scope="family" scopeId={fid} name={name} /> : null}
+      {members.data && !(isChild && myPc?.messaging === 'none') ? <CallCard scope="family" scopeId={fid} name={name} /> : null}
       <Spacer />
 
       <H2>Objectifs communs</H2>
@@ -98,7 +106,7 @@ export default function FamilyScreen() {
 
       <H2>Membres</H2>
       {members.data?.map((m) => (
-        <MemberRow key={m.id} m={m} isParent={isParent} isMe={m.user_id === userId} pc={pcs.data?.find((p) => p.child_member_id === m.id)} familyId={fid} onChanged={() => (members.reload(), pcs.reload())} />
+        <MemberRow key={m.id} m={m} isParent={isParent} isMe={m.user_id === userId} pc={pcs.data?.find((p) => p.child_member_id === m.id)} familyId={fid} onChanged={() => (members.reload(), pcs.reload())} video={vids.data ? (vids.data[m.id] ?? false) : undefined} onVideoChanged={vids.reload} />
       ))}
       {isParent ? <AddChild familyId={fid} onAdded={members.reload} /> : null}
       <Spacer />
@@ -159,7 +167,26 @@ function Wird({ family, canEdit, onSaved }: { family: api.Family; canEdit: boole
   );
 }
 
-function MemberRow({ m, isParent, isMe, pc, familyId, onChanged }: { m: api.FamilyMember; isParent: boolean; isMe: boolean; pc?: api.ParentalControl; familyId: string; onChanged: () => void }) {
+function MemberRow({
+  m,
+  isParent,
+  isMe,
+  pc,
+  familyId,
+  onChanged,
+  video,
+  onVideoChanged,
+}: {
+  m: api.FamilyMember;
+  isParent: boolean;
+  isMe: boolean;
+  pc?: api.ParentalControl;
+  familyId: string;
+  onChanged: () => void;
+  /** Consentement vidéo pour les appels ; undefined = appels pas encore ouverts (réglage masqué). */
+  video?: boolean;
+  onVideoChanged?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [limit, setLimit] = useState(pc?.daily_minutes_limit ? String(pc.daily_minutes_limit) : '');
@@ -241,6 +268,14 @@ function MemberRow({ m, isParent, isMe, pc, familyId, onChanged }: { m: api.Fami
                 </View>
                 <Button small title="OK" onPress={() => void save({ daily_minutes_limit: limit ? Math.max(5, Math.min(600, parseInt(limit, 10) || 0)) : null })} />
               </Row>
+              {m.user_id && video !== undefined ? (
+                <Toggle
+                  label="Vidéo pendant les appels de famille"
+                  hint="Sans votre accord, l’enfant participe aux appels en audio seulement."
+                  value={video}
+                  onChange={(v) => void setVideoConsent(familyId, m.id, v).then(() => onVideoChanged?.()).catch(() => setErr(L('Réglage non enregistré. Réessayez.')))}
+                />
+              ) : null}
               <Muted>Les enfants ne rejoignent aucun cercle et ne sont jamais visibles hors de la famille.</Muted>
             </>
           ) : null}

@@ -114,3 +114,6 @@ src/components/chat/module.ts
 src/app/discussion.tsx
 src/app/moderation.tsx
 src/components/AccountExtras.tsx
+src/components/call/call-screen.tsx
+src/components/call/module.ts
+src/app/call.tsx

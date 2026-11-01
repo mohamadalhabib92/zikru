@@ -64,3 +64,11 @@ Accès et export : section Compte. Effacement : suppression du compte. Rectifica
 - **Conservation** : 365 jours, puis effacement automatique ; suppression du compte → suppression de ses messages.
 - **Modération** : signalement avec instantané, blocage, suppression pour tous tracée.
 - **Point ouvert (juridique, Mohamed)** : la politique de confidentialité ne mentionne pas encore les messages de groupe ; à mettre à jour avant l'activation en production.
+
+## 7. Mise à jour — appels de groupe v1 (01.11.2026, projet, non activé)
+
+- **Nouveau flux** : son et image en temps réel, identifiant de compte, nom affiché et adresse IP transmis à **LiveKit Inc. (États-Unis, sous-traitant)**. Région des serveurs à choisir à la création du compte LiveKit (de préférence UE / Suisse) ; contrat de sous-traitance et clauses types à conclure avant l'activation.
+- **Sécurité** : chiffré en transit (TLS / DTLS-SRTP), **pas encore de bout en bout** (libellé exact dans l'app). Jamais d'enregistrement (aucun droit `roomRecord`, aucun Egress), pas de partage d'écran, pas de données dans l'appel.
+- **Données Zikru** : `private.call_joins` (personne, groupe, heure, vidéo oui/non) pour la limite de débit et le délai entre notifications ; effacé après 30 jours et avec le compte. Actions d'hôte (couper un micro, retirer) tracées dans `private.moderation_actions`.
+- **Mineurs** : appels seulement dans la famille, mêmes paires que la discussion (réglage « Parents » / « Aucun », jamais un invité) ; jamais dans les cercles (règle serveur existante) ; vidéo seulement avec l'accord d'un parent (`allow_video_calls`, défaut non). Sans accord : le jeton n'autorise pas la caméra ; la réception de vidéo est coupée côté app (limite documentée).
+- **Points ouverts** : faut-il redemander le consentement « compte » à l'ouverture des appels (nouveau sous-traitant) ? Date de mise à jour de la politique à fixer à la publication. Conditions de conservation des journaux LiveKit à vérifier dans son contrat.

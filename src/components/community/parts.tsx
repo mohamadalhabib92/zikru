@@ -3,6 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Platform, Share, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { PWA_URL } from '@/lib/backend';
+import { callRights, callStatus } from '@/lib/calls/api';
+import { availability, LABEL_TRANSIT, type CallAvailability } from '@/lib/calls/core';
+import { callsSupported } from '@/lib/calls/support';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
@@ -420,6 +423,56 @@ export function DiscussionCard({ scope, scopeId, name }: { scope: api.ScopeType;
         </View>
         {r?.muted ? <Ionicons name="notifications-off-outline" size={16} color={t.muted} accessibilityLabel={L('En sourdine')} /> : null}
         <UnreadBadge n={r?.unread ?? 0} muted={r?.muted} />
+        <Ionicons name="chevron-forward" size={18} color={t.muted} />
+      </Row>
+    </Card>
+  );
+}
+
+/**
+ * Accès à l'appel de groupe (écran et WebRTC chargés à la demande). Kill-switch serveur : tant que la migration
+ * « appels » n'est pas appliquée, que calls.enabled est faux, ou que ce binaire n'a pas le module d'appel,
+ * la carte affiche « Bientôt disponible ». Ne bloque jamais le reste de l'écran.
+ */
+export function CallCard({ scope, scopeId, name }: { scope: api.ScopeType; scopeId: string; name: string }) {
+  const [av, setAv] = useState<CallAvailability | null>(null);
+  const [live, setLive] = useState(0);
+  useEffect(() => {
+    let on = true;
+    void callRights(scope, scopeId).then((r) => {
+      if (!on) return;
+      const a = r.offline ? ({ kind: 'hidden' } as const) : availability(r.rights, { missing: r.missing, nativeOk: callsSupported() });
+      setAv(a);
+      if (a.kind === 'ready') void callStatus(scope, scopeId).then((s) => on && setLive(s.count)).catch(() => {});
+    });
+    return () => {
+      on = false;
+    };
+  }, [scope, scopeId]);
+  if (!av || av.kind === 'hidden') return null;
+  if (av.kind !== 'ready')
+    return (
+      <Card>
+        <Row gap={10} style={{ alignItems: 'center' }}>
+          <Ionicons name="call-outline" size={22} color={t.muted} />
+          <View style={{ flex: 1 }}>
+            <H2>Appel de groupe</H2>
+            <Muted style={{ fontSize: 12 }}>{av.kind === 'soon' ? 'Bientôt disponible' : 'Indisponible avec vos réglages actuels.'}</Muted>
+          </View>
+        </Row>
+      </Card>
+    );
+  return (
+    <Card accessibilityLabel={L('Ouvrir l’appel du groupe')} onPress={() => router.push({ pathname: '/call', params: { scope, id: scopeId, name } })}>
+      <Row gap={10} style={{ alignItems: 'center' }}>
+        <Ionicons name={live ? 'call' : 'call-outline'} size={22} color={t.primary} />
+        <View style={{ flex: 1 }}>
+          <H2>Appel de groupe</H2>
+          <Muted style={{ fontSize: 12 }}>
+            {live ? L('Appel en cours · {n} personne(s)', { n: live }) + ' · ' : ''}
+            {L(av.video ? 'Audio ou vidéo' : 'Audio')} · {L(LABEL_TRANSIT)}
+          </Muted>
+        </View>
         <Ionicons name="chevron-forward" size={18} color={t.muted} />
       </Row>
     </Card>
