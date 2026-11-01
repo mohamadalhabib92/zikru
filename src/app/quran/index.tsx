@@ -120,7 +120,7 @@ export default function QuranHub() {
             <View style={{ alignItems: 'center', backgroundColor: alpha(b.heroText, 0.08), borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 }} accessibilityLabel={L('Série de lecture : {n} jours', { n: st.current })}>
               <Ionicons name="flame" size={20} color={b.gold} />
               <Text style={{ color: b.heroText, fontWeight: '900', fontSize: 18 }}>{st.current}</Text>
-              <Text style={{ color: b.heroMuted, fontSize: 11 }}>{st.current > 1 ? 'jours' : 'jour'}</Text>
+              <Text style={{ color: b.heroMuted, fontSize: 11 }}>{st.current > 1 ? L('jours') : L('jour')}</Text>
             </View>
           </View>
           {lastHref && last ? (

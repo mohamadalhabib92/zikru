@@ -183,7 +183,7 @@ export default function Home() {
               <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
               <View style={{ backgroundColor: alpha(b.gold, 0.18), borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
                 <Text style={{ color: '#E2C171', fontWeight: '800', fontSize: 13 }}>{/* passe 6 : or éclairci, 5:1 sur le ciel du hero (b.gold = 4,4) */}
-                  {tr.in} {countdown(next.time.getTime() - now.getTime())}
+                  {tr.in} {"\u2066" + countdown(next.time.getTime() - now.getTime()) + "\u2069"}
                 </Text>
               </View>
             </View>
