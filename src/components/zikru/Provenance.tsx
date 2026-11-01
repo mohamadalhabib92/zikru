@@ -1,8 +1,8 @@
 import Constants from 'expo-constants';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
-import { GRADE_LABEL, GRADINGS_CHECKED_AT, dorarSearchUrl, gradeTone, provenanceFor, reportUrl } from '@/lib/provenance';
+import { GRADE_LABEL, dorarSearchUrl, gradeTone, reportUrl } from '@/lib/provenance-lite';
 import type { ProvenanceItem, ProvenanceSet } from '@/lib/provenance-types';
 import { REVIEW_LABEL } from '@/lib/reviews';
 import { Badge, Ionicons } from '@/ui/kit';
@@ -31,9 +31,30 @@ function Link({ label, url, icon = 'open-outline' }: { label: string; url: strin
   );
 }
 
+type ProvMod = typeof import('@/lib/review-sheet');
+let provMod: ProvMod | null = null;
+let provLoad: Promise<ProvMod> | null = null;
+/** Index de provenance (du‘as, hadiths, jugements vérifiés…) chargé à la demande, une fois, hors chargement initial. */
+function useProvenanceIndex(need: boolean): ProvMod | null {
+  const [m, setM] = useState<ProvMod | null>(provMod);
+  useEffect(() => {
+    if (!need || m) return;
+    let alive = true;
+    void (provLoad ??= import('@/lib/review-sheet').then((x) => (provMod = x))).then((x) => alive && setM(x)).catch(() => {
+      provLoad = null;
+    });
+    return () => {
+      alive = false;
+    };
+  }, [need, m]);
+  return m;
+}
+
 /** Badges de provenance (jugement + statut de validation) et détail dépliable avec « Signaler une erreur ». */
 export function ProvenanceBadges({ set, id, item }: { set?: ProvenanceSet; id?: string; item?: ProvenanceItem }) {
-  const p = item ?? (set && id !== undefined ? provenanceFor(set, id) : undefined);
+  const mod = useProvenanceIndex(true);
+  const p = item ?? (set && id !== undefined ? mod?.provenanceFor(set, id) : undefined);
+  const GRADINGS_CHECKED_AT = mod?.GRADINGS_CHECKED_AT ?? '…';
   const [open, setOpen] = useState(false);
   if (!p) return null;
   const sum = gradingSummary(p);

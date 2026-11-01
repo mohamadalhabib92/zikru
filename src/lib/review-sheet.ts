@@ -16,6 +16,8 @@ import { FATIHA_AR, FATIHA_EN, FATIHA_FR } from './fatiha';
 import { NURANI_LETTERS, NURANI_MNEMONIC } from './nuraniyya';
 import { FATIHA_ORDER_FLAG, PRACTICES } from './tijani';
 import { ADHKAR_IDS, ADHKAR_MOMENTS, ADHKAR_TO_COMPLETE, adhkarFor, MOMENT_LABEL } from './adhkar';
+// Passe 6 : point d'entrée unique (chargé à la demande) de l'index de provenance, partagé avec ProvenanceBadges.
+export { GRADINGS_CHECKED_AT, provenanceFor } from './provenance';
 
 const TO_REVIEW = 'traduction à relire (Zikru, assistée par machine puis revue)';
 const QD_EN = Object.fromEntries(QURAN_DUAS.map((q) => [q.id, q.en ?? '']));

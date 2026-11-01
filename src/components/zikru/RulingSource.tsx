@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import type { FiqhRuling } from '@/lib/fiqh-rulings';
-import { reportUrl } from '@/lib/provenance';
+import { reportUrl } from '@/lib/provenance-lite';
 import { REVIEW_LABEL, reviewFor } from '@/lib/reviews';
 import { Badge, Ionicons } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';

@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
 
 /**
  * El Ghaly Bilal — coach comportemental islamique (IA).
@@ -10,6 +10,7 @@ export { BilalError, bilalErrorFr, codeFromResponse } from './bilal-errors';
 export type ChatMsg = { role: 'user' | 'assistant'; content: string };
 
 export async function askBilal(body: { mode: 'chat'; messages: ChatMsg[] } | { mode: 'reflection'; period: string }): Promise<string> {
+  const supabase = await getSupabase();
   if (!supabase) throw new BilalError('not_configured');
   const { data: s } = await supabase.auth.getSession();
   if (!s.session) throw new BilalError('auth');

@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Session } from '@supabase/supabase-js';
+import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { AUTH_REDIRECT, supabase } from '../supabase';
+import { AUTH_REDIRECT, getSupabase, supabaseConfigured } from '../supabase';
 import { linkErrorMessage, parseAuthReturn } from '../auth-link';
 import { deleteMyAccount, getProfile, updateProfile } from './api';
 
@@ -34,7 +34,9 @@ const LAST_EMAIL = 'zikru-last-email';
 
 /** Natif : échange le code PKCE d'un lien magique (zikru://auth-callback?code=…). */
 async function handleAuthUrl(url: string | null): Promise<string | null> {
-  if (!url || !supabase || !/auth-callback|[?&#]code=|error_description=/.test(url)) return null;
+  if (!url || !/auth-callback|[?&#]code=|error_description=/.test(url)) return null;
+  const supabase = await getSupabase();
+  if (!supabase) return null;
   const r = parseAuthReturn(url);
   if (r.error) return linkErrorMessage(r.errorCode, r.error);
   if (r.code) {
@@ -57,27 +59,58 @@ function takeWebLinkError(): string | null {
   return linkErrorMessage(r.errorCode, r.error);
 }
 
+/**
+ * Web : faut-il charger le client Supabase dès le démarrage ? Seulement si une session existe déjà sur
+ * l'appareil ou si l'adresse est un retour de lien de connexion. Sinon (cas le plus courant : pas de compte),
+ * supabase-js n'est chargé qu'à la première action en ligne (envoi du code, invitation…).
+ */
+function clientNeededAtStart(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return true;
+  try {
+    if (window.localStorage?.getItem('zikru-auth')) return true;
+  } catch {
+    return true;
+  }
+  return /auth-callback|[?&#]code=|error_description=/.test(window.location?.href ?? '');
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [ready, setReady] = useState(!supabase);
+  const [ready, setReady] = useState(!supabaseConfigured);
   const [linkError, setLinkError] = useState<string | null>(() => (Platform.OS === 'web' ? takeWebLinkError() : null));
   const [lastEmail, setLastEmail] = useState('');
   const userId = session?.user.id ?? null;
+  // Client chargé à la demande : on s'abonne aux changements de session dès qu'il est disponible (une seule fois).
+  const attached = useRef<SupabaseClient | null>(null);
+  const unsub = useRef<(() => void) | null>(null);
+  const client = useCallback(async (): Promise<SupabaseClient | null> => {
+    const c = await getSupabase();
+    if (c && attached.current !== c) {
+      attached.current = c;
+      const { data } = c.auth.onAuthStateChange((_e, s) => {
+        setSession(s);
+        if (s) setLinkError(null);
+      });
+      unsub.current = () => data.subscription.unsubscribe();
+    }
+    return c;
+  }, []);
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabaseConfigured) return;
     let alive = true;
-    supabase.auth
-      .getSession()
-      .then(({ data }) => alive && setSession(data.session))
-      .catch(() => {})
-      .finally(() => alive && setReady(true));
     void AsyncStorage.getItem(LAST_EMAIL).then((v) => alive && v && setLastEmail(v)).catch(() => {});
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      if (s) setLinkError(null);
-    });
+    if (clientNeededAtStart()) {
+      void client()
+        .then((c) => c?.auth.getSession())
+        .then((r) => alive && r && setSession(r.data.session))
+        .catch(() => {})
+        .finally(() => alive && setReady(true));
+    } else {
+      // Aucune session sur cet appareil : prêt tout de suite, sans télécharger supabase-js.
+      Promise.resolve().then(() => alive && setReady(true));
+    }
     let sub: { remove: () => void } | null = null;
     if (Platform.OS !== 'web') {
       void Linking.getInitialURL().then((u) => handleAuthUrl(u).then((e) => e && setLinkError(e)));
@@ -85,10 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return () => {
       alive = false;
-      data.subscription.unsubscribe();
+      unsub.current?.();
+      attached.current = null;
       sub?.remove();
     };
-  }, []);
+  }, [client]);
 
   const refreshProfile = useCallback(async () => {
     if (!userId) return setProfile(null);
@@ -103,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshProfile]);
 
   const value: Ctx = {
-    enabled: !!supabase,
+    enabled: supabaseConfigured,
     ready,
     session,
     userId,
@@ -114,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     lastEmail,
     clearLinkError: () => setLinkError(null),
     sendCode: async (email) => {
+      const supabase = await client();
       if (!supabase) throw new Error('Serveur non configuré.');
       const e = email.trim().toLowerCase();
       const { error } = await supabase.auth.signInWithOtp({ email: e, options: { emailRedirectTo: AUTH_REDIRECT, shouldCreateUser: true } });
@@ -122,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void AsyncStorage.setItem(LAST_EMAIL, e).catch(() => {});
     },
     verifyCode: async (email, code) => {
+      const supabase = await client();
       if (!supabase) throw new Error('Serveur non configuré.');
       const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.replace(/\s/g, ''), type: 'email' });
       if (error) throw new Error('Code incorrect ou expiré.');
@@ -134,14 +170,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     refreshProfile,
     signOut: async () => {
-      await supabase?.auth.signOut();
+      await (await client())?.auth.signOut();
       void AsyncStorage.removeItem(LAST_EMAIL).catch(() => {});
       setLastEmail('');
       setProfile(null);
     },
     deleteAccount: async () => {
       await deleteMyAccount();
-      await supabase?.auth.signOut();
+      await (await client())?.auth.signOut();
       void AsyncStorage.removeItem(LAST_EMAIL).catch(() => {});
       setLastEmail('');
       setProfile(null);
