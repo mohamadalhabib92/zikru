@@ -10,6 +10,7 @@ import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
+import { DataExportItem, GroupPushToggle, ModerationLink } from '@/components/AccountExtras';
 import { WidgetSettings } from '@/components/WidgetSettings';
 import { DispenseSettings } from '@/components/DispenseSettings';
 import { PrayerOptions } from '@/components/PrayerOptions';
@@ -64,6 +65,7 @@ export default function SettingsScreen() {
       <Spacer h={20} />
 
       <NotifSettings />
+      <GroupPushToggle lang={s.lang} />
       <WidgetSettings />
       <DispenseSettings />
       <H2>{tr.location}</H2>
@@ -176,6 +178,8 @@ export default function SettingsScreen() {
       <Card>
         <ListItem title={pt.policy_link} icon="shield-checkmark-outline" onPress={() => router.push('/privacy')} />
         <Divider />
+        <DataExportItem />
+        <Divider />
         <ListItem title={pt.delete_account} subtitle={pt.delete_account_hint} icon="person-remove-outline" onPress={() => router.push('/community')} />
         <Divider />
         <ListItem
@@ -202,6 +206,7 @@ export default function SettingsScreen() {
         <ListItem title={tr.audit} icon="clipboard-outline" onPress={() => router.push('/audit')} />
         <Divider />
         <ListItem title="Validation savante" subtitle="Pour les relecteurs : contenus par statut, fiche exportable" icon="ribbon-outline" onPress={() => router.push('/validation')} />
+        <ModerationLink />
       </Card>
       <Spacer h={20} />
       <Button

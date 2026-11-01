@@ -21,7 +21,6 @@ export const UI_STRINGS_CHAT: Record<string, [en: string, ar: string, de: string
   "Le message sera effacé pour tout le groupe.": ["The message will be erased for the whole group.","ستُمحى الرسالة لدى المجموعة كلها.","Die Nachricht wird für die ganze Gruppe gelöscht."],
   "Le réglage parental ne permet pas d’utiliser la discussion.": ["The parental setting does not allow using the chat.","الإعداد الأبوي لا يسمح باستخدام المحادثة.","Die elterliche Einstellung erlaubt die Nutzung des Chats nicht."],
   "Message copié": ["Message copied","تم نسخ الرسالة","Nachricht kopiert"],
-  "Message supprimé": ["Message deleted","رسالة محذوفة","Nachricht gelöscht"],
   "Message supprimé pour tous": ["Message deleted for everyone","حُذفت الرسالة لدى الجميع","Nachricht für alle gelöscht"],
   "Message trop long ({n} caractères maximum).": ["Message too long ({n} characters maximum).","الرسالة طويلة جدًا ({n} حرفًا كحدّ أقصى).","Nachricht zu lang (höchstens {n} Zeichen)."],
   "Mettre en sourdine": ["Mute","كتم","Stummschalten"],

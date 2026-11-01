@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 import { AUTH_REDIRECT, getSupabase, supabaseConfigured } from '../supabase';
 import { linkErrorMessage, parseAuthReturn } from '../auth-link';
 import { deleteMyAccount, getProfile, updateProfile } from './api';
+import { disableGroupPush, refreshGroupPush } from '../group-push';
 
 type Profile = { id: string; display_name: string; is_minor: boolean };
 type Ctx = {
@@ -135,6 +136,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refreshProfile();
   }, [refreshProfile]);
+  // Passe 6 : notifications de groupe (natif, derrière EXPO_PUBLIC_GROUP_PUSH ; sans effet ailleurs).
+  useEffect(() => {
+    if (userId) void refreshGroupPush();
+  }, [userId]);
 
   const value: Ctx = {
     enabled: supabaseConfigured,
@@ -170,13 +175,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     refreshProfile,
     signOut: async () => {
+      await disableGroupPush(); // le jeton de l'appareil est retiré AVANT la déconnexion (sinon l'ancien compte reste notifié)
       await (await client())?.auth.signOut();
       void AsyncStorage.removeItem(LAST_EMAIL).catch(() => {});
       setLastEmail('');
       setProfile(null);
     },
     deleteAccount: async () => {
-      await deleteMyAccount();
+      await deleteMyAccount(); // les jetons push du compte sont supprimés en cascade côté serveur
+      await disableGroupPush();
       await (await client())?.auth.signOut();
       void AsyncStorage.removeItem(LAST_EMAIL).catch(() => {});
       setLastEmail('');

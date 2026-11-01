@@ -112,3 +112,5 @@ src/components/bien-etre/screens/gratitude.tsx
 src/components/chat/discussion.tsx
 src/components/chat/module.ts
 src/app/discussion.tsx
+src/app/moderation.tsx
+src/components/AccountExtras.tsx
