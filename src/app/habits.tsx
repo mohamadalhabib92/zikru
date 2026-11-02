@@ -3,6 +3,7 @@ import { Alert, Platform, Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey, HABIT_PRESETS, streak, useGrowth, type Habit } from '@/lib/growth';
+import { excusedDay, useSettings } from '@/lib/settings';
 import { Button, Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LText, LTitle, SectionLabel } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
@@ -22,6 +23,8 @@ function Plant({ n }: { n: number }) {
 
 export default function Habits() {
   const g = useGrowth();
+  const { s } = useSettings();
+  const excuse = (k: string) => excusedDay(s, k);
   const today = dayKey();
   const [title, setTitle] = useState('');
   const [anchor, setAnchor] = useState('');
@@ -37,7 +40,7 @@ export default function Habits() {
     setTiny('');
     setAdding(false);
   };
-  const st = (h: Habit) => streak((k) => h.done.includes(k));
+  const st = (h: Habit) => streak((k) => h.done.includes(k), new Date(), excuse);
   return (
     <Screen padded={false} bg={b.cream}>
       <PatternBg color={TEAL} style={{ padding: 20 }}>

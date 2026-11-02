@@ -4,7 +4,7 @@ import { Platform, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { enableBackgroundAudio, NowPlaying, PlayerBar } from '@/components/PlayerBar';
 import { fridayKey, getKahfText, isKahfTime, KAHF_AUDIO, type Ayah } from '@/lib/kahf';
-import { computeDay } from '@/lib/prayer';
+import { computeDay, prayerOptionsOf } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
 import { Badge, Button, Card, Eyebrow, H1, H2, Muted, Notice, Screen, Segmented, Spacer, Toggle } from '@/ui/kit';
@@ -25,7 +25,7 @@ export default function Kahf() {
   const [reminder, setReminder] = usePersistentState('kahf-reminder', true);
   const [readWeeks, setReadWeeks] = usePersistentState<string[]>('kahf-read', []);
   const now = new Date();
-  const maghrib = useMemo(() => computeDay(now, s.place, s.method, s.madhab).find((x) => x.key === 'maghrib')?.time, [s.place, s.method, s.madhab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const maghrib = useMemo(() => computeDay(now, s.place, s.method, s.madhab, prayerOptionsOf(s)).find((x) => x.key === 'maghrib')?.time, [s.place, s.method, s.madhab, s.highLat, s.adjustments, s.mosque]); // eslint-disable-line react-hooks/exhaustive-deps
   const week = fridayKey(now);
   const done = readWeeks.includes(week);
 

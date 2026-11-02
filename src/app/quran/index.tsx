@@ -8,6 +8,7 @@ import { khatmaStatus, streak } from '@/lib/khatma';
 import { normLat, searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { hizbPage, hizbRange, juzPage, juzRange, pageOf, pageRange, parseRef, surahPage, fromIndex, OFFSETS } from '@/lib/quran-nav';
 import { hifzCards, khatma, lastRead, marks, readDays } from '@/lib/quran-store';
+import { excusedDay, useSettings } from '@/lib/settings';
 import { useShared } from '@/lib/shared-state';
 import { dailyQueue, queueSize, rangeStatus } from '@/lib/srs';
 import { SURAHS } from '@/lib/surahs';
@@ -29,8 +30,9 @@ export default function QuranHub() {
   const [cards] = useShared(hifzCards);
   const [m] = useShared(marks);
   const tr = useTranslationId();
+  const { s } = useSettings();
   const today = dayKey();
-  const st = streak(days, today);
+  const st = streak(days, today, (d) => excusedDay(s, d));
   const kst = k ? khatmaStatus(k, today) : null;
   const due = queueSize(dailyQueue(cards, today));
   const [tab, setTab] = useState<Tab>('surah');

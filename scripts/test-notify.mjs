@@ -55,4 +55,25 @@ t('aucune prière : seulement la pause (ou rien)', () => {
 t('empreinte stable', () => {
   assert.equal(P.planHash(P.buildPlan(now, compute, D, L)), P.planHash(P.buildPlan(now, compute, D, L)));
 });
+t('7 jours sans trou avant la limite de 64', () => {
+  const start = new Date(2026, 10, 2, 0, 30);
+  const p = P.buildPlan(start, compute, D, L);
+  assert.ok(p.length <= 64, String(p.length));
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(2026, 10, 2 + i);
+    const keys = p.filter((e) => e.kind === 'prayer' && e.date.getFullYear() === day.getFullYear() && e.date.getMonth() === day.getMonth() && e.date.getDate() === day.getDate()).map((e) => e.id.split('-').pop()).sort();
+    assert.deepEqual(keys, ['asr', 'dhuhr', 'fajr', 'isha', 'maghrib']);
+  }
+});
+t('mode dispense : aucun rappel', () => {
+  const p = P.buildPlan(now, compute, D, L);
+  assert.equal(P.gatePlan(p, { suspended: true }).length, 0);
+});
+t('sourdine : les adhans avant l’échéance sortent du plan', () => {
+  const p = P.buildPlan(now, compute, D, L);
+  const until = new Date(2026, 9, 28, 16, 0).getTime();
+  const gated = P.gatePlan(p, { muteUntil: until });
+  assert.ok(gated.every((e) => e.kind !== 'prayer' && e.kind !== 'before' || e.date.getTime() >= until));
+  assert.ok(gated.length < p.length);
+});
 console.log(`Notifications : ${ok} tests passent.`);

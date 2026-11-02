@@ -1,4 +1,5 @@
 import { Platform, type ViewStyle } from 'react-native';
+import { GOLD_DECOR, GOLD_INK_DARK, GOLD_INK_LIGHT } from '@/lib/contrast';
 
 /**
  * Système de design Zikru (1.0.19) — un seul thème premium, clair ou sombre.
@@ -18,7 +19,7 @@ const LIGHT = {
   muted: '#5C6A63',
   primary: '#0E6B4F',
   onPrimary: '#FFFFFF',
-  accent: '#8F6F1E',
+  accent: GOLD_INK_LIGHT,
   border: '#E5DFD3',
   danger: '#B42318',
   dangerBg: '#FDECEA',
@@ -37,7 +38,7 @@ const DARK: typeof LIGHT = {
   muted: '#A0AEA7',
   primary: '#3DBE8B',
   onPrimary: '#03140D',
-  accent: '#D9B65C',
+  accent: GOLD_INK_DARK,
   border: '#24352E',
   danger: '#F0806E',
   dangerBg: '#3A1D19',
@@ -67,8 +68,8 @@ const BRAND_LIGHT = {
   ink: LIGHT.text,
   inkMuted: LIGHT.muted,
   line: LIGHT.border,
-  gold: '#E3BE5A',
-  goldDeep: '#9C7A22',
+  gold: GOLD_DECOR,
+  goldDeep: GOLD_INK_LIGHT,
   goldSoft: '#FBF3DC',
   green: '#0E6B4F',
   greenDeep: '#0A3F30',
@@ -99,7 +100,7 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
   ink: DARK.text,
   inkMuted: DARK.muted,
   line: DARK.border,
-  goldDeep: '#D9B65C',
+  goldDeep: GOLD_INK_DARK,
   goldSoft: '#2A2414',
   green: '#23946B',
   greenDeep: '#0F3A2C',

@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
+import { PrayerReliability } from '@/components/PrayerReliability';
 import { useSettings } from '@/lib/settings';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
@@ -112,6 +113,7 @@ export default function SettingsScreen() {
           ? `${L('Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite).')} ${L(s.asrManual ? 'Choisi manuellement.' : 'Suit l’école choisie ci-dessus.')}`
           : `Separate from the school: shadow ×1 (majority) or ×2 (Hanafi). ${s.asrManual ? 'Set manually.' : 'Follows the school above.'}`}
       </Muted>
+      <PrayerReliability />
       <Spacer />
       <Segmented label={tr.hijri_offset} options={[-2, -1, 0, 1, 2].map((n) => ({ label: n > 0 ? `+${n}` : String(n), value: n }))} value={s.hijriOffset} onChange={(v) => set({ hijriOffset: v })} />
       <Spacer h={20} />
@@ -198,6 +200,7 @@ export default function SettingsScreen() {
       />
       <Spacer />
       <Muted>Zikru {Constants.expoConfig?.version ?? '1.0.19'} · {pt.local_footer}</Muted>
+      <Muted>Support : YOUR_SUPPORT_EMAIL</Muted>
     </Screen>
   );
 }

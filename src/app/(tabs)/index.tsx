@@ -11,10 +11,10 @@ import { DUAS_LIST } from '@/lib/duas';
 import { dayKey, streak, useGrowth } from '@/lib/growth';
 import { formatHijri } from '@/lib/hijri';
 import { isKahfTime } from '@/lib/kahf';
-import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } from '@/lib/prayer';
+import { AR_NAMES, computeDay, countdown, hhmm, prayerOptionsOf, withStates, type PrayerKey } from '@/lib/prayer';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { periodFor, PERIODS, REFLECTIONS } from '@/lib/reflections';
-import { useSettings } from '@/lib/settings';
+import { excusedDay, useSettings } from '@/lib/settings';
 import { useConsent } from '@/lib/consent';
 import { canFetchWeather, canSendToAI, undecided } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
@@ -34,6 +34,8 @@ import { Arabic, LCard, LMuted } from '@/ui/light';
 import { alpha, brand as b } from '@/ui/theme';
 import { L, useUiLang } from '@/lib/l10n';
 import { duaView, quranDuaView } from '@/lib/i18n-content';
+
+export { RouteErrorBoundary as ErrorBoundary } from '@/components/RouteErrorBoundary';
 
 const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
 let aiUnavailable = false; // évite d'appeler la fonction à chaque rendu si l'IA n'est pas configurée
@@ -90,11 +92,12 @@ export default function Home() {
   }, [s.place.lat, s.place.lng, s.place.label, weatherOk]);
 
   const { next, list, maghrib } = useMemo(() => {
-    const today = computeDay(now, s.place, s.method, s.madhab);
-    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab);
+    const opt = prayerOptionsOf(s);
+    const today = computeDay(now, s.place, s.method, s.madhab, opt);
+    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, opt);
     return { next: withStates(today, now, tomorrow[0].time).next, list: today, maghrib: today.find((x) => x.key === 'maghrib')?.time };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab]);
+  }, [Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab, s.highLat, s.adjustments, s.mosque]);
 
   const period = periodFor(now);
   const pool = REFLECTIONS[period];
@@ -130,7 +133,7 @@ export default function Home() {
   const prayedToday = g.prayed[today] ?? [];
   const names = Object.fromEntries(list.map((p) => [p.key, tr[p.key]])) as Record<PrayerKey, string>;
   const dhikrToday = g.days[today] ?? 0;
-  const st = streak((k) => (g.days[k] ?? 0) > 0);
+  const st = streak((k) => (g.days[k] ?? 0) > 0, now, (k) => excusedDay(s, k));
   const kahfTime = kahfReminder && isKahfTime(now, maghrib);
   const greet = now.getHours() < 17 ? tr.greet_morning : tr.greet_evening;
   const doy = dayOfYear(now);
@@ -265,7 +268,7 @@ export default function Home() {
   const hq = dailyQueue(qCards, today);
   const hqN = queueSize(hq);
   const tracked = Object.keys(qCards).length;
-  const qStreak = readStreak(qDays, today);
+  const qStreak = readStreak(qDays, today, (d) => excusedDay(s, d));
   const lastHref: Href = quranLast ? (quranLast.mode === 'page' ? { pathname: '/quran/mushaf', params: { p: String(quranLast.page ?? pageOf(quranLast.n, quranLast.ayah)) } } : { pathname: '/quran/[n]', params: { n: String(quranLast.n), a: String(quranLast.ayah) } }) : '/quran';
   const quranCard = (
     <FadeIn delay={80}>

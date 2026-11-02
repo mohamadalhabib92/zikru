@@ -16,13 +16,14 @@ import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
 import { takePendingRoute } from '@/ui/appearance';
 import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
-import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
 import { L } from '@/lib/l10n';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
-export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
-  return <ErrorScreen error={error} retry={() => void retry()} />;
+export function ErrorBoundary(props: { error: Error; retry: () => Promise<void> }) {
+  return <RouteErrorBoundary {...props} />;
 }
 
 function Root() {

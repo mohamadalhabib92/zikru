@@ -1,6 +1,6 @@
 import type { Dict } from './i18n';
-import { computeDay, type MethodKey, type Place } from './prayer';
-import { buildPlan, type NotifPrefs, type PlanLabels } from './notify-plan';
+import { computeDay, prayerOptionsOf, type HighLatKey, type MethodKey, type MinuteAdjustments, type MosqueTimetable, type Place } from './prayer';
+import { buildPlan, gatePlan, type NotifPrefs, type PlanGate, type PlanLabels } from './notify-plan';
 
 export function planLabels(tr: Dict, place: string): PlanLabels {
   return {
@@ -27,7 +27,17 @@ export function planLabels(tr: Dict, place: string): PlanLabels {
   };
 }
 
-export type PlanInput = { place: Place; method: MethodKey; madhab: 'shafi' | 'hanafi'; notif: NotifPrefs };
-export function planFor(now: Date, s: PlanInput, tr: Dict) {
-  return buildPlan(now, (d) => computeDay(d, s.place, s.method, s.madhab), s.notif, planLabels(tr, s.place.label));
+export type PlanInput = {
+  place: Place;
+  method: MethodKey;
+  madhab: 'shafi' | 'hanafi';
+  notif: NotifPrefs;
+  highLat?: HighLatKey;
+  adjustments?: MinuteAdjustments | null;
+  mosque?: MosqueTimetable | null;
+  dispense?: { on?: boolean } | null;
+};
+export function planFor(now: Date, s: PlanInput, tr: Dict, gate?: PlanGate | null) {
+  const suspended = gate?.suspended || s.dispense?.on === true;
+  return gatePlan(buildPlan(now, (d) => computeDay(d, s.place, s.method, s.madhab, prayerOptionsOf(s)), s.notif, planLabels(tr, s.place.label)), { ...gate, suspended });
 }

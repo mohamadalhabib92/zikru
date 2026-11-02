@@ -56,6 +56,8 @@ src/components/BleStatusChip.tsx
 src/components/Hub.tsx
 src/components/LocalGroups.tsx
 src/components/NotifSettings.tsx
+src/components/PrayerReliability.tsx
+src/components/RouteErrorBoundary.tsx
 src/components/PlayerBar.tsx
 src/components/StorageAlert.tsx
 src/components/SunArc.tsx

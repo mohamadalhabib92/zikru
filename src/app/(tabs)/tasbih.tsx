@@ -15,6 +15,8 @@ import { L } from '@/lib/l10n';
 import { uid } from '@/lib/storage';
 import { closeSession, groupSessions, resetCount, switchDhikr } from '@/lib/tasbih-core';
 
+export { RouteErrorBoundary as ErrorBoundary } from '@/components/RouteErrorBoundary';
+
 export default function TasbihScreen() {
   const { t: tr } = useSettings();
   const { tasbih, setTasbih, increment, saveSession, content, ready } = useData();

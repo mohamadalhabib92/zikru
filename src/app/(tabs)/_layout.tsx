@@ -1,23 +1,42 @@
 import { Redirect, Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
 import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
-import { Ionicons, type IconName } from '@/ui/kit';
+import { Button, Ionicons, Muted, type IconName } from '@/ui/kit';
 import { useData } from '@/lib/data';
 import { usePrayerReminders } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
 import { theme as t } from '@/ui/theme';
+import { Text } from '@/ui/Text';
+
+export { RouteErrorBoundary as ErrorBoundary } from '@/components/RouteErrorBoundary';
 
 export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
   const { ready: dataReady } = useData();
   usePrayerReminders();
   const { width } = useWindowDimensions();
+  const [bootAttempt, setBootAttempt] = useState(0);
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (ready && dataReady) return;
+    const id = setTimeout(() => setSlow(true), 8000);
+    return () => clearTimeout(id);
+  }, [ready, dataReady, bootAttempt]);
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
   if (!ready || !dataReady)
     return (
-      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={t.primary} />
+      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 }}>
+        {slow ? (
+          <>
+            <Text style={{ color: t.text, fontSize: 18, fontWeight: '700', textAlign: 'center' }}>Le chargement prend trop de temps</Text>
+            <Muted style={{ textAlign: 'center' }}>Vos données restent sur l’appareil. Réessayez, ou fermez puis rouvrez Zikru.</Muted>
+            <Button title="Réessayer" onPress={() => { setSlow(false); setBootAttempt((n) => n + 1); }} />
+          </>
+        ) : (
+          <ActivityIndicator color={t.primary} />
+        )}
       </View>
     );
   if (!s.onboarded) return <Redirect href="/onboarding" />;

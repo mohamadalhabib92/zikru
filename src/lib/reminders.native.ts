@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
+import { nearKnownPlace } from './location';
 import { planHash } from './notify-plan';
 import { planFor } from './reminders-common';
 import { useSettings } from './settings';
@@ -21,10 +22,17 @@ Notifications.setNotificationHandler({
 });
 
 const CHANNEL = 'prayers';
-async function ensureChannel() {
+const CHANNEL_SILENT = 'prayers-silent';
+async function ensureChannel(silent: boolean) {
+  const id = silent ? CHANNEL_SILENT : CHANNEL;
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: Notifications.AndroidImportance.HIGH, sound: 'default' });
+    await Notifications.setNotificationChannelAsync(id, {
+      name: silent ? 'Prières (silencieuses)' : 'Prières',
+      importance: silent ? Notifications.AndroidImportance.DEFAULT : Notifications.AndroidImportance.HIGH,
+      sound: silent ? null : 'default',
+    });
   }
+  return id;
 }
 
 export async function reminderPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
@@ -59,10 +67,10 @@ export async function scheduledCount(): Promise<number> {
 
 export async function sendTestNotification(title: string, body: string) {
   if (!(await requestReminderPermission())) return;
-  await ensureChannel();
+  const channelId = await ensureChannel(false);
   await Notifications.scheduleNotificationAsync({
     content: { title, body, sound: 'default', data: { url: '/settings' } },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3, channelId: CHANNEL },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3, channelId },
   });
 }
 
@@ -70,25 +78,25 @@ const HASH_KEY = 'notif-hash';
 let running: Promise<void> | null = null;
 
 /** (Re)programme le plan si nécessaire. Sans permission ou rappels désactivés : tout est annulé. */
-async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
+async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>, silent: boolean) {
   if (!enabled || (await reminderPermission()) !== 'granted') {
     await Notifications.cancelAllScheduledNotificationsAsync().catch(() => {});
     await saveJSON(HASH_KEY, '');
     return;
   }
   const plan = build();
-  const hash = planHash(plan);
+  const hash = planHash(plan) + (silent ? '|silent' : '|sound');
   const [prev, current] = await Promise.all([loadJSON<string>(HASH_KEY, ''), Notifications.getAllScheduledNotificationsAsync().catch(() => [])]);
   const stillThere = plan.filter((e) => e.date.getTime() > Date.now() + 60000).length;
   if (prev === hash && current.length >= stillThere && current.length > 0) return;
-  await ensureChannel();
+  const channelId = await ensureChannel(silent);
   await Notifications.cancelAllScheduledNotificationsAsync();
   for (const e of plan) {
     if (e.date.getTime() <= Date.now() + 2000) continue;
     await Notifications.scheduleNotificationAsync({
       identifier: e.id,
-      content: { title: e.title, body: e.body, sound: 'default', data: { url: e.url, kind: e.kind } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date, channelId: CHANNEL },
+      content: { title: e.title, body: e.body, sound: silent ? false : 'default', data: { url: e.url, kind: e.kind } },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date, channelId },
     });
   }
   await saveJSON(HASH_KEY, hash);
@@ -115,7 +123,12 @@ export function usePrayerReminders() {
     if (!ready) return;
     const run = () => {
       const { s: cur, tr: t } = latest.current;
-      const job = (running ?? Promise.resolve()).then(() => sync(cur.reminders, () => planFor(new Date(), cur, t))).catch(() => {});
+      const job = (running ?? Promise.resolve())
+        .then(async () => {
+          const muteUntil = cur.notif.muteAtMosque && (await nearKnownPlace(cur.mosquePlace)) ? Date.now() + 6 * 3600000 : null;
+          await sync(cur.reminders, () => planFor(new Date(), cur, t, { muteUntil }), cur.notif.sound === 'silent');
+        })
+        .catch(() => {});
       running = job;
     };
     run();
@@ -135,5 +148,5 @@ export function usePrayerReminders() {
       sub.remove();
       clearTimeout(timer);
     };
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.notif, s.lang]);
+  }, [ready, s.reminders, s.place, s.method, s.madhab, s.notif, s.lang, s.highLat, s.adjustments, s.mosque, s.mosquePlace, s.dispense]);
 }

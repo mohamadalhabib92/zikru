@@ -85,16 +85,26 @@ export function markPage(k: Khatma, page: number, today: string): Khatma {
   return { ...k, done, finished: done >= khatmaTotal(k) ? (k.finished ?? today) : undefined };
 }
 
-/** Série : jours consécutifs de lecture se terminant aujourd’hui (ou hier, si rien n’est encore lu aujourd’hui) ; et le record. */
-export function streak(days: string[], today: string): { current: number; best: number; todayDone: boolean } {
+/** Série : jours consécutifs de lecture se terminant aujourd’hui (ou hier, si rien n’est encore lu aujourd’hui) ; et le record. Un jour `excused` (mode dispense) ne casse pas la série. */
+export function streak(days: string[], today: string, excused?: (d: string) => boolean): { current: number; best: number; todayDone: boolean } {
   const set = new Set(days);
   const todayDone = set.has(today);
   let current = 0;
-  for (let d = todayDone ? today : addDays(today, -1); set.has(d); d = addDays(d, -1)) current++;
+  let guard = 0;
+  for (let d = todayDone || excused?.(today) ? today : addDays(today, -1); guard++ < 4000; d = addDays(d, -1)) {
+    if (set.has(d)) {
+      current++;
+      continue;
+    }
+    if (excused?.(d)) continue;
+    break;
+  }
   const sorted = [...set].sort();
   let best = 0, run = 0, prev = '';
   for (const d of sorted) {
-    run = prev && daysBetween(prev, d) === 1 ? run + 1 : 1;
+    const gap = prev ? daysBetween(prev, d) : 1;
+    const bridged = gap > 1 && gap <= 40 && !!excused && Array.from({ length: gap - 1 }, (_, i) => excused(addDays(prev, i + 1))).every(Boolean);
+    run = prev && (gap === 1 || bridged) ? run + 1 : 1;
     best = Math.max(best, run);
     prev = d;
   }

@@ -3,6 +3,8 @@ import { useSettings } from '@/lib/settings';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
+export { RouteErrorBoundary as ErrorBoundary } from '@/components/RouteErrorBoundary';
+
 /** Onglet « Plus » : outils, parcours, communauté, réglages. */
 export default function More() {
   const { t: tr } = useSettings();

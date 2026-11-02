@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { nearKnownPlace } from './location';
 import { planFor } from './reminders-common';
 import { useSettings } from './settings';
 
@@ -44,19 +45,25 @@ export function usePrayerReminders() {
   useEffect(() => {
     if (!ready || !s.reminders || !remindersSupported() || Notification.permission !== 'granted') return;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const schedule = () => {
+    let alive = true;
+    const schedule = async () => {
+      const muteUntil = s.notif.muteAtMosque && (await nearKnownPlace(s.mosquePlace)) ? Date.now() + 6 * 3600000 : null;
+      if (!alive) return;
       const now = new Date();
-      const next = planFor(now, s, tr).find((e) => e.kind !== 'paused' && e.date.getTime() > now.getTime() + 1000);
+      const next = planFor(now, s, tr, { muteUntil }).find((e) => e.kind !== 'paused' && e.date.getTime() > now.getTime() + 1000);
       if (!next) return;
       const delay = Math.min(next.date.getTime() - now.getTime(), 2 ** 31 - 1);
       timer = setTimeout(() => {
         try {
-          new Notification(next.title, { body: next.body, tag: `zikru-${next.id}` });
+          new Notification(next.title, { body: next.body, tag: `zikru-${next.id}`, silent: s.notif.sound === 'silent' });
         } catch {}
-        schedule();
+        void schedule();
       }, delay);
     };
-    schedule();
-    return () => clearTimeout(timer);
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.notif, tr]);
+    void schedule();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [ready, s.reminders, s.place, s.method, s.madhab, s.notif, s.highLat, s.adjustments, s.mosque, s.dispense, tr]);
 }

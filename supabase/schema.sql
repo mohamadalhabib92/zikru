@@ -1,3 +1,5 @@
+-- Zikru — schéma minimal HÉRITÉ. La source de vérité des communautés est supabase/migrations.
+-- Ne pas réappliquer ce fichier par-dessus ces migrations (policies en conflit).
 -- Zikru — schéma Supabase minimal (idempotent). À exécuter dans l'éditeur SQL Supabase.
 create extension if not exists pgcrypto;
 
@@ -53,8 +55,8 @@ alter table public.user_preferences enable row level security;
 alter table public.prayer_settings enable row level security;
 alter table public.tasbih_sessions enable row level security;
 
-create or replace function public.is_editor() returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('editor','admin'));
+create or replace function public.is_editor() returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.profiles p where p.id = (select auth.uid()) and p.role in ('editor','admin'));
 $$;
 
 drop policy if exists "profiles self" on public.profiles;
