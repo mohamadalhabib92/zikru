@@ -26,7 +26,7 @@ import { loadJSON, saveJSON, uid } from '@/lib/storage';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { newClientId } from '@/lib/community/chat-core';
-import { allowedDestinations, batchSignature, canSetWird, insertionOrder, planIds, stepsToGoals, wirdSummary, type GroupDest, type PendingBatch } from '@/lib/program-group';
+import { allowedDestinations, batchSignature, canSetWird, insertionOrder, planIds, programSignature, stepsToGoals, stepsToProgram, wirdSummary, type GroupDest, type PendingBatch } from '@/lib/program-group';
 import { moveItem } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
@@ -133,6 +133,7 @@ function Badge({ m, raw, s }: { m: StepMatch; raw: StepMatch; s: EStep }) {
 }
 
 const PENDING_KEY = 'zikru.import.groupBatch';
+const PENDING_PROGRAM_KEY = 'zikru.import.groupProgram';
 
 export default function ImportProgram() {
   const router = useRouter();
@@ -147,6 +148,8 @@ export default function ImportProgram() {
   const [withWird, setWithWird] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareErr, setShareErr] = useState<string | null>(null);
+  // Programmes de groupe disponibles sur le serveur pour cette destination ? (null = inconnu ; false = repli objectifs communs)
+  const [progAvail, setProgAvail] = useState<Record<string, boolean>>({});
   const { create } = useZikrs();
   const [via, setVia] = useState<ImportVia>('paste');
   const [pages, setPages] = useState<Page[]>([]);
@@ -165,6 +168,20 @@ export default function ImportProgram() {
   const ocr = useMemo(() => ocrSupport(), []);
   const pdfOk = useMemo(() => pdfSupport(), []);
   const canPhoto = Platform.OS !== 'web';
+
+  const destKey = dest ? dest.scope + ':' + dest.id : '';
+  useEffect(() => {
+    if (!dest) return;
+    let alive = true;
+    api
+      .listGroupPrograms(dest.scope, dest.id)
+      .then(() => alive && setProgAvail((p) => ({ ...p, [destKey]: true })))
+      .catch((e) => alive && e instanceof api.ProgramsMissing && setProgAvail((p) => ({ ...p, [destKey]: false })));
+    return () => {
+      alive = false;
+    };
+  }, [dest, destKey]);
+  const asProgram = !!dest && progAvail[destKey] !== false;
 
   useEffect(() => {
     if (!userId) return;
@@ -388,12 +405,39 @@ export default function ImportProgram() {
     [steps, canCreate, matches, via],
   );
   const drafts = useMemo(() => stepsToGoals(groupItems), [groupItems]);
+  const program = useMemo(() => stepsToProgram(name.trim() || L('Programme importé'), groupItems), [name, groupItems]);
   const wird = useMemo(() => (canSetWird(dest) ? wirdSummary(name.trim() || L('Programme importé'), groupItems) : null), [dest, name, groupItems]);
   const share = async () => {
     if (!dest || !userId || !drafts.length || sharing) return;
     setSharing(true);
     setShareErr(null);
     try {
+      if (asProgram) {
+        // Programme de groupe : un seul enregistrement atomique (toutes les étapes ou rien), identifiant stable.
+        const psig = programSignature(dest, program.title, program.steps);
+        const [pid] = planIds(await loadJSON<PendingBatch | null>(PENDING_PROGRAM_KEY, null), psig, 1, () => newClientId());
+        await saveJSON(PENDING_PROGRAM_KEY, { sig: psig, ids: [pid] });
+        try {
+          await api.createGroupProgram({
+            id: pid,
+            scope: dest.scope,
+            scopeId: dest.id,
+            title: program.title,
+            steps: program.steps.map(({ cut: _cut, ...st }) => st),
+            sourceNote: L('Importé depuis un document'),
+          });
+        } catch (e) {
+          if (!(e instanceof api.ProgramsMissing)) throw e;
+          // Serveur sans programmes de groupe : repli sur les objectifs communs, après un nouvel aperçu.
+          setProgAvail((p) => ({ ...p, [destKey]: false }));
+          setShareErr(L('Le serveur n’a pas encore les programmes de groupe : vérifiez l’aperçu (objectifs communs), puis confirmez à nouveau.'));
+          return;
+        }
+        if (withWird && wird && canSetWird(dest)) await api.updateFamily(dest.id, { wird });
+        await saveJSON(PENDING_PROGRAM_KEY, null);
+        router.replace({ pathname: '/program/[id]', params: { id: pid } });
+        return;
+      }
       const sig = batchSignature(dest, drafts);
       const ids = planIds(await loadJSON<PendingBatch | null>(PENDING_KEY, null), sig, drafts.length, () => newClientId());
       await saveJSON(PENDING_KEY, { sig, ids });
@@ -671,10 +715,34 @@ export default function ImportProgram() {
                   ) : !preview ? (
                     <>
                       <LBtn icon="eye-outline" label="Aperçu avant partage" solid disabled={!canCreate} onPress={() => setPreview(true)} />
-                      <LMuted style={{ fontSize: 12 }}>Chaque étape deviendra un objectif commun du groupe, dans l’ordre. Seul le texte validé est partagé : la photo reste sur votre appareil.</LMuted>
+                      <LMuted style={{ fontSize: 12 }}>
+                        {asProgram
+                          ? 'Le groupe recevra un programme : les étapes s’enchaînent dans l’ordre et chacun compte avec le tasbih de groupe. Seul le texte validé est partagé : la photo reste sur votre appareil.'
+                          : 'Chaque étape deviendra un objectif commun du groupe, dans l’ordre. Seul le texte validé est partagé : la photo reste sur votre appareil.'}
+                      </LMuted>
                     </>
                   ) : (
                     <View style={[card(), { gap: 8, borderColor: t.warning }]}>
+                      {asProgram ? (
+                        <>
+                          <Text style={{ color: b.ink, fontWeight: '700' }}>{L('Aperçu : programme de {n} étape(s) pour « {g} »', { n: program.steps.length, g: dest.name })}</Text>
+                          <Text style={{ color: t.warning, fontSize: 13 }}>{L('Tous les membres de « {g} » verront ce programme (titre, textes, nombres) et pourront le suivre étape par étape. La photo n’est pas envoyée.', { g: dest.name })}</Text>
+                          <Text style={{ color: b.ink, fontWeight: '600' }}>{program.title}</Text>
+                          {program.titleCut ? <Text style={{ color: t.warning, fontSize: 12 }}>{L('Titre coupé à {n} caractères.', { n: 80 })}</Text> : null}
+                          {program.steps.map((d, i) => (
+                            <View key={i} style={{ borderTopWidth: 1, borderTopColor: b.line, paddingTop: 6, gap: 2 }}>
+                              <Text style={{ color: b.ink, fontWeight: '600' }}>{`${i + 1}. ${d.label}`}</Text>
+                              {d.arabic ? programHasArabic(d.arabic) ? <Arabic size={16}>{d.arabic}</Arabic> : <Text style={{ color: b.ink }}>{d.arabic}</Text> : null}
+                              {d.translit ? <LMuted style={{ fontSize: 12, fontStyle: 'italic' }}>{d.translit}</LMuted> : null}
+                              <LMuted style={{ fontSize: 12 }}>{L('Nombre : {n}', { n: d.target })}{d.source_ref ? ' · ' + d.source_ref : ''}</LMuted>
+                              {d.verification === 'unverified' ? <Text style={{ color: t.warning, fontSize: 12, fontWeight: '700' }}>Texte non vérifié (lu sur votre document)</Text> : null}
+                              {d.cut ? <Text style={{ color: t.warning, fontSize: 12, fontWeight: '700' }}>{L('Texte trop long : coupé à {n} caractères (« … »).', { n: 4000 })}</Text> : null}
+                            </View>
+                          ))}
+                          {groupItems.length > program.steps.length ? <Text style={{ color: t.warning, fontSize: 12, fontWeight: '700' }}>{L('Seules les {n} premières étapes seront partagées.', { n: program.steps.length })}</Text> : null}
+                        </>
+                      ) : (
+                      <>
                       <Text style={{ color: b.ink, fontWeight: '700' }}>{L('Aperçu : {n} objectif(s) pour « {g} »', { n: drafts.length, g: dest.name })}</Text>
                       <Text style={{ color: t.warning, fontSize: 13 }}>{L('Tous les membres de « {g} » verront ces objectifs (titre, formule, nombre). La photo n’est pas envoyée.', { g: dest.name })}</Text>
                       {drafts.map((d) => (
@@ -693,6 +761,8 @@ export default function ImportProgram() {
                           {d.formulaCut ? <Text style={{ color: t.warning, fontSize: 12, fontWeight: '700' }}>{L('Formule trop longue : coupée à {n} caractères (« … »). Le texte complet reste dans le document.', { n: 200 })}</Text> : null}
                         </View>
                       ))}
+                      </>
+                      )}
                       {canSetWird(dest) ? (
                         wird ? (
                           <Pressable onPress={() => setWithWird(!withWird)} accessibilityRole="checkbox" accessibilityState={{ checked: withWird }} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 4 }}>

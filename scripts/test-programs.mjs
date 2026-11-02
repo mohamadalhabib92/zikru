@@ -364,6 +364,53 @@ test('groupe : résumé du wird (≤ 500, sinon rien)', () => {
   assert.equal(PG.wirdSummary('x', []), null);
 });
 
+// ——— Programme de groupe (tables group_programs, migration 20261102200000)
+test('programme de groupe : texte arabe complet (jamais coupé à 200), statut quran/catalogue/unverified, ordre', () => {
+  const long = Array.from({ length: 40 }, () => SUB).join(' ');
+  const p = PG.stepsToProgram('  Programme test ', [
+    { label: 'Istighfār', ar: ISTI, tr: 'astaghfiru llah', reps: 100, ref: 'Catalogue Zikru', kind: 'formula' },
+    { label: 'Coran test', ar: long, reps: 1, ref: 'Coran 1:1', kind: 'verse' },
+    { label: 'Formule test', ar: 'Formule test', reps: 33, unverified: true, kind: 'free' },
+  ]);
+  assert.equal(p.title, 'Programme test');
+  assert.deepEqual(p.steps.map((s) => [s.label, s.verification, s.target]), [['Istighfār', 'catalogue', 100], ['Coran test', 'quran', 1], ['Formule test', 'unverified', 33]]);
+  assert.equal(p.steps[0].arabic, ISTI);
+  assert.equal(p.steps[0].translit, 'astaghfiru llah');
+  assert.equal(p.steps[1].arabic, long, 'texte complet, identique');
+  assert.ok(p.steps.every((s) => !s.cut));
+});
+test('programme de groupe : limites (100 étapes, 4000 caractères, nombre 1..100000), signature stable', () => {
+  const huge = 'x'.repeat(4100);
+  const p = PG.stepsToProgram('t', Array.from({ length: 120 }, () => ({ label: 'a', ar: huge, reps: 0 })));
+  assert.equal(p.steps.length, 100);
+  assert.ok(p.steps[0].cut && cp(p.steps[0].arabic) <= 4000 && p.steps[0].target === 1);
+  const one = PG.stepsToProgram('t', [{ label: 'a', ar: SUB, reps: 3 }]);
+  const dest = { scope: 'family', id: 'f1' };
+  assert.equal(PG.programSignature(dest, one.title, one.steps), PG.programSignature(dest, one.title, one.steps));
+  assert.notEqual(PG.programSignature(dest, 'autre', one.steps), PG.programSignature(dest, one.title, one.steps));
+  assert.notEqual(PG.programSignature({ scope: 'circle', id: 'f1' }, one.title, one.steps), PG.programSignature(dest, one.title, one.steps));
+});
+test('tasbih de groupe : enchaînement automatique, bornes, annulation, fin', () => {
+  const st = [{ id: 'a', target: 2 }, { id: 'b', target: 1 }];
+  let c = {};
+  assert.equal(PG.currentStep(st, c), 0);
+  let r = PG.tapStep(st, c, 0);
+  assert.deepEqual([r.counts.a, r.next, r.completed], [1, 0, false]);
+  r = PG.tapStep(st, r.counts, 0);
+  assert.deepEqual([r.counts.a, r.next, r.completed], [2, 1, true]);
+  r = PG.tapStep(st, r.counts, 0);
+  assert.deepEqual([r.counts.a, r.completed], [2, false], 'jamais au-delà du nombre');
+  r = PG.tapStep(st, r.counts, 1);
+  assert.deepEqual([r.counts.b, r.next, r.completed], [1, 1, true]);
+  assert.ok(PG.programDone(st, r.counts));
+  assert.equal(PG.currentStep(st, r.counts), 1);
+  r = PG.tapStep(st, r.counts, 1, -1);
+  assert.equal(r.counts.b, 0);
+  assert.equal(PG.tapStep(st, { a: 0 }, 0, -1).counts.a, 0, 'jamais sous 0');
+  assert.ok(!PG.programDone([], {}));
+  assert.deepEqual(PG.mergeCounts({ a: 1, b: 1 }, { a: 2, b: 0 }, ['a']), { a: 2, b: 1 });
+});
+
 let fail = 0;
 for (const [n, f] of tests) {
   try {

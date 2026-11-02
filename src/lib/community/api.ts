@@ -349,3 +349,54 @@ export const setSessionCount = (sessionId: string, userId: string, displayName: 
 export const getProfile = (id: string) => q<{ id: string; display_name: string; is_minor: boolean } | null>(sb().then((c) => c.from('profiles').select('id,display_name,is_minor').eq('id', id).maybeSingle()));
 export const updateProfile = (id: string, display_name: string) => q(sb().then((c) => c.from('profiles').update({ display_name }).eq('id', id)));
 export const deleteMyAccount = () => q(sb().then((c) => c.rpc('delete_my_account')));
+
+// ---------- Programmes de groupe (migration 20261102200000, à appliquer séparément) ----------
+// Toutes les écritures passent par des RPC ; si la migration n'est pas appliquée (PGRST202 / 42P01…), les appelants
+// reçoivent `ProgramsMissing` et retombent sur les objectifs communs.
+export type ProgramVerification = 'unverified' | 'catalogue' | 'quran';
+export type ProgramStepInput = { label: string; arabic?: string | null; translit?: string | null; translation?: string | null; target: number; verification?: ProgramVerification; source_ref?: string | null };
+export type GroupProgram = { id: string; scope_type: ScopeType; family_id: string | null; circle_id: string | null; title: string; description: string | null; version: number; status: 'active' | 'archived'; created_at: string };
+export type ProgramStepView = { id: string; position: number; label: string; arabic: string | null; translit: string | null; translation: string | null; target: number; verification: ProgramVerification; source_ref: string | null; total: number; done_by: number; mine: number | null };
+export type ProgramMemberView = { user_id: string; name: string; me: boolean; participated: boolean; steps_done: number | null; counts: Record<string, number> | null };
+export type GroupProgramView = {
+  id: string;
+  scope_type: ScopeType;
+  scope_id: string;
+  title: string;
+  description: string | null;
+  source_note: string | null;
+  version: number;
+  status: 'active' | 'archived';
+  created_by: string | null;
+  created_at: string;
+  can_admin: boolean;
+  steps: ProgramStepView[];
+  members: ProgramMemberView[];
+};
+/** Le serveur n’a pas (encore) les programmes de groupe. */
+export class ProgramsMissing extends CommunityError {
+  constructor() {
+    super(L('Les programmes de groupe ne sont pas encore disponibles sur le serveur.'), 'MISSING');
+  }
+}
+async function pq<T>(p: PromiseLike<{ data: T | null; error: PgError | null }>): Promise<T> {
+  const { data, error } = await p;
+  if (error) {
+    if (isMissingFeature(error)) throw new ProgramsMissing();
+    throw new CommunityError(frError(error), error.code);
+  }
+  return data as T;
+}
+export const listGroupPrograms = (scope: ScopeType, id: string) =>
+  pq<GroupProgram[]>(sb().then((c) => c.from('group_programs').select('id,scope_type,family_id,circle_id,title,description,version,status,created_at').eq(scopeCol(scope), id).eq('status', 'active').order('created_at', { ascending: false })));
+/** Création idempotente : même `id` (choisi par l’app) = même programme, jamais de doublon. */
+export const createGroupProgram = (p: { id: string; scope: ScopeType; scopeId: string; title: string; steps: ProgramStepInput[]; description?: string | null; sourceNote?: string | null }) =>
+  pq<{ id: string; created: boolean; version: number }>(sb().then((c) => c.rpc('create_group_program', {
+    p_id: p.id, p_scope: p.scope, p_scope_id: p.scopeId, p_title: p.title, p_steps: p.steps, p_description: p.description ?? null, p_source_note: p.sourceNote ?? null,
+  })));
+export const updateGroupProgram = (id: string, expectedVersion: number, title: string, steps: ProgramStepInput[], description?: string | null) =>
+  pq<number>(sb().then((c) => c.rpc('update_group_program', { p_id: id, p_expected_version: expectedVersion, p_title: title, p_steps: steps, p_description: description ?? null })));
+export const setGroupProgramStatus = (id: string, status: 'active' | 'archived') => pq(sb().then((c) => c.rpc('set_group_program_status', { p_id: id, p_status: status })));
+/** Avancée personnelle (valeur absolue) sur une étape ; le serveur la borne au nombre de l’étape et renvoie la valeur gardée. */
+export const setProgramProgress = (stepId: string, count: number) => pq<number>(sb().then((c) => c.rpc('set_program_progress', { p_step: stepId, p_count: count })));
+export const groupProgramView = (id: string) => pq<GroupProgramView>(sb().then((c) => c.rpc('group_program_view', { p_id: id })));

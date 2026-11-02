@@ -4,6 +4,7 @@ import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { CallCard, confirmAsk, DiscussionCard, EncouragementsPanel, ErrorNote, fmt, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
+import { ProgramsPanel } from '@/components/community/programs';
 import { callRights, setVideoConsent, videoConsents } from '@/lib/calls/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
@@ -77,6 +78,7 @@ export default function FamilyScreen() {
       {members.data && !(isChild && myPc?.messaging === 'none') ? <CallCard scope="family" scopeId={fid} name={name} /> : null}
       <Spacer />
 
+      <ProgramsPanel scope="family" scopeId={fid} />
       <H2>Objectifs communs</H2>
       <ErrorNote error={goals.error} onRetry={goals.reload} />
       {goals.data?.length ? null : <Muted>Aucun objectif pour l’instant.</Muted>}

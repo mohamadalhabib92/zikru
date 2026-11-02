@@ -108,3 +108,88 @@ export function allowedDestinations(
 }
 /** Le wird familial ne peut être modifié que par un parent (RLS families_update). */
 export const canSetWird = (d: GroupDest | null) => !!d && d.scope === 'family' && d.role === 'parent';
+
+// ---------- Programme de groupe (tables group_programs / group_program_steps) ----------
+/** Limites du schéma group_programs / group_program_steps (char_length = points de code). */
+export const PROGRAM_TITLE_MAX = 80;
+export const PROGRAM_LABEL_MAX = 120;
+export const PROGRAM_TEXT_MAX = 4000;
+export const PROGRAM_REF_MAX = 200;
+export const PROGRAM_STEPS_MAX = 100;
+
+export type ProgramSource = GoalSource & { kind?: string; fr?: string };
+export type ProgramStepDraft = {
+  label: string;
+  arabic: string | null;
+  translit: string | null;
+  translation: string | null;
+  target: number;
+  verification: 'unverified' | 'catalogue' | 'quran';
+  source_ref: string | null;
+  /** Un texte a dû être coupé (jamais l’arabe reconnu : un tel texte tient toujours dans 4000 caractères). */
+  cut: boolean;
+};
+
+/**
+ * Étapes validées → programme de groupe : texte arabe complet (jamais réécrit), translittération, traduction du
+ * catalogue, nombre. Statut : « quran » (passage reconnu), « catalogue » (formule du catalogue), sinon « unverified ».
+ */
+export function stepsToProgram(name: string, items: ProgramSource[]): { title: string; titleCut: boolean; steps: ProgramStepDraft[] } {
+  const t = clip(name.trim(), PROGRAM_TITLE_MAX);
+  const steps = items.slice(0, PROGRAM_STEPS_MAX).map((it) => {
+    const ar = it.ar.trim();
+    const lab = clip(it.label.trim() || (it.tr ?? '').trim() || ar, PROGRAM_LABEL_MAX);
+    const arabic = ar ? clip(ar, PROGRAM_TEXT_MAX) : null;
+    const tr = (it.tr ?? '').trim() ? clip((it.tr ?? '').trim(), PROGRAM_TEXT_MAX) : null;
+    const fr = (it.fr ?? '').trim() ? clip((it.fr ?? '').trim(), PROGRAM_TEXT_MAX) : null;
+    const ref = (it.ref ?? '').trim() ? clip((it.ref ?? '').trim(), PROGRAM_REF_MAX) : null;
+    const verification: ProgramStepDraft['verification'] = it.unverified ? 'unverified' : it.kind === 'verse' ? 'quran' : 'catalogue';
+    return {
+      label: lab.text,
+      arabic: arabic?.text ?? null,
+      translit: tr?.text ?? null,
+      translation: fr?.text ?? null,
+      target: Math.max(1, Math.min(GOAL_TARGET_MAX, Math.round(it.reps))),
+      verification,
+      source_ref: ref?.text ?? null,
+      cut: lab.cut || !!arabic?.cut || !!tr?.cut || !!fr?.cut || !!ref?.cut,
+    };
+  });
+  return { title: t.text, titleCut: t.cut, steps };
+}
+
+/** Empreinte d’un programme (destination + contenu exact) : un nouvel essai réutilise le même identifiant. */
+export function programSignature(dest: Pick<GroupDest, 'scope' | 'id'>, title: string, steps: ProgramStepDraft[]): string {
+  const asGoals = steps.map((s, i) => ({ step: i + 1, title: `${title}\u0000${s.label}`, formula: s.arabic ?? s.translit, target: s.target })) as GoalDraft[];
+  return 'p:' + batchSignature(dest, asGoals);
+}
+
+// ---------- Tasbih de groupe : enchaînement des étapes (logique pure) ----------
+export type ChainStep = { id: string; target: number };
+/** Première étape non terminée (ou la dernière si tout est fait). */
+export function currentStep(steps: ChainStep[], counts: Record<string, number>): number {
+  const i = steps.findIndex((s) => (counts[s.id] ?? 0) < s.target);
+  return i === -1 ? Math.max(0, steps.length - 1) : i;
+}
+export const programDone = (steps: ChainStep[], counts: Record<string, number>) => steps.length > 0 && steps.every((s) => (counts[s.id] ?? 0) >= s.target);
+/**
+ * Un appui (+1, ou −1 pour annuler) sur l’étape `i` : borné à 0..nombre de l’étape. Renvoie les nouveaux nombres,
+ * l’étape à afficher ensuite (passage automatique à la suivante quand l’étape est complète) et si elle vient d’être finie.
+ */
+export function tapStep(steps: ChainStep[], counts: Record<string, number>, i: number, delta: 1 | -1 = 1): { counts: Record<string, number>; next: number; completed: boolean } {
+  const s = steps[i];
+  if (!s) return { counts, next: i, completed: false };
+  const before = counts[s.id] ?? 0;
+  const after = Math.max(0, Math.min(s.target, before + delta));
+  const out = { ...counts, [s.id]: after };
+  const completed = before < s.target && after >= s.target;
+  const next = completed && i < steps.length - 1 ? i + 1 : i;
+  return { counts: out, next, completed };
+}
+/** Nombres à afficher : la valeur locale non encore envoyée l’emporte ; sinon celle du serveur. */
+export function mergeCounts(server: Record<string, number>, local: Record<string, number>, dirty: Set<string> | string[]): Record<string, number> {
+  const d = new Set(dirty);
+  const out = { ...server };
+  for (const k of d) if (k in local) out[k] = local[k];
+  return out;
+}

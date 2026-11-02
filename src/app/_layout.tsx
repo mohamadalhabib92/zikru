@@ -127,6 +127,7 @@ function Root() {
         <Stack.Screen name="family/[id]" options={{ title: L("Ma famille") }} />
         <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
+        <Stack.Screen name="program/[id]" options={{ title: L("Programme de groupe") }} />
         <Stack.Screen name="discussion" options={{ title: L("Discussion") }} />
       </Stack>
       <MiniPlayer path={path} />

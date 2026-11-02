@@ -34,7 +34,8 @@ select tests.as_user('G'); select public.accept_invitation(tests.get('inv_g'), '
 select tests.as_user('F');
 insert into tests.ctx select 'cir', public.create_circle('Cercle test', '', 'Règles test', 'Fondateur')::text;
 insert into tests.ctx select 'inv_x', code from public.create_invitation('circle', tests.get('cir')::uuid, 'member', 1, 7);
-select tests.as_user('X'); select public.accept_invitation(tests.get('inv_x'), 'Membre', true);
+select tests.as_user('X'); select public.accept_invitation(tests.get('inv_x'), 'Xavier', true);
+do $$ begin assert private.is_circle_member(tests.get('cir')::uuid), 'X est membre du cercle'; end $$;
 
 do $$ begin
   -- Famille : parent et adulte peuvent ajouter les étapes ; invité et enfant non.
