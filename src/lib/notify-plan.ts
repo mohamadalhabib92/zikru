@@ -19,6 +19,10 @@ export type NotifPrefs = {
   wird: boolean;
   /** Lecture du Coran (khatma / révision hifz) : après le Fajr, après le ‘Isha, ou désactivé. */
   quran?: QuranSlot;
+  /** Son système, ou silencieux. Aucun adhan protégé n'est embarqué. */
+  sound?: 'system' | 'silent';
+  /** Sourdine des rappels de prière quand l'app constate la présence au lieu enregistré. Opt-in. */
+  muteAtMosque?: boolean;
 };
 export type QuranSlot = 'off' | 'fajr' | 'isha';
 export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off' };
@@ -112,3 +116,13 @@ export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: 
 
 /** Empreinte du plan : évite de tout reprogrammer si rien n’a changé. */
 export const planHash = (p: PlannedNotif[]) => p.map((e) => `${e.id}@${Math.round(e.date.getTime() / MIN)}:${e.title}`).join('|');
+
+export type PlanGate = { suspended?: boolean; muteUntil?: number | null };
+
+/** Mode dispense : aucun rappel. Sourdine au lieu de prière : retire les adhans avant `muteUntil`. */
+export function gatePlan(plan: PlannedNotif[], gate?: PlanGate | null): PlannedNotif[] {
+  if (gate?.suspended) return [];
+  if (gate?.muteUntil == null) return plan;
+  const until = gate.muteUntil;
+  return plan.filter((e) => (e.kind !== 'prayer' && e.kind !== 'before') || e.date.getTime() >= until);
+}

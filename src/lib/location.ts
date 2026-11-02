@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import type { Place } from './prayer';
+import { distanceKm, type Place } from './prayer';
 
 /** Position GPS (avec permission). Renvoie null en cas de refus : l'app garde la dernière position connue. */
 export async function getGpsPlace(): Promise<Place | null> {
@@ -17,5 +17,22 @@ export async function getGpsPlace(): Promise<Place | null> {
     };
   } catch {
     return null;
+  }
+}
+
+/**
+ * Vrai si la dernière position déjà connue est à moins de `radiusKm` du lieu (défaut 400 m).
+ * N'affiche pas de demande de permission et n'interroge pas le GPS : aucun suivi en arrière-plan.
+ */
+export async function nearKnownPlace(target: { lat: number; lng: number } | null | undefined, radiusKm = 0.4): Promise<boolean> {
+  if (!target) return false;
+  try {
+    const read = (Location as { getLastKnownPositionAsync?: () => Promise<{ coords: { latitude: number; longitude: number } } | null> }).getLastKnownPositionAsync;
+    if (!read) return false;
+    const pos = await read();
+    if (!pos) return false;
+    return distanceKm(pos.coords.latitude, pos.coords.longitude, target.lat, target.lng) <= radiusKm;
+  } catch {
+    return false;
   }
 }

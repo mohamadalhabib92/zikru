@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { BEFORE_OPTIONS, FARD_KEYS, type NotifPrefs } from '@/lib/notify-plan';
+import { getGpsPlace } from '@/lib/location';
 import { reminderPermission, remindersNative, remindersSupported, requestReminderPermission, scheduledCount, sendTestNotification } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
 import { Button, Card, Chip, Divider, H2, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
@@ -11,6 +12,7 @@ export function NotifSettings() {
   const { s, set, t: tr } = useSettings();
   const [perm, setPerm] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const [count, setCount] = useState<number | null>(null);
+  const [placeMsg, setPlaceMsg] = useState<string | null>(null);
   const n = s.notif;
   const patch = (p: Partial<NotifPrefs>) => set({ notif: { ...n, ...p } });
   useEffect(() => {
@@ -64,6 +66,43 @@ export function NotifSettings() {
               value={n.quran ?? 'off'}
               onChange={(v) => patch({ quran: v })}
             />
+            <Segmented
+              label="Son des rappels"
+              options={[
+                { label: 'Son du système', value: 'system' as const },
+                { label: 'Silencieux', value: 'silent' as const },
+              ]}
+              value={n.sound === 'silent' ? 'silent' : 'system'}
+              onChange={(v) => patch({ sound: v })}
+            />
+            <Muted>Aucun fichier d’adhan n’est inclus (droits à obtenir).</Muted>
+            <Toggle
+              label="Sourdine au lieu de prière"
+              hint="Si l’app constate que vous êtes au lieu enregistré, les rappels de prière des prochaines heures sont suspendus. Aucun suivi en arrière-plan."
+              value={n.muteAtMosque === true}
+              onChange={(v) => patch({ muteAtMosque: v })}
+            />
+            {n.muteAtMosque ? (
+              <>
+                <Button
+                  title="Enregistrer le lieu actuel"
+                  variant="secondary"
+                  icon="location-outline"
+                  onPress={() => {
+                    void getGpsPlace().then((p) => {
+                      if (!p) {
+                        setPlaceMsg('Position refusée : le lieu n’a pas été enregistré.');
+                        return;
+                      }
+                      set({ mosquePlace: { lat: p.lat, lng: p.lng, label: p.label } });
+                      setPlaceMsg('Lieu de prière enregistré.');
+                    });
+                  }}
+                />
+                {s.mosquePlace ? <Muted>{s.mosquePlace.label}</Muted> : null}
+                {placeMsg ? <Muted>{placeMsg}</Muted> : null}
+              </>
+            ) : null}
             <Divider />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               {remindersNative && count != null ? <Muted style={{ flex: 1 }}>{tr.notif_scheduled.replace('{n}', String(count))}</Muted> : <View style={{ flex: 1 }} />}

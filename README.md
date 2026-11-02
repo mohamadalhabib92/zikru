@@ -21,11 +21,13 @@ Copier `.env.example` vers `.env` et remplacer les valeurs `YOUR_*` :
 
 | Variable | Rôle |
 |---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | Projet Supabase (synchronisation) |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Clé publique anon Supabase |
+| `EXPO_PUBLIC_SUPABASE_URL` | Projet Supabase (synchronisation), sinon `YOUR_SUPABASE_URL` |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Clé publique anon Supabase, sinon `YOUR_SUPABASE_ANON_KEY` |
+| `EXPO_PUBLIC_SENTRY_DSN` | Journal de crash, désactivé si `YOUR_SENTRY_DSN` |
 | `EXPO_PUBLIC_ADHAN_AUDIO_URL` | Fichier audio d'adhan dont vous détenez les droits |
+| `EXPO_PUBLIC_DEFAULT_PRAYER_METHOD` | Méthode par défaut pour la Suisse (`YOUR_DEFAULT_PRAYER_METHOD`, à trancher) |
 
-Sans ces valeurs, tout le cœur de l'app fonctionne en local et l'écran **Configuration manquante** l'indique clairement. Schéma SQL + RLS : `supabase/schema.sql`.
+Sans ces valeurs, tout le cœur de l'app fonctionne en local et l'écran **Configuration manquante** l'indique clairement. Aucune clé n'est écrite dans le dépôt. Schéma SQL + RLS : `supabase/migrations` (le fichier `supabase/schema.sql` est un schéma hérité, plus étroit).
 
 ## Structure
 - `src/lib/hijri.ts` — source unique de la date hégirienne (+ `scripts/test-hijri.mjs`)

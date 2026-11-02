@@ -10,6 +10,8 @@ import { Arabic } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
+export { RouteErrorBoundary as ErrorBoundary } from '@/components/RouteErrorBoundary';
+
 /** Onglet « Lire » : Coran, invocations, Noms, savoir. */
 export default function Read() {
   const { t: tr } = useSettings();

@@ -18,6 +18,7 @@ export default function Sources() {
         <Body>Calcul astronomique local, sans réseau, avec la bibliothèque open-source « adhan » (Batoul Apps, licence MIT), algorithmes issus de « Astronomical Algorithms » (Jean Meeus).</Body>
         <Muted>Méthode active : {METHODS[s.method]}. Asr : {s.madhab === 'hanafi' ? 'ombre ×2 (Hanafi)' : 'ombre ×1 (majorité)'}. Règle hautes latitudes : recommandée par adhan selon la latitude.</Muted>
         <Muted>Les heures sont affichées dans le fuseau horaire de l’appareil.</Muted>
+        <Muted>Ajustements manuels et horaires de mosquée saisis sur l’appareil. UOIF (12°/12°) : à valider. Méthode par défaut pour la Suisse : YOUR_DEFAULT_PRAYER_METHOD.</Muted>
       </Card>
       <Spacer />
       <H2>Qibla</H2>

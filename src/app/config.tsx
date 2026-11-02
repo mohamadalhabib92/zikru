@@ -1,4 +1,5 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL, backendConfigured } from '@/lib/backend';
+import { sentryEnv } from '@/lib/crash';
 import { useSettings } from '@/lib/settings';
 import { Badge, Body, Card, H1, ListItem, Muted, Notice, Screen, Spacer } from '@/ui/kit';
 
@@ -15,7 +16,7 @@ export default function Config() {
       />
       <Spacer />
       <Card>
-        {[SUPABASE_URL, SUPABASE_ANON_KEY].map((v) => (
+        {[SUPABASE_URL, SUPABASE_ANON_KEY, sentryEnv].map((v) => (
           <ListItem key={v.name} title={v.name} subtitle={v.configured ? 'défini' : 'valeur YOUR_* à remplacer'} right={<Badge label={v.configured ? 'OK' : 'Manquant'} tone={v.configured ? 'success' : 'warning'} />} />
         ))}
       </Card>

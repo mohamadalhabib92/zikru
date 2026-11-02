@@ -5,7 +5,7 @@ import { Text } from '@/ui/Text';
 import Svg, { Circle, Line, Rect, Text as SvgText } from 'react-native-svg';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey } from '@/lib/growth';
-import { computeDay, hhmm, type PrayerKey } from '@/lib/prayer';
+import { computeDay, hhmm, prayerOptionsOf, type PrayerKey } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
 import { ADILLA_I18N } from '@/lib/i18n-content/tijani';
@@ -130,7 +130,7 @@ function DaySchedule() {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
-  const list = useMemo(() => computeDay(now, s.place, s.method, s.madhab), [now.toDateString(), s.place, s.method, s.madhab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const list = useMemo(() => computeDay(now, s.place, s.method, s.madhab, prayerOptionsOf(s)), [now.toDateString(), s.place, s.method, s.madhab, s.highLat, s.adjustments, s.mosque]); // eslint-disable-line react-hooks/exhaustive-deps
   const at = (k: PrayerKey) => list.find((x) => x.key === k)!.time;
   const mins = (d: Date) => d.getHours() * 60 + d.getMinutes();
   const pad = 8;
@@ -218,14 +218,14 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
         </Arabic>
         <Text style={{ color: b.ink, fontSize: 20, fontWeight: '900', textAlign: 'center' }}>{p.name}</Text>
       </View>
-      <View style={{ flexDirection: 'row', backgroundColor: b.green }}>
+      <View style={{ flexDirection: 'row', backgroundColor: b.greenDeep }}>
         {[
           ['Étapes', String(p.steps.length)],
           ['Faites', String(checked.length)],
           ['Total', p.uncounted ? '∞' : String(total)],
         ].map(([l, v], i) => (
           <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 12, borderLeftWidth: i ? 1 : 0, borderLeftColor: 'rgba(255,255,255,0.15)' }}>
-            <Text style={{ color: b.gold, fontSize: 22, fontWeight: '900' }}>{v}</Text>
+            <Text style={{ color: b.heroText, fontSize: 22, fontWeight: '900' }}>{v}</Text>
             <Text style={{ color: b.heroMuted, fontSize: 12 }}>{l}</Text>
           </View>
         ))}
@@ -249,8 +249,8 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
                     {isOn ? (
                       <Ionicons name="checkmark-circle" size={30} color={b.wirdGreen} />
                     ) : (
-                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.green, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ color: b.gold, fontWeight: '900' }}>{i + 1}</Text>
+                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.greenDeep, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: b.heroText, fontWeight: '900' }}>{i + 1}</Text>
                       </View>
                     )}
                   </Pressable>

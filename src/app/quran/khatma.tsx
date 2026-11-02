@@ -9,7 +9,7 @@ import { khatmaStatus, markPage, MUSHAF_PAGES, newKhatma, streak } from '@/lib/k
 import { fromIndex, pageRange } from '@/lib/quran-nav';
 import { khatma as khatmaStore, readDays } from '@/lib/quran-store';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
-import { useSettings } from '@/lib/settings';
+import { excusedDay, useSettings } from '@/lib/settings';
 import { useShared } from '@/lib/shared-state';
 import { SURAHS } from '@/lib/surahs';
 import { Container, FadeIn, HeroHeader, ProgressBar, SectionHeader } from '@/ui/ds';
@@ -41,7 +41,7 @@ export default function KhatmaScreen() {
   const [quit, setQuit] = useState(false);
   const pal = readerPalette('auto');
   const st = k ? khatmaStatus(k, today) : null;
-  const sk = streak(days, today);
+  const sk = streak(days, today, (d) => excusedDay(s, d));
   const slot = s.notif.quran ?? 'off';
   const setSlot = async (v: 'off' | 'fajr' | 'isha') => {
     if (v !== 'off' && !s.reminders) {

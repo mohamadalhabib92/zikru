@@ -7,13 +7,15 @@ import { PatternBg } from '@/components/zikru/Pattern';
 import { SkyArc } from '@/components/zikru/SkyArc';
 import { dayKey as dk, useGrowth } from '@/lib/growth';
 import { formatHijri } from '@/lib/hijri';
-import { AR_NAMES, computeDay, countdown, hhmm, METHODS, withStates, type PrayerKey, type PrayerState } from '@/lib/prayer';
+import { AR_NAMES, computeDay, countdown, hhmm, METHODS, prayerOptionsOf, withStates, type PrayerKey, type PrayerState } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { Button, Ionicons, Screen, Spacer } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LTitle } from '@/ui/light';
 import { tapHaptic, useLayout } from '@/ui/ds';
 import { alpha, brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+
+export { RouteErrorBoundary as ErrorBoundary } from '@/components/RouteErrorBoundary';
 
 const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
 const ICONS: Record<PrayerKey, string> = { fajr: 'partly-sunny', sunrise: 'sunny', dhuhr: 'sunny', asr: 'partly-sunny', maghrib: 'cloudy-night', isha: 'moon' };
@@ -30,11 +32,12 @@ export default function Prayers() {
   }, []);
   const day = now.toDateString();
   const { rows, next, list } = useMemo(() => {
-    const today = computeDay(now, s.place, s.method, s.madhab);
-    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab);
+    const opt = prayerOptionsOf(s);
+    const today = computeDay(now, s.place, s.method, s.madhab, opt);
+    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, opt);
     return { ...withStates(today, now, tomorrow[0].time), list: today };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day, Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab]);
+  }, [day, Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab, s.highLat, s.adjustments, s.mosque]);
 
   let greg = now.toDateString();
   try {
@@ -157,6 +160,9 @@ export default function Prayers() {
         <LMuted>
           {METHODS[s.method]} · {s.madhab === 'hanafi' ? tr.hanafi : tr.shafi} · {tr.offline_ready}
         </LMuted>
+        {s.mosque?.enabled ? <LMuted>Horaires de la mosquée, prioritaires sur le calcul.</LMuted> : null}
+        <LMuted>Vérifie avec ta mosquée locale. Le calcul est une aide, pas une décision.</LMuted>
+        {s.dispense?.on ? <LMuted>Rappels suspendus (mode dispense). La série est conservée.</LMuted> : null}
         <Spacer h={16} />
         <AudioPlayer />
         <Spacer />
