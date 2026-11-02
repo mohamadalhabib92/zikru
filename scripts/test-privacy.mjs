@@ -8,7 +8,7 @@ import { loadLib, policyHtml, PRIVACY_HTML_PATH } from './privacy-html.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const storageStub = 'export async function loadJSON(k, f) { return f; } export async function saveJSON() { return true; } export async function saveCacheJSON() {}';
-const dir = await loadLib(['privacy', 'privacy-policy', 'privacy-text', 'prayer', 'weather'], { storage: storageStub });
+const dir = await loadLib(['privacy', 'privacy-policy', 'privacy-text', 'prayer', 'net', 'weather'], { storage: storageStub });
 const P = await import(join(dir, 'privacy.mjs'));
 const W = await import(join(dir, 'weather.mjs'));
 const { POLICY } = await import(join(dir, 'privacy-policy.mjs'));
