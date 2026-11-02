@@ -364,7 +364,7 @@ test('groupe : résumé du wird (≤ 500, sinon rien)', () => {
   assert.equal(PG.wirdSummary('x', []), null);
 });
 
-// ——— Programme de groupe (tables group_programs, migration 20261102200000)
+// ——— Programme de groupe (tables group_programs, migration 20261102152251)
 test('programme de groupe : texte arabe complet (jamais coupé à 200), statut quran/catalogue/unverified, ordre', () => {
   const long = Array.from({ length: 40 }, () => SUB).join(' ');
   const p = PG.stepsToProgram('  Programme test ', [

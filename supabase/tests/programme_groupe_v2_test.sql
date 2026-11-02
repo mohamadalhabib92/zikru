@@ -1,4 +1,4 @@
--- Programmes de groupe (migration 20261102200000) : étapes ordonnées, avancée par membre, droits, idempotence,
+-- Programmes de groupe (migration 20261102152251) : étapes ordonnées, avancée par membre, droits, idempotence,
 -- mineurs, suspension, filtre, version, masquage selon les préférences de partage.
 -- Personnes : P parent, A adulte, G invité, K enfant (famille) ; F fondateur, X membre (cercle).
 create schema tests;

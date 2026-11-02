@@ -350,7 +350,7 @@ export const getProfile = (id: string) => q<{ id: string; display_name: string; 
 export const updateProfile = (id: string, display_name: string) => q(sb().then((c) => c.from('profiles').update({ display_name }).eq('id', id)));
 export const deleteMyAccount = () => q(sb().then((c) => c.rpc('delete_my_account')));
 
-// ---------- Programmes de groupe (migration 20261102200000, à appliquer séparément) ----------
+// ---------- Programmes de groupe (migration 20261102152251, appliquée en prod le 02.11.2026) ----------
 // Toutes les écritures passent par des RPC ; si la migration n'est pas appliquée (PGRST202 / 42P01…), les appelants
 // reçoivent `ProgramsMissing` et retombent sur les objectifs communs.
 export type ProgramVerification = 'unverified' | 'catalogue' | 'quran';
