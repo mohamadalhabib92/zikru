@@ -12,6 +12,7 @@ export default function More() {
       items: [
         { icon: 'compass', title: tr.qibla_title, sub: 'Boussole et distance à la Ka‘ba', href: '/qibla', color: b.teal },
         { icon: 'bluetooth', title: tr.ring, sub: 'Bague / compteur connecté', href: '/ring', color: b.blue },
+        { icon: 'calendar-outline', title: 'Calendrier hégirien', sub: 'Ramadan, Aïd, Achoura, jours blancs', href: '/calendar', color: b.green },
         { icon: 'calculator', title: 'Abjad', sub: 'Mashriqi & Maghribi', href: '/abjad', color: b.goldDeep },
       ],
     },

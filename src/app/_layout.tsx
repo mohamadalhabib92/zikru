@@ -86,6 +86,7 @@ function Root() {
         <Stack.Screen name="ring" options={{ title: tr.ring }} />
         <Stack.Screen name="ble-diag" options={{ title: L("Diagnostic Bluetooth") }} />
         <Stack.Screen name="qibla" options={{ title: tr.qibla_title }} />
+        <Stack.Screen name="calendar" options={{ title: L("Calendrier hégirien") }} />
         <Stack.Screen name="dhikr" options={{ title: tr.dhikr_title }} />
         <Stack.Screen name="settings" options={{ title: tr.settings_title }} />
         <Stack.Screen name="search" options={{ title: tr.search }} />
