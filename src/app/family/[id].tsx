@@ -83,6 +83,9 @@ export default function FamilyScreen() {
       {goals.data?.map((g) => (
         <GoalCard key={g.id} goal={g} scopeName={name} canAdmin={isAdult} gentle={isChild} managedChildren={isAdult ? managed : []} />
       ))}
+      {isAdult && !isChild ? (
+        <Button small variant="ghost" icon="camera-outline" title="Importer un programme (photo, fichier)" onPress={() => router.push({ pathname: '/zikrs/import', params: { scope: 'family', id: fid } })} />
+      ) : null}
       {isAdult ? <NewGoal onCreate={async (g) => (await api.createGoal('family', fid, userId!, g), void goals.reload())} /> : null}
       {isAdult && managed.length ? (
         <Card>

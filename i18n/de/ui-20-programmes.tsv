@@ -16,3 +16,24 @@ turc	Türkisch
 indonésien / malais	Indonesisch / Malaiisch
 wolof	Wolof
 écriture latine (langue non identifiée)	Lateinische Schrift (Sprache nicht erkannt)
+Importer un programme (photo, fichier)	Programm importieren (Foto, Datei)
+Vous ne pouvez pas ajouter d’objectifs à ce groupe : le programme sera enregistré dans vos zikrs.	Du kannst dieser Gruppe keine Ziele hinzufügen: Das Programm wird in deinen Zikrs gespeichert.
+Enregistrer dans	Speichern in
+Mes zikrs (personnel)	Meine Zikrs (persönlich)
+Famille · {n}	Familie · {n}
+Cercle · {n}	Kreis · {n}
+Connectez-vous à la communauté pour importer dans une famille ou un cercle.	Melde dich in der Gemeinschaft an, um in eine Familie oder einen Kreis zu importieren.
+Seuls les parents et adultes d’une famille, ou les fondateurs et modérateurs d’un cercle, peuvent y ajouter des objectifs.	Nur Eltern und Erwachsene einer Familie oder Gründer und Moderatoren eines Kreises können dort Ziele hinzufügen.
+Aperçu avant partage	Vorschau vor dem Teilen
+Chaque étape deviendra un objectif commun du groupe, dans l’ordre. Seul le texte validé est partagé : la photo reste sur votre appareil.	Jeder Schritt wird der Reihe nach zu einem gemeinsamen Ziel der Gruppe. Nur der bestätigte Text wird geteilt: Das Foto bleibt auf deinem Gerät.
+Aperçu : {n} objectif(s) pour « {g} »	Vorschau: {n} Ziel(e) für „{g}“
+Tous les membres de « {g} » verront ces objectifs (titre, formule, nombre). La photo n’est pas envoyée.	Alle Mitglieder von „{g}“ sehen diese Ziele (Titel, Formel, Anzahl). Das Foto wird nicht gesendet.
+Objectif : {n}	Ziel: {n}
+Texte non vérifié (lu sur votre document)	Nicht geprüfter Text (aus deinem Dokument gelesen)
+Titre coupé à {n} caractères (limite des objectifs communs).	Titel auf {n} Zeichen gekürzt (Grenze gemeinsamer Ziele).
+Formule trop longue : coupée à {n} caractères (« … »). Le texte complet reste dans le document.	Formel zu lang: auf {n} Zeichen gekürzt („…“). Der vollständige Text bleibt im Dokument.
+Remplacer aussi le wird familial par ce résumé	Auch das Familien-Wird durch diese Zusammenfassung ersetzen
+Wird actuel (sera remplacé) : {w}	Aktuelles Wird (wird ersetzt): {w}
+Le résumé dépasse 500 caractères : le wird familial ne sera pas modifié.	Die Zusammenfassung überschreitet 500 Zeichen: Das Familien-Wird wird nicht geändert.
+Confirmer et partager avec le groupe	Bestätigen und mit der Gruppe teilen
+Vous pouvez réessayer : les étapes déjà ajoutées ne seront pas dupliquées.	Du kannst es erneut versuchen: Bereits hinzugefügte Schritte werden nicht doppelt angelegt.

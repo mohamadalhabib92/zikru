@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { loadLib } from './load-lib.mjs';
 
-const L = await loadLib(['program-parse', 'program-lang', 'ocr-merge', 'program-match', 'pdf-lines', 'tijani', 'quran-match', 'quran-text', 'quran-uthmani'], 'programs');
+const L = await loadLib(['program-parse', 'program-lang', 'ocr-merge', 'program-group', 'program-match', 'pdf-lines', 'tijani', 'quran-match', 'quran-text', 'quran-uthmani'], 'programs');
 const P = L['program-parse'];
 const M = L['program-match'];
 const PL = L['pdf-lines'];
@@ -300,6 +300,68 @@ test('Vision : le texte fusionné n’est jamais modifié (chaque ligne vient te
   const A = [{ text: '  ' + ISTI + ' ×100 ', confidence: 0.7, box: [0.2, 0.5, 0.6, 0.05] }];
   const out = OM.mergePasses(A, [{ text: 'Formule test', confidence: 0.99, box: [0.2, 0.3, 0.6, 0.05] }]);
   assert.deepEqual(out.map((l) => l.text), [A[0].text, 'Formule test']);
+});
+
+// ——— Programme importé → objectifs communs d’un groupe (sans migration)
+const PG = L['program-group'];
+const cp = (x) => [...x].length;
+test('groupe : une étape = un objectif, titre « N. libellé », formule = texte validé, cible = nombre', () => {
+  const d = PG.stepsToGoals([
+    { label: 'Istighfār', ar: ISTI, reps: 100, ref: 'Catalogue Zikru' },
+    { label: 'Formule test', ar: 'Formule test', reps: 33, unverified: true },
+  ]);
+  assert.deepEqual(d.map((x) => [x.step, x.title, x.formula, x.target, x.unverified]), [
+    [1, '1. Istighfār', ISTI, 100, false],
+    [2, '2. Formule test', 'Formule test', 33, true],
+  ]);
+  assert.ok(d.every((x) => !x.titleCut && !x.formulaCut));
+});
+test('groupe : formule > 200 / titre > 80 coupés avec « … » et signalés ; texte qui tient jamais modifié', () => {
+  const long = Array.from({ length: 40 }, () => SUB).join(' ');
+  const [d] = PG.stepsToGoals([{ label: long, ar: long, reps: 7 }]);
+  assert.ok(d.formulaCut && d.titleCut);
+  assert.ok(cp(d.formula) <= 200 && cp(d.title) <= 80, `${cp(d.formula)} ${cp(d.title)}`);
+  assert.ok(d.formula.endsWith(' …'));
+  assert.ok(long.startsWith(d.formula.slice(0, -2)), 'début identique au texte validé');
+  const exact = 'x'.repeat(200);
+  assert.deepEqual(PG.clip(exact, 200), { text: exact, cut: false });
+  assert.equal(PG.stepsToGoals([{ label: 'a', ar: exact, reps: 1 }])[0].formula, exact);
+});
+test('groupe : nombre borné aux limites du serveur ; libellé vide → texte arabe', () => {
+  const [a, b2] = PG.stepsToGoals([{ label: '', ar: SUB, reps: 0 }, { label: 'x', ar: '', reps: 5e6 }]);
+  assert.deepEqual([a.title, a.target, b2.formula, b2.target], [`1. ${SUB}`, 1, null, 100000]);
+});
+test('groupe : ordre d’envoi inverse (la liste du groupe affiche le plus récent en haut → étape 1 en haut)', () => {
+  assert.deepEqual(PG.insertionOrder(4), [3, 2, 1, 0]);
+  assert.deepEqual(PG.insertionOrder(0), []);
+});
+test('groupe : idempotence — même lot = mêmes identifiants (double appui, hors ligne) ; autre contenu ou groupe = nouveaux', () => {
+  const d = PG.stepsToGoals([{ label: 'Formule test', ar: SUB, reps: 33 }]);
+  const dest = { scope: 'family', id: 'f1' };
+  const sig = PG.batchSignature(dest, d);
+  let n = 0;
+  const mk = () => `id${++n}`;
+  const ids = PG.planIds(null, sig, 1, mk);
+  assert.deepEqual(PG.planIds({ sig, ids }, sig, 1, mk), ids);
+  assert.equal(PG.batchSignature(dest, d), sig);
+  assert.notEqual(PG.batchSignature({ scope: 'circle', id: 'f1' }, d), sig);
+  assert.notEqual(PG.batchSignature(dest, PG.stepsToGoals([{ label: 'Formule test', ar: SUB, reps: 34 }])), sig);
+  assert.notDeepEqual(PG.planIds({ sig: 'autre', ids }, sig, 1, mk), ids);
+});
+test('groupe : destinations = mêmes règles que la RLS (famille parent/adulte, cercle fondateur/modérateur, jamais un enfant)', () => {
+  const fams = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }, { id: 'd', name: 'D' }];
+  const cirs = [{ id: 'x', name: 'X' }, { id: 'y', name: 'Y' }, { id: 'z', name: 'Z' }];
+  const roles = { family: { a: 'parent', b: 'adult', c: 'child', d: 'guest' }, circle: { x: 'founder', y: 'moderator', z: 'member' } };
+  assert.deepEqual(PG.allowedDestinations(fams, cirs, roles, false).map((d) => d.scope + ':' + d.id), ['family:a', 'family:b', 'circle:x', 'circle:y']);
+  assert.deepEqual(PG.allowedDestinations(fams, cirs, roles, true), []);
+  const ds = PG.allowedDestinations(fams, cirs, roles, false);
+  assert.deepEqual(ds.map(PG.canSetWird), [true, false, false, false]);
+});
+test('groupe : résumé du wird (≤ 500, sinon rien)', () => {
+  const items = [{ label: 'Istighfār', ar: ISTI, reps: 100 }, { label: 'Formule test', ar: SUB, reps: 33 }];
+  assert.equal(PG.wirdSummary('Programme test', items), 'Programme test : 1. Istighfār × 100 · 2. Formule test × 33');
+  assert.equal(PG.wirdSummary('x', Array.from({ length: 40 }, () => ({ label: 'Formule test numéro', ar: '', reps: 100 }))), null);
+  assert.equal(PG.wirdSummary('x', []), null);
 });
 
 let fail = 0;

@@ -8,7 +8,7 @@
 import * as Clipboard from 'expo-clipboard';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { KbInput } from '@/ui/keyboard-done';
@@ -22,7 +22,11 @@ import { detectLanguages, LANG_LABEL, type LangCode } from '@/lib/program-lang';
 import { latinDigits, parseProgram, programHasArabic, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
 import { confirmLoose, matchStepText, stepToItem, type CatalogEntry, type ImportVia, type LooseTarget, type StepMatch } from '@/lib/program-match';
 import { loadQuranIndex, type QuranIndex } from '@/lib/quran-match';
-import { uid } from '@/lib/storage';
+import { loadJSON, saveJSON, uid } from '@/lib/storage';
+import * as api from '@/lib/community/api';
+import { useAuth } from '@/lib/community/auth';
+import { newClientId } from '@/lib/community/chat-core';
+import { allowedDestinations, batchSignature, canSetWird, insertionOrder, planIds, stepsToGoals, wirdSummary, type GroupDest, type PendingBatch } from '@/lib/program-group';
 import { moveItem } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
@@ -128,8 +132,21 @@ function Badge({ m, raw, s }: { m: StepMatch; raw: StepMatch; s: EStep }) {
   );
 }
 
+const PENDING_KEY = 'zikru.import.groupBatch';
+
 export default function ImportProgram() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ scope?: string; id?: string }>();
+  const { userId, profile } = useAuth();
+  // Destination : null = Mes zikrs (personnel) ; sinon une famille / un cercle où l’on peut créer des objectifs.
+  const [dests, setDests] = useState<GroupDest[] | null>(null);
+  const [destSel, setDest] = useState<GroupDest | null>(null);
+  const dest = userId ? destSel : null;
+  const [destNote, setDestNote] = useState<string | null>(null);
+  const [preview, setPreview] = useState(false);
+  const [withWird, setWithWird] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareErr, setShareErr] = useState<string | null>(null);
   const { create } = useZikrs();
   const [via, setVia] = useState<ImportVia>('paste');
   const [pages, setPages] = useState<Page[]>([]);
@@ -148,6 +165,26 @@ export default function ImportProgram() {
   const ocr = useMemo(() => ocrSupport(), []);
   const pdfOk = useMemo(() => pdfSupport(), []);
   const canPhoto = Platform.OS !== 'web';
+
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    Promise.all([api.listFamilies(), api.listCircles(), api.myGroupRoles(userId)])
+      .then(([f, c, r]) => {
+        if (!alive) return;
+        const ds = allowedDestinations(f ?? [], c ?? [], r, !!profile?.is_minor);
+        setDests(ds);
+        if (params.scope && params.id) {
+          const d = ds.find((x) => x.scope === params.scope && x.id === params.id);
+          if (d) setDest(d);
+          else setDestNote(L('Vous ne pouvez pas ajouter d’objectifs à ce groupe : le programme sera enregistré dans vos zikrs.'));
+        }
+      })
+      .catch(() => alive && setDests([]));
+    return () => {
+      alive = false;
+    };
+  }, [userId, profile?.is_minor, params.scope, params.id]);
 
   useEffect(() => {
     let alive = true;
@@ -343,6 +380,35 @@ export default function ImportProgram() {
     });
     const z = create(name.trim() || L('Programme importé'), items);
     router.replace({ pathname: '/zikrs/edit', params: { id: z.id } });
+  };
+
+  // Partage vers un groupe : uniquement le texte validé (jamais la photo), un objectif par étape.
+  const groupItems = useMemo(
+    () => (steps && canCreate ? steps.map((s, i) => stepToItem({ ar: s.ar, latin: s.latin, hint: s.hint, count: parseCount(s.count)! }, resolved(s, matches[i]), s.official && s.pick !== 'own', via)) : []),
+    [steps, canCreate, matches, via],
+  );
+  const drafts = useMemo(() => stepsToGoals(groupItems), [groupItems]);
+  const wird = useMemo(() => (canSetWird(dest) ? wirdSummary(name.trim() || L('Programme importé'), groupItems) : null), [dest, name, groupItems]);
+  const share = async () => {
+    if (!dest || !userId || !drafts.length || sharing) return;
+    setSharing(true);
+    setShareErr(null);
+    try {
+      const sig = batchSignature(dest, drafts);
+      const ids = planIds(await loadJSON<PendingBatch | null>(PENDING_KEY, null), sig, drafts.length, () => newClientId());
+      await saveJSON(PENDING_KEY, { sig, ids });
+      for (const i of insertionOrder(drafts.length)) {
+        const d = drafts[i];
+        await api.insertGoalOnce(dest.scope, dest.id, userId, { id: ids[i], title: d.title, formula: d.formula, target: d.target });
+      }
+      if (withWird && wird && canSetWird(dest)) await api.updateFamily(dest.id, { wird });
+      await saveJSON(PENDING_KEY, null);
+      router.replace({ pathname: dest.scope === 'family' ? '/family/[id]' : '/circle/[id]', params: { id: dest.id } });
+    } catch (e) {
+      setShareErr(api.frError(e));
+    } finally {
+      setSharing(false);
+    }
   };
 
   const page = pages[sel];
@@ -588,8 +654,67 @@ export default function ImportProgram() {
                       {L('{n} étape(s) à compléter : {x}', { n: todo, x: [...new Set(problems.filter(Boolean))].join(', ') })}
                     </Text>
                   ) : null}
-                  <LBtn icon="checkmark-circle" label="Créer la composition" solid disabled={!canCreate} onPress={save} />
-                  <LMuted style={{ fontSize: 12 }}>Rien n’est enregistré avant de toucher « Créer la composition ». Vous pourrez encore la modifier ensuite.</LMuted>
+                  <Text style={{ color: b.ink, fontWeight: '700', marginTop: 4 }}>Enregistrer dans</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
+                    <DestChip label={L('Mes zikrs (personnel)')} on={!dest} onPress={() => (setDest(null), setPreview(false))} />
+                    {(userId ? (dests ?? []) : []).map((d) => (
+                      <DestChip key={d.scope + d.id} label={L(d.scope === 'family' ? 'Famille · {n}' : 'Cercle · {n}', { n: d.name })} on={dest?.scope === d.scope && dest.id === d.id} onPress={() => (setDest(d), setPreview(false), setWithWird(false))} />
+                    ))}
+                  </View>
+                  {destNote ? <LMuted style={{ fontSize: 12, color: t.warning }}>{destNote}</LMuted> : null}
+                  {!userId ? <LMuted style={{ fontSize: 12 }}>Connectez-vous à la communauté pour importer dans une famille ou un cercle.</LMuted> : dests && !dests.length ? <LMuted style={{ fontSize: 12 }}>Seuls les parents et adultes d’une famille, ou les fondateurs et modérateurs d’un cercle, peuvent y ajouter des objectifs.</LMuted> : null}
+                  {!dest ? (
+                    <>
+                      <LBtn icon="checkmark-circle" label="Créer la composition" solid disabled={!canCreate} onPress={save} />
+                      <LMuted style={{ fontSize: 12 }}>Rien n’est enregistré avant de toucher « Créer la composition ». Vous pourrez encore la modifier ensuite.</LMuted>
+                    </>
+                  ) : !preview ? (
+                    <>
+                      <LBtn icon="eye-outline" label="Aperçu avant partage" solid disabled={!canCreate} onPress={() => setPreview(true)} />
+                      <LMuted style={{ fontSize: 12 }}>Chaque étape deviendra un objectif commun du groupe, dans l’ordre. Seul le texte validé est partagé : la photo reste sur votre appareil.</LMuted>
+                    </>
+                  ) : (
+                    <View style={[card(), { gap: 8, borderColor: t.warning }]}>
+                      <Text style={{ color: b.ink, fontWeight: '700' }}>{L('Aperçu : {n} objectif(s) pour « {g} »', { n: drafts.length, g: dest.name })}</Text>
+                      <Text style={{ color: t.warning, fontSize: 13 }}>{L('Tous les membres de « {g} » verront ces objectifs (titre, formule, nombre). La photo n’est pas envoyée.', { g: dest.name })}</Text>
+                      {drafts.map((d) => (
+                        <View key={d.step} style={{ borderTopWidth: 1, borderTopColor: b.line, paddingTop: 6, gap: 2 }}>
+                          <Text style={{ color: b.ink, fontWeight: '600' }}>{d.title}</Text>
+                          {d.formula ? (
+                            programHasArabic(d.formula) ? (
+                              <Arabic size={16}>{d.formula}</Arabic>
+                            ) : (
+                              <Text style={{ color: b.ink }}>{d.formula}</Text>
+                            )
+                          ) : null}
+                          <LMuted style={{ fontSize: 12 }}>{L('Objectif : {n}', { n: d.target })}{d.ref ? ' · ' + d.ref : ''}</LMuted>
+                          {d.unverified ? <Text style={{ color: t.warning, fontSize: 12, fontWeight: '700' }}>Texte non vérifié (lu sur votre document)</Text> : null}
+                          {d.titleCut ? <Text style={{ color: t.warning, fontSize: 12 }}>{L('Titre coupé à {n} caractères (limite des objectifs communs).', { n: 80 })}</Text> : null}
+                          {d.formulaCut ? <Text style={{ color: t.warning, fontSize: 12, fontWeight: '700' }}>{L('Formule trop longue : coupée à {n} caractères (« … »). Le texte complet reste dans le document.', { n: 200 })}</Text> : null}
+                        </View>
+                      ))}
+                      {canSetWird(dest) ? (
+                        wird ? (
+                          <Pressable onPress={() => setWithWird(!withWird)} accessibilityRole="checkbox" accessibilityState={{ checked: withWird }} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 4 }}>
+                            <Ionicons name={withWird ? 'checkbox' : 'square-outline'} size={22} color={b.ink} />
+                            <View style={{ flex: 1, gap: 2 }}>
+                              <Text style={{ color: b.ink }}>Remplacer aussi le wird familial par ce résumé</Text>
+                              <LMuted style={{ fontSize: 12 }}>{wird}</LMuted>
+                              {dest.wird ? <LMuted style={{ fontSize: 12 }}>{L('Wird actuel (sera remplacé) : {w}', { w: dest.wird })}</LMuted> : null}
+                            </View>
+                          </Pressable>
+                        ) : (
+                          <LMuted style={{ fontSize: 12 }}>Le résumé dépasse 500 caractères : le wird familial ne sera pas modifié.</LMuted>
+                        )
+                      ) : null}
+                      {shareErr ? <Text style={{ color: t.danger, fontSize: 13 }} accessibilityLiveRegion="polite">{shareErr}</Text> : null}
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        <LBtn icon={sharing ? 'hourglass-outline' : 'people'} label={sharing ? 'Partage…' : 'Confirmer et partager avec le groupe'} solid disabled={sharing || !canCreate} onPress={() => void share()} />
+                        <LBtn icon="close" label="Annuler" disabled={sharing} onPress={() => setPreview(false)} />
+                      </View>
+                      {shareErr ? <LMuted style={{ fontSize: 12 }}>Vous pouvez réessayer : les étapes déjà ajoutées ne seront pas dupliquées.</LMuted> : null}
+                    </View>
+                  )}
                 </>
               ) : null}
             </View>
@@ -597,6 +722,14 @@ export default function ImportProgram() {
         ) : null}
       </ScrollView>
     </Screen>
+  );
+}
+
+function DestChip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected: on }} accessibilityLabel={label} style={{ minHeight: 40, paddingHorizontal: 12, justifyContent: 'center', borderRadius: 20, borderWidth: 1, borderColor: on ? b.ink : b.line, backgroundColor: on ? b.ink : b.paper }}>
+      <Text style={{ color: on ? b.paper : b.ink, fontWeight: on ? '700' : '500' }}>{label}</Text>
+    </Pressable>
   );
 }
 

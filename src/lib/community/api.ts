@@ -232,6 +232,25 @@ export const listGoals = (scope: ScopeType, id: string) =>
   q<Goal[]>(sb().then((c) => c.from('shared_goals').select('id,scope_type,family_id,circle_id,title,formula,target,status,ends_on,created_at').eq(scopeCol(scope), id).neq('status', 'archived').order('created_at', { ascending: false })));
 export const createGoal = (scope: ScopeType, id: string, userId: string, g: { title: string; formula?: string; target: number; ends_on?: string | null }) =>
   q(sb().then((c) => c.from('shared_goals').insert({ scope_type: scope, [scopeCol(scope)]: id, created_by: userId, title: g.title, formula: g.formula || null, target: g.target, ends_on: g.ends_on || null })));
+/** Rôles de l’utilisateur dans ses familles et cercles (pour savoir où il peut créer des objectifs communs). */
+export async function myGroupRoles(userId: string): Promise<{ family: Record<string, string>; circle: Record<string, string> }> {
+  const [f, c] = await Promise.all([
+    q<{ family_id: string; role: string }[]>(sb().then((x) => x.from('family_members').select('family_id,role').eq('user_id', userId))),
+    q<{ circle_id: string; role: string }[]>(sb().then((x) => x.from('circle_members').select('circle_id,role').eq('user_id', userId))),
+  ]);
+  return { family: Object.fromEntries((f ?? []).map((r) => [r.family_id, r.role])), circle: Object.fromEntries((c ?? []).map((r) => [r.circle_id, r.role])) };
+}
+/**
+ * Objectif commun avec identifiant choisi par l’app : un nouvel essai (double appui, réseau coupé) ne crée jamais
+ * de doublon — si l’objectif existe déjà (clé primaire, 23505), il est considéré comme créé.
+ */
+export async function insertGoalOnce(scope: ScopeType, id: string, userId: string, g: { id: string; title: string; formula: string | null; target: number }): Promise<'created' | 'exists'> {
+  const c = await sb();
+  const { error } = await c.from('shared_goals').insert({ id: g.id, scope_type: scope, [scopeCol(scope)]: id, created_by: userId, title: g.title, formula: g.formula, target: g.target });
+  if (!error) return 'created';
+  if (error.code === '23505') return 'exists';
+  throw new CommunityError(frError(error), error.code);
+}
 export const archiveGoal = (id: string) => q(sb().then((c) => c.from('shared_goals').update({ status: 'archived' }).eq('id', id)));
 export const goalProgress = (goalId: string) => q<GoalProgress>(sb().then((c) => c.rpc('goal_progress', { p_goal: goalId })));
 export type ContributionRow = { goal_id: string; count: number; source: string; client_id: string; member_id?: string | null };

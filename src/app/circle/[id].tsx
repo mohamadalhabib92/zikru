@@ -50,6 +50,9 @@ export default function CircleScreen() {
       {goals.data?.map((g) => (
         <GoalCard key={g.id} goal={g} scopeName={name} canAdmin={isMod} />
       ))}
+      {isMod ? (
+        <Button small variant="ghost" icon="camera-outline" title="Importer un programme (photo, fichier)" onPress={() => router.push({ pathname: '/zikrs/import', params: { scope: 'circle', id: cid } })} />
+      ) : null}
       {isMod ? <NewGoal onCreate={async (g) => (await api.createGoal('circle', cid, userId!, g), void goals.reload())} /> : null}
       <Spacer />
       <SharingPicker scope="circle" scopeId={cid} />
