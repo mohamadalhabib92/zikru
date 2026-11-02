@@ -61,7 +61,7 @@ export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; on
       <View style={{ gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ color: pal.ink, flex: 1 }}>Arabe</Text>
-          <QStepper label="Taille de l’arabe" value={p.arSize} min={20} max={52} step={2} onChange={(v) => patch({ arSize: v })} pal={pal} />
+          <QStepper label="Taille de l’arabe" value={p.arSize} min={18} max={52} step={2} onChange={(v) => patch({ arSize: v })} pal={pal} />
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ color: pal.ink, flex: 1 }}>Traduction</Text>
