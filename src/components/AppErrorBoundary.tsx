@@ -2,6 +2,7 @@ import { Component, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { reportError } from '@/lib/crash-report';
 import { L } from '@/lib/l10n';
+import { noteAppError } from '@/lib/review-store';
 import { Text } from '@/ui/Text';
 
 // Filet de sécurité : une erreur JavaScript affiche un écran explicatif au lieu de fermer l'app.
@@ -43,6 +44,7 @@ export function ErrorScreen({ error, retry, inTab }: { error: Error; retry: () =
 export function TabErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
   useEffect(() => {
     reportError(error, { where: 'onglet' });
+    noteAppError();
   }, [error]);
   return <ErrorScreen inTab error={error} retry={() => void retry()} />;
 }
@@ -53,6 +55,7 @@ export class AppErrorBoundary extends Component<Props, State> {
     return { error };
   }
   componentDidCatch(error: Error, info: ErrorInfo) {
+    noteAppError();
     reportError(error, { where: 'racine' + (info?.componentStack ? ' ' + info.componentStack.split('\n').slice(0, 3).join(' ').trim() : '') });
   }
   render() {

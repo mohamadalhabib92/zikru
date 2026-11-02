@@ -22,6 +22,7 @@ import { StorageAlert } from '@/components/StorageAlert';
 import { MiniPlayer } from '@/components/quran/MiniPlayer';
 import { RecitationProvider } from '@/lib/recitation-context';
 import { L, useUiCatalog } from '@/lib/l10n';
+import { noteAppSeen } from '@/lib/review-store';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -43,6 +44,10 @@ function Root() {
     document.documentElement.lang = s.lang;
     document.documentElement.dir = rtl ? 'rtl' : 'ltr';
   }, [s.lang, rtl]);
+  // v2 : date de première ouverture (pour ne jamais proposer de note le premier jour). Locale, jamais envoyée.
+  useEffect(() => {
+    noteAppSeen();
+  }, []);
   const [fontsLoaded] = useFonts({ Amiri_400Regular, Amiri_700Bold, AmiriQuran_400Regular });
   const [fontTimeout, setFontTimeout] = useState(false);
   useEffect(() => {

@@ -7,6 +7,7 @@ import { adhkarDays } from '@/lib/adhkar-store';
 import { useDispense } from '@/lib/dispense-context';
 import { allMet, dayValues, enabledGoals, gentleStreak, GOAL_KEYS, GRACE_PER_WEEK, met, newMilestones, TARGET_OPTIONS, WIRD_MILESTONE_DAYS, weekRecap, type GoalKey, type GoalSources } from '@/lib/goals';
 import { goalPrefs, milestones } from '@/lib/goals-store';
+import { maybeAskReview } from '@/lib/review-store';
 import { dayKey, useGrowth } from '@/lib/growth';
 import { L } from '@/lib/l10n';
 import { khatma, pagesDay } from '@/lib/quran-store';
@@ -54,7 +55,11 @@ export default function Goals() {
   useEffect(() => {
     if (!msReady) return;
     const add = newMilestones(ms, { khatma: kh, wird });
-    if (add.length) setMs((x) => [...x, ...add]);
+    if (add.length) {
+      setMs((x) => [...x, ...add]);
+      // v2 : moment de réussite → éventuelle fenêtre de notation du système (≤ 1 fois / 90 j, jamais après une erreur).
+      void maybeAskReview();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [msReady, kh?.finished, wird.days, wird.since]);
 
