@@ -1,11 +1,12 @@
 import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { currentScheme, elevation, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
+import { KbInput } from './keyboard-done';
 
 const S = () => getStyles();
 
@@ -22,7 +23,7 @@ export function Screen({ children, scroll = true, padded = true, bg }: { childre
   return (
     <View style={[S().screen, bg ? { backgroundColor: bg } : null]}>
       {scroll ? (
-        <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
+        <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
           {inner}
         </ScrollView>
       ) : (
@@ -192,7 +193,7 @@ export function Field({ label, hint, error, style, ...props }: TextInputProps & 
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={S().label}>{label}</Text>
-      <TextInput
+      <KbInput
         placeholderTextColor={t.muted}
         accessibilityLabel={typeof label === "string" ? L(label) : label}
         style={[S().input, props.multiline && { minHeight: 88, textAlignVertical: 'top', paddingTop: 12 }, error ? { borderColor: t.danger } : null, style]}

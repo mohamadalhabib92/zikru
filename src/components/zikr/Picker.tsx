@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { KbInput } from '@/ui/keyboard-done';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { computeAbjad } from '@/lib/abjad';
@@ -203,9 +204,9 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
         }}
       >
         <LMuted>Verset</LMuted>
-        <TextInput value={from} onChangeText={setFrom} keyboardType="number-pad" style={[input, { width: 70 }]} accessibilityLabel={L("Premier verset")} />
+        <KbInput value={from} onChangeText={setFrom} keyboardType="number-pad" style={[input, { width: 70 }]} accessibilityLabel={L("Premier verset")} />
         <LMuted>à</LMuted>
-        <TextInput value={to} onChangeText={setTo} keyboardType="number-pad" placeholder={String(a)} placeholderTextColor={b.inkMuted} style={[input, { width: 70 }]} accessibilityLabel={L("Dernier verset (facultatif)")} />
+        <KbInput value={to} onChangeText={setTo} keyboardType="number-pad" placeholder={String(a)} placeholderTextColor={b.inkMuted} style={[input, { width: 70 }]} accessibilityLabel={L("Dernier verset (facultatif)")} />
       </View>
       <LMuted style={{ fontSize: 11, marginTop: 4 }}>Jusqu’à 20 versets consécutifs.</LMuted>
       {!data ? (

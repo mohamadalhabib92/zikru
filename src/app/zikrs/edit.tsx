@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, TextInput, View } from 'react-native';
+import { KbInput } from '@/ui/keyboard-done';
 import { Text } from '@/ui/Text';
 import { ItemPicker } from '@/components/zikr/Picker';
 import { LBtn, fmt, shareZikr } from '@/components/zikr/parts';
@@ -61,7 +62,7 @@ function RepsInput({ value, onChange }: { value: number; onChange: (n: number) =
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <Icon icon="remove" label="Moins une répétition" onPress={() => onChange(clampReps(value - 1))} disabled={value <= 1} />
-      <TextInput
+      <KbInput
         value={txt ?? String(value)}
         onChangeText={setTxt}
         onBlur={() => {

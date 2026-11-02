@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { KbInput } from '@/ui/keyboard-done';
 import { LBtn } from '@/components/zikr/parts';
 import { L } from '@/lib/l10n';
 import { keepPhoto, ocrSupport, recognizeArabic } from '@/lib/ocr';
@@ -332,7 +333,7 @@ export default function ImportProgram() {
 
   return (
     <Screen scroll={false} padded={false} bg={b.cream}>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
         <LMuted>Photographiez une page, importez un PDF ou collez le texte d’un programme (ex. une formule et son nombre de répétitions par ligne). Zikru propose les étapes dans l’ordre : vous vérifiez, corrigez, puis créez la composition. Tout reste sur votre appareil.</LMuted>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <LBtn icon="clipboard-outline" label="Coller" solid onPress={() => void fromPaste()} />
@@ -516,7 +517,7 @@ export default function ImportProgram() {
                         {m.type === 'near' ? <LMuted style={{ fontSize: 12, marginTop: 6 }}>{L('{n} mot(s) diffèrent du Coran {r} : corrigez le texte ou gardez-le comme texte personnel.', { n: m.p.diff, r: m.p.ref })}</LMuted> : null}
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 10 }}>
                           <Text style={{ color: b.ink, fontWeight: '700' }}>×</Text>
-                          <TextInput
+                          <KbInput
                             value={s.count}
                             onChangeText={(v) => upd(s.key, { count: v, unsure: false })}
                             keyboardType="number-pad"
