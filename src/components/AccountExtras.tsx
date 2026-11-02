@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
+import { tasbihCsv } from '@/lib/csv';
+import { useData } from '@/lib/data';
 import { downloadText } from '@/lib/download';
 import { disableGroupPush, enableGroupPush, groupPushAvailable, groupPushEnabled } from '@/lib/group-push';
 import { useAuth } from '@/lib/community/auth';
@@ -31,6 +33,28 @@ export function DataExportItem() {
           else Alert.alert(L('Export impossible'), m);
         } finally {
           setBusy(false);
+        }
+      }}
+    />
+  );
+}
+
+/** v2 — Historique du tasbih en CSV (tableur). Fichier local, rien n'est envoyé. */
+export function TasbihCsvItem() {
+  const { tasbih } = useData();
+  return (
+    <ListItem
+      title={L('Exporter l’historique du tasbih (CSV)')}
+      subtitle={L('{n} sessions · pour un tableur. Rien n’est envoyé.', { n: tasbih.sessions.length })}
+      icon="grid-outline"
+      onPress={async () => {
+        try {
+          const day = new Date().toISOString().slice(0, 10);
+          await downloadText('zikru-tasbih-' + day + '.csv', tasbihCsv(tasbih.sessions), 'text/csv;charset=utf-8');
+        } catch (e) {
+          const m = e instanceof Error ? e.message : String(e);
+          if (Platform.OS === 'web') window.alert(m);
+          else Alert.alert(L('Export impossible'), m);
         }
       }}
     />

@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { loadLib } from './load-lib.mjs';
 
-const { 'tasbih-core': C, 'tasbih-log': Lg } = await loadLib(['tasbih-core', 'tasbih-log'], 'history');
+const { 'tasbih-core': C, 'tasbih-log': Lg, csv: CSV } = await loadLib(['tasbih-core', 'tasbih-log', 'csv'], 'history');
 const T0 = Date.parse('2026-10-29T14:00:00Z');
 const iso = (ms) => new Date(ms).toISOString();
 let fail = 0;
@@ -148,6 +148,17 @@ test('accessibilité : annonce tous les 10 comptes, au cycle atteint, jamais en 
   assert.equal(C.tasbihAnnouncement(32, 33, true), 'goal');
   assert.equal(C.tasbihAnnouncement(10, 0, false), null);
   assert.equal(C.tasbihAnnouncement(20, 20, true), null);
+});
+
+test('export CSV : en-tête, tri par date, échappement et garde anti-formule', () => {
+  const out = CSV.tasbihCsv([
+    { id: 'b', dhikrId: 'x,"y"', count: 3, target: 33, at: '2026-11-02T10:00:00.000Z' },
+    { id: 'a', dhikrId: '=cmd', count: 33, target: 33, at: '2026-11-01T10:00:00.000Z', source: 'bluetooth' },
+  ]);
+  const lines = out.replace(/^\uFEFF/, '').trim().split('\r\n');
+  assert.equal(lines[0], 'date,debut,dhikr,compte,objectif,source');
+  assert.equal(lines[1], "2026-11-01T10:00:00.000Z,,'=cmd,33,33,bluetooth");
+  assert.equal(lines[2], '2026-11-02T10:00:00.000Z,,"x,""y""",3,33,manuel');
 });
 
 if (fail) {

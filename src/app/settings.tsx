@@ -10,7 +10,7 @@ import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
-import { DataExportItem, GroupPushToggle, ModerationLink } from '@/components/AccountExtras';
+import { DataExportItem, GroupPushToggle, ModerationLink, TasbihCsvItem } from '@/components/AccountExtras';
 import { WidgetSettings } from '@/components/WidgetSettings';
 import { DispenseSettings } from '@/components/DispenseSettings';
 import { PrayerOptions } from '@/components/PrayerOptions';
@@ -179,6 +179,8 @@ export default function SettingsScreen() {
         <ListItem title={pt.policy_link} icon="shield-checkmark-outline" onPress={() => router.push('/privacy')} />
         <Divider />
         <DataExportItem />
+        <Divider />
+        <TasbihCsvItem />
         <Divider />
         <ListItem title={pt.delete_account} subtitle={pt.delete_account_hint} icon="person-remove-outline" onPress={() => router.push('/community')} />
         <Divider />
