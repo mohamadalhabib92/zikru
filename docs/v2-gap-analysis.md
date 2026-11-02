@@ -187,13 +187,12 @@ Légende : **FAIT** = déjà fait (preuve) · **PARTIEL** · **MANQUANT** · **N
 | 9. Store listing FR/DE/IT/EN | PARTIEL | FR/EN/AR dans `store/ios-metadata.md` ; DE/IT à faire relire |
 | 10. Tests, typecheck, lint, checklist | FAIT / PARTIEL | tests et tsc verts ; lint, voir §13 |
 
-## Totaux
-Les lignes « FAIT / AJOUTÉ » et « FAIT / PARTIEL » sont comptées dans le premier statut.
-- FAIT : 66
-- AJOUTÉ (sur v2-ecarts) : 11
-- PARTIEL : 15
-- MANQUANT : 6 (qibla carte et interférence, audio des 99 noms, chiffres arabes-indiens, captures store, CGU, IT)
-- NE PAS FAIRE : 9
+## Totaux (lignes du tableau ; « FAIT / x » est compté en FAIT)
+- FAIT : 85
+- AJOUTÉ (sur v2-ecarts) : 9 lignes, plus 2 lignes FAIT / AJOUTÉ (écran d'erreur, politique LiveKit)
+- PARTIEL : 12
+- MANQUANT : 5 (qibla carte et interférence, audio des 99 noms, chiffres arabes-indiens, captures store, CGU)
+- NE PAS FAIRE : 7
 
 ## Reporté, décision de Mohamed nécessaire
 - Nouveau consentement après la mise à jour LiveKit (`POLICY_UPDATED` inchangé).
