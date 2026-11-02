@@ -25,6 +25,8 @@ export type ProgramStep = {
   sure: boolean;
   /** Autres nombres trouvés sur la même étape (signalés, jamais choisis à la place de l’utilisateur). */
   alt: number[];
+  /** Lignes latines lues entre la formule arabe et son nombre (translittération, traduction, consigne), copiées telles quelles. */
+  note: string;
 };
 export type IgnoredLine = { page: number; line: number; text: string };
 export type ParsedProgram = { steps: ProgramStep[]; ignored: IgnoredLine[] };
@@ -48,9 +50,48 @@ const AR_UNITS: [string, number][] = [
   ['ثلاث', 3], ['اربع', 4], ['خمس', 5], ['ست', 6], ['سبع', 7], ['ثماني', 8], ['ثمان', 8], ['تسع', 9], ['عشر', 10],
 ];
 const AR_HUNDRED = `(?:${arPat('مائة')}|${arPat('مئة')}|${arPat('ماية')})`;
+// 1 à 9 (formes masculines/féminines, accusatif « ثلاثاً ») et dizaines (nominatif ـون / cas indirect ـين).
+const AR_ONES: [string, number][] = [
+  ['واحد', 1], ['احدى', 1], ['احد', 1], ['اثنان', 2], ['اثنين', 2], ['اثنتان', 2], ['اثنتين', 2], ['ثلاث', 3], ['اربع', 4], ['خمس', 5],
+  ['ست', 6], ['سبع', 7], ['ثماني', 8], ['ثمان', 8], ['تسع', 9],
+];
+const AR_TENS: [string, number][] = [
+  ['عشرون', 20], ['عشرين', 20], ['ثلاثون', 30], ['ثلاثين', 30], ['اربعون', 40], ['اربعين', 40], ['خمسون', 50], ['خمسين', 50],
+  ['ستون', 60], ['ستين', 60], ['سبعون', 70], ['سبعين', 70], ['ثمانون', 80], ['ثمانين', 80], ['تسعون', 90], ['تسعين', 90],
+];
+const byLen = (xs: [string, number][]) => [...xs].sort((a, b) => b[0].length - a[0].length);
+/** Unité suivie éventuellement de ة/ه et/ou d’un alif d’accusatif (« ثلاثةً », « ثلاثاً »). */
+const AR_ONE = `(${byLen(AR_ONES).map(([w]) => arPat(w)).join('|')})(?:[ةه]${D})?(?:ا${D})?`;
+const AR_TEN = `(${byLen(AR_TENS).map(([w]) => arPat(w)).join('|')})`;
+const MARRA_ANY = `(?:${MARRAT}|${MARRA}|${arPat('مره')})`;
+const arNorm = (w: string) => w.replace(/[\u064B-\u0652\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/\s+/g, ' ');
+const arLookup = (table: [string, number][], w: string) => {
+  const n = arNorm(w).replace(/[ةه]?ا?$/, '');
+  for (const [k, v] of byLen(table)) if (n === arNorm(k) || arNorm(w) === arNorm(k)) return v;
+  return 0;
+};
 
-const FR_UNITS: Record<string, number> = { un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10, onze: 11, douze: 12, vingt: 20, trente: 30, quarante: 40, cinquante: 50, cent: 100, mille: 1000 };
+/**
+ * « N + mot » dans d’autres langues. sure: false = motif moins fiable (à vérifier par l’utilisateur).
+ * fr fois · en times · de mal · it volte/volta · es veces/vez · pt vezes/vez · tr defa/kere/kez · id/ms kali ·
+ * ur بار / دفعہ / مرتبہ · wo yoon (wolof, moins fiable).
+ */
+const COUNT_WORDS: { re: string; sure: boolean }[] = [
+  { re: 'fois|times?|mal|volte|volta|veces|vez|vezes|defa|kere|kez|kali', sure: true },
+  { re: `${arPat('بار')}|${arPat('دفعہ')}|${arPat('دفعه')}|${arPat('مرتبہ')}|${arPat('مرتبه')}`, sure: true },
+  { re: 'yoon', sure: false },
+];
+
+const FR_UNITS: Record<string, number> = { un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10, onze: 11, douze: 12, vingt: 20, trente: 30, quarante: 40, cinquante: 50, soixante: 60, cent: 100, mille: 1000 };
 const EN_UNITS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, twenty: 20, thirty: 30, forty: 40, fifty: 50, hundred: 100, 'a hundred': 100, 'one hundred': 100, thousand: 1000, 'a thousand': 1000, 'one thousand': 1000 };
+
+const FR_ONES = 'un|une|deux|trois|quatre|cinq|six|sept|huit|neuf';
+/** 70–79 et 80–99 : « soixante-dix », « soixante et onze », « quatre-vingt(s) », « quatre-vingt-dix-neuf ». */
+const FR_TEENS: Record<string, number> = { dix: 10, onze: 11, douze: 12, treize: 13, quatorze: 14, quinze: 15, seize: 16, 'dix-sept': 17, 'dix-huit': 18, 'dix-neuf': 19 };
+const FR_ADD: Record<string, number> = { ...FR_TEENS, un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9 };
+const FR_ADD_RE = Object.keys(FR_ADD).sort((a, b) => b.length - a.length).join('|');
+const EN_ONES = 'one|two|three|four|five|six|seven|eight|nine';
+const EN_TENS: Record<string, number> = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
 
 type Rule = { re: RegExp; value: (m: RegExpExecArray) => number; sure: boolean };
 const NB = '(?<![\\p{L}\\p{N}])';
@@ -60,16 +101,28 @@ const RULES: Rule[] = [
   { re: new RegExp(`(?<![\\p{L}\\p{N}])[×xX✕✖]\\s*(\\d{1,6})(?!\\d)`, 'gu'), value: (m) => +m[1], sure: true },
   // 100×, 100 x
   { re: new RegExp(`${NB}(\\d{1,6})\\s*[×xX✕✖]${NA}`, 'gu'), value: (m) => +m[1], sure: true },
-  // 100 fois, 100 times, ١٠٠ مرة / مرات
+  // 100 fois, 100 times, 33 mal / 33-mal, 33 veces, 33 kali, ١٠٠ مرة / مرات, ۱۰۰ بار…
   { re: new RegExp(`${NB}(\\d{1,6})\\s*(?:fois|times?|${MARRA}|${MARRAT}|${arPat('مره')})${NA}`, 'giu'), value: (m) => +m[1], sure: true },
+  ...COUNT_WORDS.map((w) => ({ re: new RegExp(`${NB}(\\d{1,6})\\s*-?\\s*(?:${w.re})${NA}`, 'giu'), value: (m: RegExpExecArray) => +m[1], sure: w.sure })),
+  // « sebanyak 33 kali », « Kali 33 » : non ; « 33 adet » : non (trop ambigu).
   // Arabe en lettres (toujours suivi de مرة/مرات, sinon ignoré)
   { re: new RegExp(`${NB}${arPat('الف')}\\s+${MARRA}${NA}`, 'gu'), value: () => 1000, sure: true },
   { re: new RegExp(`${NB}(${AR_UNITS.slice(0, 8).map(([w]) => arPat(w)).join('|')})\\s*${AR_HUNDRED}\\s+${MARRA}${NA}`, 'gu'), value: (m) => 100 * arUnit(m[1]), sure: true },
   { re: new RegExp(`${NB}(?:${arPat('مائتي')}|${arPat('مئتي')}|${arPat('مائتين')}|${arPat('مئتين')})\\s+${MARRA}${NA}`, 'gu'), value: () => 200, sure: true },
   { re: new RegExp(`${NB}${AR_HUNDRED}\\s+${MARRA}${NA}`, 'gu'), value: () => 100, sure: true },
+  // ثلاث وثلاثون مرة (33), إحدى وعشرين مرة (21)
+  { re: new RegExp(`${NB}${AR_ONE}\\s*و${D}\\s*${AR_TEN}\\s+${MARRA_ANY}${NA}`, 'gu'), value: (m) => arLookup(AR_ONES, m[1]) + arLookup(AR_TENS, m[2]), sure: true },
+  // سبعين مرة (70)
+  { re: new RegExp(`${NB}${AR_TEN}\\s+${MARRA_ANY}${NA}`, 'gu'), value: (m) => arLookup(AR_TENS, m[1]), sure: true },
+  // ثلاثة مرات (forme courante, accord approximatif)
+  { re: new RegExp(`${NB}(${AR_UNITS.map(([w]) => arPat(w)).join('|')})[ةه]${D}\\s+${MARRAT}${NA}`, 'gu'), value: (m) => arUnit(m[1]), sure: true },
   { re: new RegExp(`${NB}(${AR_UNITS.map(([w]) => arPat(w)).join('|')})\\s+${MARRAT}${NA}`, 'gu'), value: (m) => arUnit(m[1]), sure: true },
   { re: new RegExp(`${NB}(?:${arPat('مرتين')}|${arPat('مرتان')})${NA}`, 'gu'), value: () => 2, sure: true },
   { re: new RegExp(`${NB}${MARRA}\\s*${arPat('واحدة')}${NA}`, 'gu'), value: () => 1, sure: true },
+  // Français / anglais en lettres : « trente-trois fois », « thirty-three times »
+  { re: new RegExp(`${NB}(soixante|quatre-vingts?)(?:[-\\s]et[-\\s](un|une|onze)|-(${FR_ADD_RE}))?\\s+fois${NA}`, 'giu'), value: (m) => (m[1].toLowerCase() === 'soixante' ? 60 : 80) + (m[2] ? FR_ADD[m[2].toLowerCase()] : m[3] ? FR_ADD[m[3].toLowerCase()] : 0), sure: true },
+  { re: new RegExp(`${NB}(vingt|trente|quarante|cinquante)(?:[-\\s]et[-\\s](un|une)|-(${FR_ONES}))?\\s+fois${NA}`, 'giu'), value: (m) => FR_UNITS[m[1].toLowerCase()] + (m[2] ? 1 : m[3] ? FR_UNITS[m[3].toLowerCase()] : 0), sure: true },
+  { re: new RegExp(`${NB}(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[-\\s](${EN_ONES}))?\\s+times${NA}`, 'giu'), value: (m) => EN_TENS[m[1].toLowerCase()] + (m[2] ? EN_UNITS[m[2].toLowerCase()] : 0), sure: true },
   // Français / anglais en lettres
   { re: new RegExp(`${NB}(${Object.keys(FR_UNITS).join('|')})\\s+fois${NA}`, 'giu'), value: (m) => FR_UNITS[m[1].toLowerCase()], sure: true },
   { re: new RegExp(`${NB}(${Object.keys(EN_UNITS).sort((a, b) => b.length - a.length).join('|')})\\s+times${NA}`, 'giu'), value: (m) => EN_UNITS[m[1].toLowerCase()], sure: true },
@@ -111,6 +164,8 @@ export function findCounts(line: string): Hit[] {
 }
 
 /** Numérotation de liste en début de ligne (« 1. », « ١- », « 2) », « • ») : retirée, jamais lue comme un nombre. */
+const STEP_WORDS = 'étape|etape|step|schritt|paso|passo|etapa|adım|adim|langkah|tahap|الخطوة|المرحلة|مرحلہ';
+const STEP_LABEL = new RegExp(`^\\s*(?:${STEP_WORDS})\\s*[0-9\\u0660-\\u0669\\u06F0-\\u06F9]{1,3}\\s*[.):\\-–—،]?\\s+`, 'iu');
 const NUMBERING = /^\s*(?:[-–—•·▪●◦*]+|\(?[0-9\u0660-\u0669\u06F0-\u06F9]{1,3}\s*[.)\-–—:،]|[0-9\u0660-\u0669\u06F0-\u06F9]{1,3}\s*[-–—])\s+/u;
 const TRIM = /^[\s\-–—:,;.|·•،؛()[\]«»"“”'’=+/]+|[\s\-–—:,;.|·•،؛()[\]«»"“”'’=+/]+$/gu;
 
@@ -126,7 +181,8 @@ function arabicSpan(s: string): { ar: string; rest: string } {
 
 type Lexed = { line: number; text: string; ar: string; latin: string; counts: Hit[] };
 function lex(text: string, line: number): Lexed {
-  let s = text.replace(NUMBERING, '');
+  // « Étape 2 : », « Step 3 – », « الخطوة ٢ : » puis « 1. », « ١- », « • » : jamais lus comme un nombre de répétitions.
+  let s = text.replace(STEP_LABEL, '').replace(NUMBERING, '');
   const counts = findCounts(s);
   // retire les nombres (de la fin vers le début pour garder les positions)
   for (const h of [...counts].reverse()) s = s.slice(0, h.start) + ' ' + s.slice(h.end);
@@ -149,27 +205,32 @@ export function parseProgram(pages: string[]): ParsedProgram {
   pages.forEach((pageText, page) => {
     const lines = pageText.replace(/\r\n?/g, '\n').split('\n');
     let pend: Lexed[] = [];
+    /** Lignes latines lues après une formule arabe encore sans nombre (translittération, traduction, consigne). */
+    let notes: Lexed[] = [];
     let heading: Lexed | null = null;
-    const push = (parts: Lexed[], countFrom: Lexed | null, latin = '') => {
+    const push = (parts: Lexed[], countFrom: Lexed | null, latin = '', unsure = false) => {
       const counts = countFrom ? countFrom.counts : [];
       const distinct = [...new Set(counts.map((c) => c.n))];
       steps.push({
         order: steps.length + 1,
         page,
-        lines: [...new Set([...parts.map((p) => p.line), ...(countFrom ? [countFrom.line] : [])])],
+        lines: [...new Set([...parts.map((p) => p.line), ...notes.map((n) => n.line), ...(countFrom ? [countFrom.line] : [])])].sort((a, b) => a - b),
         ar: parts.map((p) => p.ar).filter(Boolean).join(' '),
         latin,
         hint: heading ? heading.latin : '',
         count: counts.length ? counts[0].n : null,
         countRaw: counts.map((c) => c.raw).join(' '),
-        sure: counts.length > 0 && distinct.length === 1 && counts.every((c) => c.sure),
+        sure: !unsure && counts.length > 0 && distinct.length === 1 && counts.every((c) => c.sure),
         alt: distinct.slice(1),
+        note: [...notes.map((n) => n.text.trim()), ...(unsure && countFrom?.latin ? [countFrom.latin] : [])].join(' / '),
       });
       heading = null;
+      notes = [];
     };
     const flush = () => {
       if (pend.length) push(pend, null);
       pend = [];
+      notes = [];
     };
     const dropHeading = () => {
       if (heading) ignored.push({ page, line: heading.line, text: heading.text.trim() });
@@ -183,6 +244,8 @@ export function parseProgram(pages: string[]): ParsedProgram {
       const l = lex(raw, i);
       const hasCount = l.counts.length > 0;
       if (l.ar) {
+        // une formule arabe après des lignes latines : la formule en attente est terminée
+        if (notes.length) flush();
         if (hasCount) {
           push([...pend, l], l);
           pend = [];
@@ -208,6 +271,17 @@ export function parseProgram(pages: string[]): ParsedProgram {
             prev.lines.push(i);
           } else ignored.push({ page, line: i, text: raw.trim() });
         }
+        return;
+      }
+      if (l.latin && hasCount && pend.length) {
+        // « سبحان الله » puis « Subhanallah 33 fois » : sans doute la même étape, mais à vérifier
+        push(pend, l, '', true);
+        pend = [];
+        return;
+      }
+      if (l.latin && !hasCount && pend.length) {
+        // translittération / traduction sous la formule : gardée telle quelle comme note de l’étape
+        notes.push(l);
         return;
       }
       if (l.latin && hasCount) {

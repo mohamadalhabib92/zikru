@@ -4,7 +4,7 @@
  */
 import { requireOptionalNativeModule } from 'expo';
 import { Platform } from 'react-native';
-import { ocrSupport, recognizeArabic } from './ocr';
+import { ocrSupport, recognizeText } from './ocr';
 import { ocrToLines } from './ocr-lines';
 import { brokenGlyphs, cleanLine } from './pdf-lines';
 import { MAX_PAGES, type PdfDoc, type PdfSupport } from './pdf-types';
@@ -47,7 +47,7 @@ export async function renderPdfPage(doc: PdfDoc, index: number, maxSide = 1600):
 export async function ocrPdfPage(doc: PdfDoc, index: number): Promise<string> {
   const img = native?.pdfRender ? await native.pdfRender(String(doc.handle), index, 2400) : null;
   if (!img) throw new Error('pdf-render');
-  const r = await recognizeArabic(img);
+  const r = await recognizeText(img);
   return ocrToLines(r.lines).join('\n');
 }
 

@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { loadLib } from './load-lib.mjs';
 
-const L = await loadLib(['program-parse', 'program-match', 'pdf-lines', 'tijani', 'quran-match', 'quran-text', 'quran-uthmani'], 'programs');
+const L = await loadLib(['program-parse', 'program-lang', 'ocr-merge', 'program-match', 'pdf-lines', 'tijani', 'quran-match', 'quran-text', 'quran-uthmani'], 'programs');
 const P = L['program-parse'];
 const M = L['program-match'];
 const PL = L['pdf-lines'];
@@ -211,6 +211,95 @@ test('repli sans espaces : aucune fausse correspondance (lettre changée, texte 
   assert.ok(key.includes('الخاتم'));
   const swapped = key.replace('الخاتم', 'الاختم').replace(/ /g, '');
   assert.ok(!['catalog', 'loose'].includes(M.matchStepText(swapped, '', idx).type));
+});
+
+// ——— Multilingue (photos de programmes dans toutes les langues). Fixtures : formules du catalogue, « سبحان الله »,
+// ou chaînes de test manifestement factices (« Formule test »). Aucun contenu religieux inventé.
+const SUB = 'سبحان الله';
+const LG = L['program-lang'];
+const OM = L['ocr-merge'];
+test('multilingue : fois / times / mal / volte / veces / vezes / defa / kere / kez / kali', () => {
+  const words = ['33 fois', '33 times', '33 mal', '33-mal', '33 volte', '33 veces', '33 vezes', '33 defa', '33 kere', '33 kez', '33 kali'];
+  for (const w of words) {
+    const s = steps(`${SUB} ${w}`);
+    assert.deepEqual([s.length, s[0].count, s[0].sure, s[0].ar], [1, 33, true, SUB], w);
+  }
+});
+test('multilingue : ourdou « ۳۳ بار » (chiffres persans) et « ۱۰۰ دفعہ »', () => {
+  assert.deepEqual(counts(`${SUB} ۳۳ بار\n\n${ISTI} ۱۰۰ دفعہ`), [33, 100]);
+  assert.ok(steps(`${SUB} ۳۳ بار`)[0].sure);
+});
+test('multilingue : wolof « 33 yoon » retenu mais à vérifier (motif moins fiable)', () => {
+  const s = steps(`${SUB} 33 yoon`);
+  assert.deepEqual([s[0].count, s[0].sure], [33, false]);
+});
+test('arabe en lettres : ثلاث وثلاثون مرة (33), ثلاثاً وثلاثين مرة, إحدى وعشرين مرة, سبعين مرة, ثلاثة مرات', () => {
+  assert.deepEqual(counts(`${SUB} ثلاث وثلاثون مرة\n\n${SUB} ثلاثاً وثلاثين مرة\n\n${SUB} إحدى وعشرين مرة\n\n${SUB} سبعين مرة\n\n${SUB} ثلاثة مرات\n\n${SUB} أربعاً وثلاثين مرة`), [33, 33, 21, 70, 3, 34]);
+});
+test('français / anglais composés : « trente-trois fois », « vingt et une fois », « thirty-three times »', () => {
+  assert.deepEqual(counts(`${SUB} trente-trois fois\n\n${SUB} vingt et une fois\n\n${SUB} thirty-three times\n\n${SUB} soixante-dix fois\n\n${SUB} quatre-vingt-dix-neuf fois\n\n${SUB} soixante fois`), [33, 21, 33, 70, 99, 60]);
+});
+test('page mixte : formule arabe, translittération, nombre sur la ligne suivante → une étape, note gardée telle quelle', () => {
+  const s = steps(`${SUB}\nSubhanallah (Formule test)\n33 fois`);
+  assert.equal(s.length, 1);
+  assert.deepEqual([s[0].ar, s[0].count, s[0].sure, s[0].lines], [SUB, 33, true, [0, 1, 2]]);
+  assert.equal(s[0].note, 'Subhanallah (Formule test)');
+});
+test('page mixte : formule arabe puis « Subhanallah 33 times » → une étape, nombre à vérifier', () => {
+  const s = steps(`${SUB}\nSubhanallah 33 times`);
+  assert.deepEqual([s.length, s[0].ar, s[0].count, s[0].sure, s[0].note], [1, SUB, 33, false, 'Subhanallah']);
+});
+test('page mixte : note latine puis nouvelle formule arabe → deux étapes, rien de fusionné', () => {
+  const s = steps(`${SUB}\nFormule test\n${ISTI} ×100`);
+  assert.deepEqual(s.map((x) => [x.ar, x.count]), [[SUB, null], [ISTI, 100]]);
+  assert.equal(s[0].note, 'Formule test');
+});
+test('étiquettes d’ordre « Étape 2 : », « Step 3 – », « Schritt 1 », « الخطوة ٢ : » jamais lues comme un nombre', () => {
+  const s = steps(`Étape 1 : ${SUB} 33 fois\n\nStep 2 – ${ISTI} 100 times\n\nSchritt 3 ${HAIL} 100 mal\n\nالخطوة ٤ : ${SUB} ٣٣ مرة\n\nAdım 5 ${SUB} 33 defa`);
+  assert.deepEqual(s.map((x) => [x.count, x.sure]), [[33, true], [100, true], [100, true], [33, true], [33, true]]);
+  assert.equal(s[0].ar, SUB);
+});
+test('étape latine seule dans d’autres langues : « Formule test 33 veces » / « Formule test 33 kali »', () => {
+  const s = steps('Formule test 33 veces\n\nFormule test 33 kali');
+  assert.deepEqual(s.map((x) => [x.latin, x.count, x.sure]), [['Formule test', 33, true], ['Formule test', 33, true]]);
+});
+test('pas de faux nombre : « mal », « vez », « kali » sans nombre, ou collés à un mot, ne comptent pas', () => {
+  assert.deepEqual(counts(`${SUB} mal\n\n${SUB} kali\n\n${SUB} A33mal`), [null, null, null]);
+});
+test('langues détectées : arabe + français, arabe + anglais, ourdou, turc, indonésien, latin non identifié', () => {
+  assert.deepEqual(LG.detectLanguages(`${SUB} 33 fois, puis ${ISTI} 100 fois`), ['ar', 'fr']);
+  assert.deepEqual(LG.detectLanguages(`${SUB} 33 times, then the next one`), ['ar', 'en']);
+  assert.deepEqual(LG.detectLanguages(`${SUB} ۳۳ بار پڑھیں اور ہر روز`), ['ur']);
+  assert.deepEqual(LG.detectLanguages('Formule test 33 defa, sonra 33 kere'), ['tr']);
+  assert.deepEqual(LG.detectLanguages('Formule test 33 kali, lalu 33 kali'), ['id']);
+  assert.deepEqual(LG.detectLanguages('Subhanallah'), ['latin']);
+  assert.deepEqual(LG.detectLanguages(SUB), ['ar']);
+});
+test('Vision : plan de langues (arabe d’abord, latin ensuite, CJK à part, codes absents ignorés)', () => {
+  const p = OM.planLanguages(['en-US', 'fr-FR', 'zh-Hans', 'ar-SA', 'ars-SA', 'de-DE', 'tr-TR', 'ko-KR', 'ru-RU', 'id-ID']);
+  assert.deepEqual(p.arabic, ['ar-SA', 'ars-SA']);
+  assert.deepEqual(p.others, ['fr-FR', 'en-US', 'de-DE', 'tr-TR', 'id-ID', 'ru-RU']);
+  assert.deepEqual(OM.planLanguages(['en-US', 'fr-FR']).arabic, []);
+});
+test('Vision : fusion des passes (arabe gardé de la passe arabe, latin de la meilleure confiance, lignes uniques gardées)', () => {
+  const A = [
+    { text: SUB, confidence: 0.9, box: [0.5, 0.8, 0.4, 0.05] },
+    { text: 'Sobhanallah', confidence: 0.4, box: [0.1, 0.7, 0.5, 0.05] },
+  ];
+  const B = [
+    { text: 'Ssbhn llh', confidence: 0.95, box: [0.5, 0.8, 0.4, 0.05] }, // lecture latine de l’arabe : écartée
+    { text: 'Subhanallah', confidence: 0.8, box: [0.1, 0.7, 0.5, 0.05] },
+    { text: '33 fois', confidence: 0.9, box: [0.1, 0.6, 0.2, 0.05] },
+  ];
+  assert.deepEqual(OM.mergePasses(A, B).map((l) => l.text), [SUB, 'Subhanallah', '33 fois']);
+  // sans positions (ancien build) : passe arabe gardée si elle contient de l’arabe
+  assert.deepEqual(OM.mergePasses([{ text: SUB, confidence: 0.5 }], [{ text: 'x', confidence: 0.9 }]).map((l) => l.text), [SUB]);
+  assert.deepEqual(OM.mergePasses([], B).length, 3);
+});
+test('Vision : le texte fusionné n’est jamais modifié (chaque ligne vient telle quelle d’une passe)', () => {
+  const A = [{ text: '  ' + ISTI + ' ×100 ', confidence: 0.7, box: [0.2, 0.5, 0.6, 0.05] }];
+  const out = OM.mergePasses(A, [{ text: 'Formule test', confidence: 0.99, box: [0.2, 0.3, 0.6, 0.05] }]);
+  assert.deepEqual(out.map((l) => l.text), [A[0].text, 'Formule test']);
 });
 
 let fail = 0;

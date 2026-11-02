@@ -1,0 +1,17 @@
+# Import de programmes multilingue : langues détectées, note lue sous la formule, images depuis Fichiers (02.11.2026) (ar : traduction à relire)
+Importer un fichier (PDF ou image)	Import a file (PDF or image)	استيراد ملف (PDF أو صورة)
+Cette version d’iOS ne lit pas l’écriture arabe sur les photos (iOS 18 ou plus) : seul le texte en écriture latine sera lu. Pour l’arabe, utilisez « Texte en direct » puis « Coller ».	This iOS version cannot read Arabic script in photos (iOS 18 or later is needed): only Latin-script text will be read. For Arabic, use “Live Text”, then “Paste”.	لا يقرأ هذا الإصدار من iOS الخط العربي في الصور (يلزم iOS 18 أو أحدث): لن يُقرأ إلا النص المكتوب بالحروف اللاتينية. للعربية، استخدم «النص المباشر» ثم «لصق».
+Langues détectées (estimation) : {l}	Detected languages (estimate): {l}	اللغات المكتشفة (تقدير): {l}
+Lu sous la formule : {t}	Read under the formula: {t}	المقروء تحت الصيغة: {t}
+arabe	Arabic	العربية
+ourdou	Urdu	الأردية
+français	French	الفرنسية
+anglais	English	الإنجليزية
+allemand	German	الألمانية
+italien	Italian	الإيطالية
+espagnol	Spanish	الإسبانية
+portugais	Portuguese	البرتغالية
+turc	Turkish	التركية
+indonésien / malais	Indonesian / Malay	الإندونيسية / الملايوية
+wolof	Wolof	الولوفية
+écriture latine (langue non identifiée)	Latin script (language not identified)	حروف لاتينية (لغة غير محددة)

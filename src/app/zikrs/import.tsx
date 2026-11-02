@@ -14,11 +14,12 @@ import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, V
 import { KbInput } from '@/ui/keyboard-done';
 import { LBtn } from '@/components/zikr/parts';
 import { L } from '@/lib/l10n';
-import { keepPhoto, ocrSupport, recognizeArabic } from '@/lib/ocr';
+import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { ocrToLines } from '@/lib/ocr-lines';
 import { closePdf, ocrPdfPage, openPdf, pdfSupport, renderPdfPage, type PdfDoc } from '@/lib/pdf';
 import { pageIsScanned } from '@/lib/pdf-types';
-import { latinDigits, parseProgram, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
+import { detectLanguages, LANG_LABEL, type LangCode } from '@/lib/program-lang';
+import { latinDigits, parseProgram, programHasArabic, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
 import { confirmLoose, matchStepText, stepToItem, type CatalogEntry, type ImportVia, type LooseTarget, type StepMatch } from '@/lib/program-match';
 import { loadQuranIndex, type QuranIndex } from '@/lib/quran-match';
 import { uid } from '@/lib/storage';
@@ -39,6 +40,8 @@ type EStep = {
   ar: string;
   latin: string;
   hint: string;
+  /** Translittération / traduction / consigne lue sous la formule (telle quelle). */
+  note: string;
   count: string;
   /** Nombre lu sans marque explicite : à confirmer par l’utilisateur. */
   unsure: boolean;
@@ -66,6 +69,7 @@ const toEdit = (s: ProgramStep, pages: Page[]): EStep => {
     ar: s.ar,
     latin: s.latin,
     hint: s.hint,
+    note: s.note,
     count: s.count ? String(s.count) : '',
     unsure: s.count !== null && !s.sure,
     alt: s.alt,
@@ -137,6 +141,7 @@ export default function ImportProgram() {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [langs, setLangs] = useState<LangCode[]>([]);
   const [idx, setIdx] = useState<QuranIndex | null>(null);
   const [total, setTotal] = useState(0);
   const pdfRef = useRef<PdfDoc | null>(null);
@@ -166,10 +171,12 @@ export default function ImportProgram() {
     setSel(0);
     setNote(null);
     setTotal(0);
+    setLangs([]);
   };
   const analyse = (ps: Page[]) => {
     const texts = ps.map((p) => (p.on ? p.text : ''));
     const r = parseProgram(texts);
+    setLangs(detectLanguages(texts.join('\n')));
     setSteps(r.steps.map((s) => toEdit(s, ps)));
     setIgnored(r.ignored);
     if (!r.steps.length) setNote(L('Aucune étape détectée. Vérifiez le texte lu, ou ajoutez les étapes à la main.'));
@@ -198,11 +205,16 @@ export default function ImportProgram() {
     const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1, exif: false, base64: false, allowsMultipleSelection: !camera, selectionLimit: 10 };
     const r = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
     if (r.canceled || !r.assets?.length) return;
+    await readImages(r.assets.map((a) => a.uri));
+  };
+
+  /** Photos (appareil photo, photothèque ou app Fichiers) : lecture sur l’appareil, toutes langues proposées par iOS. */
+  const readImages = async (uris: string[]) => {
     // Photo supplémentaire = page suivante du même programme.
     const keep = via === 'photo' && pages.length ? pages : [];
     if (!keep.length) reset();
     setVia('photo');
-    const added: Page[] = r.assets.map((a) => ({ image: a.uri, text: '', state: ocr.ok ? 'busy' : 'empty', on: true }));
+    const added: Page[] = uris.map((uri) => ({ image: uri, text: '', state: ocr.ok ? 'busy' : 'empty', on: true }));
     let ps = [...keep, ...added];
     setPages(ps);
     setSel(keep.length);
@@ -210,7 +222,7 @@ export default function ImportProgram() {
     setBusy(L('Lecture du texte sur l’appareil…'));
     for (let i = keep.length; i < ps.length; i++) {
       try {
-        const o = await recognizeArabic(ps[i].image!);
+        const o = await recognizeText(ps[i].image!);
         const text = ocrToLines(o.lines).join('\n');
         ps = ps.map((p, j) => (j === i ? { ...p, text, state: text ? 'text' : 'failed' } : p));
       } catch {
@@ -224,9 +236,14 @@ export default function ImportProgram() {
 
   const fromPdf = async () => {
     setNote(null);
-    if (!pdfOk.text) return setNote(pdfNote(pdfOk.reason));
-    const r = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true, multiple: false });
+    // Fichiers : PDF (si lisible ici) et images (si la lecture des photos est disponible sur l’appareil).
+    const types = [...(pdfOk.text ? ['application/pdf'] : []), ...(ocr.ok ? ['image/*'] : [])];
+    if (!types.length) return setNote(pdfNote(pdfOk.reason));
+    const r = await DocumentPicker.getDocumentAsync({ type: types, copyToCacheDirectory: true, multiple: false });
     if (r.canceled || !r.assets?.[0]) return;
+    const a = r.assets[0];
+    if ((a.mimeType ?? '').startsWith('image/') || /\.(jpe?g|png|heic|heif|webp|tiff?|gif|bmp)$/i.test(a.name ?? '')) return void (await readImages([a.uri]));
+    if (!pdfOk.text) return setNote(pdfNote(pdfOk.reason));
     reset();
     setVia('pdf');
     setBusy(L('Lecture du PDF sur l’appareil…'));
@@ -291,9 +308,9 @@ export default function ImportProgram() {
   };
   const addIgnored = (l: IgnoredLine) => {
     setIgnored((g) => g.filter((x) => x !== l));
-    setSteps((ss) => [...(ss ?? []), { key: uid(), page: l.page, src: [l.text], ar: /[\u0600-\u06FF]/.test(l.text) ? l.text : '', latin: /[\u0600-\u06FF]/.test(l.text) ? '' : l.text, hint: '', count: '', unsure: false, alt: [], official: true, pick: null, confirmed: false }]);
+    setSteps((ss) => [...(ss ?? []), { key: uid(), page: l.page, src: [l.text], ar: /[\u0600-\u06FF]/.test(l.text) ? l.text : '', latin: /[\u0600-\u06FF]/.test(l.text) ? '' : l.text, hint: '', note: '', count: '', unsure: false, alt: [], official: true, pick: null, confirmed: false }]);
   };
-  const addEmpty = () => setSteps((ss) => [...(ss ?? []), { key: uid(), page: sel, src: [], ar: '', latin: '', hint: '', count: '', unsure: false, alt: [], official: true, pick: null, confirmed: false }]);
+  const addEmpty = () => setSteps((ss) => [...(ss ?? []), { key: uid(), page: sel, src: [], ar: '', latin: '', hint: '', note: '', count: '', unsure: false, alt: [], official: true, pick: null, confirmed: false }]);
 
   const resolved = (s: EStep, m: StepMatch): StepMatch => {
     if (m.type === 'loose') return confirmLoose(m, s.confirmed);
@@ -339,12 +356,16 @@ export default function ImportProgram() {
           <LBtn icon="clipboard-outline" label="Coller" solid onPress={() => void fromPaste()} />
           {canPhoto ? <LBtn icon="camera-outline" label="Photographier" onPress={() => void fromPhoto(true)} /> : null}
           {canPhoto ? <LBtn icon="images-outline" label="Choisir des photos" onPress={() => void fromPhoto(false)} /> : null}
-          <LBtn icon="document-outline" label="Importer un PDF" onPress={() => void fromPdf()} />
+          <LBtn icon="document-outline" label={ocr.ok ? 'Importer un fichier (PDF ou image)' : 'Importer un PDF'} onPress={() => void fromPdf()} />
           {pages.length || paste ? <LBtn icon="close" label="Effacer" onPress={() => { reset(); setPaste(''); setVia('paste'); }} /> : null}
         </View>
         {Platform.OS === 'web' ? (
           <View style={{ backgroundColor: t.warningBg, borderRadius: 10, padding: 10 }}>
             <Text style={{ color: t.warning, fontSize: 13 }}>Sur le web, Zikru lit les PDF contenant du texte et le texte collé. Les photos et les PDF scannés ne peuvent pas être lus ici : utilisez l’app iPhone, ou « Texte en direct » / Google Lens pour copier le texte puis « Coller ».</Text>
+          </View>
+        ) : ocr.ok && !ocr.arabic ? (
+          <View style={{ backgroundColor: t.warningBg, borderRadius: 10, padding: 10 }}>
+            <Text style={{ color: t.warning, fontSize: 13 }}>Cette version d’iOS ne lit pas l’écriture arabe sur les photos (iOS 18 ou plus) : seul le texte en écriture latine sera lu. Pour l’arabe, utilisez « Texte en direct » puis « Coller ».</Text>
           </View>
         ) : !ocr.ok || !pdfOk.text ? (
           <View style={{ backgroundColor: t.warningBg, borderRadius: 10, padding: 10 }}>
@@ -369,7 +390,7 @@ export default function ImportProgram() {
               multiline
               autoCorrect={false}
               spellCheck={false}
-              style={[field(), { minHeight: 140, fontSize: 18, textAlign: 'right', writingDirection: 'rtl', paddingVertical: 8, textAlignVertical: 'top' }]}
+              style={[field(), { minHeight: 140, fontSize: 18, textAlign: !paste.trim() || programHasArabic(paste) ? 'right' : 'left', writingDirection: !paste.trim() || programHasArabic(paste) ? 'rtl' : 'ltr', paddingVertical: 8, textAlignVertical: 'top' }]}
               accessibilityLabel={L('Texte du programme')}
             />
             <View style={{ flexDirection: 'row' }}>
@@ -418,9 +439,13 @@ export default function ImportProgram() {
                   {page.text ? (
                     <View style={{ marginTop: 8 }}>
                       <LMuted style={{ fontSize: 12, fontWeight: '700' }}>Texte lu sur cette page (lecture seule)</LMuted>
-                      <Arabic size={18} style={{ marginTop: 4 }}>
-                        {page.text}
-                      </Arabic>
+                      {programHasArabic(page.text) ? (
+                        <Arabic size={18} style={{ marginTop: 4 }}>
+                          {page.text}
+                        </Arabic>
+                      ) : (
+                        <Text style={{ color: b.ink, fontSize: 15, marginTop: 4 }}>{page.text}</Text>
+                      )}
                     </View>
                   ) : null}
                 </View>
@@ -435,6 +460,11 @@ export default function ImportProgram() {
                   <Text style={{ color: b.ink, fontWeight: '900', fontSize: 16 }} accessibilityRole="header">
                     {L('Étapes détectées : {n}', { n: steps.length })}
                   </Text>
+                  {langs.length ? (
+                    <LMuted style={{ fontSize: 12 }}>
+                      {L('Langues détectées (estimation) : {l}', { l: langs.map((c) => L(LANG_LABEL[c])).join(', ') })}
+                    </LMuted>
+                  ) : null}
                   <LMuted style={{ fontSize: 12 }}>Vérifiez chaque étape avec la page source. Ce programme restera personnel : il n’est pas validé par Zikru ni par une voie.</LMuted>
                   {steps.map((s, i) => {
                     const m = matches[i] ?? { type: 'none', reason: 'empty' };
@@ -462,6 +492,7 @@ export default function ImportProgram() {
                           </LMuted>
                         ) : null}
                         {s.hint && s.hint !== s.latin ? <LMuted style={{ fontSize: 12 }}>{L('Titre lu : {t}', { t: s.hint })}</LMuted> : null}
+                        {s.note ? <LMuted style={{ fontSize: 12 }}>{L('Lu sous la formule : {t}', { t: s.note })}</LMuted> : null}
                         {s.latin && !s.ar ? (
                           <TextInput value={s.latin} onChangeText={(v) => upd(s.key, { latin: v, pick: null, confirmed: false })} style={[field(), { marginTop: 8 }]} accessibilityLabel={L('Texte de l’étape {n}', { n: i + 1 })} />
                         ) : (

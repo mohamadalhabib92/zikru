@@ -1,5 +1,6 @@
 /** Reconnaissance de texte (photo → texte), toujours sur l’appareil. */
-export type OcrSupport = { ok: true; langs: string[] } | { ok: false; reason: 'web' | 'android' | 'needs-build' | 'no-arabic' };
+/** ok : langs = langues proposées par l’appareil (Vision), arabic = l’écriture arabe en fait partie (iOS 18+). */
+export type OcrSupport = { ok: true; langs: string[]; arabic: boolean } | { ok: false; reason: 'web' | 'android' | 'needs-build' | 'no-arabic' };
 export type OcrLine = { text: string; confidence: number; /** x, y, largeur, hauteur normalisées (origine en bas à gauche), si le build natif les fournit. */ box?: number[] };
 export type OcrResult = { text: string; lines: OcrLine[]; minConfidence: number };
 

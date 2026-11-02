@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Platform, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { L, useUiLang } from '@/lib/l10n';
-import { keepPhoto, ocrSupport, recognizeArabic } from '@/lib/ocr';
+import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { translationFor } from '@/lib/quran';
 import { normAr } from '@/lib/ar-norm';
 import { loadQuranIndex, matchQuran, type MatchResult, type QuranProposal } from '@/lib/quran-match';
@@ -177,7 +177,7 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
     setOcr('busy');
     setEditing(false);
     try {
-      const o = await recognizeArabic(r.assets[0].uri);
+      const o = await recognizeText(r.assets[0].uri);
       setOrig(o.text);
       setText(o.text);
       setConf(o.minConfidence);
