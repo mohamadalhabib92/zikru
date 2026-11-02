@@ -14,7 +14,7 @@ export const CONTROLLER = 'Mohamed El Habib Ba, Chemin de la Suettaz 17, 1008 Pr
 
 const fr: Policy = {
   title: 'Politique de confidentialité de Zikru',
-  updated: 'Dernière mise à jour : 30 octobre 2026 (version 1.0.24)',
+  updated: 'Dernière mise à jour : 2 novembre 2026 (version 1.0.29)',
   lead: 'Zikru fonctionne sans compte et sans publicité. Sans compte, vos compteurs, réglages et lectures restent sur votre appareil. Certaines fonctions facultatives envoient des données à des serveurs : elles sont décrites ci-dessous, une par une, et les plus sensibles ne s’activent qu’avec votre accord explicite.',
   sections: [
     {
@@ -96,7 +96,7 @@ const fr: Policy = {
       h: '8. Transferts à l’étranger',
       p: [
         'Les données du compte sont hébergées en Suisse. Supabase Inc. (États-Unis) peut y accéder en tant que sous-traitant, sur la base de ses garanties contractuelles (clauses contractuelles types). L’envoi des messages de Bilal aux États-Unis repose sur votre consentement explicite (art. 17 al. 1 let. a nLPD, art. 49 par. 1 let. a RGPD). La météo est traitée par un prestataire suisse.',
-        'Appels de groupe : le son et l’image passent par LiveKit Inc. (États-Unis), sous-traitant, sur la base de garanties contractuelles ; la région des serveurs est choisie à l’ouverture du service et sera indiquée ici.',
+        'Appels de groupe : le son et l’image passent par LiveKit Inc. (États-Unis), sous-traitant, sur la base de garanties contractuelles ; les serveurs d’appels utilisés pour Zikru sont situés dans l’Union européenne (Francfort, Allemagne).',
       ],
     },
     {
@@ -141,7 +141,7 @@ const fr: Policy = {
 
 const en: Policy = {
   title: 'Zikru privacy policy',
-  updated: 'Last updated: 30 October 2026 (version 1.0.24)',
+  updated: 'Last updated: 2 November 2026 (version 1.0.29)',
   lead: 'Zikru works without an account and without ads. Without an account, your counters, settings and reading stay on your device. Some optional features send data to servers: each is described below, and the most sensitive ones only turn on with your explicit consent.',
   sections: [
     {
@@ -223,7 +223,7 @@ const en: Policy = {
       h: '8. International transfers',
       p: [
         'Account data is hosted in Switzerland. Supabase Inc. (USA) may access it as a processor under its contractual safeguards (standard contractual clauses). Sending Bilal messages to the USA relies on your explicit consent (FADP art. 17(1)(a), GDPR art. 49(1)(a)). Weather is handled by a Swiss provider.',
-        'Group calls: sound and video go through LiveKit Inc. (USA), a processor, under contractual safeguards; the server region is chosen when the service opens and will be stated here.',
+        'Group calls: sound and video go through LiveKit Inc. (USA), a processor, under contractual safeguards; the call servers used for Zikru are located in the European Union (Frankfurt, Germany).',
       ],
     },
     {
@@ -269,7 +269,7 @@ const en: Policy = {
 
 const ar: Policy = {
   title: 'سياسة الخصوصية لتطبيق ذكرو',
-  updated: 'آخر تحديث: 30 أكتوبر 2026 (الإصدار 1.0.24)',
+  updated: 'آخر تحديث: 2 نوفمبر 2026 (الإصدار 1.0.29)',
   lead: 'يعمل ذكرو بدون حساب وبدون إعلانات. بدون حساب، تبقى عدّاداتك وإعداداتك وقراءتك على جهازك. بعض الميزات الاختيارية ترسل بيانات إلى خوادم: نصفها أدناه واحدةً واحدة، ولا تعمل أكثرها حساسيةً إلا بموافقتك الصريحة.',
   sections: [
     {
@@ -351,7 +351,7 @@ const ar: Policy = {
       h: '8. النقل إلى الخارج',
       p: [
         'بيانات الحساب مستضافة في سويسرا. وقد تصل إليها شركة Supabase Inc. (الولايات المتحدة) بصفتها معالجًا من الباطن وفق ضماناتها التعاقدية (البنود التعاقدية النموذجية). أما إرسال رسائل بلال إلى الولايات المتحدة فيقوم على موافقتك الصريحة (المادة 17 الفقرة 1 أ من القانون السويسري، والمادة 49 الفقرة 1 أ من اللائحة الأوروبية). ويعالج الطقسَ مزوّدٌ سويسري.',
-        'المكالمات الجماعية: يمر الصوت والصورة عبر شركة LiveKit Inc. (الولايات المتحدة)، بصفتها معالجًا من الباطن، على أساس ضمانات تعاقدية؛ تُختار منطقة الخوادم عند فتح الخدمة وستُذكر هنا.',
+        'المكالمات الجماعية: يمر الصوت والصورة عبر شركة LiveKit Inc. (الولايات المتحدة)، بصفتها معالجًا من الباطن، على أساس ضمانات تعاقدية؛ وتقع خوادم المكالمات المستخدمة لـ Zikru في الاتحاد الأوروبي (فرانكفورت، ألمانيا).',
       ],
     },
     {
