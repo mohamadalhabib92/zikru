@@ -1,4 +1,5 @@
 import { loadJSON, saveCacheJSON } from './storage';
+import { fetchWithRetry } from './net';
 
 /** Récitation de Mishary Rashid Alafasy — diffusée en streaming depuis des serveurs publics, jamais incluse dans l'app. */
 export const KAHF_AUDIO = ['https://cdn.mp3quran.net/audio/mishary-alafasy/r1/018.mp3', 'https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/18.mp3'];
@@ -14,7 +15,7 @@ export async function getKahfText(force = false): Promise<{ ayahs: Ayah[]; cache
   const cached = await loadJSON<Ayah[] | null>(KEY, null);
   if (cached?.length && !force) return { ayahs: cached, cached: true };
   try {
-    const r = await fetch(KAHF_TEXT_URL);
+    const r = await fetchWithRetry(KAHF_TEXT_URL);
     if (!r.ok) throw new Error(String(r.status));
     const j = (await r.json()) as { data: { ayahs: { numberInSurah: number; text: string }[] }[] };
     const [ar, fr, en] = j.data;

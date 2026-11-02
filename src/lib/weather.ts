@@ -7,6 +7,7 @@
 import { CITIES } from './prayer';
 import { coarsePoint, nearestCityLabel } from './privacy';
 import { loadJSON, saveCacheJSON } from './storage';
+import { fetchWithRetry } from './net';
 
 export type Weather = { temp: number; code: number; isDay: boolean; wind: number; feels?: number | null; max: number | null; min: number | null; city: string | null; at: number; lat: number; lng: number };
 
@@ -42,7 +43,7 @@ export async function getWeather(rawLat: number, rawLng: number, fallbackCity: s
   const cached = await loadJSON<Weather | null>(KEY, null);
   const near = cached && Math.abs(cached.lat - lat) < 0.05 && Math.abs(cached.lng - lng) < 0.05;
   if (cached && near && !force && cached.feels !== undefined && Date.now() - cached.at < TTL) return cached;
-  const r = await fetch(weatherUrl(lat, lng));
+  const r = await fetchWithRetry(weatherUrl(lat, lng), {}, { retries: 1 });
   if (!r.ok) {
     if (cached) return cached;
     throw new Error(`Open-Meteo ${r.status}`);
