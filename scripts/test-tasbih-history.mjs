@@ -141,6 +141,15 @@ test('affichage : une ligne close n\'est pas fusionnée', () => {
   assert.equal(C.groupSessions([b, a]).length, 2);
 });
 
+test('accessibilité : annonce tous les 10 comptes, au cycle atteint, jamais en baisse', () => {
+  assert.equal(C.tasbihAnnouncement(8, 9, false), null);
+  assert.equal(C.tasbihAnnouncement(9, 10, false), 'ten');
+  assert.equal(C.tasbihAnnouncement(18, 23, false), 'ten'); // lot Bluetooth qui franchit 20
+  assert.equal(C.tasbihAnnouncement(32, 33, true), 'goal');
+  assert.equal(C.tasbihAnnouncement(10, 0, false), null);
+  assert.equal(C.tasbihAnnouncement(20, 20, true), null);
+});
+
 if (fail) {
   console.error(`historique du tasbih : ${fail}/${n} échec(s)`);
   process.exit(1);

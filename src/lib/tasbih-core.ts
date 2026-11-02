@@ -119,3 +119,14 @@ export function groupSessions(sessions: TasbihSession[], gapMs = SESSION_GAP_MS)
   }
   return out.reverse();
 }
+
+/**
+ * v2 accessibilité : faut-il annoncer le compte au lecteur d'écran ?
+ * 'goal' quand un cycle est atteint, 'ten' quand une dizaine est franchie (même par un lot Bluetooth), sinon null.
+ * Jamais d'annonce quand le compte baisse (annulation, remise à zéro).
+ */
+export function tasbihAnnouncement(prev: number, next: number, goalReached: boolean): 'goal' | 'ten' | null {
+  if (!(next > prev)) return null;
+  if (goalReached) return 'goal';
+  return Math.floor(next / 10) > Math.floor(prev / 10) ? 'ten' : null;
+}

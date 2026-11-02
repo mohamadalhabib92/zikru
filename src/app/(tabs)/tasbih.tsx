@@ -1,7 +1,7 @@
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Platform, Pressable, View } from 'react-native';
+import { AccessibilityInfo, Animated, Platform, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
@@ -13,7 +13,7 @@ import { Arabic } from '@/ui/light';
 import { brand as b, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 import { uid } from '@/lib/storage';
-import { closeSession, groupSessions, resetCount, switchDhikr } from '@/lib/tasbih-core';
+import { closeSession, groupSessions, resetCount, switchDhikr, tasbihAnnouncement } from '@/lib/tasbih-core';
 
 export default function TasbihScreen() {
   const { t: tr } = useSettings();
@@ -50,6 +50,9 @@ export default function TasbihScreen() {
   useEffect(() => {
     // Vibration de réussite à chaque cycle complété (appui écran, Bluetooth ou clavier)
     if (tasbih.count > prev.current && done) tapHaptic('success');
+    // VoiceOver / TalkBack : annonce tous les 10 comptes (et à chaque cycle atteint), sans couper chaque appui.
+    const msg = tasbihAnnouncement(prev.current, tasbih.count, done);
+    if (msg !== null) AccessibilityInfo.announceForAccessibility(msg === 'goal' ? `${L('Objectif atteint')} · ${tasbih.count}` : String(tasbih.count));
     prev.current = tasbih.count;
   }, [tasbih.count, done]);
 
