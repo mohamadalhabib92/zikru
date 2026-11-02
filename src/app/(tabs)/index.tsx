@@ -599,3 +599,6 @@ function RoundBtn({ icon, label, onPress }: { icon: IconName; label: string; onP
     </Pressable>
   );
 }
+
+// v2 : erreur confinée à l'onglet (la barre d'onglets reste utilisable).
+export { TabErrorBoundary as ErrorBoundary } from '@/components/AppErrorBoundary';

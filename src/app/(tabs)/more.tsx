@@ -42,3 +42,6 @@ export default function More() {
   ];
   return <Hub title={tr.tab_more} eyebrow="Zikru" sections={sections} />;
 }
+
+// v2 : erreur confinée à l'onglet (la barre d'onglets reste utilisable).
+export { TabErrorBoundary as ErrorBoundary } from '@/components/AppErrorBoundary';

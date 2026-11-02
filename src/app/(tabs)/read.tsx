@@ -66,3 +66,6 @@ export default function Read() {
   ) : null;
   return <Hub title={tr.tab_read} eyebrow="Bibliothèque" sections={sections} top={top} />;
 }
+
+// v2 : erreur confinée à l'onglet (la barre d'onglets reste utilisable).
+export { TabErrorBoundary as ErrorBoundary } from '@/components/AppErrorBoundary';

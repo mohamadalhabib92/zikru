@@ -169,3 +169,6 @@ export default function Prayers() {
     </Screen>
   );
 }
+
+// v2 : erreur confinée à l'onglet (la barre d'onglets reste utilisable).
+export { TabErrorBoundary as ErrorBoundary } from '@/components/AppErrorBoundary';
