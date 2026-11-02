@@ -797,6 +797,7 @@ export const CAT: Record<string, string> = {
   "Le Noble Coran": "القرآن الكريم",
   "Le Saint Coran": "القرآن الكريم",
   "Le cercle est complet ({n} personnes maximum, créateur inclus).": "الحلقة مكتملة (الحد الأقصى {n} أشخاص، بمن فيهم المنشئ).",
+  "Le chargement prend plus de temps que prévu. Vos données restent sur l’appareil ; si rien ne change, fermez puis rouvrez Zikru.": "يستغرق التحميل وقتًا أطول من المتوقع. تبقى بياناتك على الجهاز؛ إن لم يتغير شيء فأغلق ذِكرو ثم أعد فتحه.",
   "Le groupe recevra un programme : les étapes s’enchaînent dans l’ordre et chacun compte avec le tasbih de groupe. Seul le texte validé est partagé : la photo reste sur votre appareil.": "ستتلقى المجموعة برنامجًا: تتوالى المراحل بالترتيب ويعدّ كل واحد بالتسبيح الجماعي. لا يُشارَك إلا النص المؤكَّد: تبقى الصورة على جهازك.",
   "Le lecteur PDF se charge à la demande et n’est pas gardé hors connexion : reconnectez-vous pour importer un PDF, ou collez le texte.": "يُحمَّل قارئ PDF عند الحاجة ولا يُحفَظ للاستخدام دون اتصال: أعد الاتصال لاستيراد ملف PDF، أو الصق النص.",
   "Le lien de connexion n’a pas fonctionné. Saisissez le code à 6 chiffres de l’e-mail, ou demandez un nouveau lien.": "لم يعمل رابط تسجيل الدخول. أدخل الرمز المكوّن من 6 أرقام الوارد في البريد، أو اطلب رابطًا جديدًا.",

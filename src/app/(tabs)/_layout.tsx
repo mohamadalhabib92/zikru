@@ -1,5 +1,8 @@
 import { Redirect, Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
+import { Text } from '@/ui/Text';
+import { L } from '@/lib/l10n';
 import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { useData } from '@/lib/data';
@@ -18,10 +21,23 @@ export default function TabsLayout() {
   const { width } = useWindowDimensions();
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
-  if (!ready || !dataReady)
+  const loading = !ready || !dataReady;
+  // v2 : chargement trop long → message (on n'avance jamais sans les données : cela écraserait les réglages enregistrés).
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!loading) return;
+    const id = setTimeout(() => setSlow(true), 8000);
+    return () => clearTimeout(id);
+  }, [loading]);
+  if (loading)
     return (
-      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={t.primary} />
+      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <ActivityIndicator color={t.primary} accessibilityLabel={L('Chargement…')} />
+        {slow ? (
+          <Text accessibilityLiveRegion="polite" style={{ color: t.muted, textAlign: 'center', marginTop: 16, maxWidth: 360 }}>
+            {L('Le chargement prend plus de temps que prévu. Vos données restent sur l’appareil ; si rien ne change, fermez puis rouvrez Zikru.')}
+          </Text>
+        ) : null}
       </View>
     );
   if (!s.onboarded) return <Redirect href="/onboarding" />;
