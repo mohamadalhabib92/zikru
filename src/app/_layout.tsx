@@ -16,6 +16,7 @@ import { SettingsProvider, useSettings } from '@/lib/settings';
 import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
 import { takePendingRoute } from '@/ui/appearance';
 import { FeedbackProvider } from '@/ui/motion';
+import { FocusPill } from '@/components/FocusKit';
 import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
@@ -122,7 +123,9 @@ function Root() {
         <Stack.Screen name="family/[id]" options={{ title: L("Ma famille") }} />
         <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
+        <Stack.Screen name="focus" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
       </Stack>
+      <FocusPill />
       <StorageAlert />
       </FeedbackProvider>
     </View>

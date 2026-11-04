@@ -1,0 +1,6 @@
+{
+  "name": "focus-lock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Épinglage d'écran Android (startLockTask) pour le Mode Focus — DÉSACTIVÉ tant qu'il n'est pas déplacé dans modules/."
+}

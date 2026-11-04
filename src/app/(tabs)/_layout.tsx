@@ -3,6 +3,7 @@ import { useWindowDimensions, View } from 'react-native';
 import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { useData } from '@/lib/data';
+import { useFocus } from '@/lib/focus';
 import { usePrayerReminders } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
 import { theme as t } from '@/ui/theme';
@@ -12,6 +13,8 @@ export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
   const { ready: dataReady } = useData();
   usePrayerReminders();
+  // Mode Focus : onglets / barre latérale masqués pendant la séance (aucun « switch » en un geste).
+  const focusOn = useFocus().active != null;
   const { width, fontScale } = useWindowDimensions();
   // Libellés d'onglets : suivent la taille de texte du système jusqu'à ×1,4, au-delà la barre déborderait.
   const tabFs = (n: number) => Math.round(n * Math.min(fontScale, 1.4));
@@ -39,7 +42,9 @@ export default function TabsLayout() {
         headerShadowVisible: false,
         tabBarPosition: sidebar ? 'left' : 'bottom',
         tabBarLabelPosition: sidebar ? 'beside-icon' : undefined,
-        tabBarStyle: sidebar
+        tabBarStyle: focusOn
+          ? { display: 'none' }
+          : sidebar
           ? { backgroundColor: t.surface, borderColor: t.border, minWidth: SIDEBAR_WIDTH, width: SIDEBAR_WIDTH, paddingTop: 24 }
           : { backgroundColor: t.surface, borderTopColor: t.border, minHeight: 60 },
         tabBarActiveTintColor: sidebar ? t.onPrimary : t.primary,

@@ -1,0 +1,64 @@
+# Mode Focus (04.11.2026) (ar : traduction à relire)
+Mode Focus	Focus Mode	وضع التركيز
+Un temps protégé, sans distraction : {min} minutes minimum.	Protected, distraction-free time: {min} minutes minimum.	وقت محفوظ بلا مشتتات: {min} دقائق على الأقل.
+Un temps protégé pour le dhikr, la lecture et la prière, sans distraction. {min} minutes minimum : on ne le quitte qu’à la fin.	Protected time for dhikr, reading and prayer, free of distractions. {min} minutes minimum: you only leave at the end.	وقت محفوظ للذكر والتلاوة والصلاة، بلا مشتتات. {min} دقائق على الأقل: لا تغادره إلا في نهايته.
+{n} minutes	{n} minutes	{n} دقيقة
+Pendant la séance	During the session	أثناء الجلسة
+Commencer · {n} min	Start · {n} min	ابدأ · {n} د
+Série : {n} j	Streak: {n} d	المواظبة: {n} يوم
+{s} séances · {m} min	{s} sessions · {m} min	{s} جلسة · {m} د
+Ce que fait le Mode Focus	What Focus Mode does	ما يفعله وضع التركيز
+Plein écran, barre d’onglets masquée, écran maintenu allumé, aucune notification ni bannière de l’app. Le minuteur se met en pause si vous quittez l’app. On ne sort qu’à la fin, ou par la sortie d’urgence.	Full screen, tab bar hidden, screen kept awake, no in-app notifications or banners. The timer pauses if you leave the app. You leave only at the end, or through the emergency exit.	ملء الشاشة، إخفاء شريط التبويبات، إبقاء الشاشة مضاءة، ولا إشعارات أو لافتات من التطبيق. يتوقف المؤقت مؤقتًا إذا غادرت التطبيق. لا تخرج إلا في النهاية، أو عبر مخرج الطوارئ.
+Ce que seul votre téléphone peut faire	What only your phone can do	ما لا يستطيعه إلا هاتفك
+Une app ne peut pas, à elle seule, verrouiller le téléphone ni couper les notifications des autres apps. Réglez une fois l’Accès guidé (iPhone) ou l’épinglage d’écran (Android) : le téléphone restera alors sur l’app.	An app cannot, on its own, lock the phone or silence other apps’ notifications. Set up Guided Access (iPhone) or screen pinning (Android) once and the phone will stay on the app.	لا يستطيع تطبيق وحده قفل الهاتف أو إسكات إشعارات التطبيقات الأخرى. اضبط مرة واحدة «الوصول الموجّه» (iPhone) أو تثبيت الشاشة (Android)، وسيبقى الهاتف على التطبيق.
+restantes	remaining	متبقية
+En pause	Paused	متوقف مؤقتًا
+Continuer : {what}	Continue: {what}	متابعة: {what}
+Respirez. Restez avec ce moment ; le minuteur veille pour vous.	Breathe. Stay with this moment; the timer keeps watch for you.	تنفّس. ابقَ مع هذه اللحظة؛ المؤقت يرعاها لك.
+Vous avez quitté l’app ({d}). Le minuteur s’était mis en pause ; il reprend maintenant.	You left the app ({d}). The timer paused and is resuming now.	غادرت التطبيق ({d}). توقف المؤقت مؤقتًا وهو يستأنف الآن.
+D’accord	OK	حسنًا
+Sortie d’urgence	Emergency exit	مخرج الطوارئ
+Maintenez…	Keep holding…	واصل الضغط…
+Maintenez 3 secondes	Hold for 3 seconds	اضغط مطولًا 3 ثوانٍ
+Maintenez trois secondes, puis confirmez, pour quitter avant la fin.	Hold for three seconds, then confirm, to leave before the end.	اضغط مطولًا ثلاث ثوانٍ ثم أكّد، للمغادرة قبل النهاية.
+Quitter le Mode Focus ?	Leave Focus Mode?	مغادرة وضع التركيز؟
+Il reste {n} min. La séance sera notée comme interrompue et ne comptera pas dans votre série.	{n} min left. The session will be marked as interrupted and won’t count toward your streak.	بقيت {n} د. ستُسجَّل الجلسة على أنها مقطوعة ولن تُحتسب في مواظبتك.
+Quitter quand même	Leave anyway	المغادرة رغم ذلك
+Je reste	I’ll stay	سأبقى
+Séance accomplie	Session complete	اكتملت الجلسة
+{n} minutes de concentration. Bravo.	{n} minutes of focus. Well done.	{n} دقيقة من التركيز. بارك الله فيك.
+Interruptions : {n}	Interruptions: {n}	الانقطاعات: {n}
+Sans interruption	No interruptions	بلا انقطاع
+Mode Focus lancé : {n} minutes.	Focus Mode started: {n} minutes.	بدأ وضع التركيز: {n} دقيقة.
+Il reste {n} minutes.	{n} minutes left.	بقيت {n} دقيقة.
+Il reste 1 minute.	1 minute left.	بقيت دقيقة واحدة.
+Mode Focus interrompu.	Focus Mode interrupted.	انقطع وضع التركيز.
+Mode Focus, il reste {t}. Touchez pour revenir au minuteur.	Focus Mode, {t} left. Tap to return to the timer.	وضع التركيز، بقي {t}. المس للعودة إلى المؤقت.
+Verrouiller le téléphone sur l’app	Lock the phone to the app	قفل الهاتف على التطبيق
+À régler une seule fois. Ensuite, pendant le Mode Focus, le téléphone reste sur l’app jusqu’à ce que vous le libériez.	Set this up once. Then, during Focus Mode, the phone stays on the app until you release it.	يُضبط مرة واحدة. بعدها، أثناء وضع التركيز، يبقى الهاتف على التطبيق حتى تحرّره.
+Dans un navigateur, aucun site ne peut verrouiller l’appareil : utilisez l’Accès guidé ou l’épinglage de votre téléphone.	In a browser, no website can lock the device: use your phone’s Guided Access or screen pinning.	في المتصفح لا يستطيع أي موقع قفل الجهاز: استخدم «الوصول الموجّه» أو تثبيت الشاشة في هاتفك.
+iPhone · Accès guidé	iPhone · Guided Access	iPhone · الوصول الموجّه
+Réglages › Accessibilité › Accès guidé : activez-le, puis « Réglages des codes » pour choisir un code.	Settings › Accessibility › Guided Access: turn it on, then “Passcode Settings” to choose a passcode.	الإعدادات › تسهيلات الاستخدام › الوصول الموجّه: فعّله، ثم «إعدادات رمز الدخول» لاختيار رمز.
+Lancez le Mode Focus, puis triple-cliquez sur le bouton latéral (ou le bouton principal) et touchez « Démarrer ».	Start Focus Mode, then triple-click the side (or Home) button and tap “Start”.	ابدأ وضع التركيز، ثم انقر ثلاث مرات على الزر الجانبي (أو زر الشاشة الرئيسية) والمس «بدء».
+Pour sortir à la fin : triple-clic, puis votre code (ou Face ID).	To leave at the end: triple-click, then your passcode (or Face ID).	للخروج في النهاية: انقر ثلاث مرات ثم أدخل رمزك (أو Face ID).
+iPhone · Concentration « {name} »	iPhone · “{name}” Focus	iPhone · تركيز «{name}»
+Réglages › Concentration › + › Personnaliser : nommez-la « {name} ».	Settings › Focus › + › Custom: name it “{name}”.	الإعدادات › التركيز › + › مخصص: سمِّه «{name}».
+Notifications : n’autorisez que les personnes et apps vraiment essentielles.	Notifications: allow only the people and apps that truly matter.	الإشعارات: اسمح فقط بالأشخاص والتطبيقات الضرورية حقًا.
+Facultatif : ajoutez un filtre de concentration et un écran d’accueil épuré.	Optional: add a Focus filter and a pared-down Home Screen.	اختياري: أضف فلتر تركيز وشاشة رئيسية مبسّطة.
+Avant chaque séance : Centre de contrôle › Concentration › « {name} ».	Before each session: Control Center › Focus › “{name}”.	قبل كل جلسة: مركز التحكم › التركيز › «{name}».
+Android · Épinglage d’écran	Android · Screen pinning	Android · تثبيت الشاشة
+Paramètres › Sécurité (parfois « Sécurité et confidentialité › Plus ») › Épinglage d’application : activez-le.	Settings › Security (sometimes “Security & privacy › More”) › App pinning: turn it on.	الإعدادات › الأمان (أحيانًا «الأمان والخصوصية › المزيد») › تثبيت التطبيق: فعّله.
+Lancez le Mode Focus, ouvrez les apps récentes, touchez l’icône de l’app puis « Épingler ».	Start Focus Mode, open Recents, tap the app icon, then “Pin”.	ابدأ وضع التركيز، افتح التطبيقات الأخيرة، المس أيقونة التطبيق ثم «تثبيت».
+Pour sortir à la fin : maintenez Retour et Aperçu (ou balayez vers le haut et maintenez).	To leave at the end: hold Back and Overview (or swipe up and hold).	للخروج في النهاية: اضغط مطولًا على «رجوع» و«نظرة عامة» (أو اسحب لأعلى وثبّت).
+Ne pas déranger : balayez depuis le haut de l’écran › Ne pas déranger.	Do Not Disturb: swipe down from the top › Do Not Disturb.	عدم الإزعاج: اسحب من أعلى الشاشة › عدم الإزعاج.
+Pourquoi pas automatiquement ? Sur un téléphone personnel, iOS ne laisse aucune app se verrouiller elle-même ni couper les notifications des autres apps : c’est réservé aux appareils gérés (MDM) ou à l’API Temps d’écran, soumise à l’accord d’Apple. Sur Android, l’épinglage demande toujours votre confirmation.	Why not automatic? On a personal phone, iOS lets no app lock itself or silence other apps’ notifications: that is reserved for managed (MDM) devices or the Screen Time API, which requires Apple’s approval. On Android, pinning always asks for your confirmation.	لماذا ليس تلقائيًا؟ على هاتف شخصي لا يسمح iOS لأي تطبيق بقفل نفسه أو إسكات إشعارات التطبيقات الأخرى: هذا محصور في الأجهزة المُدارة (MDM) أو في واجهة «مدة استخدام الجهاز» التي تتطلب موافقة Apple. وعلى Android يطلب التثبيت دائمًا تأكيدك.
+Ouvrir les Réglages	Open Settings	فتح الإعدادات
+Réglages s’ouvre sur la page de l’app : touchez « Réglages » en haut à gauche pour revenir au menu principal.	Settings opens on the app’s page: tap “Settings” at the top left to get back to the main menu.	تُفتح الإعدادات على صفحة التطبيق: المس «الإعدادات» أعلى اليسار للعودة إلى القائمة الرئيسية.
+Épingler l’app maintenant	Pin the app now	ثبّت التطبيق الآن
+C’est compris	Got it	فهمت
+Rester sur le minuteur	Stay on the timer	البقاء على المؤقت
+Égrener mon tasbih	Count my tasbih	عدّ تسبيحي
+Mes dhikrs du jour	My dhikr for today	أذكاري لليوم
+Mode Focus et verrouillage	Focus Mode and locking	وضع التركيز والقفل
+Prière	Prayer	الصلاة
+Prière, lecture, dhikr · {min} min minimum, sans distraction	Prayer, reading, dhikr · {min} min minimum, no distractions	صلاة، تلاوة، ذكر · {min} د على الأقل، بلا مشتتات

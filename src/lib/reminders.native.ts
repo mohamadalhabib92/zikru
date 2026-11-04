@@ -6,6 +6,7 @@ import { planHash } from './notify-plan';
 import { planFor } from './reminders-common';
 import { useSettings } from './settings';
 import { loadJSON, saveJSON } from './storage';
+import { focusActive } from './focus';
 
 /**
  * Rappels natifs (iOS/Android) : notifications LOCALES programmées à l’avance (aucun serveur, aucun push distant).
@@ -17,7 +18,11 @@ export const remindersSupported = () => true;
 export const remindersNative = true;
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  // Mode Focus : pas de bannière ni de son pendant la séance ; la notification reste dans le Centre de notifications.
+  handleNotification: async () => {
+    const quiet = focusActive();
+    return { shouldShowBanner: !quiet, shouldShowList: true, shouldPlaySound: !quiet, shouldSetBadge: false };
+  },
 });
 
 const CHANNEL = 'prayers';

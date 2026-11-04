@@ -9,6 +9,7 @@ import { AccessibilityInfo, Animated, Easing, Platform, Pressable, StyleSheet, V
 import { Text } from '@/ui/Text';
 import { haptic, type HapticKind } from './haptics';
 import { announce, screenReaderOn } from './access';
+import { focusActive } from '@/lib/focus';
 import { theme as T } from './theme';
 
 const native = Platform.OS !== 'web';
@@ -178,11 +179,15 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const [cel, setCel] = useState<(Celebration & { k: number }) | null>(null);
   const [tst, setTst] = useState<(Toast & { k: number }) | null>(null);
   const celebrate = useCallback((c: Celebration) => {
+    // Mode Focus : aucun badge ni pastille de réussite ne vient interrompre la séance.
+    if (focusActive()) return;
     haptic('success');
     setCel({ ...c, k: Date.now() });
   }, []);
   const toast = useCallback((x: Toast | string) => {
     const t2 = typeof x === 'string' ? { text: x } : x;
+    // Mode Focus : confirmations tues (les erreurs restent visibles).
+    if (focusActive() && t2.tone !== 'danger') return;
     haptic(t2.tone === 'danger' ? 'warning' : 'select');
     setTst({ ...t2, k: Date.now() });
   }, []);
