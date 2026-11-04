@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AudioBar } from '@/components/quran/AudioBar';
@@ -23,6 +23,7 @@ import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import { NuraniText } from '@/components/quran/NuraniText';
 import { L } from '@/lib/l10n';
+import { VerseSkeleton } from '@/ui/ds';
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1);
 
@@ -173,9 +174,7 @@ export default function Mushaf() {
       />
       <View style={{ flex: 1 }} onLayout={(e) => setH(e.nativeEvent.layout.height)}>
       {!all || !h ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={pal.accent} />
-        </View>
+        <VerseSkeleton color={pal.line} rows={5} />
       ) : (
         <FlatList
           ref={list}

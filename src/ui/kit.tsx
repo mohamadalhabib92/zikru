@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
+import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { currentScheme, elevation, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
+import { haptic } from './haptics';
+import { FadeIn, PressableScale, prefersReducedMotion } from './motion';
 
 const S = () => getStyles();
 
@@ -61,14 +63,16 @@ export function Eyebrow({ children, style }: { children: ReactNode; style?: Styl
 export function Card({ children, style, onPress, accessibilityLabel }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; accessibilityLabel?: string }) {
   if (onPress) {
     return (
-      <Pressable
+      <PressableScale
         onPress={onPress}
+        scaleTo={0.985}
+        hapticKind="select"
         accessibilityRole="button"
         accessibilityLabel={typeof accessibilityLabel === "string" ? L(accessibilityLabel) : accessibilityLabel}
-        style={({ pressed }) => [S().card, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, style]}
+        style={({ pressed }) => [S().card, pressed && { opacity: 0.94 }, style]}
       >
         {children}
-      </Pressable>
+      </PressableScale>
     );
   }
   return <View style={[S().card, style]}>{children}</View>;
@@ -109,8 +113,10 @@ export function Button({
   const fg = { primary: t.onPrimary, secondary: t.text, ghost: t.primary, danger: t.surface }[variant];
   const off = disabled || loading;
   return (
-    <Pressable
+    <PressableScale
       onPress={off ? undefined : onPress}
+      disabled={!!off}
+      hapticKind={off ? null : variant === 'danger' ? 'warning' : 'tap'}
       accessibilityRole="button"
       accessibilityLabel={L(accessibilityLabel ?? title)}
       accessibilityState={{ disabled: !!off, busy: !!loading }}
@@ -120,7 +126,7 @@ export function Button({
         small && S().btnSmall,
         { backgroundColor: bg },
         variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
-        pressed && !off && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+        pressed && !off && { opacity: 0.9 },
         off && { opacity: 0.45 },
         style,
       ]}
@@ -133,7 +139,7 @@ export function Button({
           <Text maxFontSizeMultiplier={1.35} style={[S().btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -155,18 +161,21 @@ export function IconButton({ icon, onPress, label, color = t.text, size = 22 }: 
 export function Chip({ label, active, onPress, color }: { label: string; active?: boolean; onPress?: () => void; color?: string }) {
   const c = color ?? t.primary;
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      disabled={!onPress}
+      scaleTo={0.95}
+      hapticKind="select"
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       style={({ pressed }) => [
         S().chip,
         { borderColor: active ? c : t.border, backgroundColor: active ? c : 'transparent' },
-        pressed && { opacity: 0.8 },
+        pressed && { opacity: 0.85 },
       ]}
     >
       <Text maxFontSizeMultiplier={1.35} style={{ color: active ? (color ? '#fff' : t.onPrimary) : t.text, fontWeight: '600', fontSize: 14, flexShrink: 1, textAlign: 'center' }}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -212,7 +221,10 @@ export function Segmented<T extends string | number>({ options, value, onChange,
           return (
             <Pressable
               key={String(o.value)}
-              onPress={() => onChange(o.value)}
+              onPress={() => {
+                if (o.value !== value) haptic('select');
+                onChange(o.value);
+              }}
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
               style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
@@ -229,7 +241,10 @@ export function Segmented<T extends string | number>({ options, value, onChange,
 export function Toggle({ label, value, onChange, hint }: { label: string; value: boolean; onChange: (v: boolean) => void; hint?: string }) {
   return (
     <Pressable
-      onPress={() => onChange(!value)}
+      onPress={() => {
+        haptic('select');
+        onChange(!value);
+      }}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={typeof label === "string" ? L(label) : label}
@@ -239,23 +254,39 @@ export function Toggle({ label, value, onChange, hint }: { label: string; value:
         <Body>{label}</Body>
         {hint ? <Muted style={{ fontSize: 13 }}>{hint}</Muted> : null}
       </View>
-      <View style={[S().track, { backgroundColor: value ? t.primary : t.border }]}>
-        <View style={[S().thumb, { alignSelf: value ? 'flex-end' : 'flex-start' }]} />
-      </View>
+      <SpringSwitch on={value} />
     </Pressable>
+  );
+}
+
+/** Interrupteur à ressort (piste qui se colore, pastille qui glisse). */
+function SpringSwitch({ on }: { on: boolean }) {
+  const x = useState(() => new Animated.Value(on ? 1 : 0))[0];
+  useEffect(() => {
+    if (prefersReducedMotion()) x.setValue(on ? 1 : 0);
+    else Animated.spring(x, { toValue: on ? 1 : 0, speed: 20, bounciness: 6, useNativeDriver: false }).start();
+  }, [on, x]);
+  const bg = x.interpolate({ inputRange: [0, 1], outputRange: [t.border, t.primary] });
+  const tx = x.interpolate({ inputRange: [0, 1], outputRange: [0, 20] });
+  return (
+    <Animated.View style={[S().track, { backgroundColor: bg }]}>
+      <Animated.View style={[S().thumb, { transform: [{ translateX: tx }] }]} />
+    </Animated.View>
   );
 }
 
 export function Empty({ icon = 'sparkles-outline', title, text, action }: { icon?: IconName; title: string; text?: string; action?: ReactNode }) {
   return (
-    <View style={S().empty}>
-      <View style={S().emptyIcon}>
-        <Ionicons name={icon} size={28} color={t.accent} />
+    <FadeIn style={S().empty}>
+      <View style={S().emptyHalo}>
+        <View style={S().emptyIcon}>
+          <Ionicons name={icon} size={30} color={t.accent} />
+        </View>
       </View>
       <Text style={[S().h2, { textAlign: 'center', marginBottom: 6 }]}>{title}</Text>
       {text ? <Muted style={{ textAlign: 'center', marginBottom: 14 }}>{text}</Muted> : null}
       {action}
-    </View>
+    </FadeIn>
   );
 }
 
@@ -277,9 +308,10 @@ export function Notice({ tone = 'info', title, text, icon }: { tone?: 'info' | '
 export function ListItem({ title, subtitle, right, icon, onPress }: { title: string; subtitle?: string; right?: ReactNode; icon?: IconName; onPress?: () => void }) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={onPress ? () => { haptic('select'); onPress(); } : undefined}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? L(subtitle ? `${title}. ${subtitle}` : title) : undefined}
       style={({ pressed }) => [S().li, pressed && { backgroundColor: t.surfaceAlt }]}
     >
       {icon ? (
@@ -383,7 +415,8 @@ const makeStyles = () => StyleSheet.create({
   track: { width: 50, height: 30, borderRadius: 15, padding: 3, justifyContent: 'center' },
   thumb: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff', ...shadow(1) },
   empty: { alignItems: 'center', padding: 28, borderRadius: 18, borderWidth: 1, borderStyle: 'dashed', borderColor: t.border, backgroundColor: t.surface, marginBottom: 12 },
-  emptyIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: t.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  emptyHalo: { width: 96, height: 96, borderRadius: 48, backgroundColor: t.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', ...shadow(1) },
   notice: { flexDirection: 'row', gap: 10, padding: 12, borderRadius: t.radius - 4, marginBottom: 12 },
   li: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 8, paddingHorizontal: 4, borderRadius: 10 },
   liIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: t.surfaceAlt, alignItems: 'center', justifyContent: 'center' },

@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { HideText } from '@/components/quran/HideText';
@@ -19,6 +19,8 @@ import { SURAHS } from '@/lib/surahs';
 import { useRecitation } from '@/lib/use-recitation';
 import { alpha, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { VerseSkeleton } from '@/ui/ds';
+import { useCelebrateWhen } from '@/ui/motion';
 
 const HIDES: { label: string; value: HideMode; a11y: string }[] = [
   { label: 'Texte', value: 'none', a11y: 'Texte visible' },
@@ -140,7 +142,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
         </View>
 
         {!all ? (
-          <ActivityIndicator color={pal.accent} style={{ marginTop: 30 }} />
+          <VerseSkeleton color={pal.line} rows={2} style={{ marginTop: 10 }} />
         ) : (
           verses.map((a, i) => {
             const k = gIndex(s, a);
@@ -221,7 +223,8 @@ function Review({ pal }: { pal: Pal }) {
     setItems([...q.sabaq.map((k) => ({ k, part: 'Sabaq · leçon du jour' })), ...q.sabqi.map((k) => ({ k, part: 'Sabqi · révision récente' })), ...q.manzil.map((k) => ({ k, part: 'Manzil · révision ancienne' }))]);
   }, [ready, cards, items]);
   const mode: HideMode = hp.hide === 'none' ? 'all' : hp.hide;
-  if (!items || !all) return <ActivityIndicator color={pal.accent} style={{ marginTop: 60 }} />;
+  useCelebrateWhen(items && items.length > 0 ? i >= items.length : null, { title: 'Révision terminée', subtitle: 'Qu’Allah vous facilite la préservation de Son Livre.', icon: 'sparkles', tone: 'gold' });
+  if (!items || !all) return <VerseSkeleton color={pal.line} style={{ marginTop: 40 }} />;
   const done = i >= items.length;
   const size = rp.arSize + 4;
   if (done)

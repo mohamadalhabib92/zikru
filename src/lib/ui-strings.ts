@@ -688,6 +688,8 @@ export const UI_STRINGS: Record<string, [en: string, ar: string]> = {
   "Ma famille · Usra": ["My family · Usra","عائلتي · الأسرة"],
   "Ma liste ·": ["My list ·","قائمتي ·"],
   "Mabrouk, khatma terminée !": ["Mabrouk, khatma completed!","مبارك، تمت الختمة!"],
+  "Qu’Allah l’accepte de vous.": ["May Allah accept it from you.","تقبّل الله منكم."],
+  "Qu’Allah vous facilite la préservation de Son Livre.": ["May Allah make preserving His Book easy for you.","يسّر الله لكم حفظ كتابه."],
   "Machā’Allāh ! 🌟": ["Mashā’Allāh! 🌟","ما شاء الله! 🌟"],
   "Machā’Allāh, vous l’avez fait ensemble !": ["Mashā’Allāh, you did it together!","ما شاء الله، أنجزتموه معًا!"],
   "Maghribi": ["Maghribi","المغربي"],

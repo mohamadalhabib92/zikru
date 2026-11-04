@@ -14,6 +14,7 @@ import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
 import { takePendingRoute } from '@/ui/appearance';
+import { FeedbackProvider } from '@/ui/motion';
 import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
@@ -63,6 +64,7 @@ function Root() {
   if (!fontsLoaded && !fontTimeout) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
     <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
+      <FeedbackProvider>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -120,6 +122,7 @@ function Root() {
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
       </Stack>
       <StorageAlert />
+      </FeedbackProvider>
     </View>
   );
 }

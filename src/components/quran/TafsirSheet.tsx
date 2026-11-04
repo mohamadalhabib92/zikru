@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { getTafsir, TAFSIRS } from '@/lib/quran-reader-data';
 import { shared, useShared } from '@/lib/shared-state';
@@ -7,6 +7,7 @@ import { SURAHS } from '@/lib/surahs';
 import type { Pal } from './palette';
 import { QBtn, QChoice, Sheet } from './Sheet';
 import { L } from '@/lib/l10n';
+import { VerseSkeleton } from '@/ui/ds';
 
 const tafsirChoice = shared<string>('qr-tafsir', 'muyassar');
 
@@ -46,7 +47,7 @@ export function TafsirSheet({ verse, onClose, pal, arabic }: { verse: { s: numbe
             <QBtn icon="refresh" label="Réessayer" onPress={() => setN((x) => x + 1)} pal={pal} />
           </View>
         ) : (
-          <ActivityIndicator color={pal.accent} />
+          <VerseSkeleton color={pal.line} rows={2} style={{ padding: 0 }} />
         )}
       </View>
       <Text style={{ color: pal.muted, fontSize: 11, marginTop: 10 }}>Source : {t.src}. Les tafsirs sont donnés tels que publiés ; pour une question de jurisprudence, référez-vous à un savant.</Text>

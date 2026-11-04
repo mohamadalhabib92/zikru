@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { useAyahFlow } from '@/components/quran/AyahFlow';
@@ -20,6 +20,7 @@ import { useRecitation } from '@/lib/use-recitation';
 import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { VerseSkeleton } from '@/ui/ds';
 
 /** Lecteur verset par verset : texte uthmani, traduction et translittération optionnelles, récitation suivie. */
 export default function SurahReader() {
@@ -124,9 +125,7 @@ export default function SurahReader() {
         <Text style={{ color: pal.muted, fontSize: 12, fontWeight: '700' }}>{`${top}/${meta[4]}`}</Text>
       </View>
       {!ar ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={pal.accent} />
-        </View>
+        <VerseSkeleton color={pal.line} />
       ) : (
         <FlatList
           ref={list}

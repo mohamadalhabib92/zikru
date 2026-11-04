@@ -16,6 +16,7 @@ import { Container, FadeIn, HeroHeader, ProgressBar, SectionHeader } from '@/ui/
 import { Button, Segmented } from '@/ui/kit';
 import { alpha, brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { useCelebrateWhen } from '@/ui/motion';
 
 const PLANS = [
   { days: 7, label: '7 jours', sub: '≈ 87 p./jour' },
@@ -42,6 +43,7 @@ export default function KhatmaScreen() {
   const pal = readerPalette('auto');
   const st = k ? khatmaStatus(k, today) : null;
   const sk = streak(days, today);
+  useCelebrateWhen(st ? st.finished : null, { title: 'Mabrouk, khatma terminée !', subtitle: 'Qu’Allah l’accepte de vous.', icon: 'ribbon', tone: 'gold' });
   const slot = s.notif.quran ?? 'off';
   const setSlot = async (v: 'off' | 'fajr' | 'isha') => {
     if (v !== 'off' && !s.reminders) {

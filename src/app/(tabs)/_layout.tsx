@@ -1,11 +1,12 @@
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { useData } from '@/lib/data';
 import { usePrayerReminders } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
 import { theme as t } from '@/ui/theme';
+import { Breathing } from '@/ui/motion';
 
 export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
@@ -17,7 +18,9 @@ export default function TabsLayout() {
   if (!ready || !dataReady)
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={t.primary} />
+        <Breathing color={t.primary}>
+          <Ionicons name="moon-outline" size={28} color={t.primary} />
+        </Breathing>
       </View>
     );
   if (!s.onboarded) return <Redirect href="/onboarding" />;

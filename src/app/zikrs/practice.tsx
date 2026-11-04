@@ -15,6 +15,7 @@ import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { L, useUiLang } from '@/lib/l10n';
+import { useCelebrateWhen } from '@/ui/motion';
 
 function Bar({ ratio, color, h = 8 }: { ratio: number; color: string; h?: number }) {
   return (
@@ -50,6 +51,7 @@ export default function Practice() {
   const z = useMemo(() => (stored ? { ...stored, items: withFatiha(stored.items, fatihaOn) } : undefined), [stored, fatihaOn]);
   const [st, setSt] = useState<PracticeState>({ step: 0, count: 0 });
   const [finished, setFinished] = useState(false);
+  useCelebrateWhen(finished, { title: 'Composition terminée', subtitle: 'تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ', icon: 'checkmark-circle', tone: 'success' });
   const zRef = useRef<Zikr | undefined>(z);
   useEffect(() => {
     if (z) zRef.current = z;

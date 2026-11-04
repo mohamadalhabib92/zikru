@@ -1,10 +1,11 @@
 import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { useAuth } from '@/lib/community/auth';
-import { Muted, Screen, Spacer } from '@/ui/kit';
+import { Ionicons, Muted, Screen, Spacer } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { Breathing } from '@/ui/motion';
 
 /**
  * Retour du lien magique (PWA : …/zikru/auth-callback?code=… ; natif : zikru://auth-callback?code=…).
@@ -31,7 +32,9 @@ export default function AuthCallback() {
     <Screen>
       <Stack.Screen options={{ title: L('Connexion') }} />
       <View style={{ alignItems: 'center', paddingTop: 48 }}>
-        <ActivityIndicator color={b.green} />
+        <Breathing color={b.green}>
+          <Ionicons name="key-outline" size={26} color={b.green} />
+        </Breathing>
         <Spacer />
         <Muted>Connexion en cours…</Muted>
       </View>
