@@ -1,6 +1,7 @@
 /** Retour sensoriel natif : expo-haptics + sons courts (assets/audio/click.wav, success.wav, générés). */
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
+import { vibrationsEnabled } from '@/ui/access';
 
 let players: { tap: AudioPlayer; cycle: AudioPlayer } | null = null;
 function getPlayers() {
@@ -14,7 +15,7 @@ function getPlayers() {
   return players;
 }
 export function feedback(kind: 'tap' | 'cycle', opts: { sound: boolean; haptics: boolean }) {
-  if (opts.haptics) void (kind === 'cycle' ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success) : Haptics.selectionAsync()).catch(() => {});
+  if (opts.haptics && vibrationsEnabled()) void (kind === 'cycle' ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success) : Haptics.selectionAsync()).catch(() => {});
   if (opts.sound) {
     const p = getPlayers()?.[kind];
     if (p) {

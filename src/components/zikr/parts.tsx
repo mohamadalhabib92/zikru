@@ -11,6 +11,7 @@ import { Ionicons, type IconName } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { useReducedTransparency } from '@/ui/access';
 
 const SYSC = {
   get mashriqi() {
@@ -153,6 +154,7 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
   const router = useRouter();
   const [name, setName] = useState('');
   const [done, setDone] = useState<string | null>(null);
+  const solid = useReducedTransparency();
   if (!item) return null;
   const close = () => {
     setDone(null);
@@ -167,16 +169,18 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
   return (
     <Modal transparent animationType="fade" visible onRequestClose={close}>
       <Pressable
+        accessibilityRole="button"
         accessibilityLabel={L("Fermer")}
         onPress={close}
         style={{
           flex: 1,
-          backgroundColor: '#0008',
+          backgroundColor: solid ? '#000000E0' : '#0008',
           justifyContent: 'flex-end',
           alignItems: 'center',
         }}
       >
         <Pressable
+          accessible={false}
           onPress={() => {}}
           style={{
             width: '100%',

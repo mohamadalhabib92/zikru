@@ -15,7 +15,8 @@ import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
 import { DEFAULT_CONSENT } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
-import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer, Toggle } from '@/ui/kit';
+import { useVibrations } from '@/ui/access';
 import { L } from '@/lib/l10n';
 
 export default function SettingsScreen() {
@@ -30,6 +31,7 @@ export default function SettingsScreen() {
   };
   const [consent, choose] = useConsent();
   const pt = privacyText(s.lang);
+  const [vibrations, setVibrations] = useVibrations();
   return (
     <Screen>
       <Eyebrow>{tr.settings_title}</Eyebrow>
@@ -48,6 +50,7 @@ export default function SettingsScreen() {
           setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
         }}
       />
+      <Toggle label="Vibrations" hint="Petits retours tactiles quand vous touchez un bouton ou terminez un cycle." value={vibrations} onChange={setVibrations} />
       <H2>{tr.language}</H2>
       <Row wrap>
         {LANGS.map((l) => (

@@ -6,16 +6,18 @@ import { Ionicons, type IconName } from '@/ui/kit';
 import { alpha } from '@/ui/theme';
 import type { Pal } from './palette';
 import { L } from '@/lib/l10n';
+import { useReducedTransparency } from '@/ui/access';
 
 /** Feuille modale du bas, aux couleurs du lecteur. */
 export function Sheet({ visible, onClose, title, subtitle, pal, children, footer }: { visible: boolean; onClose: () => void; title: string; subtitle?: string; pal: Pal; children: ReactNode; footer?: ReactNode }) {
   const insets = useSafeAreaInsets();
+  const solid = useReducedTransparency();
   if (!visible) return null;
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Pressable accessibilityLabel={L("Fermer")} onPress={onClose} style={{ flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 640, maxHeight: '88%', backgroundColor: pal.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: Math.max(insets.bottom, 12) }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={L("Fermer")} onPress={onClose} style={{ flex: 1, backgroundColor: solid ? '#000000E0' : '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <Pressable accessible={false} onPress={() => {}} style={{ width: '100%', maxWidth: 640, maxHeight: '88%', backgroundColor: pal.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: Math.max(insets.bottom, 12) }}>
             <View style={{ alignItems: 'center', paddingTop: 8 }}>
               <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: alpha(pal.muted, 0.4) }} />
             </View>
@@ -42,7 +44,7 @@ export function Sheet({ visible, onClose, title, subtitle, pal, children, footer
 }
 
 /** Bouton pastille du lecteur. */
-export function QBtn({ icon, label, onPress, pal, active, solid, small, disabled, a11y }: { icon?: IconName; label?: string; onPress: () => void; pal: Pal; active?: boolean; solid?: boolean; small?: boolean; disabled?: boolean; a11y?: string }) {
+export function QBtn({ icon, label, onPress, pal, active, solid, small, disabled, a11y, fixedIcon }: { icon?: IconName; label?: string; onPress: () => void; pal: Pal; active?: boolean; solid?: boolean; small?: boolean; disabled?: boolean; a11y?: string; fixedIcon?: boolean }) {
   const fg = solid ? (pal.dark ? '#06120D' : '#fff') : active ? pal.accent : pal.ink;
   return (
     <Pressable
@@ -66,7 +68,7 @@ export function QBtn({ icon, label, onPress, pal, active, solid, small, disabled
         opacity: disabled ? 0.4 : pressed ? 0.8 : 1,
       })}
     >
-      {icon ? <Ionicons name={icon} size={small ? 15 : 18} color={solid ? fg : active ? pal.accent : pal.muted} /> : null}
+      {icon ? <Ionicons fixed={fixedIcon} name={icon} size={small ? 15 : 18} color={solid ? fg : active ? pal.accent : pal.muted} /> : null}
       {label ? <Text style={{ color: fg, fontWeight: '700', fontSize: small ? 12 : 14 }}>{label}</Text> : null}
     </Pressable>
   );

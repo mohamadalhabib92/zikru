@@ -12,7 +12,9 @@ export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
   const { ready: dataReady } = useData();
   usePrayerReminders();
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
+  // Libellés d'onglets : suivent la taille de texte du système jusqu'à ×1,4, au-delà la barre déborderait.
+  const tabFs = (n: number) => Math.round(n * Math.min(fontScale, 1.4));
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
   if (!ready || !dataReady)
@@ -43,9 +45,8 @@ export default function TabsLayout() {
         tabBarActiveTintColor: sidebar ? t.onPrimary : t.primary,
         tabBarActiveBackgroundColor: sidebar ? t.primary : undefined,
         tabBarInactiveTintColor: t.muted,
-        // Les libellés d'onglets ne grossissent pas au-delà de la barre (iOS affiche la grande vignette d'accessibilité à l'appui long).
         tabBarAllowFontScaling: false,
-        tabBarLabelStyle: sidebar ? { fontSize: 15, fontWeight: '600' } : { fontSize: 11, fontWeight: '700' },
+        tabBarLabelStyle: sidebar ? { fontSize: tabFs(15), fontWeight: '600' } : { fontSize: tabFs(11), fontWeight: '700' },
         sceneStyle: { backgroundColor: t.bg },
       }}
     >

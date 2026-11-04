@@ -204,7 +204,7 @@ export default function EditZikr() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ color: '#fff', fontWeight: '900' }}>{i + 1}</Text>
+                <Text style={{ color: b.onGreen, fontWeight: '900' }}>{i + 1}</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text

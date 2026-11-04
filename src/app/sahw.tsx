@@ -24,7 +24,7 @@ const WHEN: Record<When, { label: string; tone: 'success' | 'info' | 'warning' |
 
 function SourceLine({ s, label = 'Source' }: { s: FiqhSource; label?: string }) {
   return (
-    <Pressable accessibilityRole="link" onPress={() => s.url && Linking.openURL(s.url)} style={{ paddingVertical: 3 }}>
+    <Pressable accessibilityRole="link" onPress={() => s.url && Linking.openURL(s.url)} hitSlop={{ top: 10, bottom: 10 }} style={{ paddingVertical: 4 }}>
       <Text style={{ color: t.muted, fontSize: 12, lineHeight: 17 }}>
         {label} : {s.book}, {s.chapter}, {s.page} <Text style={{ textDecorationLine: 'underline' }}>(ouvrir)</Text>
       </Text>
@@ -58,7 +58,7 @@ function Answer({ a, uid, q, caseId, madhab }: { a: SahwAnswer; uid: string; q: 
       <SourceLine s={a.source} />
       {a.also?.map((s, i) => <SourceLine key={i} s={s} label="Voir aussi" />)}
       {isAr ? <Text style={{ color: t.muted, fontSize: 12 }}>{citation(a.source)}</Text> : null}
-      {isAr ? null : <Pressable accessibilityRole="button" onPress={() => setAr(!ar)} style={{ paddingVertical: 4 }}>
+      {isAr ? null : <Pressable accessibilityRole="button" onPress={() => setAr(!ar)} style={{ paddingVertical: 4, minHeight: 44, justifyContent: 'center' }}>
         <Text style={{ color: t.primary, fontWeight: '700', fontSize: 12 }}>{ar ? 'Masquer le texte arabe' : 'Voir le texte arabe et l’édition'}</Text>
       </Pressable>}
       {ar && !isAr ? (

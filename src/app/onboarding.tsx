@@ -132,7 +132,7 @@ export default function Onboarding() {
                 onPress={() => set({ place: { ...c, source: 'manual' } })}
                 style={{ paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 20, borderWidth: 1, borderColor: on ? b.green : b.line, backgroundColor: on ? b.green : b.paper }}
               >
-                <Text style={{ color: on ? '#fff' : b.ink, fontWeight: '600' }}>{c.label}</Text>
+                <Text style={{ color: on ? b.onGreen : b.ink, fontWeight: '600' }}>{c.label}</Text>
               </Pressable>
             );
           })}

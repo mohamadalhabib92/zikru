@@ -79,8 +79,8 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
               onLongPress={() => setN(0)}
               style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: done ? b.green : COLOR, opacity: pressed ? 0.85 : 1 })}
             >
-              <Ionicons name={done ? 'checkmark-circle' : 'add-circle-outline'} size={16} color="#fff" />
-              <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>
+              <Ionicons name={done ? 'checkmark-circle' : 'add-circle-outline'} size={16} color={done ? b.onGreen : '#fff'} />
+              <Text style={{ color: done ? b.onGreen : '#fff', fontWeight: '800', fontSize: 13 }}>
                 {n} / {reps}
               </Text>
             </Pressable>

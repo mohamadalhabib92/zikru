@@ -7,13 +7,14 @@ import { Ionicons, type IconName } from './kit';
 import { alpha, brand as b, elevation } from './theme';
 import { L } from '@/lib/l10n';
 import { PressableScale, prefersReducedMotion, springs } from './motion';
+import { vibrationsEnabled } from './access';
 
 /** Composants du système de design 1.0.19 (au-dessus de kit/light). */
 
 const native = Platform.OS !== 'web';
 /** Retour haptique léger (silencieux sur le web). */
 export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'light') {
-  if (!native) return;
+  if (!native || !vibrationsEnabled()) return;
   try {
     if (kind === 'success') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     else if (kind === 'select') void Haptics.selectionAsync();
@@ -86,11 +87,11 @@ export function Tile({ icon, title, subtitle, onPress, color = b.green, style }:
     >
       <IconBadge icon={icon} color={color} size={38} />
       <View>
-        <Text maxFontSizeMultiplier={1.3} style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={2}>
+        <Text maxFontSizeMultiplier={1.6} style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={2}>
           {title}
         </Text>
         {subtitle ? (
-          <Text maxFontSizeMultiplier={1.3} style={{ color: b.inkMuted, fontSize: 12, marginTop: 2 }} numberOfLines={2}>
+          <Text maxFontSizeMultiplier={1.6} style={{ color: b.inkMuted, fontSize: 12, marginTop: 2 }} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}

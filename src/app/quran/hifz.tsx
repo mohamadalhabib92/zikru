@@ -158,7 +158,7 @@ export default function HifzHub() {
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {([['La page', 'page'], ['5 versets', 5], ['10 versets', 10], ['Toute la sourate', 'all']] as const).map(([l, v]) => (
-                <Pressable key={l} accessibilityRole="button" onPress={() => preset(v)} style={{ paddingHorizontal: 12, minHeight: 34, justifyContent: 'center', borderRadius: 17, borderWidth: 1, borderColor: b.line, backgroundColor: b.cream }}>
+                <Pressable key={l} accessibilityRole="button" onPress={() => preset(v)} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 22, borderWidth: 1, borderColor: b.line, backgroundColor: b.cream }}>
                   <Text style={{ color: b.ink, fontWeight: '700', fontSize: 13 }}>{l}</Text>
                 </Pressable>
               ))}

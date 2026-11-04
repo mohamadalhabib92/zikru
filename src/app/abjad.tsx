@@ -108,12 +108,12 @@ export default function Abjad() {
           />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
             {ABJAD_EXAMPLES.map((ex) => (
-              <Pressable key={ex} accessibilityRole="button" accessibilityLabel={L('Exemple {x}', { x: ex })} onPress={() => setText(ex)} style={({ pressed }) => ({ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: text === ex ? alpha(b.gold, 0.22) : b.paper, opacity: pressed ? 0.8 : 1 })}>
+              <Pressable key={ex} accessibilityRole="button" accessibilityLabel={L('Exemple {x}', { x: ex })} onPress={() => setText(ex)} style={({ pressed }) => ({ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: text === ex ? alpha(b.gold, 0.22) : b.paper, opacity: pressed ? 0.8 : 1 })}>
                 <Text style={{ color: b.ink, fontSize: 16, writingDirection: 'rtl' }}>{ex}</Text>
               </Pressable>
             ))}
             {text ? (
-              <Pressable accessibilityRole="button" accessibilityLabel={L("Effacer")} onPress={() => setText('')} style={{ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center' }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Effacer")} onPress={() => setText('')} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center' }}>
                 <Text style={{ color: b.inkMuted, fontWeight: '700' }}>Effacer</Text>
               </Pressable>
             ) : null}
@@ -166,7 +166,7 @@ export default function Abjad() {
         </View>
         {p.view === 'both' && m.total !== g.total ? <LMuted style={{ marginBottom: 10 }}>{L('Écart entre les deux systèmes : {n} — dû aux lettres à cadre doré ci-dessous.', { n: fmt(Math.abs(g.total - m.total)) })}</LMuted> : null}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
-          <Pressable accessibilityRole="button" accessibilityLabel={L("Copier le résultat")} onPress={copy} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, opacity: pressed ? 0.8 : 1 })}>
+          <Pressable accessibilityRole="button" accessibilityLabel={L("Copier le résultat")} onPress={copy} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, opacity: pressed ? 0.8 : 1 })}>
             <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={copied ? b.green : b.inkMuted} />
             <Text style={{ color: b.ink, fontWeight: '700', fontSize: 13 }}>{copied ? 'Copié' : 'Copier le résultat'}</Text>
           </Pressable>

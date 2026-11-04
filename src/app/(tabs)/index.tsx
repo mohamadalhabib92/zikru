@@ -231,11 +231,11 @@ export default function Home() {
             style={({ pressed }) => ({ flex: 1, backgroundColor: b.paper, borderRadius: 18, borderWidth: 1, borderColor: b.line, padding: 12, alignItems: 'center', gap: 6, opacity: pressed ? 0.9 : 1 })}
           >
             <ProgressRing size={58} progress={total ? done / total : 0} color={p.id === 'wazifa' ? b.wazifa : p.id === 'hailala' ? b.hailala : b.green}>
-              <Text style={{ color: b.ink, fontWeight: '800', fontSize: 14 }}>
+              <Text maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit style={{ color: b.ink, fontWeight: '800', fontSize: 14 }}>
                 {done}/{total}
               </Text>
             </ProgressRing>
-            <Text style={{ color: b.ink, fontWeight: '700', fontSize: 14 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
+            <Text style={{ color: b.ink, fontWeight: '700', fontSize: 14 }} numberOfLines={3} maxFontSizeMultiplier={1.6}>
               {p.name}
             </Text>
           </Pressable>
@@ -283,10 +283,10 @@ export default function Home() {
               Continuer la lecture
             </Text>
           </View>
-          <Text style={{ color: b.heroText, fontWeight: '800', fontSize: 16 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
+          <Text style={{ color: b.heroText, fontWeight: '800', fontSize: 16 }} numberOfLines={3} maxFontSizeMultiplier={1.6}>
             {surah ? `${surah[2]} · ${quranLast!.n}:${quranLast!.ayah}` : 'Al-Fātiḥa'}
           </Text>
-          <Text style={{ color: b.heroMuted, fontSize: 12 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
+          <Text style={{ color: b.heroMuted, fontSize: 12 }} numberOfLines={3} maxFontSizeMultiplier={1.6}>
             {kst && !kst.finished ? `${L('Khatma {p} %', { p: Math.round(kst.progress * 100) })} · ${kst.today ? L('p. {a}–{b}', { a: kst.today.from, b: kst.today.to }) : ''}` : surah ? L('Page {p} · {n} j de suite', { p: quranLast!.page ?? pageOf(quranLast!.n, quranLast!.ayah), n: qStreak.current }) : L('Mushaf, récitation, tafsir')}
           </Text>
           {kst && !kst.finished ? (
@@ -307,10 +307,10 @@ export default function Home() {
               Révision du jour
             </Text>
           </View>
-          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
+          <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }} numberOfLines={3} maxFontSizeMultiplier={1.6}>
             {tracked ? (hqN ? L('Versets à réviser : {n}', { n: hqN }) : L('À jour ✓')) : L('Mémoriser le Coran')}
           </Text>
-          <Text style={{ color: b.inkMuted, fontSize: 12 }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
+          <Text style={{ color: b.inkMuted, fontSize: 12 }} numberOfLines={3} maxFontSizeMultiplier={1.6}>
             {tracked ? L('Sabaq {a} · Sabqi {b} · Manzil {c}', { a: hq.sabaq.length, b: hq.sabqi.length, c: hq.manzil.length }) : L('Répétition, masquage, révision espacée')}
           </Text>
         </Pressable>
@@ -446,7 +446,7 @@ export default function Home() {
             style={({ pressed }) => ({ alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 16, backgroundColor: pressed ? alpha(x.color, 0.08) : 'transparent' })}
           >
             <IconBadge icon={x.icon} color={x.color} size={50} />
-            <Text style={{ color: b.ink, fontSize: 12, fontWeight: '600', textAlign: 'center' }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
+            <Text style={{ color: b.ink, fontSize: 12, fontWeight: '600', textAlign: 'center' }} numberOfLines={3} maxFontSizeMultiplier={1.6}>
               {x.label}
             </Text>
           </Pressable>
@@ -488,10 +488,10 @@ export default function Home() {
               <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{pt.weather_title}</Text>
               <LMuted>{pt.weather_text}</LMuted>
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                <Pressable accessibilityRole="button" onPress={() => choose('weather', true)} style={{ backgroundColor: b.green, borderRadius: 18, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
-                  <Text style={{ color: '#fff', fontWeight: '700' }}>{pt.weather_accept}</Text>
+                <Pressable accessibilityRole="button" onPress={() => choose('weather', true)} style={{ backgroundColor: b.green, borderRadius: 18, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' }}>
+                  <Text style={{ color: b.onGreen, fontWeight: '700' }}>{pt.weather_accept}</Text>
                 </Pressable>
-                <Pressable accessibilityRole="button" onPress={() => choose('weather', false)} style={{ borderRadius: 18, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
+                <Pressable accessibilityRole="button" onPress={() => choose('weather', false)} style={{ borderRadius: 18, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' }}>
                   <Text style={{ color: b.ink, fontWeight: '600' }}>{pt.weather_decline}</Text>
                 </Pressable>
               </View>
@@ -537,7 +537,7 @@ export default function Home() {
           {/* Barre du haut */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: b.inkMuted, fontSize: 13, fontWeight: '600' }} numberOfLines={2} maxFontSizeMultiplier={1.4}>
+              <Text style={{ color: b.inkMuted, fontSize: 13, fontWeight: '600' }} numberOfLines={3} maxFontSizeMultiplier={1.6}>
                 {greg} · {hijri}
               </Text>
               <Text accessibilityRole="header" style={{ color: b.ink, fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }}>

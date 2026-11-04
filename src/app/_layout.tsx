@@ -11,6 +11,7 @@ import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
+import { setLayoutRTL } from '@/ui/access';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
 import { takePendingRoute } from '@/ui/appearance';
@@ -35,6 +36,7 @@ function Root() {
   // Messages Bluetooth (transports hors React) dans la langue de l'interface.
   setBleLang(s.lang);
   const rtl = isRTL(s.lang);
+  setLayoutRTL(rtl);
   useEffect(() => {
     // Web : dir/lang sur <html> (lecteurs d'écran, sélection, barres de défilement côté droit en arabe).
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;

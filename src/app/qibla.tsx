@@ -150,7 +150,7 @@ export default function Qibla() {
           style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 999, backgroundColor: aligned ? b.green : b.paper, borderWidth: 1, borderColor: aligned ? b.green : b.line }}
         >
           {!aligned ? <Text style={{ color: b.goldDeep, fontSize: 18, fontWeight: '900' }}>{diff > 0 ? '↻' : '↺'}</Text> : null}
-          <Text style={{ color: aligned ? '#fff' : b.ink, fontSize: 17, fontWeight: '800', textAlign: 'center' }}>
+          <Text style={{ color: aligned ? b.onGreen : b.ink, fontSize: 17, fontWeight: '800', textAlign: 'center' }}>
             {aligned ? `✓ ${tr.qibla_aligned}` : `${tr.qibla_turn} ${Math.round(Math.abs(diff))}° ${diff > 0 ? tr.qibla_right : tr.qibla_left}`}
           </Text>
         </View>

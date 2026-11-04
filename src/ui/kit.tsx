@@ -1,17 +1,24 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons as BaseIonicons } from '@expo/vector-icons';
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { currentScheme, elevation, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
+import { directionalIcon } from './access';
 import { haptic } from './haptics';
 import { FadeIn, PressableScale, prefersReducedMotion } from './motion';
 
 const S = () => getStyles();
 
-export type IconName = ComponentProps<typeof Ionicons>['name'];
-export { Ionicons };
+export type IconName = ComponentProps<typeof BaseIonicons>['name'];
+/**
+ * Ionicons du kit : en arabe (RTL), chevrons et flèches se retournent pour pointer dans le sens de lecture.
+ * `fixed` garde le dessin d'origine (ex. boutons du mushaf, déjà pensés de droite à gauche).
+ */
+export function Ionicons({ name, fixed, ...rest }: ComponentProps<typeof BaseIonicons> & { fixed?: boolean }) {
+  return <BaseIonicons name={fixed ? name : directionalIcon(name)} {...rest} />;
+}
 
 /** Conteneur d'écran défilant, largeur max sur desktop (PWA). */
 export function Screen({ children, scroll = true, padded = true, bg }: { children: ReactNode; scroll?: boolean; padded?: boolean; bg?: string }) {
@@ -136,7 +143,7 @@ export function Button({
       ) : (
         <>
           {icon ? <Ionicons name={icon} size={small ? 16 : 18} color={fg} /> : null}
-          <Text maxFontSizeMultiplier={1.35} style={[S().btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>
+          <Text maxFontSizeMultiplier={2} style={[S().btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>
         </>
       )}
     </PressableScale>
@@ -174,7 +181,7 @@ export function Chip({ label, active, onPress, color }: { label: string; active?
         pressed && { opacity: 0.85 },
       ]}
     >
-      <Text maxFontSizeMultiplier={1.35} style={{ color: active ? (color ? '#fff' : t.onPrimary) : t.text, fontWeight: '600', fontSize: 14, flexShrink: 1, textAlign: 'center' }}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.6} style={{ color: active ? (color ? '#fff' : t.onPrimary) : t.text, fontWeight: '600', fontSize: 14, flexShrink: 1, textAlign: 'center' }}>{label}</Text>
     </PressableScale>
   );
 }
@@ -190,7 +197,7 @@ export function Badge({ label, tone = 'neutral' }: { label: string; tone?: 'neut
   const [bg, fg] = map[tone];
   return (
     <View style={[S().badge, { backgroundColor: bg }]}>
-      <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={{ color: fg, fontSize: 12, fontWeight: '700', letterSpacing: 0.3 }}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.6} numberOfLines={1} style={{ color: fg, fontSize: 12, fontWeight: '700', letterSpacing: 0.3 }}>{label}</Text>
     </View>
   );
 }
@@ -229,7 +236,7 @@ export function Segmented<T extends string | number>({ options, value, onChange,
               accessibilityState={{ checked: on }}
               style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
             >
-              <Text maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14, textAlign: 'center' }}>{o.label}</Text>
+              <Text maxFontSizeMultiplier={1.6} numberOfLines={2} style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14, textAlign: 'center' }}>{o.label}</Text>
             </Pressable>
           );
         })}

@@ -57,9 +57,9 @@ export function Pill({ label, active, onPress, color = b.green }: { label: strin
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      style={{ paddingHorizontal: 14, paddingVertical: 6, minHeight: 40, maxWidth: '100%', justifyContent: 'center', borderRadius: 19, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
+      style={{ paddingHorizontal: 14, paddingVertical: 6, minHeight: 44, maxWidth: '100%', justifyContent: 'center', borderRadius: 22, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
     >
-      <Text maxFontSizeMultiplier={1.35} style={{ color: active ? '#FFFFFF' : b.ink, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.6} style={{ color: active ? (color === b.green ? b.onGreen : '#FFFFFF') : b.ink, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{label}</Text>
     </Pressable>
   );
 }

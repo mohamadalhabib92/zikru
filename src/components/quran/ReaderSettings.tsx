@@ -22,7 +22,7 @@ function Row({ label, value, onChange, pal, hint }: { label: string; value: bool
         <Text style={{ color: pal.ink, fontWeight: '600', fontSize: 15 }}>{label}</Text>
         {hint ? <Text style={{ color: pal.muted, fontSize: 12 }}>{hint}</Text> : null}
       </View>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: pal.accent, false: pal.line }} />
+      <Switch accessible={false} value={value} onValueChange={onChange} trackColor={{ true: pal.accent, false: pal.muted }} ios_backgroundColor={pal.muted} />
     </Pressable>
   );
 }
