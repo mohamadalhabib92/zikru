@@ -11,9 +11,12 @@ import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
+import { setLayoutRTL } from '@/ui/access';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
 import { takePendingRoute } from '@/ui/appearance';
+import { FeedbackProvider } from '@/ui/motion';
+import { FocusPill } from '@/components/FocusKit';
 import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
@@ -34,6 +37,7 @@ function Root() {
   // Messages Bluetooth (transports hors React) dans la langue de l'interface.
   setBleLang(s.lang);
   const rtl = isRTL(s.lang);
+  setLayoutRTL(rtl);
   useEffect(() => {
     // Web : dir/lang sur <html> (lecteurs d'écran, sélection, barres de défilement côté droit en arabe).
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -63,6 +67,7 @@ function Root() {
   if (!fontsLoaded && !fontTimeout) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
     <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
+      <FeedbackProvider>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -118,8 +123,11 @@ function Root() {
         <Stack.Screen name="family/[id]" options={{ title: L("Ma famille") }} />
         <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
+        <Stack.Screen name="focus" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
       </Stack>
+      <FocusPill />
       <StorageAlert />
+      </FeedbackProvider>
     </View>
   );
 }

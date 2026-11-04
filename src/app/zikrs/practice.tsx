@@ -15,6 +15,7 @@ import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { L, useUiLang } from '@/lib/l10n';
+import { useCelebrateWhen } from '@/ui/motion';
 
 function Bar({ ratio, color, h = 8 }: { ratio: number; color: string; h?: number }) {
   return (
@@ -50,6 +51,7 @@ export default function Practice() {
   const z = useMemo(() => (stored ? { ...stored, items: withFatiha(stored.items, fatihaOn) } : undefined), [stored, fatihaOn]);
   const [st, setSt] = useState<PracticeState>({ step: 0, count: 0 });
   const [finished, setFinished] = useState(false);
+  useCelebrateWhen(finished, { title: 'Composition terminée', subtitle: 'تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ', icon: 'checkmark-circle', tone: 'success' });
   const zRef = useRef<Zikr | undefined>(z);
   useEffect(() => {
     if (z) zRef.current = z;
@@ -296,8 +298,8 @@ export default function Practice() {
               elevation: 4,
             })}
           >
-            <Text style={{ color: '#fff', fontSize: 58, fontWeight: '900' }}>{st.count}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '800' }}>{`/ ${fmt(cur.reps)}`}</Text>
+            <Text style={{ color: b.onGreen, fontSize: 58, fontWeight: '900' }}>{st.count}</Text>
+            <Text style={{ color: b.onGreen, opacity: 0.85, fontWeight: '800' }}>{`/ ${fmt(cur.reps)}`}</Text>
           </Pressable>
           <View style={{ marginTop: 14 }}>
             <Bar ratio={cur.reps ? st.count / cur.reps : 0} color={b.green} h={6} />

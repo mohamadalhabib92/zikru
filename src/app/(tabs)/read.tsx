@@ -9,6 +9,7 @@ import { Ionicons } from '@/ui/kit';
 import { Arabic } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { FOCUS_MIN_MINUTES } from '@/lib/focus-core';
 
 /** Onglet « Lire » : Coran, invocations, Noms, savoir. */
 export default function Read() {
@@ -20,6 +21,7 @@ export default function Read() {
     {
       title: 'Coran & invocations',
       items: [
+        { icon: 'hourglass', title: 'Mode Focus', sub: L('Prière, lecture, dhikr · {min} min minimum, sans distraction', { min: FOCUS_MIN_MINUTES }), href: '/focus', color: b.teal },
         { icon: 'book', title: 'Le Saint Coran', sub: '114 sourates · traduction Hamidullah', href: '/quran', color: b.green },
         { icon: 'hand-left', title: 'Du‘as prophétiques', sub: 'Matin, soir, voyage, épreuves…', href: '/duas', color: b.blue },
         { icon: 'sparkles', title: 'Les 99 Noms d’Allah', sub: 'Sens, translittération, abjad', href: '/names', color: b.goldDeep },

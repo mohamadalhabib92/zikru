@@ -1,4 +1,5 @@
 /** Retour sensoriel web : vibration (Android Chrome) + bip WebAudio (aucun fichier à charger). */
+import { vibrationsEnabled } from '@/ui/access';
 type Ctx = { createOscillator(): OscillatorNode; createGain(): GainNode; currentTime: number; destination: AudioDestinationNode; state: string; resume(): Promise<void> };
 let ctx: Ctx | null = null;
 function audio(): Ctx | null {
@@ -25,7 +26,7 @@ function beep(freq: number, ms: number, at = 0) {
   o.stop(t0 + ms / 1000 + 0.02);
 }
 export function feedback(kind: 'tap' | 'cycle', opts: { sound: boolean; haptics: boolean }) {
-  if (opts.haptics && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+  if (opts.haptics && vibrationsEnabled() && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try {
       navigator.vibrate(kind === 'cycle' ? [60, 60, 120] : 15);
     } catch {

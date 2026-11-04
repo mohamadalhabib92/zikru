@@ -68,7 +68,7 @@ const BRAND_LIGHT = {
   inkMuted: LIGHT.muted,
   line: LIGHT.border,
   gold: '#E3BE5A',
-  goldDeep: '#9C7A22',
+  goldDeep: '#836619', // AA ≥ 4,5:1 sur crème et papier
   goldSoft: '#FBF3DC',
   green: '#0E6B4F',
   greenDeep: '#0A3F30',
@@ -88,6 +88,8 @@ const BRAND_LIGHT = {
   hero: '#0F3D30',
   heroText: '#FBF7EE',
   heroMuted: '#BFD3C9',
+  /** Texte et icônes posés sur un aplat `green` (AA ≥ 4,5:1 dans les deux thèmes). */
+  onGreen: '#FFFFFF',
 };
 const BRAND_DARK: typeof BRAND_LIGHT = {
   ...BRAND_LIGHT,
@@ -115,6 +117,7 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
   hero: '#103428',
   heroText: '#F4EFE4',
   heroMuted: '#A9C3B7',
+  onGreen: '#03140D',
 };
 export const brand = { ...BRAND_LIGHT };
 

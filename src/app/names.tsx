@@ -172,10 +172,10 @@ export default function Names() {
                         opacity: pressed ? 0.8 : 1,
                       })}
                     >
-                      <Ionicons name="add" size={15} color="#fff" />
+                      <Ionicons name="add" size={15} color={b.onGreen} />
                       <Text
                         style={{
-                          color: '#fff',
+                          color: b.onGreen,
                           fontWeight: '800',
                           fontSize: 12,
                         }}

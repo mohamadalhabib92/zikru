@@ -6,13 +6,15 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, type IconName } from './kit';
 import { alpha, brand as b, elevation } from './theme';
 import { L } from '@/lib/l10n';
+import { PressableScale, prefersReducedMotion, springs } from './motion';
+import { vibrationsEnabled } from './access';
 
 /** Composants du système de design 1.0.19 (au-dessus de kit/light). */
 
 const native = Platform.OS !== 'web';
 /** Retour haptique léger (silencieux sur le web). */
 export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'light') {
-  if (!native) return;
+  if (!native || !vibrationsEnabled()) return;
   try {
     if (kind === 'success') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     else if (kind === 'select') void Haptics.selectionAsync();
@@ -71,31 +73,30 @@ export function IconBadge({ icon, color = b.green, size = 40 }: { icon: IconName
 /** Tuile d'accès rapide (grille). */
 export function Tile({ icon, title, subtitle, onPress, color = b.green, style }: { icon: IconName; title: string; subtitle?: string; onPress: () => void; color?: string; style?: StyleProp<ViewStyle> }) {
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={subtitle ? `${L(title)}. ${L(subtitle)}` : L(title)}
-      onPress={() => {
-        tapHaptic('select');
-        onPress();
-      }}
+      scaleTo={0.96}
+      hapticKind="select"
+      onPress={onPress}
       style={({ pressed }) => [
         { backgroundColor: b.paper, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: b.line, minHeight: 104, gap: 10, ...elevation(1) },
-        pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+        pressed && { opacity: 0.94 },
         style,
       ]}
     >
       <IconBadge icon={icon} color={color} size={38} />
       <View>
-        <Text maxFontSizeMultiplier={1.3} style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={2}>
+        <Text maxFontSizeMultiplier={1.6} style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={2}>
           {title}
         </Text>
         {subtitle ? (
-          <Text maxFontSizeMultiplier={1.3} style={{ color: b.inkMuted, fontSize: 12, marginTop: 2 }} numberOfLines={2}>
+          <Text maxFontSizeMultiplier={1.6} style={{ color: b.inkMuted, fontSize: 12, marginTop: 2 }} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -130,9 +131,20 @@ export function ProgressRing({ size = 56, stroke = 6, progress, color = b.green,
 
 /** Barre de progression fine. */
 export function ProgressBar({ progress, color = b.green, height = 6 }: { progress: number; color?: string; height?: number }) {
+  const p = Math.max(0, Math.min(1, progress || 0));
+  const [v] = useState(() => new Animated.Value(p));
+  useEffect(() => {
+    // La barre « glisse » vers sa nouvelle valeur (ressort doux), sauf si l'utilisateur réduit les animations.
+    if (prefersReducedMotion()) v.setValue(p);
+    else Animated.spring(v, { toValue: p, ...springs.gentle, useNativeDriver: false }).start();
+  }, [p, v]);
   return (
-    <View style={{ height, borderRadius: height, backgroundColor: alpha(color, 0.15), overflow: 'hidden' }}>
-      <View style={{ width: `${Math.round(Math.max(0, Math.min(1, progress || 0)) * 100)}%`, height, borderRadius: height, backgroundColor: color }} />
+    <View
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 0, max: 100, now: Math.round(p * 100) }}
+      style={{ height, borderRadius: height, backgroundColor: alpha(color, 0.15), overflow: 'hidden' }}
+    >
+      <Animated.View style={{ width: v.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }), height, borderRadius: height, backgroundColor: color }} />
     </View>
   );
 }
@@ -141,6 +153,10 @@ export function ProgressBar({ progress, color = b.green, height = 6 }: { progres
 export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `${number}%`; h?: number; r?: number; style?: StyleProp<ViewStyle> }) {
   const [o] = useState(() => new Animated.Value(0.45));
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      o.setValue(0.7);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(o, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: native }),
@@ -157,6 +173,10 @@ export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `$
 export function FadeIn({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: StyleProp<ViewStyle> }) {
   const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      v.setValue(1);
+      return;
+    }
     Animated.timing(v, { toValue: 1, duration: 320, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
   }, [v, delay]);
   return <Animated.View style={[{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }, style]}>{children}</Animated.View>;
@@ -165,4 +185,23 @@ export function FadeIn({ children, delay = 0, style }: { children: ReactNode; de
 /** En-tête « héros » émeraude avec motif discret. */
 export function HeroHeader({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[{ backgroundColor: b.hero, borderRadius: 24, padding: 20, overflow: 'hidden' }, style]}>{children}</View>;
+}
+
+/**
+ * Squelette de versets (lecture du Qur’an) : lignes alignées à droite comme le texte arabe,
+ * à la place d'un indicateur rotatif. Couleur = filet de la palette de lecture courante.
+ */
+export function VerseSkeleton({ color, rows = 4, style }: { color: string; rows?: number; style?: StyleProp<ViewStyle> }) {
+  const widths = ['92%', '78%', '86%', '64%'] as const;
+  return (
+    <View accessible accessibilityRole="progressbar" accessibilityLabel={L('Chargement')} style={[{ padding: 20, gap: 22, width: '100%' }, style]}>
+      {Array.from({ length: rows }, (_, i) => (
+        <View key={i} style={{ gap: 10, alignItems: 'flex-end' }}>
+          <Skeleton w={widths[i % widths.length]} h={18} r={9} style={{ backgroundColor: color }} />
+          <Skeleton w={widths[(i + 2) % widths.length]} h={18} r={9} style={{ backgroundColor: color }} />
+          <Skeleton w="40%" h={10} r={5} style={{ backgroundColor: color, alignSelf: 'flex-start' }} />
+        </View>
+      ))}
+    </View>
+  );
 }

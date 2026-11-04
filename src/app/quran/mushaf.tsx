@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AudioBar } from '@/components/quran/AudioBar';
@@ -23,6 +23,7 @@ import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import { NuraniText } from '@/components/quran/NuraniText';
 import { L } from '@/lib/l10n';
+import { VerseSkeleton } from '@/ui/ds';
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1);
 
@@ -173,9 +174,7 @@ export default function Mushaf() {
       />
       <View style={{ flex: 1 }} onLayout={(e) => setH(e.nativeEvent.layout.height)}>
       {!all || !h ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={pal.accent} />
-        </View>
+        <VerseSkeleton color={pal.line} rows={5} />
       ) : (
         <FlatList
           ref={list}
@@ -200,7 +199,7 @@ export default function Mushaf() {
       {rec.pos < 0 ? (
         <View style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom, 10), alignItems: 'center' }} pointerEvents="box-none">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: pal.card, borderRadius: 24, borderWidth: 1, borderColor: pal.line, padding: 6 }}>
-            <QBtn icon="chevron-back" a11y="Page suivante" onPress={() => goPage(page + 1)} pal={pal} disabled={page >= TOTAL_PAGES} />
+            <QBtn fixedIcon icon="chevron-back" a11y="Page suivante" onPress={() => goPage(page + 1)} pal={pal} disabled={page >= TOTAL_PAGES} />
             <QBtn solid icon="play" label="Écouter la page" onPress={() => playFrom(pageRange(page)[0])} pal={pal} />
             {kst ? (
               <QBtn
@@ -211,7 +210,7 @@ export default function Mushaf() {
                 pal={pal}
               />
             ) : null}
-            <QBtn icon="chevron-forward" a11y="Page précédente" onPress={() => goPage(page - 1)} pal={pal} disabled={page <= 1} />
+            <QBtn fixedIcon icon="chevron-forward" a11y="Page précédente" onPress={() => goPage(page - 1)} pal={pal} disabled={page <= 1} />
           </View>
           {kst?.today ? <Text style={{ color: pal.muted, fontSize: 11, marginTop: 6, backgroundColor: alpha(pal.bg, 0.8), paddingHorizontal: 8, borderRadius: 8 }}>{L('Wird du jour : p. {a}–{b} · khatma {p} %', { a: kst.today.from, b: kst.today.to, p: Math.round(kst.progress * 100) })}</Text> : null}
         </View>

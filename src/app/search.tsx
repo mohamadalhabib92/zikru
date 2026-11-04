@@ -159,7 +159,7 @@ export default function Search() {
               style={{ flex: 1, color: b.ink, fontSize: 16, paddingVertical: 10 }}
             />
             {q ? (
-              <Pressable accessibilityLabel={L("Effacer")} onPress={() => setQ('')} hitSlop={10}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Effacer")} onPress={() => setQ('')} hitSlop={12}>
                 <Ionicons name="close-circle" size={20} color={b.inkMuted} />
               </Pressable>
             ) : null}
@@ -170,7 +170,7 @@ export default function Search() {
               <SectionHeader title="Suggestions" />
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {['Ar-Rahman', 'matin', 'voyage', 'Yasin', 'istighfar', 'Ibrahimiyya', 'pardon', 'Kahf', 'الحي القيوم', '2:255'].map((x) => (
-                  <Pressable key={x} accessibilityRole="button" onPress={() => setQ(x)} style={{ paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 20, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line }}>
+                  <Pressable key={x} accessibilityRole="button" onPress={() => setQ(x)} style={{ paddingHorizontal: 14, minHeight: 44, justifyContent: 'center', borderRadius: 22, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line }}>
                     <Text style={{ color: b.ink, fontWeight: '600' }}>{x}</Text>
                   </Pressable>
                 ))}
@@ -274,8 +274,8 @@ export default function Search() {
                     disabled={dl === 'busy'}
                     style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 46, borderRadius: 12, backgroundColor: b.green, opacity: pressed ? 0.85 : 1 })}
                   >
-                    {dl === 'busy' ? <ActivityIndicator color="#fff" /> : <Ionicons name="download-outline" size={18} color="#fff" />}
-                    <Text style={{ color: '#fff', fontWeight: '800' }}>{`${tr.offline_q_dl} · ${ed.label}`}</Text>
+                    {dl === 'busy' ? <ActivityIndicator color={b.onGreen} /> : <Ionicons name="download-outline" size={18} color={b.onGreen} />}
+                    <Text style={{ color: b.onGreen, fontWeight: '800' }}>{`${tr.offline_q_dl} · ${ed.label}`}</Text>
                   </Pressable>
                   {dl === 'err' ? <LMuted style={{ fontSize: 12 }}>{tr.no_results} (hors ligne).</LMuted> : null}
                 </View>

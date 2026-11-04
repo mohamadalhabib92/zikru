@@ -24,7 +24,7 @@ export function gradingSummary(p: ProvenanceItem) {
 
 function Link({ label, url, icon = 'open-outline' }: { label: string; url: string; icon?: 'open-outline' | 'mail-outline' | 'search-outline' }) {
   return (
-    <Pressable accessibilityRole="link" accessibilityLabel={label} onPress={() => Linking.openURL(url)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, minHeight: 32 }}>
+    <Pressable accessibilityRole="link" accessibilityLabel={label} onPress={() => Linking.openURL(url)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, minHeight: 44 }}>
       <Ionicons name={icon} size={15} color={b.brown} />
       <Text style={{ color: b.brown, fontWeight: '700', fontSize: 13, textDecorationLine: 'underline', flexShrink: 1 }}>{label}</Text>
     </Pressable>
@@ -54,7 +54,7 @@ export function ProvenanceBadges({ set, id, item }: { set?: ProvenanceSet; id?: 
         {p.divergence ? <Badge label="Jugements divergents" tone="warning" /> : null}
         <Badge label={REVIEW_LABEL[p.review.status]} tone={p.review.status === 'valide' ? 'success' : p.review.status === 'a_corriger' ? 'danger' : 'neutral'} />
       </View>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={L("Sources et jugements")} onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, minHeight: 32 }}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={L("Sources et jugements")} onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, minHeight: 44 }}>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={b.inkMuted} />
         <Text style={{ color: b.inkMuted, fontSize: 12, fontWeight: '700' }}>Sources, jugements et signalement</Text>
       </Pressable>
@@ -67,7 +67,7 @@ export function ProvenanceBadges({ set, id, item }: { set?: ProvenanceSet; id?: 
                 ? p.gradings
                     .filter((g) => g.key === s.key)
                     .map((g, j) => (
-                      <Pressable key={j} accessibilityRole="link" onPress={() => Linking.openURL(g.url)} style={{ paddingLeft: 21, paddingVertical: 2 }}>
+                      <Pressable key={j} accessibilityRole="link" onPress={() => Linking.openURL(g.url)} hitSlop={{ top: 10, bottom: 10 }} style={{ paddingLeft: 21, paddingVertical: 4 }}>
                         <Text style={{ color: b.inkMuted, fontSize: 12 }}>
                           {g.raw} — {g.site}
                           {g.book ? ` (${g.book})` : ''}

@@ -278,6 +278,7 @@ export default function BluetoothCounterScreen() {
           </Muted>
           <Toggle label="Compter les touches du clavier / de la télécommande" value={s.prefs.hidEnabled} onChange={(v) => bleCounter.setPrefs({ hidEnabled: v })} />
           <TextInput
+            accessibilityLabel={L("Zone de capture : touchez ici, puis utilisez la télécommande")}
             value={capture}
             onChangeText={(v) => {
               // caractère imprimable (ex. espace) reçu de la télécommande

@@ -50,7 +50,7 @@ export default function Tijani() {
               style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, minHeight: 40, borderRadius: 20, backgroundColor: tab === x.v ? b.green : b.paper, borderWidth: 1, borderColor: tab === x.v ? b.green : b.line }}
             >
               <Ionicons name={x.icon} size={16} color={tab === x.v ? b.gold : b.green} />
-              <Text style={{ color: tab === x.v ? '#fff' : b.ink, fontWeight: '700' }}>{x.label}</Text>
+              <Text style={{ color: tab === x.v ? b.onGreen : b.ink, fontWeight: '700' }}>{x.label}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -218,7 +218,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
         </Arabic>
         <Text style={{ color: b.ink, fontSize: 20, fontWeight: '900', textAlign: 'center' }}>{p.name}</Text>
       </View>
-      <View style={{ flexDirection: 'row', backgroundColor: b.green }}>
+      <View style={{ flexDirection: 'row', backgroundColor: b.hero }}>
         {[
           ['Étapes', String(p.steps.length)],
           ['Faites', String(checked.length)],
@@ -249,7 +249,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
                     {isOn ? (
                       <Ionicons name="checkmark-circle" size={30} color={b.wirdGreen} />
                     ) : (
-                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.green, alignItems: 'center', justifyContent: 'center' }}>
+                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.hero, alignItems: 'center', justifyContent: 'center' }}>
                         <Text style={{ color: b.gold, fontWeight: '900' }}>{i + 1}</Text>
                       </View>
                     )}

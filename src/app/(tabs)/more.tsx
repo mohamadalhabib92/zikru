@@ -2,6 +2,7 @@ import { Hub, type HubSection } from '@/components/Hub';
 import { useSettings } from '@/lib/settings';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { FOCUS_MIN_MINUTES } from '@/lib/focus-core';
 
 /** Onglet « Plus » : outils, parcours, communauté, réglages. */
 export default function More() {
@@ -10,6 +11,7 @@ export default function More() {
     {
       title: tr.tools,
       items: [
+        { icon: 'hourglass', title: 'Mode Focus', sub: L('Prière, lecture, dhikr · {min} min minimum, sans distraction', { min: FOCUS_MIN_MINUTES }), href: '/focus', color: b.green },
         { icon: 'compass', title: tr.qibla_title, sub: 'Boussole et distance à la Ka‘ba', href: '/qibla', color: b.teal },
         { icon: 'bluetooth', title: tr.ring, sub: 'Bague / compteur connecté', href: '/ring', color: b.blue },
         { icon: 'calculator', title: 'Abjad', sub: 'Mashriqi & Maghribi', href: '/abjad', color: b.goldDeep },
