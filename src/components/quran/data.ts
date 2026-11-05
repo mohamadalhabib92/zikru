@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { quranEditionLang } from '@/lib/i18n';
 import { translationFor } from '@/lib/quran';
 import { OFFSETS } from '@/lib/quran-nav';
 import { loadUthmani, surahEdition } from '@/lib/quran-reader-data';
@@ -21,7 +22,7 @@ export function useUthmani() {
 /** Traduction de l’utilisateur (selon la langue de l’app). */
 export function useTranslationId() {
   const { s } = useSettings();
-  return translationFor(s.lang);
+  return translationFor(quranEditionLang(s.lang));
 }
 
 /** Une édition (traduction / translittération) d’une sourate, chargée si `on`. */

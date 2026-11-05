@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
-import { LANGS } from '@/lib/i18n';
+import { LANGS, isReview } from '@/lib/i18n';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
 import Constants from 'expo-constants';
@@ -51,10 +51,12 @@ export default function SettingsScreen() {
       <H2>{tr.language}</H2>
       <Row wrap>
         {LANGS.map((l) => (
-          <Chip key={l.code} label={l.pending ? `${l.label} · ⏳` : l.label} active={s.lang === l.code} onPress={() => set({ lang: l.code })} />
+          <Chip key={l.code} label={l.pending ? `${l.label} · ⏳` : l.review ? `${l.label} · ✎` : l.label} active={s.lang === l.code} onPress={() => set({ lang: l.code })} />
         ))}
       </Row>
-      <Muted>⏳ = {tr.translation_pending} (repli : français).</Muted>
+      {LANGS.some((l) => l.pending) ? <Muted>⏳ = {tr.translation_pending} {L('(repli : français).')}</Muted> : null}
+      <Muted>✎ = {tr.translation_review}</Muted>
+      {isReview(s.lang) ? <Muted>{tr.translation_review}</Muted> : null}
       <Spacer h={20} />
 
       <NotifSettings />

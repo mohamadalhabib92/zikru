@@ -10,6 +10,7 @@ import { duaView, quranDuaView } from '@/lib/i18n-content';
 import { SALAWAT_EN } from '@/lib/i18n-content/knowledge';
 import { L, useUiLang } from '@/lib/l10n';
 import { useSettings } from '@/lib/settings';
+import { quranEditionLang } from '@/lib/i18n';
 import { translationFor } from '@/lib/quran';
 import { cachedTranslation, downloadTranslation, hasArabic, searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { SURAHS } from '@/lib/surahs';
@@ -50,7 +51,7 @@ export default function Search() {
   const sl = useUiLang();
   const router = useRouter();
   const { s: st, t: tr } = useSettings();
-  const ed = translationFor(st.lang);
+  const ed = translationFor(quranEditionLang(st.lang));
   const { zikrs } = useZikrs();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);

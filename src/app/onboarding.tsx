@@ -83,9 +83,10 @@ export default function Onboarding() {
         <Title icon="language" title={tr.onb_lang} />
         <View style={{ gap: 8 }}>
           {LANGS.map((l) => (
-            <Option key={l.code} active={s.lang === l.code} title={l.label} onPress={() => set({ lang: l.code })} />
+            <Option key={l.code} active={s.lang === l.code} title={l.pending ? `${l.label} · ⏳` : l.review ? `${l.label} · ✎` : l.label} onPress={() => set({ lang: l.code })} />
           ))}
         </View>
+        <Text style={{ color: b.inkMuted, fontSize: 13, textAlign: 'center', marginTop: 12 }}>✎ = {tr.translation_review}</Text>
       </>
     );
   else if (step === 'madhab')

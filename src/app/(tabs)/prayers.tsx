@@ -13,9 +13,8 @@ import { Button, Ionicons, Screen, Spacer } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LTitle } from '@/ui/light';
 import { tapHaptic, useLayout } from '@/ui/ds';
 import { alpha, brand as b } from '@/ui/theme';
+import { UI_LOCALE } from '@/lib/i18n';
 import { L } from '@/lib/l10n';
-
-const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
 const ICONS: Record<PrayerKey, string> = { fajr: 'partly-sunny', sunrise: 'sunny', dhuhr: 'sunny', asr: 'partly-sunny', maghrib: 'cloudy-night', isha: 'moon' };
 
 export default function Prayers() {
@@ -38,7 +37,7 @@ export default function Prayers() {
 
   let greg = now.toDateString();
   try {
-    greg = now.toLocaleDateString(LOCALE[s.lang] ?? 'fr-CH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    greg = now.toLocaleDateString(UI_LOCALE[s.lang], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   } catch {}
   const prayedToday = g.prayed[dk(now)] ?? [];
   const names = Object.fromEntries(list.map((p) => [p.key, tr[p.key]])) as Record<PrayerKey, string>;

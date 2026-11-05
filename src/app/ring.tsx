@@ -10,6 +10,7 @@ import { useData } from '@/lib/data';
 import { useSettings } from '@/lib/settings';
 import { Badge, Body, Button, Card, Chip, Divider, Eyebrow, Field, H2, ListItem, Muted, Notice, Row, Screen, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { UI_LOCALE } from '@/lib/i18n';
 import { L, uiLang } from '@/lib/l10n';
 
 const STATUS_TONE = { connecté: 'success', connexion: 'info', reconnexion: 'warning', déconnecté: 'neutral', erreur: 'danger' } as const;
@@ -195,7 +196,7 @@ export default function BluetoothCounterScreen() {
                   <Body style={{ flex: 1 }}>{d.name ?? 'Appareil sans nom'}</Body>
                   <Badge label={isCur ? 'connecté' : s.autoTarget === d.name && s.auto === 'recherche' && d.auto !== false ? 'recherche…' : 'hors connexion'} tone={isCur ? 'success' : 'neutral'} />
                 </Row>
-                <Muted>{d.lastSeen ? L('Vu le {d}', { d: new Date(d.lastSeen).toLocaleString(uiLang() === 'ar' ? 'ar' : uiLang() === 'en' ? 'en-GB' : 'fr-CH') }) : L('Jamais vu')}</Muted>
+                <Muted>{d.lastSeen ? L('Vu le {d}', { d: new Date(d.lastSeen).toLocaleString(UI_LOCALE[uiLang()]) }) : L('Jamais vu')}</Muted>
                 <Toggle label="Reconnexion automatique" value={d.auto !== false} onChange={(v) => bleCounter.setDeviceAuto(d.id, v)} />
                 <Row wrap>
                   {!isCur ? <Button title="Connecter" icon="bluetooth-outline" small variant="ghost" onPress={() => void bleCounter.reconnect(d.id)} /> : null}

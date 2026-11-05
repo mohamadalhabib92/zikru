@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { loadLib } from './load-lib.mjs';
 import { extractDeep, walk } from './i18n-scan.mjs';
 
-const { i18n, 'ui-strings': U } = await loadLib(['i18n', 'ui-strings'], 'i18n');
+const { i18n, 'ui-strings': U, 'ui-cat/index': catalogs, 'i18n-content/index': CONTENT } = await loadLib(['i18n', 'ui-strings', 'ui-cat/index', 'i18n-content/index'], 'i18n');
 const AR = /[\u0600-\u06FF]/;
 const norm = (s) => s.replace(/\s+/g, ' ').trim();
 
@@ -26,6 +26,51 @@ for (const l of ['en', 'ar']) {
 assert.deepEqual(miss.en, [], 'clés en manquantes : ' + miss.en.join(', '));
 assert.deepEqual(miss.ar, [], 'clés ar manquantes : ' + miss.ar.join(', '));
 
+// Langues d'interface « à relire » : chrome complet, RTL, édition Coran inchangée, contenu religieux en français.
+const REVIEW = ['de', 'de-CH', 'tr', 'ur', 'id', 'fa', 'ha', 'sw', 'es', 'it', 'pt', 'ff', 'wo'];
+for (const code of REVIEW) {
+  const row = i18n.LANGS.find((l) => l.code === code);
+  assert.equal(row?.review, true, code + ' doit être review');
+  assert.equal(row?.pending, undefined, code + ' ne doit pas être pending');
+  const d = i18n.DICTS[code];
+  for (const k of Object.keys(fr)) {
+    assert.equal(typeof d[k], 'string', code + ' chrome manque ' + k);
+    assert.ok(String(d[k]).trim(), code + ' chrome vide ' + k);
+  }
+}
+assert.equal(i18n.isRTL('ar') && i18n.isRTL('ur') && i18n.isRTL('fa'), true);
+assert.equal(i18n.isRTL('tr'), false);
+assert.equal(i18n.isRTL('id'), false);
+assert.equal(i18n.quranEditionLang('tr'), 'fr');
+assert.equal(i18n.quranEditionLang('ur'), 'fr');
+assert.equal(i18n.quranEditionLang('en'), 'en');
+assert.equal(i18n.quranEditionLang('de'), 'de');
+assert.equal(i18n.quranEditionLang('de-CH'), 'de-CH');
+assert.equal(i18n.quranEditionLang('ff'), 'ff');
+assert.equal(CONTENT.contentLang('tr'), 'fr');
+assert.equal(CONTENT.contentLang('fa'), 'fr');
+assert.equal(CONTENT.contentLang('en'), 'en');
+assert.equal(CONTENT.contentLang('ar'), 'ar');
+assert.equal(CONTENT.contentLang('de'), 'fr');
+const phOf = (s) => (String(s).match(/\{[a-zA-Z0-9_]+\}/g) ?? []).sort().join('|');
+const RELIGIOUS = [
+  "Louange à Allah, Seigneur de l’univers.",
+  "« Celui qui lit la sourate al-Kahf le vendredi, une lumière l’éclairera entre les deux vendredis. »",
+];
+for (const code of ['de', 'tr', 'ur', 'id', 'fa', 'ha', 'sw', 'es', 'it', 'pt', 'ff', 'wo']) {
+  const cat = catalogs.uiCatalog(code);
+  assert.ok(cat && Object.keys(cat).length > 1000, code + ' catalogue trop court');
+  for (const k of RELIGIOUS) assert.equal(k in cat, false, code + ' ne doit pas traduire une citation : ' + k);
+  for (const [k, v] of Object.entries(cat)) {
+    assert.equal(phOf(k), phOf(v), code + ' placeholder ' + k);
+    assert.ok(!/scholar-validated|validé par un savant/i.test(v), code + ' claim ' + k);
+  }
+  if (code === 'ur' || code === 'fa') {
+    const vals = Object.values(cat);
+    const n = vals.filter((v) => AR.test(v)).length;
+    assert.ok(n / vals.length > 0.9, code + ' doit être en écriture arabe');
+  }
+}
 // 2) Catalogue : chaque entrée a en + ar (arabe en écriture arabe), mêmes variables {…}.
 const CAT = U.UI_STRINGS;
 for (const [k, [en, ar]] of Object.entries(CAT)) {
