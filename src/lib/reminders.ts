@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { maybePlayScheduledAdhan, useBindAdhanPlayback } from './adhan-call';
 import { planFor } from './reminders-common';
 import { useSettings } from './settings';
 
@@ -41,6 +42,7 @@ export async function sendTestNotification(title: string, body: string) {
 /** Programme la prochaine notification du plan tant que l’app (PWA) est ouverte, puis la suivante. */
 export function usePrayerReminders() {
   const { s, t: tr, ready } = useSettings();
+  useBindAdhanPlayback();
   useEffect(() => {
     if (!ready || !s.reminders || !remindersSupported() || Notification.permission !== 'granted') return;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -53,6 +55,7 @@ export function usePrayerReminders() {
         try {
           new Notification(next.title, { body: next.body, tag: `zikru-${next.id}` });
         } catch {}
+        if (next.playsAdhan) void maybePlayScheduledAdhan(next.id, { playsAdhan: true });
         schedule();
       }, delay);
     };

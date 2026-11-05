@@ -42,6 +42,12 @@ export function NotifSettings() {
         {s.reminders && perm !== 'denied' ? (
           <>
             <Divider />
+            <Toggle
+              label="Adhan à l’heure de la prière"
+              hint="À l’heure des prières cochées, Zikru joue la voix choisie si l’application est ouverte, et quand vous ouvrez la notification. L’écran verrouillé ne lance pas l’enregistrement complet : iOS n’accepte qu’un son embarqué de moins de 30 secondes, et une notification Android ne lit pas une adresse distante. Sur le téléphone, ce son court est une lecture publiée (Jarih, CC BY-SA 3.0), pas la voix choisie. Le mode silencieux peut le couper. Dans le navigateur, la notification garde le son du système et la voix choisie ne part que si la page est ouverte. Si ce réglage est coupé, la notification de prière reste, sans cet appel."
+              value={n.adhan !== false}
+              onChange={(v) => patch({ adhan: v })}
+            />
             <Muted style={{ marginBottom: 6 }}>{tr.notif_prayers}</Muted>
             <Row wrap>
               {FARD_KEYS.map((k) => (

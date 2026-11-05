@@ -23,7 +23,7 @@ Copier `.env.example` vers `.env` et remplacer les valeurs `YOUR_*` :
 |---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | Projet Supabase (synchronisation) |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Clé publique anon Supabase |
-| `EXPO_PUBLIC_ADHAN_AUDIO_URL` | Fichier audio d'adhan dont vous détenez les droits |
+| `EXPO_PUBLIC_ADHAN_AUDIO_URL` | Voix d’adhan supplémentaire (fichier dont vous détenez les droits). Les voix publiées fonctionnent sans cette variable. |
 
 Sans ces valeurs, tout le cœur de l'app fonctionne en local et l'écran **Configuration manquante** l'indique clairement. Schéma SQL + RLS : `supabase/schema.sql`.
 

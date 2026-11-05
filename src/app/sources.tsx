@@ -22,6 +22,11 @@ export default function Sources() {
         <Muted>Les heures sont affichées dans le fuseau horaire de l’appareil.</Muted>
       </Card>
       <Spacer />
+      <H2>Voix de l’adhan</H2>
+      <Card>
+        <Body>Adhan diffusé à l’écoute depuis Wikimedia Commons (non inclus dans l’application), avec l’auteur, la page et la licence sous le lecteur. Aucun adhan n’est synthétisé. Le son court de la notification est la lecture de Jarih (File:Adhan wiki.oga, CC BY-SA 3.0), convertie en WAV et embarquée : le système n’accepte pas un fichier distant de plusieurs minutes.</Body>
+      </Card>
+      <Spacer />
       <H2>Qibla</H2>
       <Card>
         <Body>Azimut du grand cercle vers la Kaaba (21,4225° N, 39,8262° E), depuis le nord géographique.</Body>
