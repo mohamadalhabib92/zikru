@@ -12,6 +12,7 @@ import { ActivityIndicator, Image, Platform, TextInput, View } from 'react-nativ
 import { Text } from '@/ui/Text';
 import { L, useUiLang } from '@/lib/l10n';
 import { keepPhoto, ocrSupport, recognizeArabic } from '@/lib/ocr';
+import { quranEditionLang } from '@/lib/i18n';
 import { translationFor } from '@/lib/quran';
 import { normAr } from '@/lib/ar-norm';
 import { loadQuranIndex, matchQuran, type MatchResult, type QuranProposal } from '@/lib/quran-match';
@@ -36,7 +37,7 @@ const firstWords = (s: string) => s.trim().split(/\s+/).slice(0, 4).join(' ');
 
 /** Traduction et translittération d’un passage reconnu (cache puis réseau, sourate entière). */
 function useVerseExtras(p: QuranProposal | null, lang: string) {
-  const ed = translationFor(lang);
+  const ed = translationFor(quranEditionLang(lang));
   const key = p ? `${p.s}:${p.a}-${p.b}:${ed.id}` : '';
   const [st, setSt] = useState<{ key: string; tr?: string; tl?: string; label: string } | null>(null);
   useEffect(() => {

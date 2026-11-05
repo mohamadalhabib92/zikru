@@ -32,10 +32,9 @@ import { Container, FadeIn, Grid, IconBadge, ProgressRing, SectionHeader, Skelet
 import { Ionicons, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted } from '@/ui/light';
 import { alpha, brand as b } from '@/ui/theme';
+import { UI_LOCALE } from '@/lib/i18n';
 import { L, useUiLang } from '@/lib/l10n';
 import { duaView, quranDuaView } from '@/lib/i18n-content';
-
-const LOCALE: Record<string, string> = { fr: 'fr-CH', en: 'en-GB', de: 'de-DE', 'de-CH': 'de-CH', ar: 'ar', ff: 'fr-CH', wo: 'fr-CH' };
 let aiUnavailable = false; // évite d'appeler la fonction à chaque rendu si l'IA n'est pas configurée
 const FARD: PrayerKey[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const totalReps = (items: { reps: number }[]) => items.reduce((a, it) => a + it.reps, 0);
@@ -123,7 +122,7 @@ export default function Home() {
 
   let greg = now.toDateString();
   try {
-    greg = now.toLocaleDateString(LOCALE[s.lang] ?? 'fr-CH', { weekday: 'long', day: 'numeric', month: 'long' });
+    greg = now.toLocaleDateString(UI_LOCALE[s.lang], { weekday: 'long', day: 'numeric', month: 'long' });
   } catch {}
   const hijri = formatHijri(now, s.lang, s.hijriOffset);
   const today = dayKey(now);

@@ -1,14 +1,15 @@
 /**
  * Traduction des chaînes d'interface écrites en français dans les écrans.
- * - Clé = texte français exact ; valeur = [anglais, arabe] (catalogue `UI_STRINGS`).
- * - `L('…')` / `L('{n} jours', { n })` : traduction explicite (alertes, placeholders, gabarits).
- * - Le composant `Text` de `@/ui/Text` traduit aussi automatiquement les enfants texte connus du catalogue.
- * - Jamais pour les textes religieux (Coran, hadith, du‘a) : ceux-ci ont leurs propres champs sourcés.
- * - Allemand, pulaar, wolof : repli sur le français pour ces chaînes (non couvertes par P5).
+ * - Clé = texte français exact.
+ * - en / ar : catalogue généré `UI_STRINGS`.
+ * - de, de-CH et les langues `review` : `src/lib/ui-cat` (brouillon, pas une validation savante).
+ * - Chaîne absente : le français source reste affiché. Jamais pour les textes religieux
+ *   (Coran, hadith, du‘a) : ceux-ci ont leurs propres champs sourcés.
  */
 import { createContext, useContext } from 'react';
 import type { Lang } from './i18n';
 import { UI_STRINGS } from './ui-strings';
+import { uiCatalogText } from './ui-cat';
 
 let cur: Lang = 'fr';
 export function setUiLang(l: Lang) {
@@ -28,10 +29,16 @@ const fill = (s: string, vars?: Record<string, string | number | null | undefine
 
 /** Cherche la traduction d'une chaîne française (null si absente du catalogue ou langue sans catalogue). */
 export function lookup(fr: string, lang: Lang = cur): string | null {
-  if (lang !== 'en' && lang !== 'ar') return null;
-  const e = UI_STRINGS[fr] ?? UI_STRINGS[norm(fr)];
-  if (!e) return null;
-  return lang === 'en' ? e[0] : e[1];
+  if (lang === 'fr') return null;
+  if (lang === 'en' || lang === 'ar') {
+    const e = UI_STRINGS[fr] ?? UI_STRINGS[norm(fr)];
+    if (!e) return null;
+    return lang === 'en' ? e[0] : e[1];
+  }
+  const base = lang === 'de-CH' ? 'de' : lang;
+  const hit = uiCatalogText(base, fr) ?? uiCatalogText(base, norm(fr));
+  if (hit == null) return null;
+  return lang === 'de-CH' ? hit.replace(/ß/g, 'ss') : hit;
 }
 /** Traduit une chaîne française d'interface (gabarit `{var}` accepté). */
 export function L(fr: string, vars?: Record<string, string | number | null | undefined>, lang: Lang = cur): string {
@@ -43,7 +50,7 @@ export function L(fr: string, vars?: Record<string, string | number | null | und
 }
 /** Traduit une chaîne en conservant les espaces de bord (morceaux de texte JSX). */
 export function translatePiece(s: string, lang: Lang): string {
-  if (lang !== 'en' && lang !== 'ar') return s;
+  if (lang === 'fr') return s;
   const t = s.trim();
   if (!t) return s;
   const r = lookup(t, lang);

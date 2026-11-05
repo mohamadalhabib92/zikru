@@ -75,7 +75,7 @@ export const HIJRI_MONTHS: Record<'ar' | 'translit', string[]> = {
 /** Affichage unique de la date hégirienne (utilisé par tous les écrans). */
 export function formatHijri(date: Date, lang: string, offsetDays = 0): string {
   const h = toHijri(date, offsetDays);
-  if (lang === 'ar') return `${h.day} ${HIJRI_MONTHS.ar[h.month - 1]} ${h.year} هـ`;
+  if (lang === 'ar' || lang === 'ur' || lang === 'fa') return `${h.day} ${HIJRI_MONTHS.ar[h.month - 1]} ${h.year} هـ`;
   return `${h.day} ${HIJRI_MONTHS.translit[h.month - 1]} ${h.year} AH`;
 }
 

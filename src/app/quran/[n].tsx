@@ -11,6 +11,7 @@ import { readerPalette } from '@/components/quran/palette';
 import { ReaderSettings } from '@/components/quran/ReaderSettings';
 import { QBtn } from '@/components/quran/Sheet';
 import { arNum, gIndex, hizbOfIndex, juzOfIndex, pageOf, pageOfIndex, rubLabel, rubStartAt, sajdaAt } from '@/lib/quran-nav';
+import { splitAyah } from '@/lib/quran-enc';
 import { BASMALA_UTHMANI } from '@/lib/quran-reader-data';
 import { keyOf, marks, readerPrefs, recordRead } from '@/lib/quran-store';
 import { buildQueue } from '@/lib/recitation';
@@ -156,7 +157,9 @@ export default function SurahReader() {
             const sj = sajdaAt(gi);
             const playing = playingA === a;
             const text = ar[a - 1];
-            const t = tr.lines?.[a - 1];
+            const packed = tr.lines?.[a - 1];
+            const meaning = packed ? splitAyah(packed) : undefined;
+            const t = meaning?.text;
             return (
               <Pressable
                 accessibilityRole="button"
@@ -200,7 +203,10 @@ export default function SurahReader() {
                 {p.showTl && tl.lines?.[a - 1] ? <Text style={{ color: pal.muted, fontStyle: 'italic', fontSize: p.trSize - 1, lineHeight: Math.round((p.trSize - 1) * 1.5), marginTop: 4 }}>{tl.lines[a - 1]}</Text> : null}
                 {p.showTr ? (
                   t ? (
-                    <Text style={{ color: pal.ink, opacity: 0.88, fontSize: p.trSize, lineHeight: Math.round(p.trSize * 1.55), marginTop: 6 }}>{t}</Text>
+                    <>
+                      <Text style={{ color: pal.ink, opacity: 0.88, fontSize: p.trSize, lineHeight: Math.round(p.trSize * 1.55), marginTop: 6 }}>{t}</Text>
+                      {meaning?.notes ? <Text style={{ color: pal.muted, fontSize: Math.max(12, p.trSize - 2), lineHeight: Math.round(p.trSize * 1.45), marginTop: 6 }}>{meaning.notes}</Text> : null}
+                    </>
                   ) : a === 1 && tr.failed ? (
                     <Pressable onPress={tr.retry} accessibilityRole="button">
                       <Text style={{ color: pal.muted, fontSize: 13, marginTop: 6 }}>Traduction indisponible hors connexion · Réessayer</Text>
@@ -219,7 +225,7 @@ export default function SurahReader() {
                 {n < 114 ? <QBtn label={`${SURAHS[n][2]} →`} onPress={() => router.replace(`/quran/${n + 1}`)} pal={pal} /> : null}
               </View>
               <Text style={{ color: pal.muted, fontSize: 11, textAlign: 'center' }}>
-                {`${L('Texte : Tanzil (uthmani, CC BY 3.0) · Traduction : {t} via alquran.cloud', { t: trId.label })}${p.showTl ? L(' · Translittération : alquran.cloud') : ''} · ${L('Touchez un verset pour ses actions')}`}
+                {`${L('Texte : Tanzil (uthmani, CC BY 3.0) · {cite}', { cite: trId.citation })}${p.showTl ? L(' · Translittération : alquran.cloud') : ''} · ${L('Touchez un verset pour ses actions')}`}
               </Text>
             </View>
           }

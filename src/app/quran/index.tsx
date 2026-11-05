@@ -5,6 +5,7 @@ import { Text } from '@/ui/Text';
 import { useTranslationId } from '@/components/quran/data';
 import { dayKey } from '@/lib/dates';
 import { khatmaStatus, streak } from '@/lib/khatma';
+import { splitAyah } from '@/lib/quran-enc';
 import { normLat, searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { hizbPage, hizbRange, juzPage, juzRange, pageOf, pageRange, parseRef, surahPage, fromIndex, OFFSETS } from '@/lib/quran-nav';
 import { hifzCards, khatma, lastRead, marks, readDays } from '@/lib/quran-store';
@@ -174,7 +175,7 @@ export default function QuranHub() {
               <Text style={{ color: b.ink, fontFamily: fonts.quran, fontSize: 18, lineHeight: 38, textAlign: 'right', writingDirection: 'rtl' }} numberOfLines={2}>
                 {h.ar}
               </Text>
-              {h.tr ? <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={2}>{h.tr}</Text> : null}
+              {h.tr ? <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={2}>{splitAyah(h.tr).text}</Text> : null}
             </Pressable>
           ))}
           {hits && hits.total > 8 ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('{n} versets — affinez, ou ouvrez la recherche complète.', { n: hits.total })}</Text> : null}

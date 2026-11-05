@@ -13,7 +13,10 @@ export default function Dhikr() {
   const { content, setTasbih } = useData();
   const router = useRouter();
   const items = approvedOnly(content); // ← l'UI n'affiche que le contenu approuvé
-  const tl = (s.lang === 'de-CH' ? 'de' : s.lang) as 'fr' | 'en' | 'de' | 'ff' | 'wo' | 'ar';
+  // Les langues d'interface nouvelles n'ont pas de sens religieux : le français déjà sourcé reste affiché.
+  const raw = s.lang === 'de-CH' ? 'de' : s.lang;
+  const known = raw === 'fr' || raw === 'en' || raw === 'de' || raw === 'ff' || raw === 'wo' || raw === 'ar';
+  const tl = (known ? raw : 'fr') as 'fr' | 'en' | 'de' | 'ff' | 'wo' | 'ar';
   return (
     <Screen>
       <Eyebrow>{tr.dhikr_title}</Eyebrow>
