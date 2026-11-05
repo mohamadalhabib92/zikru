@@ -8,7 +8,7 @@
 | 2 | Boutons inactifs / cibles trop petites | Kit UI commun : hauteur ≥ 48 pt (44 pt pour les petits), `IconButton` 44×44, états `disabled` / `loading`, `accessibilityRole` + labels. |
 | 3 | Erreurs 402 / API payantes sur le chemin principal | Aucun appel réseau requis : horaires via `adhan` (local), qibla calculée localement, contenu embarqué. Supabase optionnel derrière `YOUR_*`. |
 | 4 | Compteur tasbih perdu à la fermeture | Écriture à chaque incrément (AsyncStorage / localStorage), sessions historisées. |
-| 5 | Audio Bilal absent → crash | `AudioPlayer` affiche « fichier audio manquant » si aucune source ; lecture protégée par try/catch. |
+| 5 | Audio Bilal absent → crash | `AudioPlayer` affiche « fichier manquant » pour la voix choisie si elle n’a pas de source ; lecture protégée par try/catch. Les voix publiées sont des enregistrements Wikimedia Commons (HTTPS). |
 | 6 | Bluetooth « simulé » présenté comme réel | Interface `RingService` + `MockRingService`, badge **Simulation** partout. |
 | 7 | Traductions religieuses non validées | Workflow `draft → in_review → approved` ; seul `approved` est affiché ; traductions vides = « en attente de validation ». Contenus d'amorçage marqués **Exemple**. |
 | 8 | Configuration manquante = écran blanc | Écran « Configuration manquante » explicite + `.env.example`. |
@@ -17,7 +17,7 @@
 ## Écarts connus (à traiter ensuite)
 - MMKV non utilisé (nécessite un build natif, incompatible PWA) → AsyncStorage.
 - Notifications d'adhan non implémentées (expo-notifications + build natif).
-- Fichier audio d'adhan non fourni (droits à obtenir) → `EXPO_PUBLIC_ADHAN_AUDIO_URL`.
+- Adhan complet : enregistrements Wikimedia Commons lus en ligne (licence citée dans l’app). Fichiers locaux facultatifs (`assets/audio/bilal.mp3`, `adhan-makkah.mp3`, `adhan-madinah.mp3`) et `EXPO_PUBLIC_ADHAN_AUDIO_URL`. Le son de notification est la lecture courte de Jarih (`adhan_cue.wav`, CC BY-SA 3.0, moins de 30 s) : iOS et Android ne diffusent pas l’enregistrement complet depuis une notification. La voix choisie joue si l’app est ouverte ou à l’ouverture de la notification.
 - Pulaar et Wolof : repli français en attendant des traductions validées.
 - Synchronisation Supabase : schéma + RLS fournis (`supabase/schema.sql`), client de synchro à brancher après authentification.
 - Horaires affichés dans le fuseau de l'appareil (une ville lointaine choisie manuellement s'affiche à l'heure locale de l'appareil).

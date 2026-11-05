@@ -55,4 +55,23 @@ t('aucune prière : seulement la pause (ou rien)', () => {
 t('empreinte stable', () => {
   assert.equal(P.planHash(P.buildPlan(now, compute, D, L)), P.planHash(P.buildPlan(now, compute, D, L)));
 });
+t('adhan : seulement les prières cochées, pas le rappel d’avant', () => {
+  const p = P.buildPlan(now, compute, { ...D, before: 10 }, L);
+  const prayers = p.filter((e) => e.kind === 'prayer');
+  assert.ok(prayers.length > 0 && prayers.every((e) => e.playsAdhan === true));
+  assert.ok(p.filter((e) => e.kind !== 'prayer').every((e) => !e.playsAdhan));
+  assert.ok(p.some((e) => e.kind === 'before' && !e.playsAdhan));
+});
+t('adhan coupé : la prière reste notifiée, sans lecture', () => {
+  const offPrefs = { ...D, adhan: false };
+  const p = P.buildPlan(now, compute, offPrefs, L);
+  assert.ok(p.some((e) => e.kind === 'prayer'));
+  assert.ok(p.every((e) => !e.playsAdhan));
+  assert.notEqual(P.planHash(P.buildPlan(now, compute, D, L)), P.planHash(p));
+});
+t('prière décochée : pas d’adhan pour elle', () => {
+  const p = P.buildPlan(now, compute, { ...D, prayers: { ...D.prayers, asr: false } }, L);
+  assert.ok(!p.some((e) => e.playsAdhan && /-asr$/.test(e.id)));
+  assert.ok(p.some((e) => e.playsAdhan && /-dhuhr$/.test(e.id)));
+});
 console.log(`Notifications : ${ok} tests passent.`);

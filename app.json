@@ -157,7 +157,8 @@
       [
         "expo-notifications",
         {
-          "enableRemoteNotifications": false
+          "enableRemoteNotifications": false,
+          "sounds": ["./assets/audio/adhan_cue.wav"]
         }
       ],
       [

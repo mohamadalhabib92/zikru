@@ -1,0 +1,11 @@
+Adhan notification cue
+Recording: Wikimedia Commons, File:Adhan wiki.oga
+Author: Jarih
+Source page: https://commons.wikimedia.org/wiki/File:Adhan_wiki.oga
+License: Creative Commons Attribution-ShareAlike 3.0
+https://creativecommons.org/licenses/by-sa/3.0/
+The file is also offered under the GNU Free Documentation License 1.2 (no invariant sections).
+Zikru redistributes it under CC BY-SA 3.0.
+
+adhan_cue.wav is a format conversion (Ogg Vorbis to 16-bit PCM WAV, mono, 22050 Hz) of that recording so iOS and Android can use it as a bundled notification sound. The content of the recording is unchanged. Duration is under 30 seconds.
+This cue is not the voice the user selects for the full adhan. The full recordings stay online.

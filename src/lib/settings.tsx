@@ -3,6 +3,7 @@ import { DICTS, type Dict, type Lang } from './i18n';
 import { DEFAULT_PLACE, type MethodKey, type Place } from './prayer';
 import { usePersistentState } from './storage';
 import { setUiLang, UiLangContext } from './l10n';
+import { DEFAULT_ADHAN_VOICE_ID } from './adhan-voices';
 import { DEFAULT_NOTIF, type NotifPrefs } from './notify-plan';
 
 export type Settings = {
@@ -23,8 +24,10 @@ export type Settings = {
   notif: NotifPrefs;
   /** Commencer chaque composition « Mes zikrs » par Al-Fatiha (1×). Actif par défaut. */
   fatihaFirst?: boolean;
+  /** Identifiant de la voix d’adhan (`adhan-voices.ts`). */
+  adhanVoice?: string;
 };
-const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: 'MuslimWorldLeague', madhab: 'shafi', hijriOffset: 0, onboarded: false, appearance: 'system', reminders: false, notif: DEFAULT_NOTIF, fatihaFirst: true };
+const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: 'MuslimWorldLeague', madhab: 'shafi', hijriOffset: 0, onboarded: false, appearance: 'system', reminders: false, notif: DEFAULT_NOTIF, fatihaFirst: true, adhanVoice: DEFAULT_ADHAN_VOICE_ID };
 
 type Ctx = { s: Settings; set: (p: Partial<Settings>) => void; t: Dict; ready: boolean };
 const C = createContext<Ctx | null>(null);

@@ -19,9 +19,15 @@ export type NotifPrefs = {
   wird: boolean;
   /** Lecture du Coran (khatma / révision hifz) : après le Fajr, après le ‘Isha, ou désactivé. */
   quran?: QuranSlot;
+  /**
+   * Joue la voix d’adhan choisie à l’heure des prières cochées.
+   * Le rappel « avant », le vendredi, les adhkar et le wird ne lancent pas l’adhan.
+   * Absent d’un ancien réglage : traité comme activé.
+   */
+  adhan?: boolean;
 };
 export type QuranSlot = 'off' | 'fajr' | 'isha';
-export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off' };
+export const DEFAULT_NOTIF: NotifPrefs = { prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true }, before: 0, friday: true, adhkar: false, wird: false, quran: 'off', adhan: true };
 export const BEFORE_OPTIONS = [0, 5, 10, 15, 30];
 
 export type PlanLabels = {
@@ -47,7 +53,7 @@ export type PlanLabels = {
   pausedBody: string;
 };
 
-export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'paused' };
+export type PlannedNotif = { id: string; date: Date; title: string; body: string; url: string; kind: 'prayer' | 'before' | 'friday' | 'adhkar' | 'wird' | 'quran' | 'paused'; /** true seulement à l’heure d’une prière cochée, pas pour le rappel d’avant. */ playsAdhan?: boolean };
 type DayTimes = { key: string; time: Date }[];
 export type ComputeDay = (d: Date) => DayTimes;
 
@@ -63,7 +69,7 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
   for (const k of FARD_KEYS) {
     const t = at(k);
     if (!t || !prefs.prayers[k]) continue;
-    out.push({ id: `${dk}-${k}`, date: t, title: `${L.prayer[k]} · ${L.place}`, body: L.atTime, url: '/prayers', kind: 'prayer' });
+    out.push({ id: `${dk}-${k}`, date: t, title: `${L.prayer[k]} · ${L.place}`, body: L.atTime, url: '/prayers', kind: 'prayer', playsAdhan: prefs.adhan !== false });
     if (prefs.before > 0) out.push({ id: `${dk}-${k}-pre`, date: new Date(t.getTime() - prefs.before * MIN), title: `${L.prayer[k]} ${L.inMin(prefs.before)}`, body: L.place, url: '/prayers', kind: 'before' });
   }
   const fajr = at('fajr'), sunrise = at('sunrise'), dhuhr = at('dhuhr'), asr = at('asr'), maghrib = at('maghrib');
@@ -111,4 +117,4 @@ export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: 
 }
 
 /** Empreinte du plan : évite de tout reprogrammer si rien n’a changé. */
-export const planHash = (p: PlannedNotif[]) => p.map((e) => `${e.id}@${Math.round(e.date.getTime() / MIN)}:${e.title}`).join('|');
+export const planHash = (p: PlannedNotif[]) => p.map((e) => `${e.id}@${Math.round(e.date.getTime() / MIN)}:${e.title}${e.playsAdhan ? '#adhan' : ''}`).join('|');

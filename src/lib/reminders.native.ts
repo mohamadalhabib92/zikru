@@ -2,6 +2,8 @@ import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
+import { maybePlayScheduledAdhan, useBindAdhanPlayback } from './adhan-call';
+import { ADHAN_CHANNEL_ID, ADHAN_CUE_SOUND, adhanResponseIsFresh, payloadPlaysAdhan } from './adhan-voices';
 import { planHash } from './notify-plan';
 import { planFor } from './reminders-common';
 import { useSettings } from './settings';
@@ -11,20 +13,36 @@ import { loadJSON, saveJSON } from './storage';
  * Rappels natifs (iOS/Android) : notifications LOCALES programmées à l’avance (aucun serveur, aucun push distant).
  * iOS garde au plus 64 notifications : le plan glissant (notify-plan.ts) en programme ≤ 64 et se renouvelle
  * à chaque ouverture de l’app, à minuit, et dès que le lieu, la méthode, l’école ou les préférences changent.
- * Son : son système par défaut (aucun adhan protégé embarqué).
+ *
+ * L’adhan complet (voix choisie, souvent plusieurs minutes, fichier distant) ne peut pas être le son
+ * de la notification : iOS n’accepte qu’un son embarqué de moins de 30 secondes, et Android ne lit pas
+ * une adresse distante dans la notification. Le son embarqué est la lecture courte de Jarih
+ * (`adhan_cue.wav`, CC BY-SA 3.0). La voix choisie démarre si l’app est ouverte, ou à l’ouverture
+ * de la notification. Un démarrage ordinaire ne relance pas un ancien adhan.
  */
 export const remindersSupported = () => true;
 export const remindersNative = true;
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  handleNotification: async (notification) => {
+    const adhan = payloadPlaysAdhan(notification.request.content.data);
+    // Android : shouldPlaySound false masque aussi la bannière. iOS : on coupe le son court
+    // pour ne pas le superposer à la voix choisie, que l’app lance elle-même au premier plan.
+    return {
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: Platform.OS === 'android' || !adhan,
+      shouldSetBadge: false,
+    };
+  },
 });
 
 const CHANNEL = 'prayers';
 async function ensureChannel() {
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: Notifications.AndroidImportance.HIGH, sound: 'default' });
-  }
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: Notifications.AndroidImportance.HIGH, sound: 'default' });
+  // Le son court n’est dans le binaire qu’après un prebuild. S’il manque, on garde le canal par défaut.
+  await Notifications.setNotificationChannelAsync(ADHAN_CHANNEL_ID, { name: 'Adhan', importance: Notifications.AndroidImportance.HIGH, sound: ADHAN_CUE_SOUND }).catch(() => {});
 }
 
 export async function reminderPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
@@ -85,11 +103,28 @@ async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
   await Notifications.cancelAllScheduledNotificationsAsync();
   for (const e of plan) {
     if (e.date.getTime() <= Date.now() + 2000) continue;
-    await Notifications.scheduleNotificationAsync({
-      identifier: e.id,
-      content: { title: e.title, body: e.body, sound: 'default', data: { url: e.url, kind: e.kind } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date, channelId: CHANNEL },
-    });
+    const cue = !!e.playsAdhan;
+    const content = {
+      title: e.title,
+      body: e.body,
+      sound: cue ? ADHAN_CUE_SOUND : 'default',
+      data: { url: e.url, kind: e.kind, playsAdhan: cue ? '1' : '0' },
+    };
+    const when = { type: Notifications.SchedulableTriggerInputTypes.DATE, date: e.date };
+    try {
+      await Notifications.scheduleNotificationAsync({
+        identifier: e.id,
+        content,
+        trigger: { ...when, channelId: cue ? ADHAN_CHANNEL_ID : CHANNEL },
+      });
+    } catch {
+      // Son embarqué absent (binaire pas encore reconstruit) : notification quand même, son système.
+      await Notifications.scheduleNotificationAsync({
+        identifier: e.id,
+        content: { ...content, sound: 'default' },
+        trigger: { ...when, channelId: CHANNEL },
+      }).catch(() => {});
+    }
   }
   await saveJSON(HASH_KEY, hash);
 }
@@ -99,16 +134,26 @@ export function usePrayerReminders() {
   const router = useRouter();
   const latest = useRef({ s, tr });
   latest.current = { s, tr };
+  useBindAdhanPlayback();
 
-  // Ouverture depuis une notification → écran concerné.
+  // Ouverture depuis une notification → écran concerné, et adhan si c’est l’heure d’une prière.
   useEffect(() => {
-    const go = (r: Notifications.NotificationResponse | null) => {
+    const go = (r: Notifications.NotificationResponse | null, cold: boolean) => {
       const url = r?.notification.request.content.data?.url;
       if (typeof url === 'string' && url.startsWith('/')) setTimeout(() => router.push(url as never), 300);
+      if (!r) return;
+      if (cold && !adhanResponseIsFresh(r.notification.date)) return;
+      void maybePlayScheduledAdhan(r.notification.request.identifier, r.notification.request.content.data);
     };
-    Notifications.getLastNotificationResponseAsync().then(go).catch(() => {});
-    const sub = Notifications.addNotificationResponseReceivedListener(go);
-    return () => sub.remove();
+    Notifications.getLastNotificationResponseAsync().then((r) => go(r, true)).catch(() => {});
+    const opened = Notifications.addNotificationResponseReceivedListener((r) => go(r, false));
+    const received = Notifications.addNotificationReceivedListener((n) => {
+      void maybePlayScheduledAdhan(n.request.identifier, n.request.content.data);
+    });
+    return () => {
+      opened.remove();
+      received.remove();
+    };
   }, [router]);
 
   useEffect(() => {

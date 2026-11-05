@@ -8,6 +8,7 @@ import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
 import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
+import { AdhanVoicePicker } from '@/components/AudioPlayer';
 import { NotifSettings } from '@/components/NotifSettings';
 import { useSettings } from '@/lib/settings';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
@@ -60,6 +61,8 @@ export default function SettingsScreen() {
       <Spacer h={20} />
 
       <NotifSettings />
+      <AdhanVoicePicker />
+      <Spacer h={20} />
       <H2>{tr.location}</H2>
       <Muted>
         {s.place.label}
