@@ -3,6 +3,8 @@
  * mises en cache sur l’appareil), tafsir à la demande (alquran.cloud / api.quran.com).
  */
 import { stripBasmala } from './quran';
+import { fetchQuranEncSurah } from './quran-enc';
+import { isQuranEncId, quranEncKeyOf } from './quran-licenses';
 import { cachedTranslation } from './quran-offline';
 import { OFFSETS, TOTAL_AYAHS } from './quran-nav';
 import { loadJSON, saveCacheJSON } from './storage';
@@ -41,10 +43,15 @@ export function surahEdition(n: number, ed: string): Promise<string[] | null> {
       const old = await loadJSON<{ ayahs?: { tr: string }[] } | null>(`quran3-${n}-${ed}`, null);
       if (old?.ayahs?.length) return old.ayahs.map((a) => a.tr);
       try {
-        const r = await fetch(`https://api.alquran.cloud/v1/surah/${n}/${ed}`);
-        if (!r.ok) return null;
-        const j = (await r.json()) as { data: { ayahs: { text: string }[] } };
-        const out = j.data.ayahs.map((a) => a.text);
+        const out = isQuranEncId(ed)
+          ? await fetchQuranEncSurah(quranEncKeyOf(ed), n)
+          : await (async () => {
+              const r = await fetch(`https://api.alquran.cloud/v1/surah/${n}/${ed}`);
+              if (!r.ok) return null;
+              const j = (await r.json()) as { data: { ayahs: { text: string }[] } };
+              return j.data.ayahs.map((a) => a.text);
+            })();
+        if (!out?.length) return null;
         await saveCacheJSON(`qtr-${n}-${ed}`, out);
         return out;
       } catch {

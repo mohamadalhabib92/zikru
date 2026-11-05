@@ -2,8 +2,8 @@
  * Interface : FR, EN, AR, DE, de-CH, puis les langues d'interface « à relire »
  * (tr, ur, id, fa, ha, sw, es, it, pt, ff, wo).
  * - Ces chaînes sont l'INTERFACE (boutons, titres), jamais des traductions religieuses.
- * - Les textes religieux viennent du workflow de contenu (statut « approved »), cf. src/lib/content.ts.
- *   Les langues sans édition citée restent sur le français déjà présent (contentLang).
+ * - Du‘as non coraniques, Noms et fiqh : pas de nouvelle langue (contentLang reste fr / en / ar).
+ *   Le sens du Coran suit l’édition citée dans quran-licenses.ts (QuranEnc ou Hamidullah / Pickthall).
  * - `review: true` : catalogue d'interface montré, mais pas encore relu par un humain.
  *   Ce n'est pas une validation savante.
  * - de-CH : allemand standard suisse (« ss » au lieu de « ß »), même catalogue que `de`.
@@ -131,11 +131,10 @@ export const UI_LOCALE: Record<Lang, string> = {
   es: 'es-ES', it: 'it-IT', pt: 'pt-PT', ff: 'ff', wo: 'wo',
 };
 
-const QURAN_EDITION = new Set<string>(['fr', 'en', 'de', 'de-CH', 'ar', 'ff', 'wo']);
 /**
- * Langue passée à `translationFor` : seules les éditions déjà câblées.
- * Les langues d'interface nouvelles restent sur le français (Hamidullah), sans nouvelle édition.
+ * Langue passée à `translationFor`. Le choix d’édition (Hamidullah, Pickthall, Muyassar, QuranEnc)
+ * est dans `translationFor` / `quran-licenses.ts`. Le wolof n’a pas d’édition propre.
  */
 export function quranEditionLang(lang: string): string {
-  return QURAN_EDITION.has(lang) ? lang : 'fr';
+  return lang;
 }

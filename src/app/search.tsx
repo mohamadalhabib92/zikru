@@ -12,6 +12,7 @@ import { L, useUiLang } from '@/lib/l10n';
 import { useSettings } from '@/lib/settings';
 import { quranEditionLang } from '@/lib/i18n';
 import { translationFor } from '@/lib/quran';
+import { splitAyah } from '@/lib/quran-enc';
 import { cachedTranslation, downloadTranslation, hasArabic, searchVerses, type VerseHit } from '@/lib/quran-offline';
 import { SURAHS } from '@/lib/surahs';
 import { useZikrs } from '@/lib/zikrs';
@@ -252,7 +253,7 @@ export default function Search() {
                         </Arabic>
                         {v.tr ? (
                           <Text style={{ color: b.ink, lineHeight: 21, marginTop: 4 }} numberOfLines={4}>
-                            {v.tr}
+                            {splitAyah(v.tr).text}
                           </Text>
                         ) : null}
                       </Pressable>
@@ -281,8 +282,8 @@ export default function Search() {
                   {dl === 'err' ? <LMuted style={{ fontSize: 12 }}>{tr.no_results} (hors ligne).</LMuted> : null}
                 </View>
               ) : null}
-              {latin && hasTr === false ? <SectionHeader title="Versets du Coran (en ligne)" /> : null}
-              {!(latin && hasTr === false) ? null : online === null ? (
+              {latin && hasTr === false && ed.channel === 'alquran' ? <SectionHeader title="Versets du Coran (en ligne)" /> : null}
+              {!(latin && hasTr === false && ed.channel === 'alquran') ? null : online === null ? (
                 <Pressable
                   accessibilityRole="button"
                   onPress={searchOnline}

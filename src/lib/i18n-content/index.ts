@@ -4,13 +4,16 @@
  * - fr : traduction française d’origine (relue) ;
  * - en : traduction anglaise (Pickthall pour le Coran ; sinon « traduction Zikru — à relire ») ;
  * - ar : aucun sens traduit (l’arabe source suffit) ; libellés en arabe standard moderne.
- * de / ff / wo : repli sur le français.
+ * de / ff / wo et les langues de la vague 1 : du‘as non coraniques, Noms et fiqh restent sur le français
+ * (pas de Hisn ni de sens des Noms). Le sens des du‘as coraniques suit l’édition QuranEnc de `editionFor`.
  */
 import type { Lang } from '../i18n';
 import type { Dua } from '../duas';
 import type { QuranDua } from '../quran-duas';
+import { editionFor } from '../quran-licenses';
 import { DUAS_I18N } from './duas';
 import { QURAN_DUAS_I18N } from './quran-duas';
+import { QURAN_DUA_ENC } from './quran-dua-enc';
 
 export type ContentLang = 'fr' | 'en' | 'ar';
 export const contentLang = (l: Lang): ContentLang => (l === 'en' ? 'en' : l === 'ar' ? 'ar' : 'fr');
@@ -44,14 +47,20 @@ export function duaView(d: Dua, l: Lang): ContentView {
 export function quranDuaView(q: QuranDua, l: Lang): ContentView {
   const cl = contentLang(l);
   const t = QURAN_DUAS_I18N[q.id];
-  if (cl === 'fr' || !t) return { title: q.title, when: q.who, meaning: q.fr, translation: 'trad. Hamidullah', toReview: false };
-  return {
-    title: pick(t.title, q.title, cl)!,
-    when: q.who ? pick(t.who, q.who, cl) : undefined,
-    meaning: cl === 'en' ? q.en : undefined,
-    translation: cl === 'en' ? 'transl. Pickthall (public domain)' : undefined,
-    toReview: false,
-  };
+  const base: ContentView =
+    cl === 'fr' || !t
+      ? { title: q.title, when: q.who, meaning: q.fr, translation: 'trad. Hamidullah', toReview: false }
+      : {
+          title: pick(t.title, q.title, cl)!,
+          when: q.who ? pick(t.who, q.who, cl) : undefined,
+          meaning: cl === 'en' ? q.en : undefined,
+          translation: cl === 'en' ? 'transl. Pickthall (public domain)' : undefined,
+          toReview: false,
+        };
+  const key = editionFor(l).quranEncKey;
+  const enc = key ? QURAN_DUA_ENC[q.id]?.[key] : undefined;
+  if (!enc) return base;
+  return { ...base, meaning: enc, translation: editionFor(l).citation, toReview: false };
 }
 
 import type { FiqhRuling } from '../fiqh-rulings';

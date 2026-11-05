@@ -1,19 +1,18 @@
 /**
- * Lecture du Coran via l'API publique gratuite api.alquran.cloud (texte arabe vocalisé « simple-enhanced », lisible avec toutes les polices + traduction).
+ * Lecture du Coran : arabe Tanzil / alquran.cloud, sens Hamidullah, Pickthall, Muyassar,
+ * ou une édition QuranEnc citée (téléchargée à la demande, non réécrite).
  * Chaque sourate téléchargée est mise en cache sur l'appareil → relecture hors-ligne.
  */
+import { editionFor, isQuranEncId, quranEncKeyOf, type QuranEdition } from './quran-licenses';
+import { fetchQuranEncSurah } from './quran-enc';
 import { loadJSON, saveCacheJSON } from './storage';
 
 export type Ayah = { n: number; ar: string; tr: string };
 export type SurahText = { n: number; edition: string; ayahs: Ayah[] };
 
-export function translationFor(lang: string): { id: string; label: string } {
-  if (lang === 'fr' || lang === 'ff' || lang === 'wo') return { id: 'fr.hamidullah', label: 'Muhammad Hamidullah (FR)' };
-  if (lang === 'de' || lang === 'de-CH') return { id: 'de.bubenheim', label: 'Bubenheim & Elyas (DE)' };
-  // Arabe : pas de « traduction » ; tafsir abrégé al-Muyassar (Complexe du roi Fahd), source arabe classique contemporaine.
-  if (lang === 'ar') return { id: 'ar.muyassar', label: 'التفسير الميسر (مجمع الملك فهد)' };
-  // Anglais : Pickthall (1930), domaine public. Saheeh International est sous copyright (Dar Abul-Qasim) : non utilisée.
-  return { id: 'en.pickthall', label: 'M. Pickthall (EN, public domain)' };
+/** Sens affiché pour une langue d’interface. `wo` reste Hamidullah (pas d’édition wolof). */
+export function translationFor(lang: string): QuranEdition {
+  return editionFor(lang);
 }
 
 const BASMALA = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
@@ -30,6 +29,22 @@ export async function getSurah(n: number, edition: string): Promise<SurahText> {
   const key = `quran3-${n}-${edition}`;
   const cached = await loadJSON<SurahText | null>(key, null);
   if (cached?.ayahs?.length) return cached;
+  if (isQuranEncId(edition)) {
+    try {
+      const { offlineSurah } = await import('./quran-offline');
+      const base = await offlineSurah(n);
+      const tr = await fetchQuranEncSurah(quranEncKeyOf(edition), n);
+      const ayahs = base.map((a, i) => ({ n: a.n, ar: a.ar, tr: tr[i] ?? '' }));
+      const out = { n, edition, ayahs };
+      await saveCacheJSON(key, out);
+      return out;
+    } catch (e) {
+      const { offlineSurah } = await import('./quran-offline');
+      const ayahs = await offlineSurah(n, edition).catch(() => null);
+      if (ayahs?.length) return { n, edition, ayahs };
+      throw e;
+    }
+  }
   let j: { data: { ayahs: { numberInSurah: number; text: string }[] }[] };
   try {
     const r = await fetch(`https://api.alquran.cloud/v1/surah/${n}/editions/quran-simple-enhanced,${edition}`);

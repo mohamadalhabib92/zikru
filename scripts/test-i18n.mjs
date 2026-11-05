@@ -41,12 +41,9 @@ for (const code of REVIEW) {
 assert.equal(i18n.isRTL('ar') && i18n.isRTL('ur') && i18n.isRTL('fa'), true);
 assert.equal(i18n.isRTL('tr'), false);
 assert.equal(i18n.isRTL('id'), false);
-assert.equal(i18n.quranEditionLang('tr'), 'fr');
-assert.equal(i18n.quranEditionLang('ur'), 'fr');
+assert.equal(i18n.quranEditionLang('tr'), 'tr');
+assert.equal(i18n.quranEditionLang('wo'), 'wo');
 assert.equal(i18n.quranEditionLang('en'), 'en');
-assert.equal(i18n.quranEditionLang('de'), 'de');
-assert.equal(i18n.quranEditionLang('de-CH'), 'de-CH');
-assert.equal(i18n.quranEditionLang('ff'), 'ff');
 assert.equal(CONTENT.contentLang('tr'), 'fr');
 assert.equal(CONTENT.contentLang('fa'), 'fr');
 assert.equal(CONTENT.contentLang('en'), 'en');

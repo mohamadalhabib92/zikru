@@ -4,6 +4,8 @@
  */
 import { SURAHS } from './surahs';
 import { stripBasmala } from './quran';
+import { fetchQuranEncQuran } from './quran-enc';
+import { isQuranEncId, quranEncKeyOf } from './quran-licenses';
 import { readText, writeText } from './text-cache';
 import { hasArabic, normAr } from './ar-norm';
 
@@ -74,10 +76,14 @@ export function cachedTranslation(edition: string): Promise<string[] | null> {
 export async function downloadTranslation(edition: string): Promise<string[]> {
   const have = await cachedTranslation(edition);
   if (have) return have;
-  const r = await fetch(`https://api.alquran.cloud/v1/quran/${edition}`);
-  if (!r.ok) throw new Error(`alquran.cloud ${r.status}`);
-  const j = (await r.json()) as { data: { surahs: { ayahs: { text: string }[] }[] } };
-  const lines = j.data.surahs.flatMap((s) => s.ayahs.map((a) => a.text.replace(/\s*\n\s*/g, ' ')));
+  const lines = isQuranEncId(edition)
+    ? await fetchQuranEncQuran(quranEncKeyOf(edition))
+    : await (async () => {
+        const r = await fetch(`https://api.alquran.cloud/v1/quran/${edition}`);
+        if (!r.ok) throw new Error(`alquran.cloud ${r.status}`);
+        const j = (await r.json()) as { data: { surahs: { ayahs: { text: string }[] }[] } };
+        return j.data.surahs.flatMap((s) => s.ayahs.map((a) => a.text.replace(/\s*\n\s*/g, ' ')));
+      })();
   if (lines.length !== 6236) throw new Error('traduction incomplète');
   await writeText(trKey(edition), lines.join('\n'));
   trMem[edition] = Promise.resolve(lines);
