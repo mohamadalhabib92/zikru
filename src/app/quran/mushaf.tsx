@@ -99,7 +99,7 @@ export default function Mushaf() {
   const [settings, setSettings] = useState(false);
   const list = useRef<FlatList<number>>(null);
   useReaderKeepAwake(pr.keepAwake);
-  const rec = useRecitation({ reciter: pr.reciter, rate: pr.rate, gap: 0 });
+  const rec = useRecitation({ reciter: pr.reciter, rate: pr.rate, gap: 0, mode: pr.readingMode });
   const playing = rec.step ? keyOf(rec.step.s, rec.step.a) : '';
   const flow = useAyahFlow(pal, (t) => playFrom(gIndex(t.s, t.a)));
   const today = dayKey();
@@ -216,7 +216,7 @@ export default function Mushaf() {
           {kst?.today ? <Text style={{ color: pal.muted, fontSize: 11, marginTop: 6, backgroundColor: alpha(pal.bg, 0.8), paddingHorizontal: 8, borderRadius: 8 }}>{L('Wird du jour : p. {a}–{b} · khatma {p} %', { a: kst.today.from, b: kst.today.to, p: Math.round(kst.progress * 100) })}</Text> : null}
         </View>
       ) : null}
-      <AudioBar rec={rec} pal={pal} extra={L('Page {p}', { p: page })} />
+      <AudioBar rec={rec} pal={pal} extra={L('Page {p}', { p: page })} showReadingMode />
       <ReaderSettings visible={settings} onClose={() => setSettings(false)} pal={pal} />
       {flow.sheets}
     </View>

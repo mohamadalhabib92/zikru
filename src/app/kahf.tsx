@@ -1,9 +1,12 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { enableBackgroundAudio, NowPlaying, PlayerBar } from '@/components/PlayerBar';
 import { fridayKey, getKahfText, isKahfTime, KAHF_AUDIO, type Ayah } from '@/lib/kahf';
+import { onQuranPreempted, quranMount, quranOwnsPlayback, quranRequestPlay, quranUnmount, quranUserPause, quranUserStop } from '@/lib/quran-playback';
+import { readerPrefs } from '@/lib/quran-store';
+import { useShared } from '@/lib/shared-state';
 import { computeDay } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
@@ -11,10 +14,14 @@ import { Badge, Button, Card, Eyebrow, H1, H2, Muted, Notice, Screen, Segmented,
 import { theme as t } from '@/ui/theme';
 import { L, useUiLang } from '@/lib/l10n';
 
+const KAHF_ID = 'kahf';
+
 export default function Kahf() {
   const { s, t: tr } = useSettings();
-  const player = useAudioPlayer({ uri: KAHF_AUDIO[0] }, { updateInterval: 500 });
+  const [prefs] = useShared(readerPrefs);
+  const player = useAudioPlayer({ uri: KAHF_AUDIO[0] }, { updateInterval: 500, keepAudioSessionActive: true });
   const st = useAudioPlayerStatus(player);
+  const wantPlay = useRef(false);
   const [src, setSrc] = useState(0);
   const [ayahs, setAyahs] = useState<Ayah[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -31,18 +38,41 @@ export default function Kahf() {
 
   useEffect(() => {
     void enableBackgroundAudio();
-  }, []);
-  // Bascule automatique vers la source de secours si le premier serveur échoue.
-  // La position atteinte est conservée : la lecture reprend au même endroit sur le serveur de secours.
+    quranMount(KAHF_ID);
+    const off = onQuranPreempted(KAHF_ID, () => {
+      wantPlay.current = false;
+      try {
+        player.pause();
+      } catch {}
+    });
+    return () => {
+      off();
+      wantPlay.current = false;
+      quranUnmount(KAHF_ID);
+      try {
+        player.pause();
+      } catch {}
+    };
+  }, [player]);
+  // Fin naturelle du fichier entier : libère la récitation. Un échec de chargement n’est pas une fin.
+  useEffect(() => {
+    if (!st.didJustFinish || st.playbackState === 'failed') return;
+    if (!wantPlay.current && !quranOwnsPlayback(KAHF_ID)) return;
+    wantPlay.current = false;
+    quranUserStop(KAHF_ID);
+  }, [st.didJustFinish, st.playbackState]);
+  // Bascule vers la source de secours si le premier serveur échoue.
+  // On ne lance pas la lecture tout seul : seulement si l’utilisateur l’avait demandée et qu’al-Kahf a encore la main.
   useEffect(() => {
     if (st.playbackState === 'failed' && src < KAHF_AUDIO.length - 1) {
       const n = src + 1;
-      const at = st.currentTime || 0;
+      const keep = wantPlay.current && quranOwnsPlayback(KAHF_ID);
+      const at = keep ? st.currentTime || 0 : 0;
       setSrc(n); // eslint-disable-line react-hooks/set-state-in-effect
       setResumeAt(at);
       try {
         player.replace({ uri: KAHF_AUDIO[n] });
-        player.play();
+        if (keep) player.play();
       } catch {}
     }
   }, [st.playbackState, src, player]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -78,7 +108,19 @@ export default function Kahf() {
       {reminder && isKahfTime(now, maghrib) && !done ? <Notice tone="success" icon="notifications-outline" title={L("C’est le moment de lire al-Kahf")} text={L("Du coucher du soleil jeudi jusqu’au coucher du soleil vendredi.")} /> : null}
       <Card>
         <NowPlaying title={L("Sourate al-Kahf")} sub={L("Récitation : Mishary Rashid Alafasy (streaming)")} />
-        <PlayerBar player={player} st={st} />
+        <PlayerBar
+          player={player}
+          st={st}
+          onPlay={() => {
+            wantPlay.current = true;
+            quranRequestPlay(KAHF_ID);
+          }}
+          onPause={() => {
+            wantPlay.current = false;
+            quranUserPause(KAHF_ID);
+          }}
+        />
+        {prefs.readingMode === 'meditative' ? <Muted style={{ fontSize: 12, marginTop: 8 }}>{L('Lecture méditative indisponible : audio en un seul fichier, sans séparation des versets.')}</Muted> : null}
         {st.playbackState === 'failed' && src === KAHF_AUDIO.length - 1 ? <Muted style={{ marginTop: 6, color: t.danger }}>{L('Lecture impossible : connexion requise (audio en streaming, non stocké dans l’app).')}</Muted> : null}
         <Muted style={{ fontSize: 11, marginTop: 8 }}>{L('Audio diffusé depuis {s} — rien n’est téléchargé ni inclus dans l’app.', { s: src === 0 ? 'mp3quran.net' : 'cdn.islamic.network' })}</Muted>
       </Card>

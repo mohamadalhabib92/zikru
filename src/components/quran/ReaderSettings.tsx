@@ -92,6 +92,17 @@ export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; on
         ))}
       </View>
       {warsh ? <Text style={{ color: pal.gold, fontSize: 12, marginTop: 8 }}>Récitation selon la riwaya de Warsh ‘an Nafi‘ ; le texte affiché reste celui de Hafs ‘an ‘Asim (pas de texte Warsh sous licence libre disponible).</Text> : null}
+      <QLabel pal={pal}>{L('Mode de lecture')}</QLabel>
+      <QChoice
+        options={[
+          { label: L('Lecture normale'), value: 'normal' as const },
+          { label: L('Lecture méditative'), value: 'meditative' as const },
+        ]}
+        value={p.readingMode}
+        onChange={(v) => patch({ readingMode: v })}
+        pal={pal}
+      />
+      <Text style={{ color: pal.muted, fontSize: 12, marginTop: 8 }}>{L('Lecture normale enchaîne les versets. Lecture méditative attend 5 secondes à la fin de chaque verset, puis continue. Une pause ou un arrêt annule cette attente. Le fichier unique d’al-Kahf n’a pas de découpage verset par verset : ce mode n’y est pas disponible.')}</Text>
       <QLabel pal={pal}>VITESSE</QLabel>
       <QChoice options={RATES.map((r) => ({ label: `×${r}`, value: r }))} value={p.rate} onChange={(v) => patch({ rate: v })} pal={pal} />
       <Text style={{ color: pal.muted, fontSize: 11, marginTop: 14 }}>Audio diffusé verset par verset depuis EveryAyah.com (secours : Islamic Network). Rien n’est intégré à l’app.</Text>
