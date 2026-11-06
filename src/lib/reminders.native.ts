@@ -45,23 +45,47 @@ async function ensureChannel() {
   await Notifications.setNotificationChannelAsync(ADHAN_CHANNEL_ID, { name: 'Adhan', importance: Notifications.AndroidImportance.HIGH, sound: ADHAN_CUE_SOUND }).catch(() => {});
 }
 
+function notificationsGranted(p: Awaited<ReturnType<typeof Notifications.getPermissionsAsync>>): boolean {
+  return p.granted || p.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
+}
+
 export async function reminderPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
   try {
     const p = await Notifications.getPermissionsAsync();
-    if (p.granted || p.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) return 'granted';
+    if (notificationsGranted(p)) return 'granted';
     return p.canAskAgain ? 'undetermined' : 'denied';
   } catch {
     return 'denied';
   }
 }
 
+/**
+ * Android 12+ : sans SCHEDULE_EXACT_ALARM, une notification datée peut arriver en retard.
+ * Le refus ne coupe pas les rappels. iOS n’a pas cet écran.
+ */
+async function allowExactPrayerAlarms(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    const exact = await Notifications.getExactAlarmPermissionsAsync();
+    if (exact.granted || exact.canAskAgain === false) return;
+    await Notifications.requestExactAlarmPermissionsAsync();
+  } catch {
+    // Manifeste sans l’autorisation, ou écran système indisponible.
+  }
+}
+
 export async function requestReminderPermission(): Promise<boolean> {
   try {
     const cur = await Notifications.getPermissionsAsync();
-    if (cur.granted) return true;
-    if (!cur.canAskAgain) return false;
-    const r = await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } });
-    return r.granted || r.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
+    let granted = notificationsGranted(cur);
+    if (!granted) {
+      if (!cur.canAskAgain) return false;
+      const r = await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } });
+      granted = notificationsGranted(r);
+    }
+    if (!granted) return false;
+    await allowExactPrayerAlarms();
+    return true;
   } catch {
     return false;
   }
