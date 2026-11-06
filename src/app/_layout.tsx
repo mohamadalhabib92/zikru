@@ -19,6 +19,7 @@ import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
 import { L } from '@/lib/l10n';
+import { WatchSync } from '@/lib/watch-sync';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -130,6 +131,7 @@ export default function Layout() {
       <SafeAreaProvider>
         <SettingsProvider>
           <DataProvider>
+            <WatchSync />
             <ZikrProvider>
               <AuthProvider>
                 <CommunityProvider>

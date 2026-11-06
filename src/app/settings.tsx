@@ -18,6 +18,7 @@ import { DEFAULT_CONSENT } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
 import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { L } from '@/lib/l10n';
+import { WatchCard } from '@/components/WatchCard';
 
 export default function SettingsScreen() {
   const { s, set, t: tr } = useSettings();
@@ -62,6 +63,7 @@ export default function SettingsScreen() {
 
       <NotifSettings />
       <AdhanVoicePicker />
+      <WatchCard />
       <Spacer h={20} />
       <H2>{tr.location}</H2>
       <Muted>
