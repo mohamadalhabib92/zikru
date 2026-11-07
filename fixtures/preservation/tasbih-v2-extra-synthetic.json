@@ -1,0 +1,10 @@
+{
+  "v": 2,
+  "dev": "synthetic-dev",
+  "seq": 1,
+  "base": 0,
+  "log": [{ "dev": "synthetic-dev", "i": 1, "n": 7, "s": "manuel", "a": 1, "d": "subhanallah", "extraMark": "keep" }],
+  "ble": {},
+  "t": { "count": 7, "target": 33, "dhikrId": "subhanallah", "total": 7, "sessions": [] },
+  "shrine": "unknown-field"
+}

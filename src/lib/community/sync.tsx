@@ -7,15 +7,15 @@
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
-import { uid, usePersistentState } from '../storage';
+import { flushStorage, uid, usePersistentState } from '../storage';
 import type { ClickSource } from '../tasbih-core';
 import { allSharingModes, insertContributions, type ContributionRow, type ScopeType, type SharingMode } from './api';
 import { useAuth } from './auth';
 import { onClicks } from './clicks';
-import { coalesceQueue } from './queue';
+import { ackAttempts, classifyContributionError, coalesceQueue, sealAttempts, type OutboxRow } from './queue';
 
 export type GoalLink = { goalId: string; title: string; scope: ScopeType; scopeId: string; scopeName: string; memberId?: string | null };
-type Queued = ContributionRow & { tries?: number };
+type Queued = ContributionRow & OutboxRow & { tries?: number };
 type Ctx = {
   links: GoalLink[];
   isLinked: (goalId: string) => boolean;
@@ -90,7 +90,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
         let n = v.n;
         while (n > 0) {
           const c = Math.min(n, 100000);
-          rows.push({ goal_id: v.goalId, count: c, source: v.source, client_id: uid('c-'), member_id: v.memberId ?? null });
+          rows.push({ goal_id: v.goalId, count: c, source: v.source, client_id: uid('c-'), member_id: v.memberId ?? null, attempt: 0 });
           n -= c;
         }
       }
@@ -112,34 +112,39 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     if (!userId || busy.current || !queueRef.current.length) return;
     busy.current = true;
     const batch = queueRef.current.slice(0, 200);
-    for (const b of batch) inflight.current.add(b.client_id);
+    const ids = batch.map((b) => b.client_id);
+    queueRef.current = sealAttempts(queueRef.current, ids);
+    setQueue(queueRef.current);
+    for (const id of ids) inflight.current.add(id);
     try {
+      // L'écriture locale du gel part avant le réseau : un arrêt ici laisse l'identifiant et le nombre intacts.
+      const frozen = await flushStorage('community-queue');
+      if (!frozen) {
+        setSyncError('Les contributions restent sur cet appareil et seront renvoyées. Rien n’a été effacé.');
+        return;
+      }
       await insertContributions(
         userId,
-        batch.map(({ tries: _t, ...r }) => r),
+        batch.map((r) => ({ goal_id: r.goal_id, count: r.count, source: r.source, client_id: r.client_id, member_id: r.member_id ?? null })),
       );
-      const sent = new Set(batch.map((b) => b.client_id));
-      queueRef.current = queueRef.current.filter((r) => !sent.has(r.client_id));
+      queueRef.current = ackAttempts(queueRef.current, ids);
       setQueue(queueRef.current);
       setLastSync(Date.now());
       setSyncError(null);
     } catch (e) {
-      const m = (e as Error).message ?? '';
-      if (/row-level security|violates|check constraint/i.test(m)) {
-        // Objectif atteint, archivé ou accès retiré : on écarte ces lignes et on délie l'objectif.
-        const bad = new Set(batch.map((b) => b.goal_id));
-        queueRef.current = queueRef.current.filter((r) => !bad.has(r.goal_id));
+      if (classifyContributionError(e) === 'already-stored') {
+        queueRef.current = ackAttempts(queueRef.current, ids);
         setQueue(queueRef.current);
-        setLinks((ls) => ls.filter((l) => !bad.has(l.goalId)));
-        setSyncError('Un objectif n’accepte plus de contributions (atteint ou retiré) : il a été délié.');
+        setSyncError(null);
       } else {
-        setSyncError('Hors-ligne : les contributions seront envoyées plus tard.');
+        // La ligne gelée reste. On ne détache pas l'objectif : le nombre local n'est pas effacé.
+        setSyncError('Les contributions restent sur cet appareil et seront renvoyées. Rien n’a été effacé.');
       }
     } finally {
       busy.current = false;
       inflight.current.clear();
     }
-  }, [userId, setQueue, setLinks, stash]);
+  }, [userId, setQueue, stash]);
   const flushRef = useRef(flush);
   flushRef.current = flush;
 

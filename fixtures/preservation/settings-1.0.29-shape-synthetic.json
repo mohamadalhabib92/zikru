@@ -1,0 +1,10 @@
+{
+  "lang": "fr",
+  "hijriOffset": 1,
+  "hijriCalendar": "ummAlQura",
+  "onboarded": true,
+  "appearance": "system",
+  "reminders": false,
+  "prayer": { "highLatitude": "AngleBased", "mosque": { "enabled": true, "name": "synthetic" } },
+  "quietHoursLabel": "synthetic-only"
+}
