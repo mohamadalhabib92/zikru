@@ -15,7 +15,7 @@ import { L } from '@/lib/l10n';
 type Rec = ReturnType<typeof useRecitation>;
 
 /** Barre de récitation flottante (verset en cours, précédent / lecture / suivant, vitesse, boucle, arrêt). */
-export function AudioBar({ rec, pal, extra }: { rec: Rec; pal: Pal; extra?: string }) {
+export function AudioBar({ rec, pal, extra, showReadingMode }: { rec: Rec; pal: Pal; extra?: string; showReadingMode?: boolean }) {
   const insets = useSafeAreaInsets();
   const [p, set] = useShared(readerPrefs);
   if (rec.pos < 0 && !rec.error) return null;
@@ -34,7 +34,7 @@ export function AudioBar({ rec, pal, extra }: { rec: Rec; pal: Pal; extra?: stri
             {st ? `${SURAHS[st.s - 1][2]} · ${st.s}:${st.a}` : 'Récitation'}
           </Text>
           <Text style={{ color: rec.error ? '#C24D5C' : pal.muted, fontSize: 12 }} numberOfLines={1}>
-            {rec.error ?? extra ?? r.name}
+            {rec.error ?? (rec.holding ? L('Suite automatique après 5 s') : extra ?? r.name)}
           </Text>
         </View>
         {btn('play-skip-back', 'Verset précédent', () => rec.skip(-1))}
@@ -58,6 +58,17 @@ export function AudioBar({ rec, pal, extra }: { rec: Rec; pal: Pal; extra?: stri
         <Pressable accessibilityRole="switch" accessibilityState={{ checked: rec.loop }} accessibilityLabel={L("Répéter en boucle")} onPress={() => rec.setLoop(!rec.loop)} hitSlop={6} style={{ width: 36, height: 40, alignItems: 'center', justifyContent: 'center' }}>
           <Ionicons name="repeat" size={20} color={rec.loop ? pal.accent : pal.muted} />
         </Pressable>
+        {showReadingMode ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={L(p.readingMode === 'meditative' ? 'Lecture méditative' : 'Lecture normale')}
+            onPress={() => set((o) => ({ ...o, readingMode: o.readingMode === 'meditative' ? 'normal' : 'meditative' }))}
+            hitSlop={6}
+            style={{ minWidth: 36, height: 32, borderRadius: 16, backgroundColor: alpha(pal.muted, 0.14), alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 }}
+          >
+            <Text style={{ color: pal.ink, fontWeight: '800', fontSize: 11 }}>{p.readingMode === 'meditative' ? L('Méditative') : L('Normale')}</Text>
+          </Pressable>
+        ) : null}
         {btn('stop', 'Arrêter la récitation', rec.stop)}
       </View>
     </View>

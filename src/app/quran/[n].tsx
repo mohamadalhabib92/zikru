@@ -40,7 +40,7 @@ export default function SurahReader() {
   const [settings, setSettings] = useState(false);
   const [top, setTop] = useState(startA);
   useReaderKeepAwake(p.keepAwake);
-  const rec = useRecitation({ reciter: p.reciter, rate: p.rate, gap: 0 });
+  const rec = useRecitation({ reciter: p.reciter, rate: p.rate, gap: 0, mode: p.readingMode });
   const playingA = rec.step && rec.step.s === n ? rec.step.a : 0;
   const list = useRef<FlatList<number>>(null);
   const flow = useAyahFlow(pal, (t) => play(t.a));
@@ -231,7 +231,7 @@ export default function SurahReader() {
           }
         />
       )}
-      <AudioBar rec={rec} pal={pal} />
+      <AudioBar rec={rec} pal={pal} showReadingMode />
       <ReaderSettings visible={settings} onClose={() => setSettings(false)} pal={pal} />
       {flow.sheets}
     </View>

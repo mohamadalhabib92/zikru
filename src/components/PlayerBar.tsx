@@ -6,16 +6,33 @@ import { IconButton, Ionicons, Muted, Row } from '@/ui/kit';
 import { L } from '@/lib/l10n';
 import { theme as t } from '@/ui/theme';
 
-let configured = false;
-/** Lecture en arrière-plan / écran verrouillé (iOS : UIBackgroundModes audio via le plugin expo-audio). */
+let audioMode: 'none' | 'quran' | 'ui' = 'none';
+/**
+ * Lecture en arrière-plan / écran verrouillé (iOS : UIBackgroundModes audio via le plugin expo-audio).
+ * Réappliqué si un son d’interface a changé le mode : sinon la récitation se coupe (mode silencieux, mix).
+ */
 export async function enableBackgroundAudio() {
-  if (configured || Platform.OS === 'web') return;
-  configured = true;
+  if (Platform.OS === 'web' || audioMode === 'quran') return;
+  audioMode = 'quran';
   try {
     await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' });
   } catch {
-    configured = false;
+    audioMode = 'none';
   }
+}
+
+/** true tant que la récitation du Coran tient la session : les clics ne doivent pas la réécrire. */
+export function quranSessionHoldsAudioMode() {
+  return audioMode === 'quran';
+}
+
+/** Sons courts d’interface. N’écrase pas la session du Coran (cause d’arrêts en pleine récitation). */
+export function applyUiClickMode() {
+  if (Platform.OS === 'web' || audioMode === 'quran' || audioMode === 'ui') return;
+  audioMode = 'ui';
+  void setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' }).catch(() => {
+    audioMode = 'none';
+  });
 }
 
 export function fmt(sec: number) {
@@ -27,7 +44,7 @@ export function fmt(sec: number) {
 }
 
 /** Barre de lecture : play/pause, ±15 s, barre de progression cliquable. */
-export function PlayerBar({ player, st, onPrev, onNext }: { player: AudioPlayer; st: AudioStatus; onPrev?: () => void; onNext?: () => void }) {
+export function PlayerBar({ player, st, onPrev, onNext, onPlay, onPause }: { player: AudioPlayer; st: AudioStatus; onPrev?: () => void; onNext?: () => void; onPlay?: () => void; onPause?: () => void }) {
   const [w, setW] = useState(1);
   const pct = st.duration > 0 ? Math.min(1, st.currentTime / st.duration) : 0;
   const safe = (fn: () => void) => () => {
@@ -59,8 +76,11 @@ export function PlayerBar({ player, st, onPrev, onNext }: { player: AudioPlayer;
         <PlayPauseButton
           playing={st.playing}
           onPress={safe(() => {
-            if (st.playing) player.pause();
-            else {
+            if (st.playing) {
+              onPause?.();
+              player.pause();
+            } else {
+              onPlay?.();
               void enableBackgroundAudio();
               if (st.duration > 0 && st.currentTime >= st.duration - 0.3) player.seekTo(0);
               player.play();

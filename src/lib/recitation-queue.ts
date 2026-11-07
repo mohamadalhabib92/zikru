@@ -86,7 +86,79 @@ export function createTokenGate() {
   };
 }
 
-/** Lecture bloquée ? (lecture demandée, pas d’attente programmée, position figée trop longtemps) */
-export function isStalled(p: { playing: boolean; waitingGap: boolean; now: number; lastProgressAt: number; limitMs?: number }): boolean {
-  return p.playing && !p.waitingGap && p.now - p.lastProgressAt > (p.limitMs ?? 12000);
+/** Lecture bloquée ? (lecture demandée, pas d’attente programmée, position figée trop longtemps).
+ * Une mise en mémoire, une interruption du système ou une pause utilisateur ne sont pas un blocage :
+ * les relancer couperait la récitation ou reprendrait malgré l’utilisateur / iOS. */
+export function isStalled(p: {
+  playing: boolean;
+  waitingGap: boolean;
+  now: number;
+  lastProgressAt: number;
+  limitMs?: number;
+  buffering?: boolean;
+  interrupted?: boolean;
+  userPaused?: boolean;
+}): boolean {
+  if (!p.playing || p.waitingGap || p.buffering || p.interrupted || p.userPaused) return false;
+  return p.now - p.lastProgressAt > (p.limitMs ?? 12000);
+}
+
+/**
+ * Pause native alors que l’app croit encore lire.
+ * - interruption : le verset avait commencé (appel, Siri…) — ne pas rappeler play().
+ * - startup-stall : play() n’a jamais démarré (session iOS coupée) — la reprise réseau peut réessayer.
+ * - buffering : le flux charge — ne pas remplacer le verset.
+ */
+export function nativePauseKind(p: {
+  intentPlaying: boolean;
+  userPaused: boolean;
+  didJustFinish: boolean;
+  isBuffering: boolean;
+  nativePlaying: boolean;
+  currentTime: number;
+  duration?: number;
+  loading: boolean;
+  waitingGap: boolean;
+}): 'none' | 'buffering' | 'interruption' | 'startup-stall' {
+  if (!p.intentPlaying || p.userPaused || p.didJustFinish || p.nativePlaying || p.waitingGap) return 'none';
+  if (p.isBuffering || p.loading) return 'buffering';
+  // Fin de piste : ce n’est pas un appel téléphonique. La file décide d’enchaîner ou de s’arrêter.
+  if ((p.duration ?? 0) > 0 && p.currentTime + 0.4 >= (p.duration ?? 0)) return 'none';
+  if (p.currentTime > 0.25) return 'interruption';
+  return 'startup-stall';
+}
+
+/** Ne pas attribuer une fin (souvent périmée) au chargement qui vient de commencer. */
+export function nextLoadedToken(p: { didJustFinish: boolean; isLoaded: boolean; playingIntent: boolean; loadedToken: number; token: number }): number {
+  if (p.didJustFinish) return p.loadedToken;
+  if (p.isLoaded && p.playingIntent && p.loadedToken !== p.token) return p.token;
+  return p.loadedToken;
+}
+
+/** Une fin n’avance la file que si ce chargement a vraiment joué, une seule fois (voir le jeton). */
+export function canAcceptFinish(p: { didJustFinish: boolean; playingIntent: boolean; loadedToken: number; token: number; sawProgress: boolean }): boolean {
+  return p.didJustFinish && p.playingIntent && p.loadedToken === p.token && p.sawProgress;
+}
+
+export type ReadingMode = 'normal' | 'meditative';
+/** Silence après chaque verset en lecture méditative, puis enchaînement automatique. */
+export const MEDITATIVE_GAP_MS = 5000;
+
+export type VersePlan =
+  | { type: 'end' }
+  | { type: 'now'; next: number; same: boolean }
+  | { type: 'wait'; delayMs: number; next: number; same: boolean };
+
+/**
+ * À la fin d’un verset.
+ * - normale : enchaîne tout de suite (ou après la pause de mémorisation déjà réglée).
+ * - méditative : 5 s fixes, quel que soit le débit, puis le verset suivant.
+ * Dernier verset sans boucle : fin, sans recommencer.
+ */
+export function planVerseEnd(p: { queue: Step[]; pos: number; loop: boolean; mode: ReadingMode; normalDelayMs: number }): VersePlan {
+  const nx = advance(p.queue, p.pos, p.loop);
+  if (!nx) return { type: 'end' };
+  if (p.mode === 'meditative') return { type: 'wait', delayMs: MEDITATIVE_GAP_MS, next: nx.next, same: nx.same };
+  if (p.normalDelayMs > 0) return { type: 'wait', delayMs: p.normalDelayMs, next: nx.next, same: nx.same };
+  return { type: 'now', next: nx.next, same: nx.same };
 }

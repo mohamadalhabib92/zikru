@@ -5,6 +5,7 @@
 import { dayKey } from './dates';
 import { markPage, type Khatma } from './khatma';
 import { fromIndex, gIndex, pageOf } from './quran-nav';
+import type { ReadingMode } from './recitation-queue';
 import type { Gap } from './recitation';
 import { shared } from './shared-state';
 import { newCard, review, type Card, type Grade } from './srs';
@@ -25,9 +26,11 @@ export type ReaderPrefs = {
   nurani: boolean;
   /** Souligner les lettres isolées ouvrant 29 sourates — désactivé par défaut. */
   muqattaat: boolean;
+  /** Normale : enchaîne. Méditative : 5 s entre les versets déjà découpés, puis la suite. */
+  readingMode: ReadingMode;
 };
-export const DEFAULT_READER: ReaderPrefs = { arSize: 28, trSize: 15, lineH: 2.1, theme: 'auto', showTr: true, showTl: false, keepAwake: true, reciter: 'alafasy', rate: 1, follow: true, nurani: false, muqattaat: false };
-export const readerPrefs = shared<ReaderPrefs>('qr-prefs', DEFAULT_READER, (v) => ({ ...DEFAULT_READER, ...v }));
+export const DEFAULT_READER: ReaderPrefs = { arSize: 28, trSize: 15, lineH: 2.1, theme: 'auto', showTr: true, showTl: false, keepAwake: true, reciter: 'alafasy', rate: 1, follow: true, nurani: false, muqattaat: false, readingMode: 'normal' };
+export const readerPrefs = shared<ReaderPrefs>('qr-prefs', DEFAULT_READER, (v) => ({ ...DEFAULT_READER, ...v, readingMode: v.readingMode === 'meditative' ? 'meditative' : 'normal' }));
 
 export type Bookmark = { id: string; s: number; a: number; name: string; color: string; at: number };
 export type Note = { text: string; at: number };

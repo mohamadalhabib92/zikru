@@ -2,13 +2,16 @@
  * Récitation verset par verset (EveryAyah, secours Islamic Network) avec une seule instance expo-audio et une file JS :
  * répétitions, pause entre les versets, boucle A-B, vitesse, suivi du verset en cours.
  *
- * Robustesse (1.0.24) — la lecture s’arrêtait après 1 ou 2 versets sur iPhone :
+ * Robustesse — la lecture s’arrêtait après 1 ou 2 versets sur iPhone :
  * à la fin de chaque verset, expo-audio (keepAudioSessionActive=false par défaut) programme la désactivation
  * de la session audio iOS 100 ms plus tard si aucun lecteur « joue ». Le verset suivant, encore en
- * téléchargement, ne « joue » pas encore → la session est coupée sous ses pieds et la lecture se fige
- * (alors que play() avait été appelé). D’où : session gardée active, verset suivant préchargé, jeton par
- * chargement (pas de double avance ni de minuterie périmée), reprise réseau avec CDN de secours, et
- * détection de blocage qui relance le verset.
+ * téléchargement, ne « joue » pas encore → la session est coupée et la lecture se fige.
+ * D’où : session gardée active, verset suivant préchargé, jeton par chargement, et reprise si le
+ * démarrage n’a jamais eu lieu. Une interruption du système (appel) ou une pause utilisateur ne relance pas play().
+ *
+ * Une seule récitation du Coran à la fois : démarrer ici met en pause al-Kahf ou un autre lecteur.
+ * Lecture méditative : 5 s après chaque verset, puis le suivant. Pause, arrêt, changement de source,
+ * prise de main ou démontage annulent cette attente.
  * En arrière-plan (écran verrouillé), iOS peut retarder les pauses programmées : la lecture continue, l’écart peut varier.
  */
 import { clearPreloadedSource, preload, useAudioPlayer } from 'expo-audio';
@@ -16,23 +19,24 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { enableBackgroundAudio } from '@/components/PlayerBar';
 import { ayahFallbackUrl, ayahUrl, gapMs, reciterById, type Gap, type Step } from './recitation';
-import { advance, createTokenGate, isStalled, nextDistinct, retryPlan, skipTarget } from './recitation-queue';
+import { canAcceptFinish, createTokenGate, isStalled, nativePauseKind, nextDistinct, nextLoadedToken, planVerseEnd, retryPlan, skipTarget, type ReadingMode } from './recitation-queue';
+import { onQuranPreempted, quranApplyMode, quranArmVerse, quranFirePending, quranIsCurrent, quranMount, quranOnVerseFinished, quranRequestPlay, quranResume, quranResumeNext, quranUnmount, quranUserPause, quranUserStop } from './quran-playback';
 import { SURAHS } from './surahs';
 
-export type RecState = { queue: Step[]; pos: number; playing: boolean; loading: boolean; error: string | null; loop: boolean };
-const IDLE: RecState = { queue: [], pos: -1, playing: false, loading: false, error: null, loop: false };
+export type RecState = { queue: Step[]; pos: number; playing: boolean; loading: boolean; holding: boolean; error: string | null; loop: boolean };
+const IDLE: RecState = { queue: [], pos: -1, playing: false, loading: false, holding: false, error: null, loop: false };
 const native = Platform.OS !== 'web';
 
-export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }) {
+let ownerSeq = 0;
+
+export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; mode?: ReadingMode }) {
   // keepAudioSessionActive : la session iOS reste active entre deux versets (cause racine de l’arrêt).
   const player = useAudioPlayer(null, { updateInterval: 300, keepAudioSessionActive: true });
   const [st, setSt] = useState<RecState>(IDLE);
   // S est la vérité synchrone (les rappels natifs la lisent) ; l’état React n’en est que le reflet pour l’affichage.
   const S = useRef<RecState>(IDLE);
   const O = useRef(opts);
-  useEffect(() => {
-    O.current = opts;
-  });
+  const [ownerId] = useState(() => `quran-${++ownerSeq}`);
   const gate = useRef(createTokenGate()).current;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadWatch = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -40,7 +44,11 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
   const failures = useRef(0);
   const lastProgress = useRef({ t: -1, at: 0 });
   const preloaded = useRef<string | null>(null);
+  const sawProgress = useRef(false);
+  const interrupted = useRef(false);
+  const buffering = useRef(false);
   const alive = useRef(true);
+  const api = useRef({ go: (_next: number, _same: boolean) => {}, arm: (_delay: number, _epoch: number) => {} });
 
   const clear = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -72,24 +80,26 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
   };
 
   const loadRef = useRef<(pos: number, queue?: Step[], useFallback?: boolean) => void>(() => {});
-  /** Échec (chargement trop long ou lecture figée) : plan de reprise, puis message visible. */
+  /** Échec (chargement trop long ou lecture figée au démarrage) : plan de reprise, puis message visible. */
   const fail = (pos: number) => {
+    if (interrupted.current || !S.current.playing) return;
     clear();
     const step = S.current.queue[pos];
     if (!step) return;
     failures.current += 1;
     const plan = retryPlan(failures.current, !!ayahFallbackUrl(reciterById(O.current.reciter), step.s, step.a));
     if (!plan) {
-      gate.begin(); // neutralise toute fin tardive
+      gate.begin();
+      quranUserPause(ownerId);
       try {
         player.pause();
       } catch {}
-      update({ playing: false, loading: false, error: 'Récitation indisponible (connexion ?) — touchez Lecture pour réessayer' });
+      update({ playing: false, loading: false, holding: false, error: 'Récitation indisponible (connexion ?) — touchez Lecture pour réessayer' });
       return;
     }
     update({ loading: true });
     const again = () => {
-      if (S.current.playing && S.current.pos === pos) loadRef.current(pos, S.current.queue, plan.useFallback);
+      if (S.current.playing && S.current.pos === pos && !interrupted.current) loadRef.current(pos, S.current.queue, plan.useFallback);
     };
     if (plan.delayMs > 0) timer.current = setTimeout(again, plan.delayMs);
     else again();
@@ -100,13 +110,16 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
       clear();
       const step = queue[pos];
       if (!step) return;
+      quranArmVerse(ownerId);
       const r = reciterById(O.current.reciter);
       const url = (useFallback ? ayahFallbackUrl(r, step.s, step.a) : null) ?? ayahUrl(r, step.s, step.a);
       const token = gate.begin();
+      loadedToken.current = -1;
+      sawProgress.current = false;
+      interrupted.current = false;
       lastProgress.current = { t: -1, at: Date.now() };
-      update({ queue, pos, playing: true, loading: true, error: null });
+      update({ queue, pos, playing: true, loading: true, holding: false, error: null });
       try {
-        // un préchargement consommé par replace() (iOS) ou conservé (Android) : on libère la référence
         if (preloaded.current === url) {
           player.replace({ uri: url });
           dropPreload();
@@ -117,74 +130,124 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
         } catch {}
         if (native) player.setActiveForLockScreen(true, { title: `${SURAHS[step.s - 1][2]} ${step.s}:${step.a}`, artist: `${r.name} · Zikru` });
       } catch {}
-      // CDN muet ? plan de reprise (secours, puis nouvelles tentatives) — jamais déclenché pour un autre verset
       loadWatch.current = setTimeout(() => {
-        if (gate.isCurrent(token) && loadedToken.current !== token && S.current.playing) fail(pos);
+        if (gate.isCurrent(token) && loadedToken.current !== token && S.current.playing && !interrupted.current) fail(pos);
       }, 9000);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [player],
+    [player, ownerId],
   );
   useEffect(() => {
     loadRef.current = load;
   }, [load]);
 
+  const go = (next: number, same: boolean) => {
+    if (!alive.current || !S.current.playing) return;
+    update({ holding: false });
+    if (same && player.isLoaded) {
+      quranArmVerse(ownerId);
+      const t = gate.begin();
+      loadedToken.current = t;
+      sawProgress.current = false;
+      lastProgress.current = { t: -1, at: Date.now() };
+      update({ pos: next, playing: true, loading: false, holding: false });
+      player
+        .seekTo(0)
+        .then(() => {
+          if (gate.isCurrent(t) && S.current.playing) player.play();
+        })
+        .catch(() => load(next));
+      return;
+    }
+    load(next);
+  };
+
+  const arm = (delay: number, epoch: number) => {
+    if (timer.current) clearTimeout(timer.current);
+    update({ holding: true, playing: true, loading: false });
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      const fired = quranFirePending(ownerId, epoch);
+      if (!fired.play || !alive.current || !S.current.playing || interrupted.current) {
+        if (S.current.holding) update({ holding: false });
+        return;
+      }
+      go(fired.next ?? 0, !!fired.same);
+    }, delay);
+  };
+  const finishVerse = (duration: number) => {
+    failures.current = 0;
+    sawProgress.current = false;
+    const cur = S.current;
+    const mode = O.current.mode ?? 'normal';
+    const normalDelay = gapMs(O.current.gap ?? 0, duration || 0) / (O.current.rate || 1);
+    const plan = planVerseEnd({ queue: cur.queue, pos: cur.pos, loop: cur.loop, mode, normalDelayMs: normalDelay });
+    const decision = quranOnVerseFinished(ownerId, plan);
+    if (decision.effect === 'ignore') return;
+    if (decision.effect === 'end') {
+      update({ playing: false, holding: false, loading: false, pos: -1 });
+      try {
+        if (native) player.clearLockScreenControls();
+      } catch {}
+      return;
+    }
+    if (decision.effect === 'advance-now') {
+      go(decision.next, decision.same);
+      return;
+    }
+    arm(decision.delayMs, decision.epoch);
+  };
+  const finishRef = useRef(finishVerse);
+
   useEffect(() => {
     const sub = player.addListener('playbackStatusUpdate', (s) => {
       const token = gate.current;
-      if (s.isLoaded && loadedToken.current !== token && S.current.playing) {
-        loadedToken.current = token;
+      if (typeof s.currentTime === 'number' && s.currentTime !== lastProgress.current.t) lastProgress.current = { t: s.currentTime, at: Date.now() };
+      buffering.current = !!s.isBuffering;
+      if (s.playing) interrupted.current = false;
+      if (!s.didJustFinish && S.current.playing && (s.playing || (typeof s.currentTime === 'number' && s.currentTime > 0.05))) sawProgress.current = true;
+      const kind = nativePauseKind({
+        intentPlaying: S.current.playing,
+        userPaused: false,
+        didJustFinish: !!s.didJustFinish,
+        isBuffering: !!s.isBuffering,
+        nativePlaying: !!s.playing,
+        currentTime: s.currentTime || 0,
+        duration: s.duration || 0,
+        loading: S.current.loading,
+        waitingGap: !!timer.current,
+      });
+      if (kind === 'interruption') interrupted.current = true;
+      const loaded = nextLoadedToken({ didJustFinish: !!s.didJustFinish, isLoaded: !!s.isLoaded, playingIntent: S.current.playing, loadedToken: loadedToken.current, token });
+      if (loaded !== loadedToken.current) {
+        loadedToken.current = loaded;
         if (loadWatch.current) clearTimeout(loadWatch.current);
         loadWatch.current = null;
         if (S.current.loading) update({ loading: false });
         prefetch(S.current.queue, S.current.pos);
       }
-      if (typeof s.currentTime === 'number' && s.currentTime !== lastProgress.current.t) lastProgress.current = { t: s.currentTime, at: Date.now() };
-      if (!s.didJustFinish) return;
-      const cur = S.current;
-      // une seule avance par verset chargé, et seulement pour le chargement en cours (déjà prêt) :
-      // une fin en double ou en retard du verset précédent ne fait pas sauter un verset
-      if (!cur.playing || loadedToken.current !== token || !gate.finish(token)) return;
-      failures.current = 0;
-      const nx = advance(cur.queue, cur.pos, cur.loop);
-      if (!nx) {
-        update({ playing: false, pos: -1 });
-        try {
-          if (native) player.clearLockScreenControls();
-        } catch {}
-        return;
-      }
-      const wait = gapMs(O.current.gap ?? 0, s.duration || 0) / (O.current.rate || 1);
-      const go = () => {
-        timer.current = null;
-        if (!S.current.playing) return;
-        if (nx.same && player.isLoaded) {
-          // même verset répété : pas de rechargement réseau
-          const t = gate.begin();
-          loadedToken.current = t;
-          lastProgress.current = { t: -1, at: Date.now() };
-          update({ pos: nx.next });
-          player
-            .seekTo(0)
-            .then(() => {
-              if (gate.isCurrent(t) && S.current.playing) player.play();
-            })
-            .catch(() => load(nx.next));
-        } else load(nx.next);
-      };
-      if (wait > 0) timer.current = setTimeout(go, wait);
-      else go();
+      if (!canAcceptFinish({ didJustFinish: !!s.didJustFinish, playingIntent: S.current.playing, loadedToken: loadedToken.current, token, sawProgress: sawProgress.current })) return;
+      if (!gate.finish(token)) return;
+      finishRef.current(s.duration || 0);
     });
     return () => sub.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player, load]);
 
-  // Détection de blocage : lecture demandée mais position figée > 12 s (réseau coupé en cours de verset…) → reprise.
   useEffect(() => {
     const iv = setInterval(() => {
       const cur = S.current;
       if (cur.pos < 0 || loadWatch.current) return;
-      if (isStalled({ playing: cur.playing, waitingGap: !!timer.current, now: Date.now(), lastProgressAt: lastProgress.current.at })) {
+      if (
+        isStalled({
+          playing: cur.playing,
+          waitingGap: !!timer.current,
+          now: Date.now(),
+          lastProgressAt: lastProgress.current.at,
+          buffering: buffering.current,
+          interrupted: interrupted.current,
+        })
+      ) {
         lastProgress.current = { t: -1, at: Date.now() };
         fail(cur.pos);
       }
@@ -198,47 +261,106 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
       if (S.current.playing) player.setPlaybackRate(opts.rate);
     } catch {}
   }, [opts.rate, player]);
+
+  const yieldToOther = () => {
+    clear();
+    gate.begin();
+    loadedToken.current = gate.current;
+    sawProgress.current = false;
+    try {
+      player.pause();
+      if (native) player.clearLockScreenControls();
+    } catch {}
+    update({ playing: false, holding: false, loading: false });
+  };
+  const yieldRef = useRef(yieldToOther);
+
+  useEffect(() => {
+    O.current = opts;
+    api.current.go = go;
+    api.current.arm = arm;
+    finishRef.current = finishVerse;
+    yieldRef.current = yieldToOther;
+  });
+
+  useEffect(() => {
+    const decision = quranApplyMode(ownerId, opts.mode ?? 'normal');
+    if (decision.effect === 'advance-now') {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+      if (!S.current.playing) return;
+      api.current.go(decision.next, decision.same);
+    } else if (decision.effect === 'wait') api.current.arm(decision.delayMs, decision.epoch);
+  }, [opts.mode, ownerId]);
+
   useEffect(() => {
     alive.current = true;
+    quranMount(ownerId, O.current.mode ?? 'normal');
+    const off = onQuranPreempted(ownerId, () => yieldRef.current());
     return () => {
       alive.current = false;
+      off();
       clear();
       dropPreload();
+      quranUnmount(ownerId);
+      try {
+        player.pause();
+        if (native) player.clearLockScreenControls();
+      } catch {}
     };
-  }, []);
+  }, [player, ownerId]);
 
   const start = useCallback(
     async (queue: Step[], pos = 0, loop = false) => {
+      const gen = quranRequestPlay(ownerId);
       failures.current = 0;
-      update({ loop });
-      // session audio (lecture en mode silencieux, arrière-plan) configurée AVANT de lancer le premier verset
-      // (sur le web, pas d’attente : play() doit rester dans le geste de l’utilisateur)
+      interrupted.current = false;
+      update({ loop, holding: false });
       if (native) await enableBackgroundAudio().catch(() => {});
+      if (!alive.current || !quranIsCurrent(ownerId, gen)) return;
       load(pos, queue);
     },
-    [load],
+    [load, ownerId],
   );
   const pause = () => {
     clear();
-    gate.begin(); // une fin qui arriverait juste après la pause ne relance rien
+    quranUserPause(ownerId);
+    gate.begin();
     loadedToken.current = gate.current;
-    player.pause();
-    update({ playing: false });
+    sawProgress.current = false;
+    try {
+      player.pause();
+    } catch {}
+    update({ playing: false, holding: false });
   };
   const resume = () => {
-    if (S.current.pos < 0) return;
+    if (S.current.pos < 0 && !quranResumeNext(ownerId)) return;
+    const resumed = quranResume(ownerId);
+    if (!quranIsCurrent(ownerId, resumed.generation)) return;
     failures.current = 0;
+    interrupted.current = false;
+    if (native) void enableBackgroundAudio();
+    if (resumed.resumeNext) {
+      update({ playing: true, holding: false, error: null });
+      go(resumed.resumeNext.next, resumed.resumeNext.same);
+      return;
+    }
+    if (S.current.pos < 0) return;
     if (player.isLoaded && !S.current.error) {
       gate.begin();
       loadedToken.current = gate.current;
+      sawProgress.current = false;
       lastProgress.current = { t: -1, at: Date.now() };
+      quranArmVerse(ownerId);
       player.play();
-      update({ playing: true });
+      update({ playing: true, holding: false });
     } else load(S.current.pos);
   };
   const stop = () => {
     clear();
+    quranUserStop(ownerId);
     gate.begin();
+    sawProgress.current = false;
     dropPreload();
     try {
       player.pause();
@@ -250,7 +372,9 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap }
   const skip = (d: number) => {
     const i = skipTarget(S.current.queue, S.current.pos, d);
     if (i >= 0) {
+      quranRequestPlay(ownerId);
       failures.current = 0;
+      interrupted.current = false;
       load(i);
     }
   };
