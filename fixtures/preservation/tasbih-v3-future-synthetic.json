@@ -1,0 +1,10 @@
+{
+  "v": 3,
+  "dev": "future-dev",
+  "seq": 2,
+  "base": 10,
+  "log": [{ "dev": "future-dev", "i": 2, "n": 4, "s": "manuel", "a": 2, "d": "allahuakbar" }],
+  "ble": {},
+  "t": { "count": 4, "target": 99, "dhikrId": "allahuakbar", "total": 14, "sessions": [] },
+  "futureNote": "do-not-rewrite"
+}
