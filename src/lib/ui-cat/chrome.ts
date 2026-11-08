@@ -2,9 +2,7 @@
  * Libellés d'interface (onglets, réglages, onboardings) — brouillon à relire.
  * Pas une traduction religieuse et pas une validation savante.
  */
-import type { Dict } from '../i18n';
-
-const tr: Dict = {
+const tr = {
   tab_home: 'Ana sayfa', prayer_times: 'Namaz vakitleri', sec_growth: 'İLERLEME', sec_knowledge: 'İSLAMİ BİLGİ', sec_prayer: 'NAMAZ VE ZİKİR', sec_songs: 'TASAVVUF İLAHİLERİ', sec_community: 'TAKVİM VE TOPLULUK', tijani: 'Ticânî yolu', wird: 'Günlük wird', sahw: 'Namaz düzeltmesi', adilla: 'Adilla (deliller)', kahf: 'Kehf suresi', songs: 'Tasavvuf ilahileri', community: 'Topluluk', weather: 'Hava', qibla_aligned: 'Kıbleye dönük', qibla_turn: 'Şu kadar dönün', qibla_right: 'sağa', qibla_left: 'sola', reflection: 'Tefekkür',
   tab_prayers: 'Namazlar', tab_qibla: 'Kıble', tab_tasbih: 'Tesbih', tab_dhikr: 'Zikir', tab_settings: 'Ayarlar',
   tab_read: 'Oku', tab_more: 'Daha fazla', search: 'Ara', search_ph: 'İsimler, dualar, ayetler, zikirler…', no_results: 'Sonuç yok', see_all: 'Tümünü gör', skip: 'Atla', back: 'Geri', done: 'Bitti',
@@ -25,7 +23,7 @@ const tr: Dict = {
   offline_ready: 'Çevrimdışı çalışır', cancel: 'İptal', save: 'Kaydet', close: 'Kapat',
 };
 
-const es: Dict = {
+const es = {
   tab_home: 'Inicio', prayer_times: 'Horarios de salat', sec_growth: 'PROGRESO', sec_knowledge: 'SABER ISLÁMICO', sec_prayer: 'SALAT Y DHIKR', sec_songs: 'CANTOS SUFÍES', sec_community: 'CALENDARIO Y COMUNIDAD', tijani: 'Vía tijani', wird: 'Wird diario', sahw: 'Corrección de la salat', adilla: 'Adilla (pruebas)', kahf: 'Sura al-Kahf', songs: 'Cantos sufíes', community: 'Comunidad', weather: 'Tiempo', qibla_aligned: 'De cara a la qibla', qibla_turn: 'Gire', qibla_right: 'a la derecha', qibla_left: 'a la izquierda', reflection: 'Reflexión',
   tab_prayers: 'Salat', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Ajustes',
   tab_read: 'Leer', tab_more: 'Más', search: 'Buscar', search_ph: 'Nombres, du‘as, aleyas, dhikr…', no_results: 'Sin resultados', see_all: 'Ver todo', skip: 'Omitir', back: 'Volver', done: 'Listo',
@@ -46,7 +44,7 @@ const es: Dict = {
   offline_ready: 'Funciona sin conexión', cancel: 'Cancelar', save: 'Guardar', close: 'Cerrar',
 };
 
-const it: Dict = {
+const it = {
   tab_home: 'Home', prayer_times: 'Orari della salat', sec_growth: 'PERCORSO', sec_knowledge: 'SAPERE ISLAMICO', sec_prayer: 'SALAT E DHIKR', sec_songs: 'CANTI SUFI', sec_community: 'CALENDARIO E COMUNITÀ', tijani: 'Via tijani', wird: 'Wird quotidiano', sahw: 'Correzione della salat', adilla: 'Adilla (prove)', kahf: 'Sura al-Kahf', songs: 'Canti sufi', community: 'Comunità', weather: 'Meteo', qibla_aligned: 'Rivolti alla qibla', qibla_turn: 'Girare di', qibla_right: 'a destra', qibla_left: 'a sinistra', reflection: 'Riflessione',
   tab_prayers: 'Salat', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Impostazioni',
   tab_read: 'Leggi', tab_more: 'Altro', search: 'Cerca', search_ph: 'Nomi, du‘a, versetti, dhikr…', no_results: 'Nessun risultato', see_all: 'Vedi tutto', skip: 'Salta', back: 'Indietro', done: 'Fatto',
@@ -67,7 +65,7 @@ const it: Dict = {
   offline_ready: 'Funziona non in linea', cancel: 'Annulla', save: 'Salva', close: 'Chiudi',
 };
 
-const pt: Dict = {
+const pt = {
   tab_home: 'Início', prayer_times: 'Horários da salat', sec_growth: 'PROGRESSO', sec_knowledge: 'SABER ISLÂMICO', sec_prayer: 'SALAT E DHIKR', sec_songs: 'CANTOS SUFIS', sec_community: 'CALENDÁRIO E COMUNIDADE', tijani: 'Via tijani', wird: 'Wird diário', sahw: 'Correção da salat', adilla: 'Adilla (provas)', kahf: 'Surata al-Kahf', songs: 'Cantos sufis', community: 'Comunidade', weather: 'Meteorologia', qibla_aligned: 'Virado para a qibla', qibla_turn: 'Rode', qibla_right: 'para a direita', qibla_left: 'para a esquerda', reflection: 'Reflexão',
   tab_prayers: 'Salat', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Definições',
   tab_read: 'Ler', tab_more: 'Mais', search: 'Pesquisar', search_ph: 'Nomes, du‘as, versículos, dhikr…', no_results: 'Sem resultados', see_all: 'Ver tudo', skip: 'Saltar', back: 'Voltar', done: 'Concluído',
@@ -88,7 +86,7 @@ const pt: Dict = {
   offline_ready: 'Funciona sem ligação', cancel: 'Cancelar', save: 'Guardar', close: 'Fechar',
 };
 
-const id: Dict = {
+const id = {
   tab_home: 'Beranda', prayer_times: 'Waktu salat', sec_growth: 'KEMAJUAN', sec_knowledge: 'ILMU ISLAM', sec_prayer: 'SALAT & ZIKIR', sec_songs: 'LAGU SUFI', sec_community: 'KALENDER & KOMUNITAS', tijani: 'Jalan Tijani', wird: 'Wird harian', sahw: 'Koreksi salat', adilla: 'Adilla (dalil)', kahf: 'Surah al-Kahf', songs: 'Lagu sufi', community: 'Komunitas', weather: 'Cuaca', qibla_aligned: 'Menghadap kiblat', qibla_turn: 'Putar sebesar', qibla_right: 'ke kanan', qibla_left: 'ke kiri', reflection: 'Renungan',
   tab_prayers: 'Salat', tab_qibla: 'Kiblat', tab_tasbih: 'Tasbih', tab_dhikr: 'Zikir', tab_settings: 'Pengaturan',
   tab_read: 'Baca', tab_more: 'Lainnya', search: 'Cari', search_ph: 'Nama, doa, ayat, zikir…', no_results: 'Tidak ada hasil', see_all: 'Lihat semua', skip: 'Lewati', back: 'Kembali', done: 'Selesai',
@@ -109,7 +107,7 @@ const id: Dict = {
   offline_ready: 'Berjalan tanpa jaringan', cancel: 'Batal', save: 'Simpan', close: 'Tutup',
 };
 
-const ha: Dict = {
+const ha = {
   tab_home: 'Gida', prayer_times: 'Lokutan salla', sec_growth: 'CIGABA', sec_knowledge: 'ILIMIN MUSULUNCI', sec_prayer: 'SALLA DA ZIKIRI', sec_songs: 'WAKOKIN SUFI', sec_community: 'KALANDA DA AL’UMMA', tijani: 'Hanyar Tijani', wird: 'Wird na yau', sahw: 'Gyaran salla', adilla: 'Adilla (hujjoji)', kahf: 'Suratul Kahf', songs: 'Wakokin sufi', community: 'Al’umma', weather: 'Yanayi', qibla_aligned: 'Fuskantar qibla', qibla_turn: 'Juya da', qibla_right: 'zuwa dama', qibla_left: 'zuwa hagu', reflection: 'Tunani',
   tab_prayers: 'Salloli', tab_qibla: 'Qibla', tab_tasbih: 'Tasbihi', tab_dhikr: 'Zikiri', tab_settings: 'Saituna',
   tab_read: 'Karanta', tab_more: 'Ƙari', search: 'Bincika', search_ph: 'Sunaye, addu’o’i, ayoyi, zikiri…', no_results: 'Babu sakamako', see_all: 'Duba duka', skip: 'Tsallake', back: 'Komawa', done: 'An gama',
@@ -130,7 +128,7 @@ const ha: Dict = {
   offline_ready: 'Yana aiki ba tare da hanyar sadarwa ba', cancel: 'Soke', save: 'Ajiye', close: 'Rufe',
 };
 
-const sw: Dict = {
+const sw = {
   tab_home: 'Nyumbani', prayer_times: 'Nyakati za swala', sec_growth: 'MAENDELEO', sec_knowledge: 'ELIMU YA KIISLAMU', sec_prayer: 'SWALA NA DHIKRI', sec_songs: 'NYIMBO ZA TASAUFI', sec_community: 'KALENDA NA JAMII', tijani: 'Njia ya Tijani', wird: 'Wird ya kila siku', sahw: 'Kurekebisha swala', adilla: 'Adilla (dalili)', kahf: 'Sura al-Kahf', songs: 'Nyimbo za tasaufi', community: 'Jamii', weather: 'Hali ya hewa', qibla_aligned: 'Umeelekea qibla', qibla_turn: 'Geuka kwa', qibla_right: 'kulia', qibla_left: 'kushoto', reflection: 'Tafakuri',
   tab_prayers: 'Swala', tab_qibla: 'Qibla', tab_tasbih: 'Tasbihi', tab_dhikr: 'Dhikri', tab_settings: 'Mipangilio',
   tab_read: 'Soma', tab_more: 'Zaidi', search: 'Tafuta', search_ph: 'Majina, dua, aya, dhikri…', no_results: 'Hakuna matokeo', see_all: 'Ona yote', skip: 'Ruka', back: 'Rudi', done: 'Imekamilika',
@@ -151,7 +149,7 @@ const sw: Dict = {
   offline_ready: 'Inafanya kazi nje ya mtandao', cancel: 'Ghairi', save: 'Hifadhi', close: 'Funga',
 };
 
-const ur: Dict = {
+const ur = {
   tab_home: 'ہوم', prayer_times: 'نماز کے اوقات', sec_growth: 'ترقی', sec_knowledge: 'اسلامی علم', sec_prayer: 'نماز اور ذکر', sec_songs: 'صوفی نغمے', sec_community: 'کیلنڈر اور جماعت', tijani: 'تجانی طریقہ', wird: 'روزانہ ورد', sahw: 'نماز کی درستگی', adilla: 'ادلہ', kahf: 'سورۃ الکہف', songs: 'صوفی نغمے', community: 'جماعت', weather: 'موسم', qibla_aligned: 'قبلہ رخ', qibla_turn: 'اتنا مڑیں', qibla_right: 'دائیں', qibla_left: 'بائیں', reflection: 'غور',
   tab_prayers: 'نمازیں', tab_qibla: 'قبلہ', tab_tasbih: 'تسبیح', tab_dhikr: 'ذکر', tab_settings: 'ترتیبات',
   tab_read: 'پڑھیں', tab_more: 'مزید', search: 'تلاش', search_ph: 'نام، دعائیں، آیات، اذکار…', no_results: 'کوئی نتیجہ نہیں', see_all: 'سب دیکھیں', skip: 'چھوڑیں', back: 'واپس', done: 'ہو گیا',
@@ -172,7 +170,7 @@ const ur: Dict = {
   offline_ready: 'آف لائن چلتا ہے', cancel: 'منسوخ', save: 'محفوظ کریں', close: 'بند کریں',
 };
 
-const fa: Dict = {
+const fa = {
   tab_home: 'خانه', prayer_times: 'اوقات نماز', sec_growth: 'پیشرفت', sec_knowledge: 'دانش اسلامی', sec_prayer: 'نماز و ذکر', sec_songs: 'آوازهای صوفی', sec_community: 'تقویم و جمع', tijani: 'طریقت تجانی', wird: 'ورد روزانه', sahw: 'اصلاح نماز', adilla: 'ادله', kahf: 'سوره کهف', songs: 'آوازهای صوفی', community: 'جمع', weather: 'هوا', qibla_aligned: 'رو به قبله', qibla_turn: 'به این اندازه بچرخید', qibla_right: 'به راست', qibla_left: 'به چپ', reflection: 'تأمل',
   tab_prayers: 'نمازها', tab_qibla: 'قبله', tab_tasbih: 'تسبیح', tab_dhikr: 'ذکر', tab_settings: 'تنظیمات',
   tab_read: 'خواندن', tab_more: 'بیشتر', search: 'جستجو', search_ph: 'نام‌ها، دعاها، آیات، ذکرها…', no_results: 'نتیجه‌ای نیست', see_all: 'همه', skip: 'رد کردن', back: 'بازگشت', done: 'تمام',
@@ -193,7 +191,7 @@ const fa: Dict = {
   offline_ready: 'بدون اتصال کار می‌کند', cancel: 'لغو', save: 'ذخیره', close: 'بستن',
 };
 
-const ff: Dict = {
+const ff = {
   tab_home: 'Jaɓɓorgal', prayer_times: 'Waktuuji juulde', sec_growth: 'YOLTUGOL', sec_knowledge: 'GANNDAL LISLAAM', sec_prayer: 'JUULDE E ZIKRI', sec_songs: 'GIMƊI SUUFU', sec_community: 'KALANDIYE E RENDO', tijani: 'Laawol Tijani', wird: 'Wird nyalde', sahw: 'Njuɓɓudi juulde', adilla: 'Adilla (seedeeji)', kahf: 'Suura Kahf', songs: 'Gimɗi suufu', community: 'Rendo', weather: 'Ngonka weeyo', qibla_aligned: 'A yeeso kibla', qibla_turn: 'Yiiltu no', qibla_right: 'ñaamo', qibla_left: 'nano', reflection: 'Miijto',
   tab_prayers: 'Juulde', tab_qibla: 'Kibla', tab_tasbih: 'Tasbihi', tab_dhikr: 'Zikri', tab_settings: 'Teelte',
   tab_read: 'Tar', tab_more: 'Goɗɗum', search: 'Yiylo', search_ph: 'Inɗe, duwaawu, aayaaji, zikri…', no_results: 'Alaa njaltudi', see_all: 'Yiy fof', skip: 'Diw', back: 'Rutto', done: 'Gasii',
@@ -214,7 +212,7 @@ const ff: Dict = {
   offline_ready: 'Hurata tawa alaa ceŋol', cancel: 'Haaytu', save: 'Danndu', close: 'Uddu',
 };
 
-const wo: Dict = {
+const wo = {
   tab_home: 'Xët bu njëkk', prayer_times: 'Waxtu julli', sec_growth: 'YOKKUTE', sec_knowledge: 'XAM-XAMU ISLAAM', sec_prayer: 'JULLI AK DHIKR', sec_songs: 'WOYU SUUFI', sec_community: 'ARMINAAT AK MBIRUM ASKAN', tijani: 'Yoonu Tijani', wird: 'Wirdu bés bi', sahw: 'Yoonal julli', adilla: 'Adilla (ay firnde)', kahf: 'Suuratu Kahf', songs: 'Woyu suufi', community: 'Mbooloo', weather: 'Njeexital', qibla_aligned: 'Yaa ngi jàkkaarloo ak qibla', qibla_turn: 'Wëlbati ci', qibla_right: 'ndijoor', qibla_left: 'càmmoñ', reflection: 'Xalaat',
   tab_prayers: 'Julli', tab_qibla: 'Qibla', tab_tasbih: 'Tasbiix', tab_dhikr: 'Dhikr', tab_settings: 'Parameetar',
   tab_read: 'Jàng', tab_more: 'Yeneen', search: 'Seet', search_ph: 'Tur, duwaa, aaya, dhikr…', no_results: 'Amul njuréef', see_all: 'Gis lépp', skip: 'Jàll', back: 'Dellu', done: 'Jeex na',

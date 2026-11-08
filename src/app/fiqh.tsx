@@ -67,11 +67,11 @@ export default function Fiqh() {
                     const v = rulingView(l, lang);
                     return (
                       <View key={l.id} style={{ marginTop: 10 }}>
-                        <Text style={{ color: COLOR, fontWeight: '800', marginBottom: 4 }}>{v.title}</Text>
+                        <Text style={{ color: b.rust, fontWeight: '800', marginBottom: 4 }}>{v.title}</Text>
                         {v.items ? (
                           v.items.map((it, i) => (
                             <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
-                              <Text style={{ color: COLOR, fontWeight: '800', width: 22 }}>{i + 1}.</Text>
+                              <Text style={{ color: b.rust, fontWeight: '800', width: 22 }}>{i + 1}.</Text>
                               <LText style={{ flex: 1 }}>{it}</LText>
                             </View>
                           ))

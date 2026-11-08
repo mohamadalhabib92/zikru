@@ -1,0 +1,24 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+1er jour confirmé : {d}	Erster Tag bestätigt: {d}
+29e jour · {d}	29. Tag · {d}
+30e jour · {d}	30. Tag · {d}
+Date hors de la plage de décalage (±2 j) : elle sert au mode Ramadan uniquement.	Datum außerhalb des Verschiebungsbereichs (±2 Tage): Es wird nur für den Ramadan-Modus verwendet.
+Dernier jour de jeûne selon votre mosquée ?	Letzter Fastentag laut Ihrer Moschee?
+Merci : le calendrier hégirien de l’app suit maintenant cette date.	Danke: Der Hidschri-Kalender der App folgt nun diesem Datum.
+Mode Ramadan	Ramadan-Modus
+Mode Ramadan : le 1er (et le dernier) jour de jeûne se confirment selon votre mosquée ; la confirmation ajuste ce décalage, source unique de l’app.	Ramadan-Modus: Der erste (und letzte) Fastentag wird laut Ihrer Moschee bestätigt; die Bestätigung passt diese Verschiebung an, die einzige Quelle der App.
+Mode Ramadan : préparez vos rappels	Ramadan-Modus: Richten Sie Ihre Erinnerungen ein
+Option Umm al-Qura (Réglages) : tables de l’appareil (Intl, hors ligne), utilisées seulement si elles passent un auto-contrôle ; sinon repli tabulaire. Actuel :	Option Umm al-Qura (Einstellungen): die Tabellen des Geräts (Intl, offline), nur verwendet, wenn sie eine Selbstprüfung bestehen; sonst tabellarischer Ersatz. Aktuell:
+Pendant ramadan, affiche la fin du suhur (Fajr, moins la marge que vous avez choisie dans le mode Ramadan, 0 par défaut) et l’iftar (Maghrib) selon vos horaires calculés.	Zeigt während des Ramadan das Ende des Suhur (Fajr, abzüglich der im Ramadan-Modus gewählten Marge, standardmäßig 0) und das Iftar (Maghrib) aus Ihren berechneten Zeiten.
+Quel est le 1er jour de jeûne selon votre mosquée ?	Welcher ist laut Ihrer Moschee der erste Fastentag?
+Ramadan Mubarak · jour {d} sur {n}	Ramadan Mubarak · Tag {d} von {n}
+Ramadan {y} : dans {n} j (estimation)	Ramadan {y}: in {n} Tagen (Schätzung)
+Suhur et iftar	Suhur und Iftar
+Suhur et iftar · suivis privés	Suhur und Iftar · private Verfolgung
+Suhur et iftar, jeûne, tarawih, dix dernières nuits	Suhur und Iftar, Fasten, Tarawih, letzte zehn Nächte
+Tabulaire (hors ligne)	Tabellarisch (offline)
+Umm al-Qura	Umm al-Qura
+Umm al-Qura : tables officielles saoudiennes intégrées à l’appareil (hors ligne). Les deux restent des estimations : la mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).	Umm al-Qura: offizielle saudische Tabellen, im Gerät integriert (offline). Beide bleiben Schätzungen: Ihre Moschee oder die lokale Sichtung hat Vorrang (Ramadan-Modus: den ersten Tag bestätigen).
+Umm al-Qura indisponible sur cet appareil : calendrier tabulaire utilisé. La mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).	Umm al-Qura ist auf diesem Gerät nicht verfügbar: tabellarischer Kalender verwendet. Ihre Moschee oder die lokale Sichtung hat Vorrang (Ramadan-Modus: den ersten Tag bestätigen).
+tabulaire	tabellarisch

@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/community/auth';
 import { CommunityProvider } from '@/lib/community/sync';
 import { DataProvider } from '@/lib/data';
+import { DispenseProvider } from '@/lib/dispense-context';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
@@ -18,7 +19,9 @@ import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
-import { L } from '@/lib/l10n';
+import { MiniPlayer } from '@/components/quran/MiniPlayer';
+import { RecitationProvider } from '@/lib/recitation-context';
+import { L, useUiCatalog } from '@/lib/l10n';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -60,7 +63,9 @@ function Root() {
     const r = takePendingRoute();
     if (r) setTimeout(() => router.push(r as never), 60);
   }, [scheme]);
-  if (!fontsLoaded && !fontTimeout) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
+  // Catalogue d'interface de la langue choisie (chargé à la demande, pré-caché hors-ligne ; rien pour le français).
+  const catReady = useUiCatalog(s.lang);
+  if ((!fontsLoaded && !fontTimeout) || !catReady) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
     <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
@@ -100,13 +105,17 @@ function Root() {
         <Stack.Screen name="quran/hifz-session" options={{ title: L("Session de mémorisation") }} />
         <Stack.Screen name="quran/bookmarks" options={{ title: L("Marque-pages et notes") }} />
         <Stack.Screen name="quran/khatma" options={{ title: L("Khatma") }} />
+        <Stack.Screen name="quran/downloads" options={{ title: L("Téléchargements audio") }} />
         <Stack.Screen name="hadiths" options={{ title: L("Hadiths") }} />
         <Stack.Screen name="duas" options={{ title: L("Du‘as prophétiques") }} />
+        <Stack.Screen name="adhkar" options={{ title: L("Adhkar du jour") }} />
+        <Stack.Screen name="goals" options={{ title: L("Objectifs du jour") }} />
         <Stack.Screen name="abjad" options={{ title: L("Calculateur abjad") }} />
         <Stack.Screen name="names" options={{ title: L("Les 99 Noms d’Allah") }} />
         <Stack.Screen name="zikrs/index" options={{ title: L("Mes zikrs") }} />
         <Stack.Screen name="zikrs/edit" options={{ title: L("Composer un zikr") }} />
         <Stack.Screen name="zikrs/practice" options={{ title: L("Pratique") }} />
+        <Stack.Screen name="zikrs/import" options={{ title: L("Importer un programme") }} />
         <Stack.Screen name="fiqh" options={{ title: L("Fiqh") }} />
         <Stack.Screen name="journey" options={{ title: L("Mon parcours spirituel") }} />
         <Stack.Screen name="habits" options={{ title: L("Jardin des habitudes") }} />
@@ -118,7 +127,10 @@ function Root() {
         <Stack.Screen name="family/[id]" options={{ title: L("Ma famille") }} />
         <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
+        <Stack.Screen name="program/[id]" options={{ title: L("Programme de groupe") }} />
+        <Stack.Screen name="discussion" options={{ title: L("Discussion") }} />
       </Stack>
+      <MiniPlayer path={path} />
       <StorageAlert />
     </View>
   );
@@ -129,17 +141,21 @@ export default function Layout() {
     <AppErrorBoundary>
       <SafeAreaProvider>
         <SettingsProvider>
+          <DispenseProvider>
           <DataProvider>
             <ZikrProvider>
               <AuthProvider>
                 <CommunityProvider>
                   <GrowthProvider>
-                    <Root />
+                    <RecitationProvider>
+                      <Root />
+                    </RecitationProvider>
                   </GrowthProvider>
                 </CommunityProvider>
               </AuthProvider>
             </ZikrProvider>
           </DataProvider>
+          </DispenseProvider>
         </SettingsProvider>
       </SafeAreaProvider>
     </AppErrorBoundary>

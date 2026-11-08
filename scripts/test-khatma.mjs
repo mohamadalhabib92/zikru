@@ -9,7 +9,7 @@ const load = (name) => {
   const src = readFileSync(new URL(`../src/lib/${name}.ts`, import.meta.url), 'utf8').replace(/from '\.\/(\w[\w-]*)'/g, "from './$1.mjs'");
   writeFileSync(join(dir, name + '.mjs'), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
 };
-for (const n of ['dates', 'khatma']) load(n);
+for (const n of ['dates', 'hijri', 'khatma']) load(n);
 const K = await import(join(dir, 'khatma.mjs'));
 let ok = 0;
 const test = (n, f) => { f(); ok++; console.log('✓', n); };

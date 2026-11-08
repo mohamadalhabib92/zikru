@@ -1,0 +1,23 @@
+# Ramadan : bandeau d’accueil, confirmation, réglages du calendrier, khatma (31.10.2026) (ar : traduction à relire)
+1er jour confirmé : {d}	First day confirmed: {d}	اليوم الأول المؤكَّد: {d}
+29e jour · {d}	29th day · {d}	اليوم التاسع والعشرون · {d}
+30e jour · {d}	30th day · {d}	اليوم الثلاثون · {d}
+Date hors de la plage de décalage (±2 j) : elle sert au mode Ramadan uniquement.	Date outside the offset range (±2 days): it is used for Ramadan mode only.	التاريخ خارج نطاق التعديل (±2 يوم): يُستخدم لوضع رمضان فقط.
+Dernier jour de jeûne selon votre mosquée ?	Last day of fasting according to your mosque?	ما آخر يوم صيام حسب مسجدك؟
+Merci : le calendrier hégirien de l’app suit maintenant cette date.	Thank you: the app’s Hijri calendar now follows this date.	شكرًا: التقويم الهجري في التطبيق يتبع الآن هذا التاريخ.
+Mode Ramadan	Ramadan mode	وضع رمضان
+Mode Ramadan : le 1er (et le dernier) jour de jeûne se confirment selon votre mosquée ; la confirmation ajuste ce décalage, source unique de l’app.	Ramadan mode: the first (and last) day of fasting are confirmed according to your mosque; confirming adjusts this offset, the app’s single source.	وضع رمضان: يُؤكَّد اليوم الأول (والأخير) من الصيام حسب مسجدك؛ والتأكيد يضبط هذا التعديل، وهو المصدر الوحيد في التطبيق.
+Mode Ramadan : préparez vos rappels	Ramadan mode: set up your reminders	وضع رمضان: جهّز تذكيراتك
+Option Umm al-Qura (Réglages) : tables de l’appareil (Intl, hors ligne), utilisées seulement si elles passent un auto-contrôle ; sinon repli tabulaire. Actuel :	Umm al-Qura option (Settings): the device’s tables (Intl, offline), used only if they pass a self-check; otherwise tabular fallback. Current:	خيار أم القرى (الإعدادات): جداول الجهاز (Intl، دون اتصال)، تُستخدم فقط إذا اجتازت فحصًا ذاتيًا؛ وإلا فالرجوع إلى الحساب الجدولي. الحالي:
+Pendant ramadan, affiche la fin du suhur (Fajr, moins la marge que vous avez choisie dans le mode Ramadan, 0 par défaut) et l’iftar (Maghrib) selon vos horaires calculés.	During Ramadan, shows the end of suhur (Fajr, minus the margin you chose in Ramadan mode, 0 by default) and iftar (Maghrib) from your calculated times.	في رمضان، يعرض نهاية السحور (الفجر، ناقص الهامش الذي اخترته في وضع رمضان، 0 افتراضيًا) والإفطار (المغرب) حسب مواقيتك المحسوبة.
+Quel est le 1er jour de jeûne selon votre mosquée ?	What is the first day of fasting according to your mosque?	ما أول يوم صيام حسب مسجدك؟
+Ramadan Mubarak · jour {d} sur {n}	Ramadan Mubarak · day {d} of {n}	رمضان مبارك · اليوم {d} من {n}
+Ramadan {y} : dans {n} j (estimation)	Ramadan {y}: in {n} days (estimate)	رمضان {y}: بعد {n} يوم (تقدير)
+Suhur et iftar	Suhur and iftar	السحور والإفطار
+Suhur et iftar · suivis privés	Suhur and iftar · private tracking	السحور والإفطار · متابعة خاصة
+Suhur et iftar, jeûne, tarawih, dix dernières nuits	Suhur and iftar, fasting, tarawih, last ten nights	السحور والإفطار، الصيام، التراويح، العشر الأواخر
+Tabulaire (hors ligne)	Tabular (offline)	جدولي (دون اتصال)
+Umm al-Qura	Umm al-Qura	أم القرى
+Umm al-Qura : tables officielles saoudiennes intégrées à l’appareil (hors ligne). Les deux restent des estimations : la mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).	Umm al-Qura: official Saudi tables built into the device (offline). Both remain estimates: your mosque or local sighting prevails (Ramadan mode: confirm the first day).	أم القرى: الجداول السعودية الرسمية المدمجة في الجهاز (دون اتصال). كلاهما تقدير: المعتبر هو المسجد أو الرؤية المحلية (وضع رمضان: تأكيد اليوم الأول).
+Umm al-Qura indisponible sur cet appareil : calendrier tabulaire utilisé. La mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).	Umm al-Qura is unavailable on this device: tabular calendar used. Your mosque or local sighting prevails (Ramadan mode: confirm the first day).	أم القرى غير متاح على هذا الجهاز: يُستخدم التقويم الجدولي. المعتبر هو المسجد أو الرؤية المحلية (وضع رمضان: تأكيد اليوم الأول).
+tabulaire	tabular	جدولي

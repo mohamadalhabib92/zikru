@@ -5,7 +5,7 @@ import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
-import { LANGS } from '@/lib/i18n';
+import { pickableLangs } from '@/lib/i18n';
 import { privacyText } from '@/lib/privacy-text';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES } from '@/lib/prayer';
@@ -50,7 +50,7 @@ export default function Onboarding() {
   const Option = ({ active, title, sub, icon, onPress }: { active: boolean; title: string; sub?: string; icon?: IconName; onPress: () => void }) => (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected: active }}
+      accessibilityState={{ selected: active }} aria-checked={active}
       onPress={() => {
         tapHaptic('select');
         onPress();
@@ -82,11 +82,10 @@ export default function Onboarding() {
       <>
         <Title icon="language" title={tr.onb_lang} />
         <View style={{ gap: 8 }}>
-          {LANGS.map((l) => (
-            <Option key={l.code} active={s.lang === l.code} title={l.pending ? `${l.label} · ⏳` : l.review ? `${l.label} · ✎` : l.label} onPress={() => set({ lang: l.code })} />
+          {pickableLangs(s.lang).map((l) => (
+            <Option key={l.code} active={s.lang === l.code} title={l.label} sub={l.review ? tr.translation_review : undefined} onPress={() => set({ lang: l.code })} />
           ))}
         </View>
-        <Text style={{ color: b.inkMuted, fontSize: 13, textAlign: 'center', marginTop: 12 }}>✎ = {tr.translation_review}</Text>
       </>
     );
   else if (step === 'madhab')
@@ -129,7 +128,7 @@ export default function Onboarding() {
               <Pressable
                 key={c.label}
                 accessibilityRole="radio"
-                accessibilityState={{ selected: on }}
+                accessibilityState={{ selected: on }} aria-checked={on}
                 onPress={() => set({ place: { ...c, source: 'manual' } })}
                 style={{ paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 20, borderWidth: 1, borderColor: on ? b.green : b.line, backgroundColor: on ? b.green : b.paper }}
               >

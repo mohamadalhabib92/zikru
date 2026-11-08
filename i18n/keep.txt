@@ -30,3 +30,4 @@ rotate(45 18 18)
 {} : {} / {} {} — Zikru
 M {} {} A {} {} 0 0 1 {} {}
 · × {}
+Ramadan Mubarak

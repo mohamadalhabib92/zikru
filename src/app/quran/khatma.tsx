@@ -1,11 +1,12 @@
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { QStepper } from '@/components/quran/Sheet';
 import { readerPalette } from '@/components/quran/palette';
 import { addDays, dayKey } from '@/lib/dates';
-import { khatmaStatus, markPage, MUSHAF_PAGES, newKhatma, streak } from '@/lib/khatma';
+import { khatmaStatus, markPage, MUSHAF_PAGES, newKhatma, ramadanPlan, streak } from '@/lib/khatma';
+import { useDispense } from '@/lib/dispense-context';
 import { fromIndex, pageRange } from '@/lib/quran-nav';
 import { khatma as khatmaStore, readDays } from '@/lib/quran-store';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
@@ -35,13 +36,18 @@ export default function KhatmaScreen() {
   const [days] = useShared(readDays);
   const { s, set } = useSettings();
   const today = dayKey();
-  const [plan, setPlan] = useState(30);
-  const [custom, setCustom] = useState(30);
+  const rp = ramadanPlan(today, s.hijriOffset);
+  // /quran/khatma?plan=ramadan (depuis le module Ramadan) : plan du Ramadan présélectionné
+  const pre = useLocalSearchParams<{ plan?: string }>().plan === 'ramadan';
+  const [plan, setPlan] = useState(pre ? -1 : 30);
+  const [custom, setCustom] = useState(pre ? rp.days : 30);
   const [from, setFrom] = useState(1);
   const [quit, setQuit] = useState(false);
+  const [ramadan, setRamadan] = useState(pre);
   const pal = readerPalette('auto');
   const st = k ? khatmaStatus(k, today) : null;
-  const sk = streak(days, today);
+  const { neutral } = useDispense();
+  const sk = streak(days, today, neutral);
   const slot = s.notif.quran ?? 'off';
   const setSlot = async (v: 'off' | 'fajr' | 'isha') => {
     if (v !== 'off' && !s.reminders) {
@@ -71,24 +77,33 @@ export default function KhatmaScreen() {
           <SectionHeader title="Durée" />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {PLANS.map((x) => (
-              <Pressable key={x.days} accessibilityRole="button" accessibilityState={{ selected: plan === x.days }} onPress={() => { setPlan(x.days); setCustom(x.days); }} style={{ width: '31.5%', minWidth: 100, flexGrow: 1, padding: 12, borderRadius: 16, borderWidth: plan === x.days ? 2 : 1, borderColor: plan === x.days ? b.green : b.line, backgroundColor: plan === x.days ? alpha(b.green, 0.08) : b.paper }}>
+              <Pressable key={x.days} accessibilityRole="button" accessibilityState={{ selected: plan === x.days }} onPress={() => { setPlan(x.days); setCustom(x.days); setRamadan(false); }} style={{ width: '31.5%', minWidth: 100, flexGrow: 1, padding: 12, borderRadius: 16, borderWidth: plan === x.days ? 2 : 1, borderColor: plan === x.days ? b.green : b.line, backgroundColor: plan === x.days ? alpha(b.green, 0.08) : b.paper }}>
                 <Text style={{ color: b.ink, fontWeight: '900' }}>{x.label}</Text>
                 <Text style={{ color: b.inkMuted, fontSize: 12 }}>{x.sub}</Text>
               </Pressable>
             ))}
+            <Pressable accessibilityRole="button" accessibilityState={{ selected: ramadan }} onPress={() => { setRamadan(true); setCustom(rp.days); setPlan(-1); }} style={{ width: '31.5%', minWidth: 100, flexGrow: 1, padding: 12, borderRadius: 16, borderWidth: ramadan ? 2 : 1, borderColor: ramadan ? b.gold : b.line, backgroundColor: ramadan ? alpha(b.gold, 0.1) : b.paper }}>
+              <Text style={{ color: b.ink, fontWeight: '900' }}>{L('Ramadan {y}', { y: rp.year })}</Text>
+              <Text style={{ color: b.inkMuted, fontSize: 12 }}>{rp.ongoing ? L('{n} jours restants', { n: rp.days }) : L('dès le {d}', { d: fmt(rp.start) })}</Text>
+            </Pressable>
           </View>
+          {ramadan ? (
+            <Text style={{ color: b.inkMuted, fontSize: 12 }}>
+              {L('Du {a} au {b} ({n} jours), selon le calendrier hégirien tabulaire et votre décalage ({o}). Le début réel dépend de l’observation du croissant : ajustez le décalage hégirien dans Réglages si besoin.', { a: fmt(rp.start), b: fmt(addDays(rp.start, rp.days - 1)), n: rp.days, o: s.hijriOffset > 0 ? `+${s.hijriOffset}` : String(s.hijriOffset) })}
+            </Text>
+          ) : null}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
             <View style={{ gap: 4 }}>
               <Text style={{ color: b.inkMuted, fontSize: 12, fontWeight: '700' }}>Nombre de jours</Text>
-              <QStepper label="Nombre de jours" value={custom} min={1} max={365} onChange={(v) => { setCustom(v); setPlan(v); }} pal={pal} />
+              <QStepper label="Nombre de jours" value={custom} min={1} max={365} onChange={(v) => { setCustom(v); setPlan(v); setRamadan(false); }} pal={pal} />
             </View>
             <View style={{ gap: 4 }}>
               <Text style={{ color: b.inkMuted, fontSize: 12, fontWeight: '700' }}>Commencer à la page</Text>
               <QStepper label="Page de départ" value={from} min={1} max={MUSHAF_PAGES} onChange={setFrom} step={1} pal={pal} />
             </View>
           </View>
-          <Text style={{ color: b.inkMuted }}>{L('{n} pages par jour environ · fin le {d} · départ : {s}', { n: Math.ceil((MUSHAF_PAGES - from + 1) / custom), d: fmt(addDays(today, custom - 1)), s: surahAtPage(from) })}</Text>
-          <Button title="Commencer la khatma" icon="flag-outline" onPress={() => setK(newKhatma(today, custom, from))} />
+          <Text style={{ color: b.inkMuted }}>{L('{n} pages par jour environ · fin le {d} · départ : {s}', { n: Math.ceil((MUSHAF_PAGES - from + 1) / custom), d: fmt(addDays(ramadan ? rp.start : today, custom - 1)), s: surahAtPage(from) })}</Text>
+          <Button title={ramadan && !rp.ongoing ? 'Programmer la khatma du Ramadan' : 'Commencer la khatma'} icon="flag-outline" onPress={() => setK(ramadan ? newKhatma(rp.start, rp.days, from) : newKhatma(today, custom, from))} />
           {reminder}
         </Container>
       </ScrollView>
@@ -100,7 +115,7 @@ export default function KhatmaScreen() {
       <Container max={820} style={{ padding: 16, gap: 16 }}>
         <FadeIn>
           <HeroHeader>
-            <Text style={{ color: b.heroMuted, fontWeight: '700' }}>{st.finished ? 'Khatma achevée' : L('Jour {a} sur {b}', { a: st.day, b: k.days })}</Text>
+            <Text style={{ color: b.heroMuted, fontWeight: '700' }}>{st.finished ? 'Khatma achevée' : st.notStarted ? L('Commence dans {n} jour(s) · le {d}', { n: st.startsIn, d: fmt(k.start) }) : L('Jour {a} sur {b}', { a: st.day, b: k.days })}</Text>
             <Text style={{ color: b.heroText, fontSize: 28, fontWeight: '900' }}>{`${Math.round(st.progress * 100)} %`}</Text>
             <Text style={{ color: b.heroMuted }}>{L('{a} / {b} pages · fin prévue le {d}', { a: st.done, b: st.total, d: fmt(st.end) })}</Text>
             <View style={{ marginTop: 12 }}>
@@ -117,15 +132,15 @@ export default function KhatmaScreen() {
           </View>
         ) : (
           <View style={{ backgroundColor: b.paper, borderRadius: 20, padding: 16, gap: 10, borderWidth: 1, borderColor: b.line }}>
-            <Text style={{ color: b.ink, fontSize: 17, fontWeight: '900' }}>Wird du jour</Text>
+            <Text style={{ color: b.ink, fontSize: 17, fontWeight: '900' }}>{st.notStarted ? 'Premier wird' : 'Wird du jour'}</Text>
             {st.today ? <Text style={{ color: b.ink }}>{L('Pages {a} à {b} · {s}', { a: st.today.from, b: st.today.to, s: surahAtPage(st.today.from) })}</Text> : null}
             <Text style={{ color: ahead ? b.green : '#D98A2B', fontWeight: '700' }}>
-              {st.delta === 0 ? 'Vous êtes dans les temps.' : ahead ? L('En avance de {n} page(s).', { n: st.delta }) : L('En retard de {n} page(s) : {p} pages/jour pour finir à temps.', { n: -st.delta, p: st.needPerDay })}
+              {st.notStarted ? (st.done ? L('En avance de {n} page(s).', { n: st.done }) : 'Vous pouvez commencer dès maintenant si vous le souhaitez.') : st.delta === 0 ? 'Vous êtes dans les temps.' : ahead ? L('En avance de {n} page(s).', { n: st.delta }) : L('En retard de {n} page(s) : {p} pages/jour pour finir à temps.', { n: -st.delta, p: st.needPerDay })}
             </Text>
             <Button title={L('Lire à partir de la page {p}', { p: st.nextPage })} icon="book-outline" onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(st.nextPage) } })} />
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
               <Button small variant="secondary" title="Page suivante lue" icon="checkmark" onPress={() => setK((c) => (c ? markPage(c, st.nextPage, today) : c))} />
-              {st.today ? <Button small variant="secondary" title="Wird du jour lu" icon="checkmark-done" onPress={() => setK((c) => (c ? markPage(c, st.today!.to, today) : c))} /> : null}
+              {st.today && !st.notStarted ? <Button small variant="secondary" title="Wird du jour lu" icon="checkmark-done" onPress={() => setK((c) => (c ? markPage(c, st.today!.to, today) : c))} /> : null}
             </View>
             <Text style={{ color: b.inkMuted, fontSize: 12 }}>La progression avance aussi automatiquement quand vous tournez les pages du mushaf.</Text>
           </View>

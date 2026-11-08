@@ -2,8 +2,9 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
-import { BlockButton, confirmAsk, EncouragementsPanel, ModerationContact, ReportButton, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
+import { BlockButton, CallCard, confirmAsk, DiscussionCard, EncouragementsPanel, ModerationContact, ReportButton, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
+import { ProgramsPanel } from '@/components/community/programs';
 import { useAuth } from '@/lib/community/auth';
 import { Badge, Button, Card, Eyebrow, Field, H1, H2, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
@@ -40,13 +41,20 @@ export default function CircleScreen() {
       ) : null}
       <ErrorNote error={circle.error || members.error} onRetry={() => (circle.reload(), members.reload())} />
       <Spacer />
+      {me ? <DiscussionCard scope="circle" scopeId={cid} name={name} /> : null}
+      {me ? <CallCard scope="circle" scopeId={cid} name={name} /> : null}
+      <Spacer />
 
+      <ProgramsPanel scope="circle" scopeId={cid} />
       <H2>Objectifs</H2>
       <ErrorNote error={goals.error} onRetry={goals.reload} />
       {goals.data?.length ? null : <Muted>Aucun objectif pour l’instant.</Muted>}
       {goals.data?.map((g) => (
         <GoalCard key={g.id} goal={g} scopeName={name} canAdmin={isMod} />
       ))}
+      {isMod ? (
+        <Button small variant="ghost" icon="camera-outline" title="Importer un programme (photo, fichier)" onPress={() => router.push({ pathname: '/zikrs/import', params: { scope: 'circle', id: cid } })} />
+      ) : null}
       {isMod ? <NewGoal onCreate={async (g) => (await api.createGoal('circle', cid, userId!, g), void goals.reload())} /> : null}
       <Spacer />
       <SharingPicker scope="circle" scopeId={cid} />

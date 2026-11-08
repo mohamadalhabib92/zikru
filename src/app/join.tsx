@@ -34,9 +34,9 @@ export default function Join() {
         <H1>Invitation</H1>
         {code ? <Muted>Code : {code}</Muted> : null}
         <Spacer />
-        <Notice tone="info" title="Connexion requise" text="Connectez-vous avec votre e-mail, puis revenez saisir ce code (Communauté › Rejoindre avec un code)." />
+        <Notice tone="info" title="Connexion requise" text="Connectez-vous avec votre e-mail : l’invitation s’ouvrira ensuite toute seule, sans ressaisir le code." />
         <Spacer />
-        <Button icon="mail-outline" title="Se connecter" onPress={() => router.push('/auth')} />
+        <Button icon="mail-outline" title="Se connecter" onPress={() => void (code ? api.rememberPendingJoin(code) : Promise.resolve()).finally(() => router.push('/auth'))} />
       </Screen>
     );
   }

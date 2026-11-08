@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { LocalGroups } from '@/components/LocalGroups';
-import { BlockedList, confirmAsk, ErrorNote, ModerationContact, useLoad } from '@/components/community/parts';
+import { BlockedList, confirmAsk, ErrorNote, ModerationContact, UnreadBadge, useGroupUnread, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
@@ -109,9 +109,11 @@ function SyncStatus() {
 function MyFamilies() {
   const { displayName, profile } = useAuth();
   const fams = useLoad(() => api.listFamilies(), []);
+  const unread = useGroupUnread();
   useFocusEffect(
     useCallback(() => {
       void fams.reload();
+      unread.reload();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
@@ -125,7 +127,14 @@ function MyFamilies() {
       <H2>Ma famille</H2>
       <ErrorNote error={fams.error} onRetry={fams.reload} />
       {fams.data?.map((f) => (
-        <ListItem key={f.id} icon="home-outline" title={f.name} subtitle={f.wird ? L('Wird : {w}', { w: f.wird }) : 'Famille privée'} onPress={() => router.push(`/family/${f.id}`)} />
+        <ListItem
+          key={f.id}
+          icon="home-outline"
+          title={f.name}
+          subtitle={f.wird ? L('Wird : {w}', { w: f.wird }) : 'Famille privée'}
+          right={<UnreadBadge n={unread.of('family', f.id)?.unread ?? 0} muted={unread.of('family', f.id)?.muted} />}
+          onPress={() => router.push(`/family/${f.id}`)}
+        />
       ))}
       {fams.data && !fams.data.length && !creating ? <Muted>Créez votre famille ou rejoignez-la avec le code reçu d’un parent.</Muted> : null}
       {profile?.is_minor ? null : creating ? (
@@ -166,9 +175,11 @@ function MyFamilies() {
 function MyCircles() {
   const { displayName, profile } = useAuth();
   const list = useLoad(() => api.listCircles(), []);
+  const unread = useGroupUnread();
   useFocusEffect(
     useCallback(() => {
       void list.reload();
+      unread.reload();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
@@ -186,7 +197,14 @@ function MyCircles() {
       <Muted>{cap.data ? L('Vos proches (Ahbab) : {n} personnes maximum par cercle, créateur inclus, sur invitation uniquement.', { n: cap.data }) : 'Vos proches (Ahbab) : petits cercles, sur invitation uniquement.'}</Muted>
       <ErrorNote error={list.error} onRetry={list.reload} />
       {list.data?.map((c) => (
-        <ListItem key={c.id} icon="people-outline" title={c.name} subtitle={c.description ?? 'Cercle privé'} onPress={() => router.push(`/circle/${c.id}`)} />
+        <ListItem
+          key={c.id}
+          icon="people-outline"
+          title={c.name}
+          subtitle={c.description ?? 'Cercle privé'}
+          right={<UnreadBadge n={unread.of('circle', c.id)?.unread ?? 0} muted={unread.of('circle', c.id)?.muted} />}
+          onPress={() => router.push(`/circle/${c.id}`)}
+        />
       ))}
       {creating ? (
         <Card>

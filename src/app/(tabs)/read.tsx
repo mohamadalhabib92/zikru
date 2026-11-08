@@ -29,6 +29,10 @@ export default function Read() {
       ],
     },
     {
+      title: 'Bien-être',
+      items: [{ icon: 'leaf', title: 'Respirer, contempler, apprendre', sub: 'Cohérence · tafakkur · jeux · tajwid', href: '/bien-etre', color: b.teal }],
+    },
+    {
       title: 'Savoir',
       items: [
         { icon: 'library', title: 'Hadiths', sub: 'Collection choisie et référencée', href: '/hadiths', color: b.indigo },

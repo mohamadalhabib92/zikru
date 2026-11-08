@@ -1,19 +1,22 @@
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
-import { Pressable, Share, TextInput, View } from 'react-native';
+import { Platform, Pressable, Share, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { arNum } from '@/lib/quran-nav';
 import { BOOKMARK_COLORS, HIGHLIGHTS, keyOf, marks, removeBookmark, saveBookmark, setHighlight, setNote } from '@/lib/quran-store';
 import { useShared } from '@/lib/shared-state';
+import { canEmbedTranslation, QURAN_TEXT_SOURCE, translationSource } from '@/lib/quran-licenses';
+import { shareVerseImage, VERSE_IMAGE_SUPPORTED } from '@/lib/verse-image';
 import { SURAHS } from '@/lib/surahs';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
+import { arLang } from '@/ui/ar-lang';
 import type { Pal } from './palette';
 import { QBtn, QLabel, Sheet } from './Sheet';
 import { L } from '@/lib/l10n';
 
-export type AyahTarget = { s: number; a: number; ar: string; tr?: string };
-export type AyahAction = 'play' | 'tafsir' | 'zikr' | 'hifz';
+export type AyahTarget = { s: number; a: number; ar: string; tr?: string; /** édition de la traduction (pour citer sa source) */ trId?: string };
+export type AyahAction = 'play' | 'tafsir' | 'zikr' | 'hifz' | 'ab';
 
 function Act({ icon, label, onPress, pal }: { icon: IconName; label: string; onPress: () => void; pal: Pal }) {
   return (
@@ -41,7 +44,25 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
   if (!target) return null;
   const meta = SURAHS[target.s - 1];
   const title = `${meta[2]} · ${target.s}:${target.a}`;
-  const plain = `${target.ar} ﴿${arNum(target.a)}﴾${target.tr ? `\n\n${target.tr}` : ''}\n\n— ${L('Coran')} ${target.s}:${target.a} (${meta[2]})`;
+  const trSrc = target.tr && target.trId ? translationSource(target.trId) : null;
+  const srcLine = `${L('Texte : {t}', { t: 'Tanzil (CC BY 3.0)' })}${trSrc ? ` · ${L('Traduction : {t}', { t: trSrc.by })}` : ''}`;
+  const plain = `${target.ar} ﴿${arNum(target.a)}﴾${target.tr ? `\n\n${target.tr}` : ''}\n\n— ${L('Coran')} ${target.s}:${target.a} (${meta[2]})\n${srcLine}`;
+  const shareImage = () => {
+    const embed = !!target.tr && !!target.trId && canEmbedTranslation(target.trId);
+    void shareVerseImage(
+      {
+        s: target.s,
+        a: target.a,
+        ar: target.ar,
+        surahName: `${L('Sourate')} ${meta[2]}`,
+        tr: embed ? target.tr : undefined,
+        trSource: embed && trSrc ? L('Traduction : {t}', { t: `${trSrc.by} — ${trSrc.licence}` }) : undefined,
+        textSource: L('Texte : {t}', { t: `${QURAN_TEXT_SOURCE.by} (${QURAN_TEXT_SOURCE.licence.split(' — ')[0]})` }),
+        brand: 'Zikru',
+      },
+      pal.dark,
+    ).catch(() => {});
+  };
   const close = () => {
     if (note !== (m.notes[k]?.text ?? '')) setNote(target.s, target.a, note);
     if (bm && name !== bm.name) saveBookmark(target.s, target.a, name, bm.color);
@@ -53,7 +74,7 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
   };
   return (
     <Sheet visible onClose={close} pal={pal} title={title} subtitle={`${L('{n} versets', { n: meta[4] })} · ${L(meta[5] === 'M' ? 'mecquoise' : 'médinoise')}`}>
-      <Text numberOfLines={3} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 22, lineHeight: 46, textAlign: 'right', writingDirection: 'rtl' }}>
+      <Text {...arLang} numberOfLines={3} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 22, lineHeight: 46, textAlign: 'right', writingDirection: 'rtl' }}>
         {target.ar}
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
@@ -69,6 +90,8 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
           pal={pal}
         />
         <Act icon="share-outline" label="Partager" onPress={() => void Share.share({ message: plain }).catch(() => {})} pal={pal} />
+        {VERSE_IMAGE_SUPPORTED && Platform.OS === 'web' ? <Act icon="image-outline" label="Partager en image" onPress={shareImage} pal={pal} /> : null}
+        <Act icon="repeat" label="Répéter A-B" onPress={() => run('ab')} pal={pal} />
         <Act icon="albums-outline" label="Ajouter à un zikr" onPress={() => run('zikr')} pal={pal} />
       </View>
 

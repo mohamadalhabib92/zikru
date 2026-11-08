@@ -1,0 +1,10 @@
+{
+ "source": "https://api.alquran.cloud/v1/surah/112/quran-tajweed (édition quran-tajweed, extrait de test, usage non commercial)",
+ "surah": 112,
+ "ayahs": [
+  "قُلْ هُوَ [h:8078[ٱ]للَّهُ أَحَ[q[د]ٌ",
+  "ٱللَّهُ [h:14675[ٱ][l[ل]صَّمَ[q[د]ُ",
+  "لَمْ يَلِ[q:14676[دْ] وَلَمْ يُولَ[q:14677[دْ]",
+  "وَلَمْ يَك[u:2596[ُن ل]َّهُ[n[ۥ] كُفُوًا أَحَ[q[د]ُۢ"
+ ]
+}

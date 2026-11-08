@@ -1,0 +1,690 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+Confidentialité	Datenschutz
+Diagnostic Bluetooth	Bluetooth-Diagnose
+Sourate	Sure
+Session de mémorisation	Lernsitzung
+Marque-pages et notes	Lesezeichen und Notizen
+Mes zikrs	Meine Zikrs
+Pratique	Praxis
+Mon parcours spirituel	Mein spiritueller Weg
+Jardin des habitudes	Gewohnheitsgarten
+El Ghaly Bilal	El Ghaly Bilal
+Planificateur du jour	Tagesplaner
+Connexion	Anmelden
+Rejoindre	Beitreten
+Ma famille	Meine Familie
+Mon cercle	Mein Kreis
+Zikr en direct	Live-Zikr
+Mashriqi (oriental)	Maschriqi (östlich)
+Maghribi (occidental)	Maghribi (westlich)
+= 5 ou 400	= 5 oder 400
+= 1 ou 0	= 1 oder 0
+Valeurs numériques des lettres · Mashriqi & Maghribi	Zahlenwerte der Buchstaben · Maschriqi & Maghribi
+Texte arabe	Arabischer Text
+Texte arabe à calculer	Zu berechnender arabischer Text
+Système et règles	System und Regeln
+Affichage	Anzeige
+Les deux	Beide
+Mashriqi	Maschriqi
+Maghribi	Maghribi
+Détail	Detail
+Somme par mot	Summe pro Wort
+Normalisation appliquée avant le calcul : voyelles (tashkīl), shadda, sukūn, alif suscrit et tatwīl sont ignorés (une lettre avec shadda compte une fois, comme dans l’usage classique).	Vor der Berechnung angewandte Normalisierung: Vokale (Taschkil), Schadda, Sukun, hochgestelltes Alif und Tatwil werden ignoriert (ein Buchstabe mit Schadda zählt einmal, wie im klassischen Gebrauch).
+Copier le résultat	Ergebnis kopieren
+SOMME PAR MOT	SUMME PRO WORT
+DÉTAIL PAR LETTRE	DETAIL PRO BUCHSTABE
+Bleu : mashriqi · vert : maghribi · cadre doré : lettre dont la valeur diffère.	Blau: Maschriqi · Grün: Maghribi · goldener Rahmen: Buchstabe mit abweichendem Wert.
+TABLE DES VALEURS	WERTETABELLE
+REPÈRE HISTORIQUE	HISTORISCHER HINWEIS
+Le ḥisāb al-jummal attribue à chaque lettre une valeur numérique selon l’ordre ancien de l’alphabet sémitique (abjad), que l’arabe partage avec l’araméen, l’hébreu et le grec. Avant la diffusion des chiffres indo-arabes, il servait à noter des nombres ; il est ensuite resté en usage pour numéroter des listes et composer des chronogrammes, où la somme des lettres d’un vers donne une date (construction, naissance, décès, achèvement d’un ouvrage).	Das Hisab al-Dschummal weist jedem Buchstaben einen Zahlenwert nach der alten Reihenfolge des semitischen Alphabets (Abjad) zu, die das Arabische mit dem Aramäischen, Hebräischen und Griechischen teilt. Bevor sich die indisch-arabischen Ziffern verbreiteten, diente es zum Schreiben von Zahlen; danach blieb es in Gebrauch, um Listen zu nummerieren und Chronogramme zu verfassen, bei denen die Summe der Buchstaben eines Verses ein Datum ergibt (ein Bauwerk, eine Geburt, ein Tod, die Vollendung eines Buches).
+Deux ordres coexistent : l’ordre oriental (mashriqi), répandu du Proche-Orient à l’Asie, et l’ordre occidental (maghribi), employé au Maghreb, en al-Andalus et en Afrique de l’Ouest, qui ne diffère que sur six lettres.	Zwei Reihenfolgen bestehen nebeneinander: die östliche (Maschriqi), verbreitet vom Nahen Osten bis nach Asien, und die westliche (Maghribi), gebräuchlich im Maghreb, in al-Andalus und in Westafrika, die sich nur bei sechs Buchstaben unterscheidet.
+Outil de calcul linguistique et historique : ce calcul ne constitue ni une preuve ni une source de jugement religieux.	Ein sprachliches und historisches Rechenwerkzeug: Diese Berechnung ist weder ein Beweis noch eine Quelle religiöser Urteile.
+Code Vibecode d’origine indisponible : reconstruction complète. L’audit porte sur la spec et sur cette base.	Ursprünglicher Vibecode-Code nicht verfügbar: vollständiger Neuaufbau. Das Audit umfasst die Spezifikation und diese Codebasis.
+Hijri	Hidschri
+Risque initial : plusieurs conversions (Intl, librairies). Correctif : une seule source (src/lib/hijri.ts) + 11 auto-tests (npm test).	Anfangsrisiko: mehrere Umrechnungen (Intl, Bibliotheken). Korrektur: eine einzige Quelle (src/lib/hijri.ts) + 11 Selbsttests (npm test).
+Cibles tactiles	Berührungsflächen
+Tous les boutons, puces et icônes : ≥ 44×44 pt (kit UI), retour visuel, états disabled/loading.	Alle Schaltflächen, Chips und Symbole: ≥ 44×44 pt (UI-Kit), visuelle Rückmeldung, Zustände deaktiviert/lädt.
+Appels payants (402)	Kostenpflichtige Aufrufe (402)
+Aucun appel réseau sur le chemin core. Prières/qibla calculés localement ; Supabase optionnel.	Kein Netzwerkaufruf im Kernpfad. Gebete/Qibla lokal berechnet; Supabase optional.
+Persistance	Persistenz
+Tasbih écrit à chaque appui (AsyncStorage / localStorage). MMKV non utilisé (build natif requis, incompatible PWA).	Tasbih bei jedem Tippen gespeichert (AsyncStorage / localStorage). MMKV nicht verwendet (native Version erforderlich, nicht mit der PWA kompatibel).
+Audio Bilal	Bilal-Audio
+Fichier non fourni : lecteur désactivé proprement, aucune exception.	Datei nicht bereitgestellt: Player sauber deaktiviert, keine Ausnahme.
+Compteur Bluetooth réel : Web Bluetooth (Chrome/Edge) et react-native-ble-plx (build natif), profils BSTWSH / iQibla (partiel) / générique, mode apprentissage, mode clavier HID.	Echter Bluetooth-Zähler: Web Bluetooth (Chrome/Edge) und react-native-ble-plx (native Version), Profile BSTWSH / iQibla (teilweise) / generisch, Lernmodus, HID-Tastaturmodus.
+Langues	Sprachen
+7 langues branchées ; Pulaar et Wolof : repli FR avec mention « en attente de validation ».	7 Sprachen angebunden; Pulaar und Wolof: französischer Ersatz, gekennzeichnet als „wartet auf Freigabe“.
+Notifications	Mitteilungen
+Non implémentées dans cette passe (à ajouter avec expo-notifications).	In diesem Durchgang nicht umgesetzt (mit expo-notifications hinzuzufügen).
+Dead code	Toter Code
+Aucun écran orphelin ; aucun flag de démo hors contenu d’exemple étiqueté.	Kein verwaister Bildschirm; kein Demo-Schalter außerhalb gekennzeichneter Beispielinhalte.
+Audit — Phase 0	Audit — Phase 0
+Problèmes → correctifs appliqués	Probleme → angewandte Korrekturen
+Pour votre famille et vos cercles. Sans mot de passe : nous vous envoyons un code par e-mail.	Für Ihre Familie und Ihre Kreise. Kein Passwort: Wir senden Ihnen einen Code per E-Mail.
+Lien de connexion	Anmeldelink
+Adresse e-mail	E-Mail-Adresse
+Recevoir un code	Einen Code erhalten
+E-mail envoyé	E-Mail gesendet
+Saisissez le code reçu, ou touchez le lien dans l’e-mail depuis cet appareil. Pensez aux indésirables.	Geben Sie den erhaltenen Code ein oder tippen Sie auf diesem Gerät auf den Link in der E-Mail. Prüfen Sie Ihren Spam-Ordner.
+Code reçu	Code erhalten
+Valider	Bestätigen
+Renvoyer le code	Code erneut senden
+Les enfants n’ont pas besoin d’adresse : un parent peut les ajouter comme « enfant géré » dans la famille.	Kinder brauchen keine Adresse: Ein Elternteil kann sie in der Familie als „betreutes Kind“ hinzufügen.
+Comment être plus régulier dans mon wird ?	Wie kann ich in meinem Wird regelmäßiger werden?
+Je me sens loin de la prière ces jours-ci…	Ich fühle mich in letzter Zeit fern vom Gebet…
+Une petite habitude pour mieux commencer la journée ?	Eine kleine Gewohnheit, um den Tag besser zu beginnen?
+Comment gérer la colère selon la Sunna ?	Wie geht man laut der Sunna mit Wut um?
+Votre compagnon de cheminement. Connectez-vous pour discuter avec lui (gratuit, limité à quelques messages par jour).	Ihr Begleiter auf dem Weg. Melden Sie sich an, um mit ihm zu schreiben (kostenlos, auf einige Nachrichten pro Tag begrenzt).
+Se connecter	Anmelden
+As-salamu ‘alaykum 👋	As-salamu ‘alaykum 👋
+Je suis El Ghaly Bilal, un compagnon pour vos habitudes, votre régularité et votre moral. Je ne suis ni un savant ni un médecin : pour une question de fiqh, consultez un imam ou votre muqaddam.	Ich bin El Ghaly Bilal, ein Begleiter für Ihre Gewohnheiten, Ihre Regelmäßigkeit und Ihre Stimmung. Ich bin weder Gelehrter noch Arzt: Wenden Sie sich bei einer Fiqh-Frage an einen Imam oder Ihren Muqaddam.
+Bientôt disponible, inch’Allah	Demnächst, insha’Allah
+Pour commencer :	Zum Einstieg:
+Effacer la conversation	Unterhaltung löschen
+Écrivez à Bilal…	An Bilal schreiben…
+Message à Bilal	Nachricht an Bilal
+Envoyer	Senden
+Cercle	Kreis
+Mes cercles · Ahbab	Meine Kreise · Ahbab
+Objectifs	Ziele
+Aucun objectif pour l’instant.	Noch keine Ziele.
+Règlement	Regeln
+Enregistrer	Speichern
+Pas de règlement.	Keine Regeln.
+Modifier	Bearbeiten
+Membres	Mitglieder
+Retirer modérateur	Moderatorenrolle entziehen
+Nommer modérateur	Zum Moderator machen
+Cette personne pourra revenir seulement avec une nouvelle invitation.	Diese Person kann nur mit einer neuen Einladung zurückkehren.
+Membre	Mitglied
+Modérateur	Moderator
+Quitter le cercle	Den Kreis verlassen
+Quitter le cercle ?	Den Kreis verlassen?
+Le rôle de fondateur passera à un modérateur ou au membre le plus ancien.	Die Gründerrolle geht an einen Moderator oder an das am längsten dabei seiende Mitglied über.
+Vous pourrez revenir avec une nouvelle invitation.	Sie können mit einer neuen Einladung zurückkehren.
+Quitter	Verlassen
+Ma famille · Mes cercles	Meine Familie · Meine Kreise
+Faites du dhikr ensemble, avec vos proches uniquement. Jamais d’annuaire public.	Gemeinsam Dhikr machen, nur mit Ihren Nächsten. Niemals ein öffentliches Verzeichnis.
+Un code à 6 chiffres vous est envoyé par e-mail. Aucun mot de passe.	Ein 6-stelliger Code wird Ihnen per E-Mail gesendet. Kein Passwort.
+Continuer avec mon e-mail	Mit meiner E-Mail fortfahren
+Mode local	Lokaler Modus
+Le serveur des communautés n’est pas configuré : seuls les groupes locaux sont disponibles.	Der Gemeinschaftsserver ist nicht konfiguriert: Nur lokale Gruppen sind verfügbar.
+Groupes locaux (sans compte)	Lokale Gruppen (ohne Konto)
+Vos familles et cercles de dhikr.	Ihre Familien und Dhikr-Kreise.
+Masquer les groupes locaux	Lokale Gruppen ausblenden
+Groupes locaux (hors-ligne)	Lokale Gruppen (offline)
+Objectifs communs	Gemeinsame Ziele
+Zikr du soir à distance	Abend-Zikr aus der Ferne
+Encouragements privés	Private Ermutigung
+Communauté	Gemeinschaft
+Tasbih relié à :	Tasbih verknüpft mit:
+dhikr en attente d’envoi…	Dhikr warten auf das Senden…
+Famille privée	Private Familie
+Créez votre famille ou rejoignez-la avec le code reçu d’un parent.	Gründen Sie Ihre Familie oder treten Sie ihr mit dem Code eines Elternteils bei.
+Nom de la famille	Name der Familie
+Famille Ba	Familie Ba
+Votre nom dans la famille	Ihr Name in der Familie
+Papa, Maman, Habib…	Papa, Mama, Habib…
+Vous serez parent administrateur (2 parents maximum).	Sie werden verwaltender Elternteil (höchstens 2 Elternteile).
+Nom requis.	Name erforderlich.
+Créer une famille	Eine Familie gründen
+Bienveillance, discrétion et sincérité. Pas de comparaison, pas de jugement.	Freundlichkeit, Diskretion und Aufrichtigkeit. Kein Vergleich, kein Urteil.
+Mes cercles	Meine Kreise
+Cercle privé	Privater Kreis
+Nom du cercle	Name des Kreises
+Cercle du jeudi	Donnerstagskreis
+Description (facultatif)	Beschreibung (optional)
+Règlement (accepté par chaque membre)	Regeln (von jedem Mitglied akzeptiert)
+Créer un cercle	Einen Kreis gründen
+Rejoindre avec un code	Mit einem Code beitreten
+Code d’invitation	Einladungscode
+Voir	Ansehen
+Mon compte	Mein Konto
+Mon prénom (affiché à ma famille et mes cercles)	Mein Vorname (sichtbar für meine Familie und meine Kreise)
+Enregistré ✓	Gespeichert ✓
+Se déconnecter	Abmelden
+Supprimer mon compte	Mein Konto löschen
+Supprimer définitivement le compte ?	Konto endgültig löschen?
+Votre profil, vos contributions et vos appartenances sont effacés. Une famille dont vous êtes le seul adulte est supprimée. Vos données locales (tasbih, groupes locaux) restent sur cet appareil.	Ihr Profil, Ihre Beiträge und Mitgliedschaften werden gelöscht. Eine Familie, in der Sie der einzige Erwachsene sind, wird gelöscht. Ihre lokalen Daten (Tasbih, lokale Gruppen) bleiben auf diesem Gerät.
+Supprimer	Löschen
+Synchronisation	Synchronisierung
+Supabase configuré	Supabase konfiguriert
+Supabase non configuré — mode local	Supabase nicht konfiguriert — lokaler Modus
+Prières, qibla, tasbih et contenu approuvé fonctionnent entièrement hors-ligne, sans compte ni API payante. La synchronisation est optionnelle.	Gebete, Qibla, Tasbih und freigegebene Inhalte funktionieren vollständig offline, ohne Konto und ohne kostenpflichtige API. Die Synchronisierung ist optional.
+défini	gesetzt
+valeur YOUR_* à remplacer	YOUR_*-Wert zu ersetzen
+Manquant	Fehlt
+Pour activer :	Zum Aktivieren:
+1. Copier .env.example vers .env et renseigner EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY.	1. Kopieren Sie .env.example nach .env und füllen Sie EXPO_PUBLIC_SUPABASE_URL und EXPO_PUBLIC_SUPABASE_ANON_KEY aus.
+2. Exécuter supabase/schema.sql dans le projet Supabase (tables + RLS).	2. Führen Sie supabase/schema.sql im Supabase-Projekt aus (Tabellen + RLS).
+3. Relancer l’app (npx expo start) ou reconstruire la PWA.	3. Starten Sie die App neu (npx expo start) oder erstellen Sie die PWA neu.
+Workflow de contenu	Inhalts-Workflow
+Mode éditeur local	Lokaler Redaktionsmodus
+Seuls les éléments « Approuvé » apparaissent dans l’app. Chaque contenu doit citer sa source. Ne saisissez que des traductions déjà validées.	Nur „freigegebene“ Elemente erscheinen in der App. Jeder Inhalt muss seine Quelle angeben. Geben Sie nur bereits geprüfte Übersetzungen ein.
+Tous	Alle
+Brouillon	Entwurf
+Relecture	Prüfung
+Approuvé	Freigegeben
+Renvoyer en brouillon	Zurück zum Entwurf
+Nouveau brouillon	Neuer Entwurf
+Texte arabe (avec tashkīl)	Arabischer Text (mit Taschkil)
+Source (obligatoire)	Quelle (erforderlich)
+Ex. référence de recueil et numéro	Z. B. Sammlungsreferenz und Nummer
+Créer le brouillon	Entwurf erstellen
+Interface affichée en français en attendant.	Oberfläche vorerst auf Französisch angezeigt.
+Contenu d’exemple	Beispielinhalt
+Formules d’amorçage à faire valider par un référent avant publication.	Einstiegsformeln, vor der Veröffentlichung von einer Referenzperson zu bestätigen.
+Exemple	Beispiel
+Wird	Wird
+Zikr	Zikr
+Fête	Feier
+Cours	Unterricht
+Rappel	Erinnerung
+Famille	Familie
+Ma famille · Usra	Meine Familie · Usra
+Temps conseillé par tes parents	Von Ihren Eltern vorgeschlagene Zeit
+Mode enfant	Kindermodus
+Confiez le téléphone à un enfant : un grand bouton de tasbih, sans chiffres des autres ni comparaison. Ses dhikr comptent pour l’objectif familial.	Geben Sie das Telefon einem Kind: eine große Tasbih-Taste, ohne Zahlen anderer und ohne Vergleich. Seine Dhikr zählen zum Familienziel.
+Adulte	Erwachsener
+Enfant	Kind
+Invité·e	Gast
+Quitter la famille	Die Familie verlassen
+Quitter la famille ?	Die Familie verlassen?
+Wird familial	Familien-Wird
+Ex. 100 istighfār et 100 ṣalawāt chaque soir	Z. B. 100 Istighfar und 100 Salawat jeden Abend
+Pas encore de wird familial.	Noch kein Familien-Wird.
+Géré	Betreut
+Rôle	Rolle
+Parent	Elternteil
+Contrôle parental	Elterliche Kontrolle
+Messages	Nachrichten
+Aucun	Keine
+Parents	Eltern
+Contenu	Inhalte
+Ado	Jugendlich
+Temps par jour (minutes, vide = libre)	Zeit pro Tag (Minuten, leer = unbegrenzt)
+Les enfants ne rejoignent aucun cercle et ne sont jamais visibles hors de la famille.	Kinder treten keinem Kreis bei und sind außerhalb der Familie nie sichtbar.
+Retirer de la famille	Aus der Familie entfernen
+Ses contributions passées restent dans le total.	Ihre früheren Beiträge bleiben in der Summe.
+Ajouter un enfant (sans compte)	Ein Kind hinzufügen (ohne Konto)
+Pour un jeune enfant sans e-mail : vous comptez pour lui, ou passez en « Mode enfant ». Pour un enfant avec son propre appareil, utilisez une invitation « Enfant ».	Für ein kleines Kind ohne E-Mail: Sie zählen für es oder wechseln in den „Kindermodus“. Für ein Kind mit eigenem Gerät verwenden Sie eine „Kind“-Einladung.
+Prénom	Vorname
+Ajouter	Hinzufügen
+Calendrier spirituel	Spiritueller Kalender
+Autre	Andere
+Rien de prévu. Ajoutez le zikr du soir, une fête ou un cours.	Nichts geplant. Fügen Sie den Abend-Zikr, eine Feier oder einen Unterricht hinzu.
+Titre	Titel
+Zikr du jeudi soir	Donnerstagabend-Zikr
+Date (AAAA-MM-JJ)	Datum (JJJJ-MM-TT)
+Heure (vide = journée)	Uhrzeit (leer = ganztägig)
+Titre et date valides requis.	Ein gültiger Titel und ein gültiges Datum sind erforderlich.
+Ajouter un moment	Einen Termin hinzufügen
+Touche le grand bouton à chaque dhikr.	Tippe für jeden Dhikr auf die große Taste.
+Compter un dhikr	Einen Dhikr zählen
+Machā’Allāh ! 🌟	Mascha’Allah! 🌟
+Continue 🌙	Weiter so 🌙
+Pas d’objectif familial	Kein Familienziel
+Les appuis sont comptés ici, sans être envoyés.	Das Tippen wird hier gezählt, ohne gesendet zu werden.
+Quitter le mode enfant (appui long)	Kindermodus verlassen (lange drücken)
+Parent : appui long ici pour quitter	Elternteil: hier lange drücken zum Verlassen
+Plantez de petites habitudes, attachées à un moment précis.	Pflanzen Sie kleine Gewohnheiten, verknüpft mit einem bestimmten Moment.
+j ·	T. ·
+fois au total	Mal insgesamt
+Nouvelle habitude	Neue Gewohnheit
+Habitude (ex. Lire une page de Coran)	Gewohnheit (z. B. Eine Seite Koran lesen)
+Après… (ex. Après la prière d’Isha)	Nach… (z. B. Nach dem Isha-Gebet)
+Moment déclencheur	Auslösender Moment
+Je… (version minuscule, ex. je lis un verset)	Ich… (Mini-Version, z. B. Ich lese einen Vers)
+Version minuscule	Mini-Version
+Planter	Pflanzen
+Créer ma propre habitude	Meine eigene Gewohnheit erstellen
+IDÉES À PLANTER	IDEEN ZUM PFLANZEN
+Invitation	Einladung
+Code :	Code:
+Connexion requise	Anmeldung erforderlich
+Connectez-vous avec votre e-mail, puis revenez saisir ce code (Communauté › Rejoindre avec un code).	Melden Sie sich mit Ihrer E-Mail an und kehren Sie dann zurück, um diesen Code einzugeben (Gemeinschaft › Mit einem Code beitreten).
+Invitation non valable	Ungültige Einladung
+Ce code est invalide, expiré, révoqué ou déjà utilisé. Demandez-en un nouveau.	Dieser Code ist ungültig, abgelaufen, widerrufen oder bereits verwendet. Bitten Sie um einen neuen.
+Cercle de proches	Kreis der Nächsten
+Rôle :	Rolle:
+Valable jusqu’au	Gültig bis
+Compte enfant	Kinderkonto
+Vos parents gèrent vos réglages. Vous ne pourrez pas rejoindre de cercles en dehors de la famille.	Deine Eltern verwalten deine Einstellungen. Du kannst keinen Kreisen außerhalb der Familie beitreten.
+Votre nom ici	Ihr Name hier
+Règlement du cercle	Regeln des Kreises
+J’accepte le règlement	Ich akzeptiere die Regeln
+100 dhikr	100 Dhikr
+1 000 dhikr	1.000 Dhikr
+10 000 dhikr	10.000 Dhikr
+Série de 7 jours	7-Tage-Serie
+Série de 30 jours	30-Tage-Serie
+5 prières cochées en un jour	5 Gebete an einem Tag abgehakt
+dhikr au total	Dhikr insgesamt
+Palier maximal atteint — al-hamdu lillah	Höchste erreichte Stufe — al-hamdu lillah
+Aujourd’hui	Heute
+Série	Serie
+Record	Rekord
+7 derniers jours	Letzte 7 Tage
+30 derniers jours	Letzte 30 Tage
+dhikr ·	Dhikr ·
+jours actifs sur 30	aktive Tage von 30
+Ces paliers sont une simple motivation pour la régularité. Ils ne mesurent pas le rang spirituel, qui n’est connu que d’Allah. Les jours sont comptés depuis l’installation de cette version.	Diese Stufen sind lediglich eine Ermutigung zur Regelmäßigkeit. Sie messen keinen spirituellen Rang, den allein Allah kennt. Die Tage werden seit der Installation dieser Version gezählt.
+Sourate al-Kahf	Sure al-Kahf
+Mishary Rashid Alafasy	Mishary Rashid Alafasy
+Texte indisponible : vérifiez la connexion internet (il sera ensuite gardé hors ligne).	Text nicht verfügbar: Prüfen Sie Ihre Internetverbindung (er wird danach offline aufbewahrt).
+Sourate 18 · 110 versets	Sure 18 · 110 Verse
+C’est le moment de lire al-Kahf	Es ist Zeit, al-Kahf zu lesen
+Du coucher du soleil jeudi jusqu’au coucher du soleil vendredi.	Von Sonnenuntergang am Donnerstag bis Sonnenuntergang am Freitag.
+Récitation : Mishary Rashid Alafasy (streaming)	Rezitation: Mishary Rashid Alafasy (Streaming)
+Lecture impossible : connexion requise (audio en streaming, non stocké dans l’app).	Wiedergabe nicht möglich: Verbindung erforderlich (gestreamtes Audio, nicht in der App gespeichert).
+Audio diffusé depuis {s} — rien n’est téléchargé ni inclus dans l’app.	Audio gestreamt von {s} — nichts wird heruntergeladen oder in die App aufgenommen.
+Rappel du vendredi	Freitagserinnerung
+Affiche un rappel dans l’app (accueil et ici) de jeudi soir à vendredi soir.	Zeigt von Donnerstagabend bis Freitagabend eine Erinnerung in der App (Startseite und hier).
+Lue cette semaine ✓	Diese Woche gelesen ✓
+Marquer comme lue cette semaine	Als diese Woche gelesen markieren
+Mérites (références)	Vorzüge (Referenzen)
+Sahih Muslim 809	Sahih Muslim 809
+Rapporté par al-Hakim et al-Bayhaqi ; jugé authentique par al-Albani (Sahih al-Jami‘ 6470)	Überliefert von al-Hakim und al-Bayhaqi; von al-Albani als authentisch eingestuft (Sahih al-Jami‘ 6470)
+Texte	Text
+Français	Französisch
+English	Englisch
+Arabe seul	Nur Arabisch
+Chargement du texte…	Text wird geladen…
+Afficher la suite ({n} versets)	Den Rest anzeigen ({n} Verse)
+Texte : api.alquran.cloud (Uthmani ; trad. Hamidullah / Pickthall, domaine public), mis en cache sur l’appareil.	Text: api.alquran.cloud (Uthmani; Übersetzungen Hamidullah / Pickthall, gemeinfrei), auf dem Gerät zwischengespeichert.
+En direct	Live
+Session terminée	Sitzung beendet
+Total ensemble	Gemeinsame Summe
+Moi	Ich
+Votre bague ou compteur Bluetooth compte aussi ici.	Ihr Bluetooth-Ring oder -Zähler zählt auch hier.
+Terminer la session	Die Sitzung beenden
+Seule la personne qui a lancé la session (ou un responsable) peut la terminer.	Nur die Person, die die Sitzung gestartet hat (oder eine leitende Person), kann sie beenden.
+Retour	Zurück
+Valeur abjad de chaque Nom · ajout direct à vos zikrs	Abjad-Wert jedes Namens · direkt zu Ihren Zikrs hinzufügen
+Nom, sens, n° ou valeur abjad…	Name, Bedeutung, Nr. oder Abjad-Wert…
+Rechercher un Nom	Einen Namen suchen
+Abjad calculé sur le Nom sans l’article ni « yā » (Laṭīf = 129), selon les options de l’écran Abjad.	Abjad berechnet auf den Namen ohne Artikel oder „ya“ (Latif = 129), gemäß den Optionen des Abjad-Bildschirms.
+Localisation indisponible — choisissez une ville.	Standort nicht verfügbar — wählen Sie eine Stadt.
+Après Fajr	Nach Fajr
+Après Dhuhr	Nach Dhuhr
+Après Asr	Nach Asr
+Après Maghrib	Nach Maghrib
+Après Isha	Nach Isha
+Organisez votre journée autour des prières ·	Organisieren Sie Ihren Tag rund um die Gebete ·
+aucune tâche	keine Aufgaben
+Ajouter une tâche…	Eine Aufgabe hinzufügen…
+Les tâches sont enregistrées sur cet appareil, pour aujourd’hui.	Aufgaben werden für heute auf diesem Gerät gespeichert.
+Aucun marque-page. Touchez un verset dans le lecteur pour en ajouter un.	Keine Lesezeichen. Tippen Sie im Leser auf einen Vers, um eines hinzuzufügen.
+Aucune note. Touchez un verset pour écrire une réflexion.	Keine Notizen. Tippen Sie auf einen Vers, um eine Reflexion zu schreiben.
+Aucun surlignage.	Keine Markierungen.
+Supprimer le marque-page	Das Lesezeichen entfernen
+Texte visible	Text sichtbar
+1er mot	1. Wort
+Seul le premier mot visible	Nur das erste Wort sichtbar
+1 sur 2	1 von 2
+Un mot sur deux masqué	Jedes zweite Wort verdeckt
+Masqué	Verdeckt
+Tout masqué, touchez un mot pour le révéler	Alles verdeckt, tippen Sie auf ein Wort, um es aufzudecken
+Flou	Unscharf
+Texte flouté	Unscharfer Text
+Difficile	Schwer
+Moyen	Mittel
+bientôt	bald
+Facile	Leicht
+plus tard	später
+en boucle	in Schleife
+Réglages de répétition	Wiederholungseinstellungen
+Début (A)	Anfang (A)
+Verset de début	Anfangsvers
+Fin (B)	Ende (B)
+Verset de fin	Endvers
+Masquer le texte	Den Text verdecken
+Reprendre	Fortsetzen
+Écouter et répéter	Anhören und wiederholen
+Masquer	Verdecken
+Révéler	Aufdecken
+· mémorisé	· auswendig gelernt
+· à réviser	· zu wiederholen
+· en cours	· in Arbeit
+Comment s’est passée la récitation de mémoire ?	Wie lief die Rezitation aus dem Gedächtnis?
+Masquez tout, récitez, puis évaluez-vous honnêtement : la date de révision est calculée pour chaque verset (SM-2).	Verdecken Sie alles, rezitieren Sie und bewerten Sie sich dann ehrlich: Das Wiederholungsdatum wird für jeden Vers berechnet (SM-2).
+Versets suivants	Nächste Verse
+Répétitions	Wiederholungen
+Appliquées à la prochaine lecture	Gilt für die nächste Wiedergabe
+Répéter chaque verset	Jeden Vers wiederholen
+Répéter toute la plage	Den ganzen Bereich wiederholen
+En boucle	Schleife
+Pause entre les répétitions (pour répéter soi-même)	Pause zwischen den Wiederholungen (zum Nachsprechen)
+= verset	= Vers
+1,5× verset	1,5× Vers
+Vitesse	Geschwindigkeit
+Récitateur	Rezitator
+Comme la lecture	Wie beim Lesen
+Sabaq · leçon du jour	Sabaq · heutige Lektion
+Sabqi · révision récente	Sabqi · kürzliche Wiederholung
+Manzil · révision ancienne	Manzil · ältere Wiederholung
+Révision terminée	Wiederholung beendet
+Rien à réviser aujourd’hui	Heute nichts zu wiederholen
+Commencez une nouvelle leçon pour alimenter la révision.	Beginnen Sie eine neue Lektion, um die Wiederholung zu füllen.
+Retour à la mémorisation	Zurück zum Auswendiglernen
+Verset précédent (indice)	Vorheriger Vers (Hinweis)
+Changer le masquage	Die Verdeckung ändern
+Récitez le verset de mémoire, révélez pour vérifier, puis évaluez-vous.	Rezitieren Sie den Vers aus dem Gedächtnis, decken Sie ihn zur Kontrolle auf und bewerten Sie sich dann.
+Pas commencé	Nicht begonnen
+En cours	In Arbeit
+À réviser	Zu wiederholen
+Mémorisé	Auswendig gelernt
+Écouter, répéter, masquer, réviser au bon moment (sabaq · sabqi · manzil).	Anhören, wiederholen, verdecken, zum richtigen Zeitpunkt wiederholen (Sabaq · Sabqi · Manzil).
+versets suivis	verfolgte Verse
+mémorisés	auswendig gelernt
+sourates complètes	vollständige Suren
+Tout est à jour — revenez demain.	Alles auf dem neuesten Stand — kommen Sie morgen wieder.
+Commencez une leçon ci-dessous.	Beginnen Sie unten eine Lektion.
+Sabaq	Sabaq
+leçon du jour	heutige Lektion
+Sabqi	Sabqi
+révision récente	kürzliche Wiederholung
+Manzil	Manzil
+révision ancienne	ältere Wiederholung
+Nouvelle leçon	Neue Lektion
+Du verset	Ab Vers
+Premier verset	Erster Vers
+Au verset	Bis Vers
+Dernier verset	Letzter Vers
+La page	Die Seite
+5 versets	5 Verse
+10 versets	10 Verse
+Toute la sourate	Die ganze Sure
+Conseil : 3 à 5 versets par jour, récitateur « Al-Husary (Mu‘allim) », puis masquez progressivement le texte.	Tipp: 3 bis 5 Verse pro Tag, Rezitator „Al-Husary (Mu‘allim)“, dann den Text nach und nach verdecken.
+Carte de progression	Fortschrittskarte
+114 sourates	114 Suren
+30 juz’	30 Juz’
+pas commencé	nicht begonnen
+Tout reste sur cet appareil. Un verset est « mémorisé » quand son intervalle de révision dépasse 21 jours.	Alles bleibt auf diesem Gerät. Ein Vers gilt als „auswendig gelernt“, wenn sein Wiederholungsintervall 21 Tage übersteigt.
+Choisir une sourate	Eine Sure wählen
+7 jours	7 Tage
+≈ 87 p./jour	≈ 87 S./Tag
+10 jours	10 Tage
+3 juz’/jour	3 Juz’/Tag
+15 jours	15 Tage
+2 juz’/jour	2 Juz’/Tag
+1 mois	1 Monat
+1 juz’/jour	1 Juz’/Tag
+2 mois	2 Monate
+≈ 10 p./jour	≈ 10 S./Tag
+4 mois	4 Monate
+≈ 5 p./jour	≈ 5 S./Tag
+Rappel quotidien du wird	Tägliche Wird-Erinnerung
+Après ‘Isha	Nach ‘Isha
+Calculé selon vos horaires de prière (45 min après Fajr ou 30 min après ‘Isha).	Berechnet aus Ihren Gebetszeiten (45 Min. nach Fajr oder 30 Min. nach ‘Isha).
+Planifier une khatma	Eine Khatma planen
+Lire tout le Coran (604 pages du mushaf de Médine) à votre rythme, avec un wird quotidien.	Lesen Sie den ganzen Koran (604 Seiten des Medina-Mushafs) in Ihrem Tempo, mit einem täglichen Wird.
+Durée	Dauer
+Nombre de jours	Anzahl der Tage
+Commencer à la page	Beginnen bei Seite
+Page de départ	Anfangsseite
+Commencer la khatma	Die Khatma beginnen
+Khatma achevée	Khatma abgeschlossen
+Mabrouk, khatma terminée !	Mabruk, Khatma abgeschlossen!
+Nouvelle khatma	Neue Khatma
+Wird du jour	Heutiger Wird
+Vous êtes dans les temps.	Sie liegen im Plan.
+Page suivante lue	Nächste Seite gelesen
+Wird du jour lu	Heutiger Wird gelesen
+La progression avance aussi automatiquement quand vous tournez les pages du mushaf.	Der Fortschritt rückt auch automatisch vor, wenn Sie die Seiten des Mushafs umblättern.
+Confirmer : effacer ce plan	Bestätigen: diesen Plan löschen
+Abandonner ce plan	Diesen Plan aufgeben
+Mode verset par verset	Vers-für-Vers-Modus
+Page suivante	Nächste Seite
+Écouter la page	Die Seite anhören
+Lue	Lesen
+Page lue	Seite gelesen
+Page précédente	Vorherige Seite
+Horaires de prière	Gebetszeiten
+priere salat horaires adhan	prayer salat times adhan priere horaires gebet gebetszeiten gebetszeit
+tasbih compteur chapelet misbaha	tasbih counter prayer beads misbaha compteur chapelet zähler gebetskette
+Qibla	Qibla
+qibla boussole kaaba direction	qibla compass kaaba direction boussole kompass richtung
+abjad calcul mashriqi maghribi	abjad calculation mashriqi maghribi calcul berechnung
+tijani tijaniyya wird wazifa haylala hailala	tijani tijaniyya wird wazifa haylala hailala tidschani
+communaute cercle famille live	community circle family live communaute cercle famille gemeinschaft kreis familie
+kahf vendredi jumua	kahf friday jumuah jumua vendredi freitag
+hadith sunna	hadith sunnah sunna hadithe
+fiqh maliki shafii jurisprudence	fiqh maliki shafii jurisprudence rechtsschule
+Réglages	Einstellungen
+reglages parametres langue theme sombre clair	settings preferences language theme dark light reglages parametres einstellungen sprache thema dunkel hell
+Compteur Bluetooth	Bluetooth-Zähler
+bluetooth bague ring compteur	bluetooth ring counter bague compteur zähler
+mes zikrs composer	my zikrs compose composer meine zusammenstellen
+Sections	Bereiche
+Noms d’Allah	Namen Allahs
+Du‘as du Coran	Du‘as aus dem Koran
+Salawat	Salawat
+Suggestions	Vorschläge
+Yasin	Yasin
+Ibrahimiyya	Ibrahimiyya
+Kahf	Kahf
+(hors ligne).	(offline).
+Versets du Coran (en ligne)	Koranverse (online)
+Chercher «	Suche nach „
+» en ligne ·	“ online ·
+(ou hors ligne).	(oder offline).
+Commencer par Al-Fatiha	Mit Al-Fatiha beginnen
+Oui	Ja
+Non	Nein
+Ajoute la sourate Al-Fatiha (1×) comme première étape de chaque composition, sans modifier la composition enregistrée.	Fügt die Sure Al-Fatiha (1×) als ersten Schritt jeder Zusammenstellung hinzu, ohne die gespeicherte Zusammenstellung zu ändern.
+Fichier introuvable sur cet appareil. Réimportez-le.	Datei auf diesem Gerät nicht gefunden. Importieren Sie sie erneut.
+Zikru · Chants soufis	Zikru · Sufi-Gesänge
+Lecture impossible pour ce fichier.	Diese Datei kann nicht abgespielt werden.
+Import impossible.	Import fehlgeschlagen.
+URL invalide (http/https).	Ungültige URL (http/https).
+Retirer cette piste ?	Diesen Titel entfernen?
+Qasa’id · madih	Qasa’id · Madih
+Votre bibliothèque personnelle de chants, stockée uniquement sur cet appareil.	Ihre persönliche Bibliothek von Gesängen, nur auf diesem Gerät gespeichert.
+Lien	Link
+Fichier local	Lokale Datei
+Importer des fichiers	Dateien importieren
+Ajouter un lien	Einen Link hinzufügen
+URL du fichier audio	URL der Audiodatei
+Titre (facultatif)	Titel (optional)
+Aucun chant pour l’instant	Noch keine Gesänge
+Ajoutez vos chants : « Importer des fichiers » (MP3, M4A… depuis votre ordinateur ou téléphone) ou « Ajouter un lien » vers un fichier audio. Ils restent dans ce navigateur.	Fügen Sie Ihre Gesänge hinzu: „Dateien importieren“ (MP3, M4A… von Ihrem Computer oder Telefon) oder „Einen Link hinzufügen“ zu einer Audiodatei. Sie bleiben in diesem Browser.
+Ajoutez vos chants : « Importer des fichiers » ouvre l’app Fichiers (iCloud Drive, AirDrop, téléchargements), ou « Ajouter un lien » vers un fichier audio. La lecture continue écran verrouillé.	Fügen Sie Ihre Gesänge hinzu: „Dateien importieren“ öffnet die App Dateien (iCloud Drive, AirDrop, Downloads), oder „Einen Link hinzufügen“ zu einer Audiodatei. Die Wiedergabe läuft bei gesperrtem Bildschirm weiter.
+Ma liste ·	Meine Liste ·
+Zikru ne fournit aucun enregistrement : ajoutez uniquement des fichiers que vous avez le droit d’écouter. Rien n’est envoyé sur internet.	Zikru stellt keine Aufnahmen bereit: Fügen Sie nur Dateien hinzu, die Sie anhören dürfen. Nichts wird ins Internet gesendet.
+Sources & Méthodologie	Quellen & Methodik
+Calcul astronomique local, sans réseau, avec la bibliothèque open-source « adhan » (Batoul Apps, licence MIT), algorithmes issus de « Astronomical Algorithms » (Jean Meeus).	Lokale astronomische Berechnung, ohne Netzwerk, mit der Open-Source-Bibliothek „adhan“ (Batoul Apps, MIT-Lizenz) und Algorithmen aus „Astronomical Algorithms“ (Jean Meeus).
+Méthode active :	Aktive Methode:
+. Asr :	. Asr:
+ombre ×2 (Hanafi)	Schatten ×2 (Hanafi)
+ombre ×1 (majorité)	Schatten ×1 (Mehrheit)
+. Règle hautes latitudes : recommandée par adhan selon la latitude.	. Regel für hohe Breiten: von adhan je nach Breitengrad empfohlen.
+Les heures sont affichées dans le fuseau horaire de l’appareil.	Die Zeiten werden in der Zeitzone des Geräts angezeigt.
+Azimut du grand cercle vers la Kaaba (21,4225° N, 39,8262° E), depuis le nord géographique.	Großkreis-Azimut zur Kaaba (21,4225° N, 39,8262° O), ab geografisch Nord.
+La boussole du téléphone peut être perturbée par des objets métalliques : calibrez-la et vérifiez l’angle.	Der Kompass des Telefons kann durch Metallgegenstände gestört werden: Kalibrieren Sie ihn und prüfen Sie den Winkel.
+Calendrier hégirien	Hidschri-Kalender
+Calendrier tabulaire arithmétique (cycle de 30 ans, 11 années abondantes, époque civile du 16 juillet 622 julien). Source unique : src/lib/hijri.ts.	Arithmetischer Tabellenkalender (30-Jahres-Zyklus, 11 Schaltjahre, bürgerliche Epoche 16. Juli 622 julianisch). Einzige Quelle: src/lib/hijri.ts.
+Peut différer de ±1–2 jours de l’observation du croissant ou du calendrier Umm al-Qura : ajustez dans Réglages (actuel :	Kann um ±1–2 Tage von der Mondsichtung oder dem Umm-al-Qura-Kalender abweichen: Passen Sie dies in den Einstellungen an (aktuell:
+Auto-tests (dates limites 29/30, années abondantes, passage d’année) :	Selbsttests (Grenzdaten 29/30, Schaltjahre, Jahreswechsel):
+réussis.	bestanden.
+Texte arabe embarqué pour la lecture et la recherche hors-ligne : Tanzil Quran Text (Simple, version 1.1), © 2007-2026 Tanzil Project, licence Creative Commons Attribution 3.0, reproduit sans modification. Source et mises à jour : tanzil.net.	Für das Offline-Lesen und die Suche eingebetteter arabischer Text: Tanzil Quran Text (Simple, Version 1.1), © 2007-2026 Tanzil Project, Lizenz Creative Commons Namensnennung 3.0, unverändert wiedergegeben. Quelle und Aktualisierungen: tanzil.net.
+Lecture en ligne et traductions (Muhammad Hamidullah, Bubenheim & Elyas, Marmaduke Pickthall — domaine public) : api.alquran.cloud. La traduction n’est pas incluse dans l’app : elle est téléchargée à votre demande puis conservée sur l’appareil.	Online-Lesen und Übersetzungen (Muhammad Hamidullah, Bubenheim & Elyas, Marmaduke Pickthall — gemeinfrei): api.alquran.cloud. Die Übersetzung ist nicht in der App enthalten: Sie wird auf Anfrage heruntergeladen und dann auf dem Gerät aufbewahrt.
+La recherche ignore les voyelles et signes (tashkīl), le tatwīl et les variantes de alif, hamza, yā’ et tā’ marbūṭa.	Die Suche ignoriert Vokale und Zeichen (Taschkil), Tatwil sowie Varianten von Alif, Hamza, Ya’ und Ta’ marbuta.
+Lecture en écriture uthmanie (riwaya Hafs ‘an ‘Asim) : Tanzil Quran Text (Uthmani, version 1.1), © Tanzil Project, CC BY 3.0, reproduit sans modification. Découpage en juz’, hizb, quarts, pages du mushaf de Médine (604) et sajdas : métadonnées Tanzil (CC BY 3.0).	Lesen in uthmanischer Schrift (Riwaya Hafs ‘an ‘Asim): Tanzil Quran Text (Uthmani, Version 1.1), © Tanzil Project, CC BY 3.0, unverändert wiedergegeben. Einteilung in Juz’, Hizb, Viertel, Seiten des Medina-Mushafs (604) und Sadschdas: Tanzil-Metadaten (CC BY 3.0).
+Police : Amiri Quran (Khaled Hosny), licence SIL Open Font License 1.1.	Schrift: Amiri Quran (Khaled Hosny), SIL Open Font License 1.1.
+Récitations diffusées verset par verset à l’écoute, jamais incluses dans l’app : EveryAyah.com, avec secours cdn.islamic.network (Islamic Network). Les droits des récitations appartiennent à leurs récitateurs et éditeurs. Les récitateurs Warsh sont proposés en audio ; le texte affiché reste celui de Hafs (aucun texte Warsh sous licence libre vérifiée n’est intégré).	Rezitationen beim Anhören Vers für Vers gestreamt, nie in der App enthalten: EveryAyah.com, mit cdn.islamic.network (Islamic Network) als Ersatz. Die Rechte an den Rezitationen liegen bei ihren Rezitatoren und Herausgebern. Warsch-Rezitatoren werden als Audio angeboten; der angezeigte Text bleibt der von Hafs (kein Warsch-Text unter einer geprüften freien Lizenz ist enthalten).
+Translittération et tafsirs (At-Tafsir al-Muyassar, Jalalayn) : api.alquran.cloud ; Tafsir as-Sa‘di et Ibn Kathir abrégé : api.quran.com. Chargés à la demande ; un tafsir est une explication humaine, pas le texte révélé.	Umschrift und Tafsire (At-Tafsir al-Muyassar, Dschalalain): api.alquran.cloud; Tafsir as-Sa‘di und gekürzter Ibn Kathir: api.quran.com. Auf Anfrage geladen; ein Tafsir ist eine menschliche Erklärung, nicht der offenbarte Text.
+Mémorisation : répétition espacée SM-2 (P. Wozniak, 1987) organisée en sabaq, sabqi et manzil. Toutes vos données (marque-pages, notes, khatma, mémorisation) restent sur l’appareil.	Auswendiglernen: verteilte Wiederholung SM-2 (P. Wozniak, 1987), gegliedert in Sabaq, Sabqi und Manzil. Alle Ihre Daten (Lesezeichen, Notizen, Khatma, Auswendiglernen) bleiben auf dem Gerät.
+Textes et traductions	Texte und Übersetzungen
+Seuls les contenus au statut « approuvé » sont affichés ; chacun cite sa source. Les textes arabes conservent leurs diacritiques. Aucune traduction religieuse n’est générée par l’app.	Nur Inhalte mit dem Status „freigegeben“ werden angezeigt; jedes Element nennt seine Quelle. Arabische Texte behalten ihre diakritischen Zeichen. Die App erzeugt keine religiösen Übersetzungen.
+Traductions approuvées : aucune pour le moment (liste à fournir).	Freigegebene Übersetzungen: vorerst keine (Liste folgt).
+Limites et responsabilité	Grenzen und Verantwortung
+Zikru est un outil d’aide. Les horaires et la date hégirienne sont des calculs ; en cas de doute, référez-vous à votre mosquée ou à une autorité religieuse locale. Les contenus marqués « Exemple » doivent être validés par un référent avant publication.	Zikru ist ein Hilfswerkzeug. Gebetszeiten und das Hidschri-Datum sind Berechnungen; wenden Sie sich im Zweifel an Ihre Moschee oder eine örtliche religiöse Instanz. Als „Beispiel“ gekennzeichnete Inhalte müssen vor der Veröffentlichung von einer Referenzperson bestätigt werden.
+Wazifa	Wazifa
+Hailala	Hailala
+La Voie	Der Weg
+Adilla	Adilla
+Programme Tijaniyya	Tidschaniyya-Programm
+Wird · Wazifa · Hailala	Wird · Wazifa · Hailala
+Suivez votre muqaddam	Folgen Sie Ihrem Muqaddam
+Programme tijani du jour	Heutiges Tidschani-Programm
+Vue 24 h	24-Stunden-Ansicht
+Maintenant	Jetzt
+Wird al-Lazim	Wird al-Lazim
+Hailala (vendredi)	Hailala (Freitag)
+Créneaux indicatifs ; votre muqaddam précise les horaires exacts.	Ungefähre Zeitfenster; Ihr Muqaddam nennt die genauen Zeiten.
+Étapes	Schritte
+Faites	Erledigt
+Total	Gesamt
+marquer comme fait	als erledigt markieren
+Traduction indicative.	Ungefähre Übersetzung.
+Indicative translation.	Ungefähre Übersetzung.
+C’est vendredi aujourd’hui : Jumu‘a mubaraka !	Heute ist Freitag: Jumu‘a mubaraka!
+Prochaine hailala : vendredi, après ‘Asr.	Nächste Hailala: Freitag, nach ‘Asr.
+Bārak Allāhu fīk — pratique complétée aujourd’hui.	Barak Allahu fik — Praxis heute abgeschlossen.
+Conditions de la voie	Bedingungen des Weges
+Telles qu’elles sont couramment énoncées ; le muqaddam les explique lors de la transmission.	Wie sie üblicherweise genannt werden; der Muqaddam erklärt sie bei der Übermittlung.
+Adilla — preuves du dhikr	Adilla — Belege des Dhikr
+Versets (sourate:verset, sens traduit) et hadiths (recueil + numéro).	Verse (Sure:Vers, übersetzte Bedeutung) und Hadithe (Sammlung + Nummer).
+Hadith	Hadith
+Moins une répétition	Eine Wiederholung weniger
+Nombre de répétitions	Anzahl der Wiederholungen
+Plus une répétition	Eine Wiederholung mehr
+Composition introuvable.	Zusammenstellung nicht gefunden.
+Texte copié	Text kopiert
+Composition	Zusammenstellung
+Nom	Name
+Ex. Wird du matin	Z. B. Morgen-Wird
+Nom de la composition	Name der Zusammenstellung
+Intention (niyya)	Absicht (Niyya)
+Ex. Pour la facilité dans mes affaires	Z. B. Für Erleichterung in meinen Angelegenheiten
+Intention	Absicht
+Objectif quotidien	Tagesziel
+Activé	An
+Libre	Frei
+fois par jour	Mal pro Tag
+Ajoutez des Noms d’Allah, des du‘as coraniques ou prophétiques, des prières sur le Prophète ﷺ, un verset ou votre propre texte.	Fügen Sie Namen Allahs, koranische oder prophetische Du‘as, Segenswünsche auf den Propheten ﷺ, einen Vers oder Ihren eigenen Text hinzu.
+Pendant la pratique, Al-Fatiha (1×) est récitée en première étape. Réglable dans Réglages › Mes zikrs.	Während der Praxis wird Al-Fatiha (1×) als erster Schritt rezitiert. Einstellbar unter Einstellungen › Meine Zikrs.
+Calcul sur le Nom sans « yā » ni article.	Berechnet auf den Namen ohne „ya“ oder Artikel.
+Monter	Nach oben
+Descendre	Nach unten
+Dupliquer	Duplizieren
+Supprimer l’élément	Element löschen
+Ajouter un élément	Ein Element hinzufügen
+Abjad de la composition	Abjad der Zusammenstellung
+une récitation de chaque	eine Rezitation von jedem
+avec les répétitions	mit den Wiederholungen
+Pratiquer	Üben
+Partager / exporter	Teilen / exportieren
+Confirmer	Bestätigen
+Texte copié dans le presse-papiers	Text in die Zwischenablage kopiert
+Composez vos propres zikrs : Noms d’Allah, du‘as coraniques et prophétiques, ṣalawāt, texte libre — abjad calculé automatiquement.	Stellen Sie Ihre eigenen Zikrs zusammen: Namen Allahs, koranische und prophetische Du‘as, Salawat, freier Text — Abjad automatisch berechnet.
+Nouvelle composition	Neue Zusammenstellung
+Aucune composition pour l’instant	Noch keine Zusammenstellungen
+Créez un zikr puis ajoutez-y des éléments, chacun avec son nombre de répétitions. Vous pouvez aussi utiliser « Ajouter à un zikr » depuis les Noms d’Allah, les Du‘as ou le Coran.	Erstellen Sie einen Zikr und fügen Sie ihm Elemente hinzu, jedes mit seiner Anzahl an Wiederholungen. Sie können auch „Zu einem Zikr hinzufügen“ bei den Namen Allahs, den Du‘as oder im Koran verwenden.
+Les 99 Noms	Die 99 Namen
+aujourd’hui	heute
+Vos compositions sont enregistrées sur cet appareil. Les sessions pratiquées apparaissent dans l’historique du tasbih.	Ihre Zusammenstellungen werden auf diesem Gerät gespeichert. Geübte Sitzungen erscheinen im Tasbih-Verlauf.
+Cette composition est vide.	Diese Zusammenstellung ist leer.
+Composition terminée	Zusammenstellung beendet
+Recommencer	Neu beginnen
+Touchez le cercle ou utilisez votre compteur Bluetooth ; l’étape suivante démarre automatiquement.	Tippen Sie auf den Kreis oder verwenden Sie Ihren Bluetooth-Zähler; der nächste Schritt beginnt automatisch.
+Précédente	Zurück
+Passer	Überspringen
+Allāhu akbar	Allāhu akbar
+Local uniquement	Nur lokal
+Les groupes et compteurs sont enregistrés sur cet appareil. Rien n’est envoyé en ligne : saisissez les contributions de votre cercle (ex. après une séance de dhikr) et partagez l’avancée par message.	Gruppen und Zähler werden auf diesem Gerät gespeichert. Nichts wird online gesendet: Tragen Sie die Beiträge Ihres Kreises ein (z. B. nach einer Dhikr-Sitzung) und teilen Sie den Fortschritt per Nachricht.
+Votre nom (pour l’historique)	Ihr Name (für den Verlauf)
+Objectif atteint	Ziel erreicht
+Autre nombre	Andere Zahl
+Aucune contribution pour l’instant.	Noch keine Beiträge.
+Partager l’avancée	Den Fortschritt teilen
+Annuler la dernière contribution	Den letzten Beitrag rückgängig machen
+Nouveau groupe	Neue Gruppe
+Formule (facultatif)	Formel (optional)
+Lā ilāha illā-llāh	Lā ilāha illā-llāh
+Objectif	Ziel
+Créer un groupe	Eine Gruppe erstellen
+Position {a} sur {b}	Position {a} von {b}
+Mise en mémoire…	Puffern…
+Précédent	Zurück
+Reculer de 15 secondes	15 Sekunden zurück
+Avancer de 15 secondes	15 Sekunden vor
+Suivant	Weiter
+Impossible de charger	Laden nicht möglich
+Fondateur	Gründer
+Machā’Allāh, vous l’avez fait ensemble !	Mascha’Allah, Sie haben es gemeinsam geschafft!
+Chaque dhikr compte. Ensemble, on avance doucement.	Jeder Dhikr zählt. Gemeinsam kommen wir sanft voran.
+a participé ✓	hat teilgenommen ✓
+Pour moi	Für mich
+Relié à mon tasbih ✓	Mit meinem Tasbih verknüpft ✓
+Relier à mon tasbih (et au compteur Bluetooth)	Mit meinem Tasbih (und dem Bluetooth-Zähler) verknüpfen
+Votre choix de partage est « Rien » ici : vos appuis ne sont pas envoyés.	Ihre Teilen-Einstellung ist hier „Nichts“: Ihr Tippen wird nicht gesendet.
+Archiver l’objectif	Ziel archivieren
+Archiver cet objectif ?	Dieses Ziel archivieren?
+Il ne sera plus affiché.	Es wird nicht mehr angezeigt.
+Archiver	Archivieren
+Nouvel objectif commun	Neues gemeinsames Ziel
+Nouvel objectif	Neues Ziel
+Salāt ‘alā n-Nabī	Ṣalāt ‘alā n-Nabī
+Allāhumma ṣalli ‘alā Muḥammad	Allāhumma ṣalli ‘alā Muḥammad
+Titre et objectif requis.	Titel und Ziel erforderlich.
+Inviter	Einladen
+Utilisations	Verwendungen
+1 personne	1 Person
+Valable	Gültig
+1 jour	1 Tag
+30 jours	30 Tage
+Créer et partager le code	Code erstellen und teilen
+Invitations actives	Aktive Einladungen
+· jusqu’au	· bis
+Révoquer	Widerrufen
+Ce que je partage ici	Was ich hier teile
+Rien	Nichts
+Participation	Teilnahme
+Compteur	Zähler
+Rien : vous n’apparaissez pas dans le détail et vos appuis reliés ne sont pas envoyés.	Nichts: Sie erscheinen nicht in den Details und Ihr verknüpftes Tippen wird nicht gesendet.
+Participation : les autres voient seulement que vous avez participé, jamais votre nombre.	Teilnahme: Andere sehen nur, dass Sie teilgenommen haben, nie Ihre Zahl.
+Compteur : votre nombre de dhikr est visible des membres de ce lieu.	Zähler: Ihre Dhikr-Zahl ist für die Mitglieder dieses Bereichs sichtbar.
+Zikr du soir	Abend-Zikr
+Récitez ensemble à distance : chacun compte sur son téléphone ou sa bague, le total s’affiche en direct.	Gemeinsam aus der Ferne rezitieren: Jeder zählt auf seinem Telefon oder Ring, und die Summe wird live angezeigt.
+Nouvelle session	Neue Sitzung
+Lancer	Starten
+Bravo	Gut gemacht
+Bravo, machā’Allāh ! Continue ainsi.	Gut gemacht, mascha’Allah! Weiter so.
+Qu’Allah te bénisse et facilite tes affaires.	Möge Allah Sie segnen und Ihnen Ihre Angelegenheiten erleichtern.
+Petit rappel affectueux pour ton wird du jour.	Eine sanfte Erinnerung an Ihren heutigen Wird.
+As-salāmu ‘alaykum, je pense à toi.	As-salāmu ‘alaykum, ich denke an Sie.
+Encouragements	Ermutigung
+Messages privés et bienveillants, visibles seulement par l’expéditeur et le destinataire (et les parents pour les enfants).	Private, freundliche Nachrichten, nur für Absender und Empfänger sichtbar (und bei Kindern für die Eltern).
+Message	Nachricht
+Aucun destinataire possible pour l’instant.	Noch kein möglicher Empfänger.
+Lettres lumineuses	Leuchtende Buchstaben
+Les 14 lettres des ouvertures de sourates, en doré discret	Die 14 Buchstaben der Surenanfänge, in dezentem Gold
+Lettres isolées d’ouverture	Einzelne Anfangsbuchstaben
+Souligne les lettres isolées (Alif Lām Mīm…) au début de 29 sourates	Unterstreicht die einzelnen Buchstaben (Alif Lām Mīm…) am Anfang von 29 Suren
+Masquer la fiche	Das Blatt ausblenden
+En savoir plus sur les lettres lumineuses	Mehr über die leuchtenden Buchstaben erfahren
+Vingt-neuf sourates s’ouvrent par des lettres isolées (al-ḥurūf al-muqaṭṭaʿa), comme Alif Lām Mīm. Sans les répétitions, elles se ramènent à 14 lettres, soit la moitié de l’alphabet ; on les appelle souvent « lettres lumineuses » (al-ḥurūf an-nūrāniyya).	Neunundzwanzig Suren beginnen mit einzelnen Buchstaben (al-ḥurūf al-muqaṭṭaʿa), wie Alif Lām Mīm. Ohne Wiederholungen sind es 14 Buchstaben, die Hälfte des Alphabets; sie werden oft die „leuchtenden Buchstaben“ (al-ḥurūf an-nūrāniyya) genannt.
+Formule mnémotechnique traditionnelle :	Traditioneller Merksatz:
+Leur sens exact : « Allah en connaît mieux le sens » est l’avis rapporté de nombreux savants. Az-Zamakhsharī (al-Kashshāf) et Ibn Kathīr (Tafsīr, début de la sourate al-Baqara) relèvent qu’elles regroupent la moitié des lettres et y voient un signe de l’inimitabilité du Coran, composé de ces mêmes lettres.	Ihre genaue Bedeutung: „Allah weiß am besten, was sie bedeuten“ ist die von vielen Gelehrten überlieferte Ansicht. Az-Zamakhsharī (al-Kashshāf) und Ibn Kathīr (Tafsīr, Anfang der Sure al-Baqara) merken an, dass sie die Hälfte der Buchstaben vereinen, und sehen darin ein Zeichen der Unnachahmlichkeit des Korans, der aus eben diesen Buchstaben besteht.
+Du‘as coraniques	Koranische Du‘as
+Ṣalawāt ﷺ	Ṣalawāt ﷺ
+Verset au choix	Vers Ihrer Wahl
+Texte libre	Freier Text
+Sourate, verset (2:255) ou mots en arabe	Sure, Vers (2:255) oder Wörter auf Arabisch
+Rechercher une sourate ou un verset	Eine Sure oder einen Vers suchen
+Versets (hors-ligne)	Verse (offline)
+Changer de sourate	Sure wechseln
+Verset	Vers
+Dernier verset (facultatif)	Letzter Vers (optional)
+Jusqu’à 20 versets consécutifs.	Bis zu 20 aufeinanderfolgende Verse.
+Impossible de charger la sourate (connexion requise la première fois).	Sure kann nicht geladen werden (beim ersten Mal ist eine Verbindung erforderlich).
+Ajouter ce passage	Diesen Abschnitt hinzufügen
+Titre (ex. Tahlīl)	Titel (z. B. Tahlīl)
+Translittération (facultatif)	Umschrift (optional)
+Traduction (facultatif)	Übersetzung (optional)
+Votre texte n’est pas vérifié : assurez-vous de sa source.	Ihr Text ist nicht überprüft: Vergewissern Sie sich seiner Quelle.
+Terminer	Beenden
+Aucun résultat pour «	Keine Ergebnisse für „
+Course du soleil et horaires de prière	Sonnenlauf und Gebetszeiten

@@ -6,6 +6,8 @@ import { maybePlayScheduledAdhan, useBindAdhanPlayback } from './adhan-call';
 import { ADHAN_CHANNEL_ID, ADHAN_CUE_SOUND, adhanResponseIsFresh, payloadPlaysAdhan } from './adhan-voices';
 import { planHash } from './notify-plan';
 import { planFor } from './reminders-common';
+import { useDispense } from './dispense-context';
+import { useRamadan } from './ramadan-store';
 import { useSettings } from './settings';
 import { loadJSON, saveJSON } from './storage';
 
@@ -38,11 +40,15 @@ Notifications.setNotificationHandler({
 });
 
 const CHANNEL = 'prayers';
+/** Android : canal séparé pour les rappels secondaires (adhkar, wird, Coran, bilal…), réglable à part dans le système. */
+const CHANNEL_OTHER = 'reminders';
 async function ensureChannel() {
   if (Platform.OS !== 'android') return;
-  await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: Notifications.AndroidImportance.HIGH, sound: 'default' });
+  const imp = Notifications.AndroidImportance;
+  await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: imp.HIGH, sound: 'default' });
+  await Notifications.setNotificationChannelAsync(CHANNEL_OTHER, { name: 'Rappels (adhkar, wird, Coran, bilan)', importance: imp.DEFAULT, sound: 'default' });
   // Le son court n’est dans le binaire qu’après un prebuild. S’il manque, on garde le canal par défaut.
-  await Notifications.setNotificationChannelAsync(ADHAN_CHANNEL_ID, { name: 'Adhan', importance: Notifications.AndroidImportance.HIGH, sound: ADHAN_CUE_SOUND }).catch(() => {});
+  await Notifications.setNotificationChannelAsync(ADHAN_CHANNEL_ID, { name: 'Adhan', importance: imp.HIGH, sound: ADHAN_CUE_SOUND }).catch(() => {});
 }
 
 export async function reminderPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
@@ -104,6 +110,7 @@ async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
   for (const e of plan) {
     if (e.date.getTime() <= Date.now() + 2000) continue;
     const cue = !!e.playsAdhan;
+    const channelId = cue ? ADHAN_CHANNEL_ID : e.kind === 'prayer' || e.kind === 'before' || e.kind === 'paused' || e.kind === 'suhur' || e.kind === 'iftar' ? CHANNEL : CHANNEL_OTHER;
     const content = {
       title: e.title,
       body: e.body,
@@ -115,14 +122,13 @@ async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
       await Notifications.scheduleNotificationAsync({
         identifier: e.id,
         content,
-        trigger: { ...when, channelId: cue ? ADHAN_CHANNEL_ID : CHANNEL },
+        trigger: { ...when, channelId },
       });
     } catch {
-      // Son embarqué absent (binaire pas encore reconstruit) : notification quand même, son système.
       await Notifications.scheduleNotificationAsync({
         identifier: e.id,
         content: { ...content, sound: 'default' },
-        trigger: { ...when, channelId: CHANNEL },
+        trigger: { ...when, channelId: channelId === ADHAN_CHANNEL_ID ? CHANNEL : channelId },
       }).catch(() => {});
     }
   }
@@ -132,8 +138,10 @@ async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
 export function usePrayerReminders() {
   const { s, t: tr, ready } = useSettings();
   const router = useRouter();
-  const latest = useRef({ s, tr });
-  latest.current = { s, tr };
+  const { pause } = useDispense();
+  const { fast } = useRamadan();
+  const latest = useRef({ s, tr, pause, fast });
+  latest.current = { s, tr, pause, fast };
   useBindAdhanPlayback();
 
   // Ouverture depuis une notification → écran concerné, et adhan si c’est l’heure d’une prière.
@@ -160,7 +168,7 @@ export function usePrayerReminders() {
     if (!ready) return;
     const run = () => {
       const { s: cur, tr: t } = latest.current;
-      const job = (running ?? Promise.resolve()).then(() => sync(cur.reminders, () => planFor(new Date(), cur, t))).catch(() => {});
+      const job = (running ?? Promise.resolve()).then(() => sync(cur.reminders, () => planFor(new Date(), cur, t, latest.current.pause, latest.current.fast))).catch(() => {});
       running = job;
     };
     run();
@@ -180,5 +188,5 @@ export function usePrayerReminders() {
       sub.remove();
       clearTimeout(timer);
     };
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.notif, s.lang]);
+  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, s.lang, pause, fast]);
 }

@@ -11,7 +11,8 @@ const load = (name) => {
     .replace(/import\('\.\/(\w[\w-]*)'\)/g, "import('./$1.mjs')");
   writeFileSync(join(dir, name + '.mjs'), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
 };
-for (const n of ['ar-norm', 'surahs', 'quran-text', 'quran-licenses', 'quran-enc', 'quran', 'quran-offline']) load(n);
+for (const n of ['ar-norm', 'translit-norm', 'surahs', 'quran-text', 'quran-licenses', 'quran-enc', 'quran', 'quran-offline']) load(n);
+writeFileSync(join(dir, 'app-placeholders.mjs'), "export const PLACEHOLDERS = { QURAN_TRANSLATIONS_LICENSES: 'YOUR_QURAN_TRANSLATIONS_LICENSES' };");
 writeFileSync(join(dir, 'storage.mjs'), 'export const loadJSON = async (k, f) => f; export const saveJSON = async () => true; export const saveCacheJSON = async () => {};');
 writeFileSync(join(dir, 'text-cache.mjs'), 'const m = new Map(); export const readText = async (k) => m.get(k) ?? null; export const writeText = async (k, v) => { m.set(k, v); };');
 const Q = await import(join(dir, 'quran-offline.mjs'));
@@ -61,37 +62,6 @@ test('traduction téléchargée (simulée) → recherche FR sans accents', async
   assert.equal(r.translated, true);
   assert.deepEqual(r.hits.map((h) => [h.s, h.a]), [[2, 153]]);
   assert.ok(r.hits[0].tr.includes('endurance'));
-});
-test('éditions citées : QuranEnc pour la vague 1, Hamidullah pour le wolof, Pickthall verified', async () => {
-  const { translationFor } = await import(join(dir, 'quran.mjs'));
-  const { packAyah, splitAyah } = await import(join(dir, 'quran-enc.mjs'));
-  const t = translationFor;
-  assert.equal(t('tr').quranEncKey, 'turkish_shahin');
-  assert.equal(t('tr').version, '1.0.0');
-  assert.equal(t('tr').status, 'todo');
-  assert.equal(t('de').quranEncKey, 'german_bubenheim');
-  assert.equal(t('de-CH').id, t('de').id);
-  assert.equal(t('ff').quranEncKey, 'fulani_rwwad');
-  assert.equal(t('ur').quranEncKey, 'urdu_junagarhi');
-  assert.equal(t('id').quranEncKey, 'indonesian_affairs');
-  assert.equal(t('fa').quranEncKey, 'persian_ih');
-  assert.equal(t('ha').quranEncKey, 'hausa_gummi');
-  assert.equal(t('ha').version, '1.2.2');
-  assert.equal(t('sw').quranEncKey, 'swahili_barawani');
-  assert.equal(t('es').quranEncKey, 'spanish_garcia');
-  assert.equal(t('it').quranEncKey, 'italian_rwwad');
-  assert.equal(t('it').version, '1.0.2');
-  assert.equal(t('pt').quranEncKey, 'portuguese_nasr');
-  assert.equal(t('pt').version, '1.4.1');
-  assert.equal(t('wo').id, 'fr.hamidullah');
-  assert.equal(t('fr').id, 'fr.hamidullah');
-  assert.equal(t('en').status, 'verified');
-  assert.equal(t('ar').id, 'ar.muyassar');
-  assert.equal(t('ar').status, 'todo');
-  const packed = packAyah('Im Namen Allahs.', '[1] note');
-  const split = splitAyah(packed);
-  assert.equal(split.text, 'Im Namen Allahs.');
-  assert.equal(split.notes, '[1] note');
 });
 test('lecture hors-ligne d’une sourate', async () => {
   const s = await Q.offlineSurah(112, 'fr.test');

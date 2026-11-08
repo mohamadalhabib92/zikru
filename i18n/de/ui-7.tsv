@@ -1,0 +1,92 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+{n} / {max} personnes	{n} / {max} Personen
+{n} personne(s)	{n} Person(en)
+complet	voll
+Le cercle est complet ({n} personnes maximum, créateur inclus).	Dieser Kreis ist voll (höchstens {n} Personen, Gründer inbegriffen).
+Ce groupe est complet ({n} personnes maximum, créateur inclus).	Diese Gruppe ist voll (höchstens {n} Personen, Gründer inbegriffen).
+Groupe complet	Gruppe voll
+Sécurité	Sicherheit
+Un problème dans ce cercle ? Signalez-le : la modération reçoit une copie du contenu signalé.	Ein Problem in diesem Kreis? Melden Sie es: Die Moderation erhält eine Kopie des gemeldeten Inhalts.
+Signaler ce cercle	Diesen Kreis melden
+Signaler cette session	Diese Sitzung melden
+Aucun : ni envoi ni réception de messages.	Keine: Es werden keine Nachrichten gesendet oder empfangen.
+Parents : échanges seulement avec les parents.	Eltern: Nachrichten nur mit den Eltern.
+Famille : échanges avec la famille, jamais avec les invités.	Familie: Nachrichten mit der Familie, nie mit Gästen.
+Rôle : {role}	Rolle: {role}
+Pour la sécurité, le code n’est conservé que sur cet appareil. Partagez-le maintenant ou créez-en un nouveau plus tard.	Aus Sicherheitsgründen wird der Code nur auf diesem Gerät aufbewahrt. Teilen Sie ihn jetzt oder erstellen Sie später einen neuen.
+Code visible seulement sur l’appareil qui l’a créé	Code nur auf dem Gerät sichtbar, das ihn erstellt hat
+jusqu’au {d}	bis {d}
+Chiffrés en transit, accessibles aux seuls membres concernés (pas encore de chiffrement de bout en bout). Pas de liens.	Bei der Übertragung verschlüsselt, nur für die betroffenen Mitglieder zugänglich (noch nicht Ende-zu-Ende-verschlüsselt). Keine Links.
+Marquer comme lu	Als gelesen markieren
+Marquer comme lu le message de {name}	Nachricht von {name} als gelesen markieren
+Harcèlement	Belästigung
+Spam	Spam
+Haine	Hass
+Contenu sexuel	Sexuelle Inhalte
+Violence ou menace	Gewalt oder Drohung
+Personne en danger	Jemand in Gefahr
+Usurpation d’identité	Identitätsanmaßung
+Sécurité d’un enfant	Kinderschutz
+Autre	Anderes
+Écrire à la modération : {m}	Moderation kontaktieren: {m}
+Écrire à la modération par e-mail	Dem Moderationsteam eine E-Mail schreiben
+Zikru – modération	Zikru – Moderation
+Signaler	Melden
+Merci, signalement envoyé à la modération.	Danke, Ihre Meldung wurde an die Moderation gesendet.
+Signaler {name}	{name} melden
+Pourquoi signalez-vous ?	Warum melden Sie?
+Précisions (facultatif)	Details (optional)
+Bloquer aussi cette personne	Diese Person auch blockieren
+Vous ne verrez plus ses messages et elle ne pourra plus vous écrire.	Sie sehen ihre Nachrichten nicht mehr, und sie kann Ihnen nicht mehr schreiben.
+En cas de danger immédiat	Wenn jemand in unmittelbarer Gefahr ist
+Appelez les secours : 112 (Europe), 117 police et 147 aide aux jeunes (Suisse).	Rufen Sie den Notdienst an: 112 (Europa), 117 Polizei und 147 Beratung für Kinder und Jugendliche (Schweiz).
+Envoyer le signalement	Meldung senden
+Bloquer	Blockieren
+Bloquer {name}	{name} blockieren
+Bloquer {name} ?	{name} blockieren?
+Vous ne verrez plus ses messages et elle ne pourra plus vous écrire. Elle n’est pas prévenue. Vous pourrez débloquer dans Communauté.	Sie sehen ihre Nachrichten nicht mehr, und sie kann Ihnen nicht mehr schreiben. Die Person wird nicht benachrichtigt. Sie können die Blockierung unter Gemeinschaft aufheben.
+Personnes bloquées	Blockierte Personen
+Elles ne peuvent plus vous écrire et vous ne voyez plus leurs messages.	Sie können Ihnen nicht mehr schreiben, und Sie sehen ihre Nachrichten nicht mehr.
+Débloquer	Blockierung aufheben
+Débloquer {name}	Blockierung von {name} aufheben
+{n} h	{n} Std.
+{n} min	{n} Min.
+{n} s	{n} s
+Vous avez atteint la limite de {n} groupes créés.	Sie haben die Grenze von {n} erstellten Gruppen erreicht.
+Trop de tentatives. Réessayez dans {t}.	Zu viele Versuche. Versuchen Sie es in {t} erneut.
+Trop de tentatives. Réessayez dans un moment.	Zu viele Versuche. Versuchen Sie es gleich noch einmal.
+Serveur non configuré.	Server nicht konfiguriert.
+Pas de connexion. Réessayez quand vous serez en ligne.	Keine Verbindung. Versuchen Sie es erneut, wenn Sie online sind.
+Action non autorisée pour votre rôle.	Diese Aktion ist für Ihre Rolle nicht erlaubt.
+Cette invitation a expiré.	Diese Einladung ist abgelaufen.
+Code invalide.	Ungültiger Code.
+Une erreur est survenue.	Etwas ist schiefgelaufen.
+Ce nom est déjà utilisé dans ce cercle	Dieser Name wird in diesem Kreis bereits verwendet
+Ce texte contient un terme non autorisé. Merci de le reformuler.	Dieser Text enthält ein nicht erlaubtes Wort. Bitte formulieren Sie ihn um.
+Ce message contient un terme non autorisé. Merci de le reformuler.	Diese Nachricht enthält ein nicht erlaubtes Wort. Bitte formulieren Sie sie um.
+Les liens ne sont pas autorisés dans les encouragements.	Links sind in Ermutigungen nicht erlaubt.
+Seul le fondateur peut inviter un modérateur	Nur der Gründer kann einen Moderator einladen
+Une invitation révoquée ne peut pas être réactivée	Eine widerrufene Einladung kann nicht reaktiviert werden
+Indiquez votre prénom	Geben Sie Ihren Vornamen ein
+Réservé aux membres du groupe	Nur Mitglieder der Gruppe
+Réservé au fondateur et aux modérateurs	Nur Gründer und Moderatoren
+Réservé aux parents de la famille	Nur Eltern der Familie
+Action impossible	Aktion nicht möglich
+Cercle introuvable	Kreis nicht gefunden
+Membre introuvable	Mitglied nicht gefunden
+Message introuvable	Nachricht nicht gefunden
+Personne introuvable	Person nicht gefunden
+Session introuvable	Sitzung nicht gefunden
+Motif inconnu	Unbekannter Grund
+Portée inconnue	Unbekannter Bereich
+Type inconnu	Unbekannter Typ
+Rôle inconnu	Unbekannte Rolle
+Vous faites déjà partie de ce cercle	Sie sind bereits in diesem Kreis
+Vous faites déjà partie de cette famille	Sie sind bereits in dieser Familie
+Le règlement du cercle doit être accepté	Die Regeln des Kreises müssen akzeptiert werden
+Invitation déjà utilisée par ce compte	Dieses Konto hat diese Einladung bereits verwendet
+Les comptes enfants restent dans leur famille	Kinderkonten bleiben in ihrer Familie
+Ce compte est adulte dans une autre famille	Dieses Konto ist in einer anderen Familie erwachsen
+Vos proches (Ahbab) : {n} personnes maximum par cercle, créateur inclus, sur invitation uniquement.	Ihre Nächsten (Ahbab): höchstens {n} Personen pro Kreis, Gründer inbegriffen, nur auf Einladung.
+Vos proches (Ahbab) : petits cercles, sur invitation uniquement.	Ihre Nächsten (Ahbab): kleine Kreise, nur auf Einladung.

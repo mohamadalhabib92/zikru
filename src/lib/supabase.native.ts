@@ -19,4 +19,8 @@ if (supabase) {
   });
 }
 
+/** Même interface que le web (src/lib/supabase.ts) : ici le client est créé d'emblée. */
+export const supabaseConfigured = backendConfigured;
+export const getSupabase = (): Promise<SupabaseClient | null> => Promise.resolve(supabase);
+
 export const AUTH_REDIRECT = 'zikru://auth-callback';

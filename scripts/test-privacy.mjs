@@ -97,7 +97,7 @@ await test('politique : mêmes sections en fr/en/ar, chaque flux nommé', () => 
   for (const l of ['en', 'ar']) assert.deepEqual(POLICY[l].sections.map((s) => s.id), ids, l);
   for (const l of ['fr', 'en', 'ar']) {
     const all = JSON.stringify(POLICY[l]);
-    for (const must of ['Open-Meteo', 'Anthropic', 'Supabase', 'eu-central-2', 'GitHub Pages', 'api.alquran.cloud', 'api.quran.com', 'everyayah.com', 'mp3quran.net', 'Prilly', 'edoeb.admin.ch']) assert.ok(all.includes(must), `${l} : ${must} manquant`);
+    for (const must of ['Open-Meteo', 'Anthropic', 'Supabase', 'eu-central-2', 'GitHub Pages', 'api.alquran.cloud', 'quranenc.com', 'upload.wikimedia.org', 'api.quran.com', 'everyayah.com', 'mp3quran.net', 'Prilly', 'edoeb.admin.ch']) assert.ok(all.includes(must), `${l} : ${must} manquant`);
   }
   for (const l of ['fr', 'en', 'ar']) {
     const t = PRIVACY_TEXT[l];
@@ -108,6 +108,37 @@ await test('politique : mêmes sections en fr/en/ar, chaque flux nommé', () => 
 
 await test('page publique public/privacy/index.html à jour (npm run privacy:html)', async () => {
   assert.equal(readFileSync(PRIVACY_HTML_PATH, 'utf8'), await policyHtml(), 'régénérer avec npm run privacy:html');
+});
+
+await test('LiveKit est nommé honnêtement : transit, pas de bout en bout, région non inventée', () => {
+  const fr = JSON.stringify(POLICY.fr);
+  const en = JSON.stringify(POLICY.en);
+  assert.match(fr, /LiveKit/);
+  assert.match(fr, /chiffrés en transit, pas encore de bout en bout/);
+  assert.match(fr, /pas encore chiffrés de bout en bout/);
+  assert.match(fr, /ne sont pas encore chiffrés de bout en bout/);
+  assert.match(en, /encrypted in transit, not yet end-to-end/);
+  assert.doesNotMatch(fr, /Frankfurt/);
+  assert.doesNotMatch(en, /Frankfurt/);
+  const files = [];
+  const walk = (d) => {
+    for (const f of readdirSync(d)) {
+      const p = join(d, f);
+      if (statSync(p).isDirectory()) {
+        if (f === 'node_modules' || f === '.git') continue;
+        walk(p);
+      } else if (/\.(tsx?|html)$/.test(f)) files.push(p);
+    }
+  };
+  walk(join(root, 'src'));
+  walk(join(root, 'public'));
+  for (const f of files) {
+    const s = readFileSync(f, 'utf8')
+      .split('\n')
+      .filter((l) => !/pas encore|not yet|jamais|aucune promesse|ne sont pas|ليست بعد|sans bout en bout|not end-to-end/i.test(l))
+      .join('\n');
+    assert.ok(!/chiffré de bout en bout|end-to-end encrypted|fully end-to-end/i.test(s), `E2EE interdit dans ${f}`);
+  }
 });
 
 await test('aucune affirmation fausse restante (« aucune donnée envoyée »), aucun géocodage distant', () => {

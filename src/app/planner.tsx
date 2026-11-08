@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { GoalsLink } from '@/components/GoalsLink';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey, useGrowth, type Block } from '@/lib/growth';
 import { AR_NAMES, computeDay, hhmm } from '@/lib/prayer';
@@ -24,7 +25,7 @@ export default function Planner() {
   const g = useGrowth();
   const day = dayKey();
   const tasks = g.tasks[day] ?? [];
-  const times = useMemo(() => Object.fromEntries(computeDay(new Date(), s.place, s.method, s.madhab).map((x) => [x.key, x.time])), [s.place, s.method, s.madhab]);
+  const times = useMemo(() => Object.fromEntries(computeDay(new Date(), s.place, s.method, s.madhab, s.prayer).map((x) => [x.key, x.time])), [s.place, s.method, s.madhab, s.prayer]);
   const now = new Date();
   const currentBlock = [...BLOCKS].reverse().find((bl) => times[bl.key] <= now)?.key ?? 'isha';
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -36,6 +37,7 @@ export default function Planner() {
         <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>Organisez votre journée autour des prières · {tasks.length ? L('{a}/{b} faites', { a: done, b: tasks.length }) : 'aucune tâche'}</Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
+        <GoalsLink />
         {BLOCKS.map((bl) => {
           const list = tasks.filter((t) => t.block === bl.key);
           const cur = bl.key === currentBlock;
@@ -63,7 +65,7 @@ export default function Planner() {
               </View>
               {list.map((t) => (
                 <View key={t.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: t.done }} accessibilityLabel={t.title} onPress={() => g.toggleTask(t.id)} style={{ width: 28, height: 28, borderRadius: 8, borderWidth: 2, borderColor: PURPLE, backgroundColor: t.done ? PURPLE : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: t.done }} aria-checked={t.done} accessibilityLabel={t.title} onPress={() => g.toggleTask(t.id)} style={{ width: 28, height: 28, borderRadius: 8, borderWidth: 2, borderColor: PURPLE, backgroundColor: t.done ? PURPLE : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                     {t.done ? <Ionicons name="checkmark" size={18} color="#fff" /> : null}
                   </Pressable>
                   <Text style={{ flex: 1, color: t.done ? b.inkMuted : b.ink, textDecorationLine: t.done ? 'line-through' : 'none' }}>{t.title}</Text>

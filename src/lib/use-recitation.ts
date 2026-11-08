@@ -18,7 +18,8 @@ import { clearPreloadedSource, preload, useAudioPlayer } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { enableBackgroundAudio } from '@/components/PlayerBar';
-import { ayahFallbackUrl, ayahUrl, gapMs, reciterById, type Gap, type Step } from './recitation';
+import { playableUrl } from './audio-dl';
+import { ayahFallbackUrl, gapMs, reciterById, type Gap, type Step } from './recitation';
 import { canAcceptFinish, createTokenGate, isStalled, nativePauseKind, nextDistinct, nextLoadedToken, planVerseEnd, retryPlan, skipTarget, type ReadingMode } from './recitation-queue';
 import { onQuranPreempted, quranApplyMode, quranArmVerse, quranFirePending, quranIsCurrent, quranMount, quranOnVerseFinished, quranRequestPlay, quranResume, quranResumeNext, quranUnmount, quranUserPause, quranUserStop } from './quran-playback';
 import { SURAHS } from './surahs';
@@ -29,7 +30,7 @@ const native = Platform.OS !== 'web';
 
 let ownerSeq = 0;
 
-export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; mode?: ReadingMode }) {
+export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; mode?: ReadingMode; onEnd?: (queue: Step[]) => Step[] | null }) {
   // keepAudioSessionActive : la session iOS reste active entre deux versets (cause racine de l’arrêt).
   const player = useAudioPlayer(null, { updateInterval: 300, keepAudioSessionActive: true });
   const [st, setSt] = useState<RecState>(IDLE);
@@ -70,7 +71,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
     const i = nextDistinct(queue, pos, S.current.loop);
     const step = queue[i];
     if (!step) return;
-    const url = ayahUrl(reciterById(O.current.reciter), step.s, step.a);
+    const url = playableUrl(O.current.reciter, step.s, step.a);
     if (url === preloaded.current) return;
     dropPreload();
     preloaded.current = url;
@@ -112,7 +113,8 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
       if (!step) return;
       quranArmVerse(ownerId);
       const r = reciterById(O.current.reciter);
-      const url = (useFallback ? ayahFallbackUrl(r, step.s, step.a) : null) ?? ayahUrl(r, step.s, step.a);
+      const fallback = useFallback ? ayahFallbackUrl(r, step.s, step.a) : null;
+      const url = fallback ?? playableUrl(O.current.reciter, step.s, step.a);
       const token = gate.begin();
       loadedToken.current = -1;
       sawProgress.current = false;
@@ -185,6 +187,11 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
     const decision = quranOnVerseFinished(ownerId, plan);
     if (decision.effect === 'ignore') return;
     if (decision.effect === 'end') {
+      const more = O.current.onEnd?.(cur.queue) ?? null;
+      if (more && more.length) {
+        load(0, more);
+        return;
+      }
       update({ playing: false, holding: false, loading: false, pos: -1 });
       try {
         if (native) player.clearLockScreenControls();

@@ -10,7 +10,7 @@ export function readerPalette(t: ReaderTheme): Pal {
     case 'sepia':
       return { bg: '#F3EAD3', card: '#F9F1DC', ink: '#3A2E1C', muted: '#76664A', line: '#E0D0AA', accent: '#2F6B4F', gold: '#94701F', dark: false };
     case 'night':
-      return { bg: '#090D0C', card: '#111816', ink: '#E6E1D3', muted: '#98A39D', line: '#22302A', accent: '#3DBE8B', gold: '#E3BE5A', dark: true };
+      return { bg: '#090D0C', card: '#111816', ink: '#E6E1D3', muted: '#98A39D', line: '#22302A', accent: '#3DBE8B', gold: '#D9B65C', dark: true };
     default:
       return { bg: b.cream, card: b.paper, ink: b.ink, muted: b.inkMuted, line: b.line, accent: b.green, gold: b.goldDeep, dark: isDark() };
   }
