@@ -25,11 +25,9 @@ assert.match(policy, /version 1\.0\.24/);
 assert.doesNotMatch(policy, /version 1\.0\.29/);
 assert.match(ui, /pas encore de chiffrement de bout en bout/);
 assert.match(policy, /ne sont pas encore chiffrés de bout en bout/);
-const htmlSays129 = html.includes('version 1.0.29');
-const policySays124 = policy.includes('version 1.0.24');
-console.log(
-  htmlSays129 && policySays124
-    ? 'connu et non corrigé ici : public/privacy/index.html dit 1.0.29 + LiveKit, src/lib/privacy-policy.ts dit 1.0.24. scripts/test-privacy.mjs reste le contrôle rouge.'
-    : 'écart page publique / politique in-app différent de celui du 7 nov. 2026 : relire scripts/test-privacy.mjs.',
-);
+assert.equal(html.includes('version 1.0.29'), false, 'la page publique ne doit pas annoncer 1.0.29');
+assert.equal(/livekit/i.test(html), false, 'cette branche n’appelle pas LiveKit');
+assert.equal(/livekit/i.test(policy), false, 'la politique in-app ne décrit pas LiveKit');
+assert.match(html, /30 octobre 2026 \(version 1\.0\.24\)/);
+console.log('page publique générée depuis privacy-policy.ts (1.0.24, sans LiveKit). Branche 1.0.29 non fusionnée.');
 console.log('release-guard : version marketing 1.0.26 tenue, écarts de source encore nommés.');
