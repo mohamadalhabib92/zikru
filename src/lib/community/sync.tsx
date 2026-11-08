@@ -12,7 +12,7 @@ import type { ClickSource } from '../tasbih-core';
 import { allSharingModes, insertContributions, type ContributionRow, type ScopeType, type SharingMode } from './api';
 import { useAuth } from './auth';
 import { onClicks } from './clicks';
-import { ackAttempts, classifyContributionError, coalesceQueue, sealAttempts, type OutboxRow } from './queue';
+import { ackAttempts, classifyContributionError, coalesceQueue, partitionByOwner, sealAttempts, shareAllowsSend, type OutboxRow } from './queue';
 
 export type GoalLink = { goalId: string; title: string; scope: ScopeType; scopeId: string; scopeName: string; memberId?: string | null };
 type Queued = ContributionRow & OutboxRow & { tries?: number };
@@ -46,7 +46,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   type Src = ContributionRow['source'];
-  const acc = useRef<Map<string, { goalId: string; n: number; source: Src; memberId?: string | null }>>(new Map());
+  const acc = useRef<Map<string, { goalId: string; n: number; source: Src; memberId?: string | null; owner: string }>>(new Map());
+  const modesLoaded = useRef(false);
   const linksRef = useRef(links);
   const modesRef = useRef(modes);
   const queueRef = useRef(queue);
@@ -62,14 +63,16 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   queueRef.current = queue;
 
   const refreshModes = useCallback(async () => {
+    modesLoaded.current = false;
     if (!userId) return;
     try {
       const rows = await allSharingModes(userId);
       const m: Record<string, SharingMode> = {};
       for (const r of rows) m[(r.family_id ?? r.circle_id) as string] = r.mode;
+      modesLoaded.current = true;
       setModes(m);
     } catch {
-      // hors-ligne
+      modesLoaded.current = false;
     }
   }, [userId]);
   useEffect(() => {
@@ -90,7 +93,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
         let n = v.n;
         while (n > 0) {
           const c = Math.min(n, 100000);
-          rows.push({ goal_id: v.goalId, count: c, source: v.source, client_id: uid('c-'), member_id: v.memberId ?? null, attempt: 0 });
+          rows.push({ goal_id: v.goalId, count: c, source: v.source, client_id: uid('c-'), member_id: v.memberId ?? null, attempt: 0, owner: v.owner });
           n -= c;
         }
       }
@@ -110,8 +113,10 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const flush = useCallback(async () => {
     stash();
     if (!userId || busy.current || !queueRef.current.length) return;
+    const owned = partitionByOwner(queueRef.current, userId);
+    if (!owned.mine.length) return;
     busy.current = true;
-    const batch = queueRef.current.slice(0, 200);
+    const batch = owned.mine.slice(0, 200);
     const ids = batch.map((b) => b.client_id);
     queueRef.current = sealAttempts(queueRef.current, ids);
     setQueue(queueRef.current);
@@ -148,10 +153,10 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const flushRef = useRef(flush);
   flushRef.current = flush;
 
-  const add = (goalId: string, n: number, source: Src, memberId?: string | null) => {
-    const key = memberId ? `${goalId}|${memberId}` : goalId;
+  const add = (goalId: string, n: number, source: Src, memberId: string | null | undefined, owner: string) => {
+    const key = `${owner}|${memberId ? `${goalId}|${memberId}` : goalId}`;
     const cur = acc.current.get(key);
-    acc.current.set(key, { goalId, n: (cur?.n ?? 0) + n, source: cur && cur.source !== source ? 'manuel' : source, memberId });
+    acc.current.set(key, { goalId, n: (cur?.n ?? 0) + n, source: cur && cur.source !== source ? 'manuel' : source, memberId, owner });
     if (!stashTimer.current) stashTimer.current = setTimeout(() => stashRef.current(), STASH_MS);
   };
 
@@ -161,8 +166,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       onClicks((n, source: ClickSource) => {
         if (!userId) return;
         for (const l of linksRef.current) {
-          if (modesRef.current[l.scopeId] === 'nothing') continue;
-          add(l.goalId, n, source, l.memberId);
+          if (!shareAllowsSend(modesRef.current[l.scopeId], modesLoaded.current)) continue;
+          add(l.goalId, n, source, l.memberId, userId);
         }
       }),
     [userId],
@@ -186,8 +191,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     link: (l) => setLinks((ls) => [...ls.filter((x) => x.goalId !== l.goalId), l]),
     unlink: (g) => setLinks((ls) => ls.filter((x) => x.goalId !== g)),
     contribute: (goalId, n, source = 'manuel', memberId) => {
-      if (!(n > 0)) return;
-      add(goalId, n, source, memberId);
+      if (!(n > 0) || !userId) return;
+      add(goalId, n, source, memberId, userId);
       void flushRef.current();
     },
     pending: queue.reduce((a, r) => a + r.count, 0),

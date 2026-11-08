@@ -16,6 +16,11 @@ export type OutboxRow = {
   client_id: string;
   member_id?: string | null;
   attempt?: OutboxAttempt;
+  /**
+   * Compte qui a produit la ligne. Absent = tentative ancienne, propriétaire inconnu :
+   * on ne le remplit jamais avec le compte actuellement connecté.
+   */
+  owner?: string;
 };
 
 const CAP = 100000;
@@ -25,8 +30,28 @@ export function isFrozenAttempt(row: { client_id: string; attempt?: number }, in
   return row.attempt !== 0;
 }
 
-function groupKey(r: { goal_id: string; member_id?: string | null; source: string }): string {
-  return `${r.goal_id}|${r.member_id ?? ''}|${r.source}`;
+function groupKey(r: { goal_id: string; member_id?: string | null; source: string; owner?: string }): string {
+  return `${r.owner ?? ''}|${r.goal_id}|${r.member_id ?? ''}|${r.source}`;
+}
+
+/**
+ * Sépare la file selon le compte connecté.
+ * Une ligne sans `owner`, ou avec un autre compte, reste en attente : elle n'est pas réattribuée.
+ */
+export function partitionByOwner<R extends { owner?: string }>(rows: readonly R[], userId: string): { mine: R[]; held: R[] } {
+  const mine: R[] = [];
+  const held: R[] = [];
+  for (const r of rows) {
+    if (r.owner === userId) mine.push(r);
+    else held.push(r);
+  }
+  return { mine, held };
+}
+
+/** Partage connu : « nothing » n'envoie pas. Tant que les modes ne sont pas chargés, on n'envoie pas. */
+export function shareAllowsSend(mode: string | undefined, modesLoaded: boolean): boolean {
+  if (!modesLoaded) return false;
+  return mode !== 'nothing';
 }
 
 /**

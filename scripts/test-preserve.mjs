@@ -104,6 +104,38 @@ test('file : seal fige le nombre, un nouvel appui part dans une autre ligne', ()
   assert.equal(out.find((r) => r.client_id === 'c10').note, 'y');
 });
 
+test('file : un autre compte ou un propriétaire inconnu ne reçoit pas la ligne', () => {
+  const rows = [
+    { goal_id: 'famille', count: 10, source: 'manuel', client_id: 'a1', attempt: 1, owner: 'compte-a' },
+    { goal_id: 'famille', count: 4, source: 'manuel', client_id: 'legacy', attempt: 1 },
+    { goal_id: 'cercle', count: 2, source: 'manuel', client_id: 'b1', attempt: 0, owner: 'compte-b' },
+  ];
+  const asB = Q.partitionByOwner(rows, 'compte-b');
+  assert.deepEqual(asB.mine.map((r) => r.client_id), ['b1']);
+  assert.equal(asB.held.find((r) => r.client_id === 'a1').count, 10);
+  assert.equal(asB.held.find((r) => r.client_id === 'legacy').owner, undefined);
+  const merged = Q.coalesceQueue(
+    [
+      { goal_id: 'g', count: 3, source: 'manuel', client_id: 'a', attempt: 0, owner: 'compte-a' },
+      { goal_id: 'g', count: 5, source: 'manuel', client_id: 'b', attempt: 0, owner: 'compte-b' },
+    ],
+    new Set(),
+    () => {
+      throw new Error('pas de fusion entre comptes');
+    },
+  );
+  assert.equal(merged.length, 2);
+  assert.equal(merged.find((r) => r.owner === 'compte-a').count, 3);
+  assert.equal(merged.find((r) => r.owner === 'compte-b').count, 5);
+});
+
+test('partage : rien n’est envoyé tant que le mode n’est pas connu, ni si le choix est « nothing »', () => {
+  assert.equal(Q.shareAllowsSend(undefined, false), false);
+  assert.equal(Q.shareAllowsSend('nothing', true), false);
+  assert.equal(Q.shareAllowsSend(undefined, true), true);
+  assert.equal(Q.shareAllowsSend('counter', true), true);
+});
+
 test('file : 23505 retire la ligne, une autre erreur la garde', () => {
   const rows = [{ goal_id: 'g', count: 9, source: 'manuel', client_id: 'c', attempt: 1 }];
   assert.equal(Q.classifyContributionError({ code: '23505', message: 'duplicate key value violates unique constraint' }), 'already-stored');
