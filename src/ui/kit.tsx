@@ -1,10 +1,12 @@
+import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { currentScheme, elevation, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
+import { KbInput } from './keyboard-done';
 
 const S = () => getStyles();
 
@@ -14,13 +16,14 @@ export { Ionicons };
 /** Conteneur d'écran défilant, largeur max sur desktop (PWA). */
 export function Screen({ children, scroll = true, padded = true, bg }: { children: ReactNode; scroll?: boolean; padded?: boolean; bg?: string }) {
   const insets = useSafeAreaInsets();
+  const mini = useMiniPlayerInset();
   const inner = (
-    <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom }]}>{children}</View>
+    <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom + mini }]}>{children}</View>
   );
   return (
     <View style={[S().screen, bg ? { backgroundColor: bg } : null]}>
       {scroll ? (
-        <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
+        <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
           {inner}
         </ScrollView>
       ) : (
@@ -190,7 +193,7 @@ export function Field({ label, hint, error, style, ...props }: TextInputProps & 
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={S().label}>{label}</Text>
-      <TextInput
+      <KbInput
         placeholderTextColor={t.muted}
         accessibilityLabel={typeof label === "string" ? L(label) : label}
         style={[S().input, props.multiline && { minHeight: 88, textAlignVertical: 'top', paddingTop: 12 }, error ? { borderColor: t.danger } : null, style]}
@@ -214,7 +217,7 @@ export function Segmented<T extends string | number>({ options, value, onChange,
               key={String(o.value)}
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
+              accessibilityState={{ checked: on }} aria-checked={on}
               style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
             >
               <Text maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14, textAlign: 'center' }}>{o.label}</Text>
@@ -231,7 +234,7 @@ export function Toggle({ label, value, onChange, hint }: { label: string; value:
     <Pressable
       onPress={() => onChange(!value)}
       accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
+      accessibilityState={{ checked: value }} aria-checked={value}
       accessibilityLabel={typeof label === "string" ? L(label) : label}
       style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, gap: 12 }}
     >

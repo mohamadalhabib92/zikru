@@ -1,0 +1,104 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+{n} à réviser	{n} zu wiederholen
+= abjad ({n})	= Abjad ({n})
+Abjad {s} : {v} · × rép. {r}	Abjad {s}: {v} · × Wdh. {r}
+Abjad {s} : {v} × {r} = {t}	Abjad {s}: {v} × {r} = {t}
+Achevée le {d}. Il est d’usage de faire des invocations à la fin de la lecture du Coran.	Abgeschlossen am {d}. Es ist üblich, nach Abschluss der Koranrezitation Bittgebete zu sprechen.
+Ajouter une tâche {x}	Eine Aufgabe hinzufügen: {x}
+Ajouter {x}	{x} hinzufügen
+Ajouter {x} à un zikr, 1 fois	{x} einmal zu einem Zikr hinzufügen
+Ajouter {x} à un zikr, {n} fois (valeur abjad)	{x} {n}-mal zu einem Zikr hinzufügen (Abjad-Wert)
+Ajouter × {n} (abjad)	× {n} hinzufügen (Abjad)
+Assalāmu ‘alaykum ! Rejoignez « {name} » sur Zikru.\nCode d’invitation : {code}\nDans l’app : Communauté › Rejoindre avec un code, ou ouvrez {link}	Assalāmu ‘alaykum! Tritt „{name}“ auf Zikru bei.\nEinladungscode: {code}\nIn der App: Gemeinschaft › Mit einem Code beitreten, oder öffne {link}
+Caractères ignorés : {c}	Ignorierte Zeichen: {c}
+Commencer · {s} {a}–{b}	Start · {s} {a}–{b}
+Compter. {a} sur {b}	Zählung. {a} von {b}
+Contributions saisies : {p}	Eingetragene Beiträge: {p}
+Coran {r}	Koran {r}
+Couleurs : {c}. Tout est enregistré sur cet appareil.	Farben: {c}. Alles wird auf diesem Gerät gespeichert.
+En avance de {n} page(s).	{n} Seite(n) voraus.
+En retard de {n} page(s) : {p} pages/jour pour finir à temps.	{n} Seite(n) im Rückstand: {p} Seiten/Tag, um rechtzeitig fertig zu werden.
+Enregistré ({g}). Les versets rejoignent votre révision.	Gespeichert ({g}). Die Verse kommen in Ihre Wiederholung.
+Exemple {x}	Beispiel {x}
+Intention : {x}	Absicht: {x}
+Jour {a} sur {b}	Tag {a} von {b}
+Juz’ {j} · Hizb {h}	Juz’ {j} · Hizb {h}
+Lire {x}	{x} abspielen
+Lire à partir de la page {p}	Ab Seite {p} lesen
+Marque-pages ({n})	Lesezeichen ({n})
+Mode enfant · {name}	Kindermodus · {name}
+Notes ({n})	Notizen ({n})
+Page {p}	Seite {p}
+Pages {a} à {b} · {s}	Seiten {a} bis {b} · {s}
+Pour {x}	Für {x}
+Racine numérique : {r}	Quersumme: {r}
+Rejoindre : {x}	Beitreten: {x}
+Renvoyer le code ({n} s)	Code erneut senden ({n} s)
+Retirer {name} ?	{name} entfernen?
+Retirer {x}	{x} entfernen
+Soleil : lever {a}, coucher {b}	Sonne: Aufgang {a}, Untergang {b}
+Sourate : {s}. Changer	Sure: {s}. Ändern
+Sourate {n} {s}	Sure {n} {s}
+Supprimer {x}	{x} löschen
+Supprimer « {x} » ?	„{x}“ löschen?
+Surlignés ({n})	Markierungen ({n})
+Série : {n} jour(s) · record {b}	Serie: {n} Tag(e) · beste {b}
+Texte : Tanzil / api.alquran.cloud · traduction {t}	Text: Tanzil / api.alquran.cloud · Übersetzung {t}
+Total {sys} : {n}	Gesamt {sys}: {n}
+Verset {a} · répétition {r}/{e}	Vers {a} · Wiederholung {r}/{e}
+Verset {a}. Toucher pour écouter à partir d’ici	Vers {a}. Tippen, um ab hier anzuhören
+Verset {s}:{a}	Vers {s}:{a}
+Wird : {w}	Wird: {w}
+Wird du jour : p. {a}–{b} · khatma {p} %	Heutiger Wird: S. {a}–{b} · Khatma {p} %
+{a} / {b} au total	{a} / {b} insgesamt
+{a} / {b} pages · fin prévue le {d}	{a} / {b} Seiten · voraussichtliches Ende {d}
+{a}/{b} arrosées aujourd’hui	{a}/{b} heute gegossen
+{a}/{b} faites	{a}/{b} erledigt
+{d} : {n} dhikr	{d}: {n} Dhikr
+{l} lettres · {w} mot	{l} Buchstaben · {w} Wort
+{l} lettres · {w} mots	{l} Buchstaben · {w} Wörter
+{m} · {n} versets	{m} · {n} Verse
+{n} dhikr avant {name} ({fr})	{n} Dhikr vor {name} ({fr})
+{n} minutes par jour. Pense à faire des pauses.	{n} Minuten pro Tag. Denk daran, Pausen zu machen.
+{n} pages par jour environ · fin le {d} · départ : {s}	Etwa {n} Seiten pro Tag · Ende am {d} · Beginn: {s}
+{n} verset(s) : {e} facile, {m} moyen, {h} difficile. Qu’Allah vous facilite la préservation de Son Livre.	{n} Vers(e): {e} leicht, {m} mittel, {h} schwer. Möge Allah Ihnen das Bewahren Seines Buches erleichtern.
+{n} verset(s) · environ {m} min	{n} Vers(e) · etwa {m} Min.
+{n} élément(s) · {r} répétitions	{n} Element(e) · {r} Wiederholungen
+{n}. {s} · {v} versets	{n}. {s} · {v} Verse
+{n}× aujourd’hui	{n}× heute
+{n}× la plage	{n}× der Bereich
+{p} % du jour	{p} % des Tages
+{p} % suivi	{p} % erfasst
+{ref}. L’énumération des 99 Noms provient de la version d’at-Tirmidhī ; les savants en ont discuté l’authenticité (elle serait une insertion d’un rapporteur), d’autres listes existent. Sens en français indicatif.	{ref}. Die Aufzählung der 99 Namen stammt aus der Version von at-Tirmidhī; Gelehrte haben ihre Authentizität diskutiert (es könnte ein Einschub eines Überlieferers sein), und es gibt andere Listen. Die Bedeutungen sind Richtwerte.
+{r} · {e}× chaque verset · {p}	{r} · {e}× jeder Vers · {p}
+{sys} : {n} (racine {r})	{sys}: {n} (Quersumme {r})
+{s} · p. {p}	{s} · S. {p}
+{s} · verset {a}	{s} · Vers {a}
+{s} · {n} v.	{s} · {n} V.
+{t} {n} degrés {f}	{t} {n} Grad {f}
+{x} : prochaine révision {s}	{x}: nächste Wiederholung {s}
+{x} fait aujourd’hui	{x} heute erledigt
+{x}. Ouvrir le verset	{x}. Den Vers öffnen
+objectif {g}	Ziel {g}
+passage {p}	Durchgang {p}
+sessions ajoutées à l’historique du tasbih	Sitzungen zum Tasbih-Verlauf hinzugefügt
+Écart entre les deux systèmes : {n} — dû aux lettres à cadre doré ci-dessous.	Unterschied zwischen den beiden Systemen: {n} — wegen der unten golden umrahmten Buchstaben.
+Éléments ({n})	Elemente ({n})
+Étape {a} / {b}	Schritt {a} / {b}
+Étape {a} sur {b}	Schritt {a} von {b}
+✓ Ajouté : {x}	✓ Hinzugefügt: {x}
+✓ {n}× aujourd’hui	✓ {n}× heute
+Confirmer	Bestätigen
+Retirer cette piste ?	Diesen Titel entfernen?
+Zikru · Chants soufis	Zikru · Sufi-Gesänge
+Effacer toutes les données locales de Zikru ?	Alle lokalen Daten von Zikru löschen?
+Compteurs, réglages et contenu local seront effacés.	Zähler, Einstellungen und lokale Inhalte werden gelöscht.
+{n} rép.	{n} Wdh.
+{n} aujourd’hui	{n} heute
+{n} formules · {r} rép.	{n} Formeln · {r} Wdh.
+{n} formule · {r} rép.	{n} Formel · {r} Wdh.
+Nom d’Allah	Name Allahs
+Du‘a coranique	Koranische Du‘a
+Du‘a prophétique	Prophetische Du‘a
+Ṣalāt sur le Prophète ﷺ	Ṣalāt auf den Propheten ﷺ

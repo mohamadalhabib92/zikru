@@ -7,7 +7,7 @@ import type { Pal } from './palette';
 import { TafsirSheet } from './TafsirSheet';
 
 /** Enchaîne actions du verset → tafsir / zikr / mémorisation / écoute, partagé par le lecteur et le mushaf. */
-export function useAyahFlow(pal: Pal, onPlay: (t: AyahTarget) => void) {
+export function useAyahFlow(pal: Pal, onPlay: (t: AyahTarget) => void, onAB?: (t: AyahTarget) => void) {
   const router = useRouter();
   const [target, setTarget] = useState<AyahTarget | null>(null);
   const [taf, setTaf] = useState<AyahTarget | null>(null);
@@ -20,6 +20,7 @@ export function useAyahFlow(pal: Pal, onPlay: (t: AyahTarget) => void) {
         onClose={() => setTarget(null)}
         onAction={(a, t) => {
           if (a === 'play') onPlay(t);
+          else if (a === 'ab') setTimeout(() => onAB?.(t), 60);
           else if (a === 'tafsir') setTimeout(() => setTaf(t), 60);
           else if (a === 'zikr') setTimeout(() => setDraft({ kind: 'verse', ref: `Coran ${t.s}:${t.a}`, label: `${SURAHS[t.s - 1][2]} ${t.s}:${t.a}`, ar: t.ar, fr: t.tr ?? '', reps: 1 }), 60);
           else if (a === 'hifz') router.push({ pathname: '/quran/hifz-session', params: { s: String(t.s), from: String(t.a), to: String(Math.min(SURAHS[t.s - 1][4], t.a + 4)) } });

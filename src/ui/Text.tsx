@@ -1,5 +1,5 @@
 /**
- * Remplace `Text` de react-native : traduit automatiquement les morceaux de texte
+ * Remplace `Text` de react-native : traduit automatiquement (en, ar, de / de-CH) les morceaux de texte
  * présents dans le catalogue d'interface. Le français source, le texte arabe coranique
  * et toute chaîne absente du catalogue sont rendus tels quels.
  */

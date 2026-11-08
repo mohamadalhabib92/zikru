@@ -4,7 +4,7 @@ import { Text } from '@/ui/Text';
 import { APP_VERSION } from '@/components/zikru/Provenance';
 import { SCHOOLS, SCHOOL_LABEL, citation, type FiqhSource } from '@/lib/fiqh-rulings';
 import { useMadhab } from '@/lib/madhab';
-import { reportUrl } from '@/lib/provenance';
+import { reportUrl } from '@/lib/provenance-lite';
 import { REVIEW_LABEL, reviewFor } from '@/lib/reviews';
 import { SAHW_CASES_AR, SAHW_CASES_EN, SAHW_HOW_AR, SAHW_HOW_EN } from '@/lib/i18n-content/sahw';
 import { schoolLabel } from '@/lib/i18n-content';

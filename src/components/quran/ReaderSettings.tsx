@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Pressable, Switch, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { NURANI_LETTERS, NURANI_MNEMONIC } from '@/lib/nuraniyya';
 import { Text } from '@/ui/Text';
 import { readerPrefs, type ReaderPrefs } from '@/lib/quran-store';
@@ -10,6 +12,7 @@ import { THEMES, type Pal } from './palette';
 import { QChoice, QLabel, QStepper, Sheet } from './Sheet';
 import { NuraniText } from './NuraniText';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 export const RATES = [0.75, 1, 1.25, 1.5];
 const SAMPLE = 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ۝٢';
@@ -17,7 +20,7 @@ const SAMPLE_MUQ = 'الٓمٓ ۝١'; // 2:1 (Tanzil uthmani)
 
 function Row({ label, value, onChange, pal, hint }: { label: string; value: boolean; onChange: (v: boolean) => void; pal: Pal; hint?: string }) {
   return (
-    <Pressable accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={typeof label === "string" ? L(label) : label} onPress={() => onChange(!value)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 }}>
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: value }} aria-checked={value} accessibilityLabel={typeof label === "string" ? L(label) : label} onPress={() => onChange(!value)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 }}>
       <View style={{ flex: 1 }}>
         <Text style={{ color: pal.ink, fontWeight: '600', fontSize: 15 }}>{label}</Text>
         {hint ? <Text style={{ color: pal.muted, fontSize: 12 }}>{hint}</Text> : null}
@@ -30,13 +33,14 @@ function Row({ label, value, onChange, pal, hint }: { label: string; value: bool
 /** Réglages d’affichage et de récitation du lecteur. */
 export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; onClose: () => void; pal: Pal }) {
   const [p, set] = useShared(readerPrefs);
+  const router = useRouter();
   const patch = (x: Partial<ReaderPrefs>) => set((o) => ({ ...o, ...x }));
   const [info, setInfo] = useState(false);
   const warsh = RECITERS.find((r) => r.id === p.reciter)?.riwaya === 'Warsh';
   return (
     <Sheet visible={visible} onClose={onClose} title="Affichage et récitation" pal={pal}>
       <View style={{ backgroundColor: pal.card, borderRadius: 16, borderWidth: 1, borderColor: pal.line, padding: 14 }}>
-        <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: p.arSize, lineHeight: Math.round(p.arSize * p.lineH), textAlign: 'right', writingDirection: 'rtl' }}>
+        <Text {...arLang} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: p.arSize, lineHeight: Math.round(p.arSize * p.lineH), textAlign: 'right', writingDirection: 'rtl' }}>
           <NuraniText text={SAMPLE_MUQ} surah={2} ayah={1} nurani={p.nurani} muqattaat={p.muqattaat} gold={pal.gold} ink={pal.ink} />{' '}
           <NuraniText text={SAMPLE} surah={1} ayah={2} nurani={p.nurani} muqattaat={false} gold={pal.gold} ink={pal.ink} />
         </Text>
@@ -82,7 +86,7 @@ export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; on
       <QLabel pal={pal}>RÉCITATEUR</QLabel>
       <View style={{ gap: 6 }}>
         {RECITERS.map((r) => (
-          <Pressable key={r.id} accessibilityRole="radio" accessibilityState={{ checked: p.reciter === r.id }} onPress={() => patch({ reciter: r.id })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 46, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: p.reciter === r.id ? pal.accent : pal.line, backgroundColor: pal.card }}>
+          <Pressable key={r.id} accessibilityRole="radio" accessibilityState={{ checked: p.reciter === r.id }} aria-checked={p.reciter === r.id} onPress={() => patch({ reciter: r.id })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 46, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: p.reciter === r.id ? pal.accent : pal.line, backgroundColor: pal.card }}>
             <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: p.reciter === r.id ? pal.accent : pal.muted, alignItems: 'center', justifyContent: 'center' }}>
               {p.reciter === r.id ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: pal.accent }} /> : null}
             </View>
@@ -105,6 +109,19 @@ export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; on
       <Text style={{ color: pal.muted, fontSize: 12, marginTop: 8 }}>{L('Lecture normale enchaîne les versets. Lecture méditative attend 5 secondes à la fin de chaque verset, puis continue. Une pause ou un arrêt annule cette attente. Le fichier unique d’al-Kahf n’a pas de découpage verset par verset : ce mode n’y est pas disponible.')}</Text>
       <QLabel pal={pal}>VITESSE</QLabel>
       <QChoice options={RATES.map((r) => ({ label: `×${r}`, value: r }))} value={p.rate} onChange={(v) => patch({ rate: v })} pal={pal} />
+      <Row label="Lecture continue" value={p.autoNext} onChange={(v) => patch({ autoNext: v })} pal={pal} hint="Enchaîne la sourate suivante (le juz’ suivant dans le Mushaf)" />
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          onClose();
+          router.push('/quran/downloads');
+        }}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 }}
+      >
+        <Ionicons name="cloud-download-outline" size={20} color={pal.accent} />
+        <Text style={{ color: pal.accent, fontWeight: '600', fontSize: 15, flex: 1 }}>Téléchargements audio (hors ligne)</Text>
+        <Ionicons name="chevron-forward" size={18} color={pal.muted} />
+      </Pressable>
       <Text style={{ color: pal.muted, fontSize: 11, marginTop: 14 }}>Audio diffusé verset par verset depuis EveryAyah.com (secours : Islamic Network). Rien n’est intégré à l’app.</Text>
     </Sheet>
   );
@@ -117,10 +134,10 @@ export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; on
 function NuraniInfo({ pal }: { pal: Pal }) {
   return (
     <View style={{ backgroundColor: pal.card, borderRadius: 14, borderWidth: 1, borderColor: pal.line, padding: 12, gap: 6, marginTop: 4 }}>
-      <Text style={{ color: pal.gold, fontFamily: fonts.quran, fontSize: 24, lineHeight: 48, textAlign: 'center', writingDirection: 'rtl' }}>{NURANI_LETTERS.join(' ')}</Text>
+      <Text {...arLang} style={{ color: pal.gold, fontFamily: fonts.quran, fontSize: 24, lineHeight: 48, textAlign: 'center', writingDirection: 'rtl' }}>{NURANI_LETTERS.join(' ')}</Text>
       <Text style={{ color: pal.ink, fontSize: 13, lineHeight: 19 }}>Vingt-neuf sourates s’ouvrent par des lettres isolées (al-ḥurūf al-muqaṭṭaʿa), comme Alif Lām Mīm. Sans les répétitions, elles se ramènent à 14 lettres, soit la moitié de l’alphabet ; on les appelle souvent « lettres lumineuses » (al-ḥurūf an-nūrāniyya).</Text>
       <Text style={{ color: pal.ink, fontSize: 13, lineHeight: 19 }}>Formule mnémotechnique traditionnelle :</Text>
-      <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 20, lineHeight: 42, textAlign: 'center', writingDirection: 'rtl' }}>{NURANI_MNEMONIC}</Text>
+      <Text {...arLang} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: 20, lineHeight: 42, textAlign: 'center', writingDirection: 'rtl' }}>{NURANI_MNEMONIC}</Text>
       <Text style={{ color: pal.ink, fontSize: 13, lineHeight: 19 }}>Leur sens exact : « Allah en connaît mieux le sens » est l’avis rapporté de nombreux savants. Az-Zamakhsharī (al-Kashshāf) et Ibn Kathīr (Tafsīr, début de la sourate al-Baqara) relèvent qu’elles regroupent la moitié des lettres et y voient un signe de l’inimitabilité du Coran, composé de ces mêmes lettres.</Text>
       <Text style={{ color: pal.muted, fontSize: 12, lineHeight: 17 }}>Affichage : alif sous toutes ses formes (ا ٱ آ أ إ) et ى comptent ; ء ؤ ئ et ة ne comptent pas. Le texte coranique n’est pas modifié, seule la couleur change.</Text>
     </View>

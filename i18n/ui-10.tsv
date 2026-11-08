@@ -1,35 +1,32 @@
-# Adhan : voix publiées et appel à l’heure de la prière (ar : traduction à relire)
-Voix de l’adhan	Adhan voice	صوت الأذان
-Enregistrements publiés, lus en ligne et non copiés dans l’application. Le choix reste sur cet appareil.	Published recordings, streamed and not copied into the app. The choice stays on this device.	تسجيلات منشورة، تُبث ولا تُنسخ في التطبيق. يبقى الاختيار على هذا الجهاز.
-Fichier manquant pour cette voix : lecture désactivée (aucun crash).	Missing file for this voice: playback disabled (no crash).	الملف ناقص لهذا الصوت: التشغيل معطّل (لا يتوقف التطبيق).
-Page de la source	Source page	صفحة المصدر
-Auteur : {name}	Author: {name}	المؤلف: {name}
-Licence : {license}	Licence: {license}	الترخيص: {license}
-Adhan à l’heure de la prière	Adhan at prayer time	الأذان عند وقت الصلاة
-À l’heure des prières cochées, Zikru joue la voix choisie si l’application est ouverte, et quand vous ouvrez la notification. L’écran verrouillé ne lance pas l’enregistrement complet : iOS n’accepte qu’un son embarqué de moins de 30 secondes, et une notification Android ne lit pas une adresse distante. Sur le téléphone, ce son court est une lecture publiée (Jarih, CC BY-SA 3.0), pas la voix choisie. Le mode silencieux peut le couper. Dans le navigateur, la notification garde le son du système et la voix choisie ne part que si la page est ouverte. Si ce réglage est coupé, la notification de prière reste, sans cet appel.	At the checked prayer times, Zikru plays the chosen voice if the app is open, and when you open the notification. The lock screen does not start the full recording: iOS only accepts a bundled sound under 30 seconds, and an Android notification does not play a remote address. On the phone, that short sound is a published reading (Jarih, CC BY-SA 3.0), not the chosen voice. Silent mode may mute it. In the browser, the notification keeps the system sound and the chosen voice starts only if the page is open. If this setting is off, the prayer notification remains, without this call.	عند أوقات الصلوات المؤشَّرة، يشغّل Zikru الصوت المختار إذا كان التطبيق مفتوحًا، وعند فتح الإشعار. شاشة القفل لا تبدأ التسجيل الكامل: iOS لا يقبل إلا صوتًا مضمّنًا أقل من 30 ثانية، وإشعار Android لا يقرأ عنوانًا بعيدًا. على الهاتف، هذا الصوت القصير قراءة منشورة (Jarih، CC BY-SA 3.0)، وليس الصوت المختار. قد يكتمه الوضع الصامت. في المتصفح، يبقى للإشعار صوت النظام ولا يبدأ الصوت المختار إلا إذا كانت الصفحة مفتوحة. إذا أُوقف هذا الإعداد، يبقى إشعار الصلاة من دون هذا الأذان.
-Beautiful adhan — Adam-synagda	Beautiful adhan — Adam-synagda	أذان Beautiful adhan — Adam-synagda
-Travail personnel publié sur Wikimedia Commons	Own work published on Wikimedia Commons	عمل شخصي منشور على Wikimedia Commons
-Azan — Andrewler	Azan — Andrewler	أذان — Andrewler
-Adhan — Aishatu98	Adhan — Aishatu98	أذان — Aishatu98
-Annonce d’adhan, travail personnel publié sur Wikimedia Commons	Adhan announcement, own work published on Wikimedia Commons	إعلان أذان، عمل شخصي منشور على Wikimedia Commons
-Adhan — Jarih	Adhan — Jarih	أذان — Jarih
-Lecture simple de l’adhan (version sunnite), travail personnel	Simple reading of the adhan (Sunni version), own work	قراءة بسيطة للأذان (نسخة سنية)، عمل شخصي
-Adhan, mosquée Hassan II	Adhan, Hassan II Mosque	أذان، مسجد الحسن الثاني
-Enregistrement de terrain à Casablanca, par Fraguando (mer, vent et voix alentour)	Field recording in Casablanca, by Fraguando (sea, wind and nearby voices)	تسجيل ميداني في الدار البيضاء، لـ Fraguando (بحر وريح وأصوات مجاورة)
-Bilal (fichier local)	Bilal (local file)	بلال (ملف محلي)
-Fichier assets/audio/bilal.mp3	File assets/audio/bilal.mp3	ملف assets/audio/bilal.mp3
-Adhan de La Mecque (fichier local)	Makkah adhan (local file)	أذان مكة (ملف محلي)
-Fichier assets/audio/adhan-makkah.mp3	File assets/audio/adhan-makkah.mp3	ملف assets/audio/adhan-makkah.mp3
-Adhan de Médine (fichier local)	Madinah adhan (local file)	أذان المدينة (ملف محلي)
-Fichier assets/audio/adhan-madinah.mp3	File assets/audio/adhan-madinah.mp3	ملف assets/audio/adhan-madinah.mp3
-Lien audio personnel	Personal audio link	رابط صوتي شخصي
-Adresse indiquée par EXPO_PUBLIC_ADHAN_AUDIO_URL (droits à votre charge)	Address set by EXPO_PUBLIC_ADHAN_AUDIO_URL (rights are yours to clear)	عنوان يحدده EXPO_PUBLIC_ADHAN_AUDIO_URL (الحقوق على عاتقكم)
-Adhan diffusé à l’écoute depuis Wikimedia Commons (non inclus dans l’application), avec l’auteur, la page et la licence sous le lecteur. Aucun adhan n’est synthétisé. Le son court de la notification est la lecture de Jarih (File:Adhan wiki.oga, CC BY-SA 3.0), convertie en WAV et embarquée : le système n’accepte pas un fichier distant de plusieurs minutes.	Adhan streamed when you listen, from Wikimedia Commons (not included in the app), with the author, the page and the licence under the player. No adhan is synthesized. The short notification sound is Jarih’s reading (File:Adhan wiki.oga, CC BY-SA 3.0), converted to WAV and bundled: the system does not accept a remote file lasting several minutes.	يُبث الأذان عند الاستماع من Wikimedia Commons (غير مضمَّن في التطبيق)، مع المؤلف والصفحة والترخيص تحت المشغّل. لا يُركَّب أي أذان. صوت الإشعار القصير هو قراءة Jarih (File:Adhan wiki.oga، CC BY-SA 3.0)، محوَّلة إلى WAV ومضمَّنة: النظام لا يقبل ملفًا بعيدًا يدوم عدة دقائق.
-Mode de lecture	Reading mode	وضع التلاوة
-Lecture normale	Normal reading	تلاوة عادية
-Lecture méditative	Meditative reading	تلاوة تدبّرية
-Normale	Normal	عادية
-Méditative	Meditative	تدبّرية
-Suite automatique après 5 s	Automatic continuation after 5 s	متابعة تلقائية بعد ٥ ث
-Lecture méditative indisponible : audio en un seul fichier, sans séparation des versets.	Meditative reading is unavailable: the audio is a single file, without verse splits.	التلاوة التدبرية غير متاحة: الصوت ملف واحد، دون فصل الآيات.
-Lecture normale enchaîne les versets. Lecture méditative attend 5 secondes à la fin de chaque verset, puis continue. Une pause ou un arrêt annule cette attente. Le fichier unique d’al-Kahf n’a pas de découpage verset par verset : ce mode n’y est pas disponible.	Normal reading plays the verses one after another. Meditative reading waits 5 seconds at the end of each verse, then continues. Pause or stop cancels that wait. The single al-Kahf file has no verse-by-verse split: this mode is not available there.	التلاوة العادية تُتبع الآيات. التلاوة التدبرية تنتظر 5 ثوانٍ في نهاية كل آية ثم تُكمل. الإيقاف المؤقت أو الإيقاف يلغي هذا الانتظار. ملف الكهف الواحد بلا تقسيم للآيات: هذا الوضع غير متاح هناك.
+# Passe 1 : options des horaires (latitudes élevées, ajustements, mosquée) et pause des rappels (31.10.2026) (ar : traduction à relire)
+Automatique (recommandé)	Automatic (recommended)	تلقائي (موصى به)
+Milieu de la nuit	Middle of the night	منتصف الليل
+Septième de la nuit	Seventh of the night	سُبع الليل
+Angle du crépuscule	Twilight angle	زاوية الشفق
+Latitudes élevées (Fajr et Isha quand la nuit est courte)	High latitudes (Fajr and Isha when nights are short)	خطوط العرض العالية (الفجر والعشاء حين يقصر الليل)
+Ajustements (minutes, ±{n} max)	Adjustments (minutes, ±{n} max)	تعديلات (بالدقائق، ±{n} كحد أقصى)
+{p} : {n} minutes	{p}: {n} minutes	{p}: {n} دقيقة
+Horaires de ma mosquée	My mosque’s times	مواقيت مسجدي
+Horaire de ma mosquée	My mosque’s time	توقيت مسجدي
+Remplace le calcul par les horaires affichés par ta mosquée (format 05:42). Une case vide garde l’horaire calculé.	Replaces the calculation with the times posted by your mosque (format 05:42). An empty box keeps the calculated time.	يستبدل الحساب بالمواقيت التي يعلنها مسجدك (بصيغة 05:42). الخانة الفارغة تُبقي التوقيت المحسوب.
+Nom de la mosquée (facultatif)	Mosque name (optional)	اسم المسجد (اختياري)
+Format attendu : 05:42	Expected format: 05:42	الصيغة المطلوبة: 05:42
+Ces horaires sont répétés chaque jour : pense à les mettre à jour quand ta mosquée change d’horaires.	These times repeat every day: remember to update them when your mosque changes its timetable.	تتكرر هذه المواقيت كل يوم: تذكّر تحديثها عندما يغيّر مسجدك جدوله.
+Horaires calculés : vérifie avec ta mosquée locale.	Calculated times: check with your local mosque.	مواقيت محسوبة: تحقّق منها مع مسجدك المحلي.
+Ajuster les horaires	Adjust times	ضبط المواقيت
+Pause des rappels	Pause reminders	إيقاف التذكيرات مؤقتًا
+Met en pause les rappels de prière et gèle tes séries sans les casser. Reste uniquement sur cet appareil : jamais synchronisé ni partagé.	Pauses prayer reminders and freezes your streaks without breaking them. Stays only on this device: never synced or shared.	يوقف تذكيرات الصلاة مؤقتًا ويجمّد سلاسلك دون أن يقطعها. يبقى على هذا الجهاز فقط: لا يُزامَن ولا يُشارَك أبدًا.
+Mettre aussi en pause les autres rappels	Also pause other reminders	إيقاف التذكيرات الأخرى أيضًا
+Adhkar, wird, Coran, al-Kahf.	Adhkar, wird, Quran, al-Kahf.	الأذكار، الورد، القرآن، الكهف.
+En pause depuis le {a}, reprise automatique le {b}.	Paused since {a}, resumes automatically on {b}.	متوقف منذ {a}، يُستأنف تلقائيًا في {b}.
+En pause depuis le {a}.	Paused since {a}.	متوقف منذ {a}.
+Reprendre maintenant	Resume now	استئناف الآن
+Reprise automatique après (jours, facultatif)	Resume automatically after (days, optional)	الاستئناف التلقائي بعد (أيام، اختياري)
+Laisse vide pour reprendre toi-même.	Leave empty to resume yourself.	اتركه فارغًا لتستأنف بنفسك.
+Entre un nombre entre 1 et {n}.	Enter a number between 1 and {n}.	أدخل رقمًا بين 1 و{n}.
+Mettre en pause	Pause	إيقاف مؤقت
+Effacer l’historique des pauses	Clear pause history	مسح سجل الإيقاف
+Les séries passées pourront alors être recalculées sans ces jours neutres.	Past streaks may then be recalculated without these neutral days.	قد يُعاد حينها حساب السلاسل السابقة دون هذه الأيام المحايدة.
+Règle hautes latitudes choisie dans les réglages : elle remplace la règle recommandée.	High-latitude rule chosen in settings: it replaces the recommended rule.	قاعدة خطوط العرض العالية المختارة في الإعدادات: تحلّ محل القاعدة الموصى بها.
+UOIF : Fajr 12°, Isha 12° (angles de la méthode « Union des organisations islamiques de France », repris par AlAdhan et PrayTimes). Ces angles sont débattus : vérifie avec ta mosquée locale.	UOIF: Fajr 12°, Isha 12° (angles of the “Union des organisations islamiques de France” method, as used by AlAdhan and PrayTimes). These angles are debated: check with your local mosque.	UOIF: الفجر 12°، العشاء 12° (زاويتا طريقة «اتحاد المنظمات الإسلامية في فرنسا» كما تعتمدها AlAdhan وPrayTimes). هاتان الزاويتان محلّ نقاش: تحقّق مع مسجدك المحلي.
+Ajustements (±30 min) et « Horaires de ma mosquée » : appliqués uniquement sur cet appareil, prioritaires sur le calcul.	Adjustments (±30 min) and “My mosque’s times”: applied only on this device, taking priority over the calculation.	التعديلات (±30 دقيقة) و«مواقيت مسجدي»: تُطبَّق على هذا الجهاز فقط، وتتقدّم على الحساب.

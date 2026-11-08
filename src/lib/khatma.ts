@@ -3,7 +3,8 @@
  * Le plan répartit les pages restantes (Mushaf de Médine, 604 p.) sur N jours ; le wird du jour est fixe (prévisible),
  * et l’écran indique l’avance / le retard et le rythme nécessaire pour finir à temps.
  */
-import { addDays, daysBetween } from './dates';
+import { addDays, dayKey, daysBetween } from './dates';
+import { hijriToDate, monthLength, toHijri } from './hijri';
 
 export const MUSHAF_PAGES = 604;
 export type Khatma = {
@@ -46,19 +47,25 @@ export type KhatmaStatus = {
   nextPage: number;
   end: string;
   finished: boolean;
+  /** Plan programmé (ex. Ramadan) qui n’a pas encore commencé. */
+  notStarted: boolean;
+  /** Jours avant le début (0 si commencé). */
+  startsIn: number;
 };
 
 export function khatmaStatus(k: Khatma, today: string): KhatmaStatus {
   const total = khatmaTotal(k), ppd = pagesPerDay(k);
   const done = Math.min(total, Math.max(0, k.done));
-  const day = Math.max(1, daysBetween(k.start, today) + 1);
+  const since = daysBetween(k.start, today);
+  const notStarted = since < 0;
+  const day = Math.max(1, since + 1);
   const finished = done >= total;
   const dayIdx = Math.min(day, k.days) - 1;
   // Répartition régulière : le jour d (0..days-1) couvre [⌊total·d/days⌋, ⌊total·(d+1)/days⌋[.
   const cut = (d: number) => Math.floor((total * d) / k.days);
   const late = day > k.days;
   const fromRel = late ? done : cut(dayIdx), toRel = late ? total : cut(dayIdx + 1);
-  const expected = toRel;
+  const expected = notStarted ? 0 : toRel;
   const daysLeft = Math.max(1, k.days - day + 1);
   const remaining = total - done;
   return {
@@ -74,7 +81,20 @@ export function khatmaStatus(k: Khatma, today: string): KhatmaStatus {
     nextPage: Math.min(MUSHAF_PAGES, k.from + done),
     end: addDays(k.start, k.days - 1),
     finished,
+    notStarted,
+    startsIn: notStarted ? -since : 0,
   };
+}
+
+/**
+ * Plan « Ramadan » : du 1er Ramadan au dernier jour du mois (calendrier hégirien tabulaire + décalage de l’utilisateur ;
+ * l’observation du croissant peut différer de ±1–2 jours, réglable). Si Ramadan est en cours : d’aujourd’hui à la fin du mois.
+ */
+export function ramadanPlan(today: string, offset = 0): { start: string; days: number; year: number; ongoing: boolean } {
+  const h = toHijri(new Date(`${today}T12:00:00`), offset);
+  if (h.month === 9) return { start: today, days: monthLength(h.year, 9) - h.day + 1, year: h.year, ongoing: true };
+  const year = h.month < 9 ? h.year : h.year + 1;
+  return { start: dayKey(hijriToDate({ year, month: 9, day: 1 }, offset)), days: monthLength(year, 9), year, ongoing: false };
 }
 
 /** Enregistre la lecture d’une page : la progression ne recule jamais. */
@@ -86,15 +106,23 @@ export function markPage(k: Khatma, page: number, today: string): Khatma {
 }
 
 /** Série : jours consécutifs de lecture se terminant aujourd’hui (ou hier, si rien n’est encore lu aujourd’hui) ; et le record. */
-export function streak(days: string[], today: string): { current: number; best: number; todayDone: boolean } {
+export function streak(days: string[], today: string, neutral: (d: string) => boolean = () => false): { current: number; best: number; todayDone: boolean } {
   const set = new Set(days);
   const todayDone = set.has(today);
   let current = 0;
-  for (let d = todayDone ? today : addDays(today, -1); set.has(d); d = addDays(d, -1)) current++;
+  // Jours neutres (mode dispense) : sautés, ni comptés ni cassants.
+  for (let d = todayDone ? today : addDays(today, -1), i = 0; i < 3650 && (set.has(d) || neutral(d)); d = addDays(d, -1), i++) if (set.has(d)) current++;
   const sorted = [...set].sort();
   let best = 0, run = 0, prev = '';
+  const bridged = (a: string, b: string) => {
+    const gap = daysBetween(a, b);
+    if (gap === 1) return true;
+    if (gap < 1 || gap > 366) return false;
+    for (let i = 1; i < gap; i++) if (!neutral(addDays(a, i))) return false;
+    return true;
+  };
   for (const d of sorted) {
-    run = prev && daysBetween(prev, d) === 1 ? run + 1 : 1;
+    run = prev && bridged(prev, d) ? run + 1 : 1;
     best = Math.max(best, run);
     prev = d;
   }

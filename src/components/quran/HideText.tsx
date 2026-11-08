@@ -4,6 +4,7 @@ import { Text } from '@/ui/Text';
 import type { HideMode } from '@/lib/quran-store';
 import { alpha, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 /** Jeton qui n’est pas un mot : signes de pause, ۞ (début de hizb), ۩ (prosternation), numéro de verset. */
 const MARK = /^[\u06D6-\u06ED\u06DE\u06E9\u0660-\u0669\u06DD]+$/;
@@ -29,13 +30,13 @@ export function HideText({ text, mode, revealAll, size, lineH, color, suffix, st
   const base: TextStyle = { fontFamily: fonts.quran, fontSize: size, lineHeight: Math.round(size * lineH), color, textAlign: 'right', writingDirection: 'rtl', ...style };
   if (mode === 'none' || revealAll)
     return (
-      <Text style={base}>
+      <Text {...arLang} style={base}>
         {text}
         {suffix ? ` ${suffix}` : ''}
       </Text>
     );
   return (
-    <Text style={base} accessibilityHint={L("Touchez un mot masqué pour le révéler")}>
+    <Text {...arLang} style={base} accessibilityHint={L("Touchez un mot masqué pour le révéler")}>
       {words.map((w, i) => {
         const mark = isMark(w);
         if (!mark) k++;

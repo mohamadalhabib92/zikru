@@ -7,7 +7,7 @@ import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { onClicks } from '@/lib/community/clicks';
 import { feedback } from '@/lib/feedback';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { Badge, Button, Card, Eyebrow, H1, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
@@ -47,20 +47,26 @@ export default function LiveScreen() {
       }
     };
     void load();
-    const ch = supabase
-      ?.channel(`live:${sid}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'zikr_session_counts', filter: `session_id=eq.${sid}` }, (p) => {
-        const row = p.new as api.SessionCount;
-        if (!row?.user_id) return;
-        setCounts((cs) => [...cs.filter((x) => x.user_id !== row.user_id), row].sort((a, b) => b.count - a.count));
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'zikr_sessions', filter: `id=eq.${sid}` }, (p) => setSession(p.new as api.ZikrSession))
-      .subscribe();
+    // Temps réel : client chargé à la demande ; le désabonnement reste possible avant qu'il soit prêt.
+    let stop: (() => void) | null = null;
+    void getSupabase().then((c) => {
+      if (!alive || !c) return;
+      const ch = c
+        .channel(`live:${sid}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'zikr_session_counts', filter: `session_id=eq.${sid}` }, (p) => {
+          const row = p.new as api.SessionCount;
+          if (!row?.user_id) return;
+          setCounts((cs) => [...cs.filter((x) => x.user_id !== row.user_id), row].sort((a, b) => b.count - a.count));
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'zikr_sessions', filter: `id=eq.${sid}` }, (p) => setSession(p.new as api.ZikrSession))
+        .subscribe();
+      stop = () => void c.removeChannel(ch);
+    });
     const poll = setInterval(load, 30000); // filet de sécurité si le temps réel est coupé
     return () => {
       alive = false;
       clearInterval(poll);
-      if (ch) void supabase?.removeChannel(ch);
+      stop?.();
     };
   }, [sid, userId]);
 

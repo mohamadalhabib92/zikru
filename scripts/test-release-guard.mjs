@@ -1,6 +1,8 @@
-// Garde de version : la réconciliation 1.0.29 n'est pas faite.
-// Ce script ne compte pas des cas unitaires au sens d'une bibliothèque de test :
-// une séquence d'asserts sur les fichiers du dépôt.
+// Garde de la branche d’intégration TestFlight.
+// La version marketing est 1.0.30, strictement au-dessus de 1.0.29,
+// pour que TestFlight ne soit pas un retour arrière. Ce n’est pas une
+// preuve que les portes de sauvegarde / restauration sont passées.
+// package.json reste 1.0.0 : ce n’est pas le numéro affiché dans TestFlight.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,19 +17,21 @@ const ui = read('src/lib/ui-strings.ts');
 const html = read('public/privacy/index.html');
 const store = read('store/ios-metadata.md');
 const preserve = read('src/lib/preserve.ts');
+const sounds = JSON.stringify(app.expo.plugins ?? app);
 
-assert.equal(app.expo.version, '1.0.26', 'version marketing de main, pas une réconciliation');
+assert.equal(app.expo.version, '1.0.30', 'au-dessus de 1.0.29, pas un retour arrière TestFlight');
 assert.equal(pkg.version, '1.0.0');
-assert.notEqual(pkg.version, app.expo.version, 'écart package.json / app.json encore ouvert');
+assert.notEqual(pkg.version, app.expo.version, 'package.json n’est pas le numéro TestFlight');
 assert.match(store, /1\.0\.0/);
-assert.match(preserve, /MARKETING_VERSION = '1\.0\.26'/);
-assert.match(policy, /version 1\.0\.24/);
-assert.doesNotMatch(policy, /version 1\.0\.29/);
+assert.match(preserve, /MARKETING_VERSION = '1\.0\.30'/);
+assert.match(policy, /version 1\.0\.30/);
+assert.match(policy, /LiveKit/);
+assert.match(policy, /chiffrés en transit, pas encore de bout en bout/);
+assert.doesNotMatch(policy, /Frankfurt/);
 assert.match(ui, /pas encore de chiffrement de bout en bout/);
 assert.match(policy, /ne sont pas encore chiffrés de bout en bout/);
-assert.equal(html.includes('version 1.0.29'), false, 'la page publique ne doit pas annoncer 1.0.29');
-assert.equal(/livekit/i.test(html), false, 'cette branche n’appelle pas LiveKit');
-assert.equal(/livekit/i.test(policy), false, 'la politique in-app ne décrit pas LiveKit');
-assert.match(html, /30 octobre 2026 \(version 1\.0\.24\)/);
-console.log('page publique générée depuis privacy-policy.ts (1.0.24, sans LiveKit). Branche 1.0.29 non fusionnée.');
-console.log('release-guard : version marketing 1.0.26 tenue, écarts de source encore nommés.');
+assert.match(html, /8 novembre 2026 \(version 1\.0\.30\)/);
+assert.match(html, /LiveKit/);
+assert.match(html, /pas encore de bout en bout/);
+assert.match(sounds, /adhan_cue\.wav/);
+console.log('release-guard : 1.0.30, son court embarqué, LiveKit décrit en transit sans bout en bout, région non inventée.');

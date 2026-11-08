@@ -1,6 +1,7 @@
 import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { afterLoginRoute } from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { Muted, Screen, Spacer } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
@@ -15,7 +16,7 @@ export default function AuthCallback() {
   const auth = useAuth();
   useEffect(() => {
     if (auth.session) {
-      router.replace('/community');
+      void afterLoginRoute().then((r) => router.replace(r as '/community'));
       return;
     }
     if (auth.linkError || !auth.enabled) {

@@ -3,10 +3,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Platform, Share, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { PWA_URL } from '@/lib/backend';
+import { callRights, callStatus } from '@/lib/calls/api';
+import { availability, LABEL_TRANSIT, type CallAvailability } from '@/lib/calls/core';
+import { callsSupported } from '@/lib/calls/support';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
-import { Badge, Button, Card, Chip, Field, H2, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Field, H2, Ionicons, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
@@ -357,6 +360,125 @@ export function SharingPicker({ scope, scopeId }: { scope: api.ScopeType; scopeI
 }
 
 /** Sessions de zikr en direct du lieu. */
+/** Non lus des discussions de groupe (pastilles) ; vide si serveur indisponible, jamais bloquant. */
+export function useGroupUnread() {
+  const { userId } = useAuth();
+  const [rows, setRows] = useState<api.GroupUnread[]>([]);
+  const [available, setAvailable] = useState<boolean | null>(api.groupChatAvailable());
+  const [tick, setTick] = useState(0);
+  const reload = useCallback(() => setTick((n) => n + 1), []);
+  useEffect(() => {
+    let on = true;
+    void (userId ? api.groupUnread() : Promise.resolve([] as api.GroupUnread[])).then((r) => {
+      if (!on) return;
+      setRows(r);
+      setAvailable(api.groupChatAvailable());
+    });
+    return () => {
+      on = false;
+    };
+  }, [userId, tick]);
+  const of = (scope: api.ScopeType, id: string) => rows.find((r) => r.scope_type === scope && r.scope_id === id);
+  return { rows, of, reload, available };
+}
+
+/** Pastille ronde « non lus » (99+), discrète si la discussion est en sourdine. */
+export function UnreadBadge({ n, muted }: { n: number; muted?: boolean }) {
+  if (!n) return null;
+  const label = n > 99 ? '99+' : String(n);
+  return (
+    <View accessibilityLabel={L('{n} messages non lus', { n: label })} style={{ minWidth: 24, height: 24, borderRadius: 12, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: muted ? t.surfaceAlt : t.primary }}>
+      <Text style={{ color: muted ? t.muted : t.onPrimary, fontSize: 12, fontWeight: '700' }}>{label}</Text>
+    </View>
+  );
+}
+
+/** Accès à la discussion de groupe (écran chargé à la demande). */
+export function DiscussionCard({ scope, scopeId, name }: { scope: api.ScopeType; scopeId: string; name: string }) {
+  const u = useGroupUnread();
+  const r = u.of(scope, scopeId);
+  if (u.available === null) return null;
+  if (!u.available)
+    return (
+      <Card>
+        <Row gap={10} style={{ alignItems: 'center' }}>
+          <Ionicons name="chatbubbles-outline" size={22} color={t.muted} />
+          <View style={{ flex: 1 }}>
+            <H2>Discussion</H2>
+            <Muted style={{ fontSize: 12 }}>Bientôt disponible pour vos groupes.</Muted>
+          </View>
+        </Row>
+      </Card>
+    );
+  return (
+    <Card
+      accessibilityLabel={L('Ouvrir la discussion du groupe') + (r?.unread ? ' · ' + L('{n} messages non lus', { n: r.unread > 99 ? '99+' : r.unread }) : '')}
+      onPress={() => router.push({ pathname: '/discussion', params: { scope, id: scopeId, name } })}
+    >
+      <Row gap={10} style={{ alignItems: 'center' }}>
+        <Ionicons name="chatbubbles-outline" size={22} color={t.primary} />
+        <View style={{ flex: 1 }}>
+          <H2>Discussion</H2>
+          <Muted style={{ fontSize: 12 }}>chiffré en transit, pas encore de bout en bout</Muted>
+        </View>
+        {r?.muted ? <Ionicons name="notifications-off-outline" size={16} color={t.muted} accessibilityLabel={L('En sourdine')} /> : null}
+        <UnreadBadge n={r?.unread ?? 0} muted={r?.muted} />
+        <Ionicons name="chevron-forward" size={18} color={t.muted} />
+      </Row>
+    </Card>
+  );
+}
+
+/**
+ * Accès à l'appel de groupe (écran et WebRTC chargés à la demande). Kill-switch serveur : tant que la migration
+ * « appels » n'est pas appliquée, que calls.enabled est faux, ou que ce binaire n'a pas le module d'appel,
+ * la carte affiche « Bientôt disponible ». Ne bloque jamais le reste de l'écran.
+ */
+export function CallCard({ scope, scopeId, name }: { scope: api.ScopeType; scopeId: string; name: string }) {
+  const [av, setAv] = useState<CallAvailability | null>(null);
+  const [live, setLive] = useState(0);
+  useEffect(() => {
+    let on = true;
+    void callRights(scope, scopeId).then((r) => {
+      if (!on) return;
+      const a = r.offline ? ({ kind: 'hidden' } as const) : availability(r.rights, { missing: r.missing, nativeOk: callsSupported() });
+      setAv(a);
+      if (a.kind === 'ready') void callStatus(scope, scopeId).then((s) => on && setLive(s.count)).catch(() => {});
+    });
+    return () => {
+      on = false;
+    };
+  }, [scope, scopeId]);
+  if (!av || av.kind === 'hidden') return null;
+  if (av.kind !== 'ready')
+    return (
+      <Card>
+        <Row gap={10} style={{ alignItems: 'center' }}>
+          <Ionicons name="call-outline" size={22} color={t.muted} />
+          <View style={{ flex: 1 }}>
+            <H2>Appel de groupe</H2>
+            <Muted style={{ fontSize: 12 }}>{av.kind === 'soon' ? 'Bientôt disponible' : 'Indisponible avec vos réglages actuels.'}</Muted>
+          </View>
+        </Row>
+      </Card>
+    );
+  return (
+    <Card accessibilityLabel={L('Ouvrir l’appel du groupe')} onPress={() => router.push({ pathname: '/call', params: { scope, id: scopeId, name } })}>
+      <Row gap={10} style={{ alignItems: 'center' }}>
+        <Ionicons name={live ? 'call' : 'call-outline'} size={22} color={t.primary} />
+        <View style={{ flex: 1 }}>
+          <H2>Appel de groupe</H2>
+          <Muted style={{ fontSize: 12 }}>
+            {live ? L('Appel en cours · {n} personne(s)', { n: live }) + ' · ' : ''}
+            {L(av.video ? 'Audio ou vidéo' : 'Audio')} · {L(LABEL_TRANSIT)}
+          </Muted>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={t.muted} />
+      </Row>
+    </Card>
+  );
+}
+
 export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: string }) {
   const { userId } = useAuth();
   const list = useLoad(() => api.liveSessions(scope, scopeId), [scope, scopeId]);
@@ -399,7 +521,7 @@ export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: s
   );
 }
 
-const KINDS = [
+export const KINDS = [
   { value: 'bravo', label: 'Bravo', text: 'Bravo, machā’Allāh ! Continue ainsi.' },
   { value: 'dua', label: 'Du‘a', text: 'Qu’Allah te bénisse et facilite tes affaires.' },
   { value: 'rappel', label: 'Rappel', text: 'Petit rappel affectueux pour ton wird du jour.' },

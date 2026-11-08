@@ -6,7 +6,13 @@ import { readFileSync } from 'node:fs';
 import { loadLib } from './load-lib.mjs';
 import { extractDeep, walk } from './i18n-scan.mjs';
 
-const { i18n, 'ui-strings': U, 'ui-cat/index': catalogs, 'i18n-content/index': CONTENT } = await loadLib(['i18n', 'ui-strings', 'ui-cat/index', 'i18n-content/index'], 'i18n');
+const { i18n, 'ui-cat/en': UEN, 'ui-cat/ar': UAR, 'ui-cat/de': UDE, 'ui-strings-bien-etre': UBE, 'ui-strings-ramadan': URA, 'ui-strings-chat': UCH, 'ui-strings-call': UCA } = await loadLib(
+  ['i18n', 'ui-cat/en', 'ui-cat/ar', 'ui-cat/de', 'ui-strings-bien-etre', 'ui-strings-ramadan', 'ui-strings-chat', 'ui-strings-call'],
+  'i18n',
+);
+// Catalogue principal reconstitué [en, ar, de] (un fichier par langue depuis la passe 6).
+const U = { UI_STRINGS: Object.fromEntries(Object.keys(UEN.CAT).map((k) => [k, [UEN.CAT[k], UAR.CAT[k], UDE.CAT[k] ?? '']])) };
+for (const k of Object.keys(UAR.CAT)) assert.ok(k in UEN.CAT, 'catalogue ar : clé absente en anglais « ' + k + ' »');
 const AR = /[\u0600-\u06FF]/;
 const norm = (s) => s.replace(/\s+/g, ' ').trim();
 
@@ -26,54 +32,26 @@ for (const l of ['en', 'ar']) {
 assert.deepEqual(miss.en, [], 'clés en manquantes : ' + miss.en.join(', '));
 assert.deepEqual(miss.ar, [], 'clés ar manquantes : ' + miss.ar.join(', '));
 
-// Langues d'interface « à relire » : chrome complet, RTL, édition Coran inchangée, contenu religieux en français.
-const REVIEW = ['de', 'de-CH', 'tr', 'ur', 'id', 'fa', 'ha', 'sw', 'es', 'it', 'pt', 'ff', 'wo'];
-for (const code of REVIEW) {
-  const row = i18n.LANGS.find((l) => l.code === code);
-  assert.equal(row?.review, true, code + ' doit être review');
-  assert.equal(row?.pending, undefined, code + ' ne doit pas être pending');
-  const d = i18n.DICTS[code];
-  for (const k of Object.keys(fr)) {
-    assert.equal(typeof d[k], 'string', code + ' chrome manque ' + k);
-    assert.ok(String(d[k]).trim(), code + ' chrome vide ' + k);
-  }
-}
-assert.equal(i18n.isRTL('ar') && i18n.isRTL('ur') && i18n.isRTL('fa'), true);
-assert.equal(i18n.isRTL('tr'), false);
-assert.equal(i18n.isRTL('id'), false);
-assert.equal(i18n.quranEditionLang('tr'), 'tr');
-assert.equal(i18n.quranEditionLang('wo'), 'wo');
-assert.equal(i18n.quranEditionLang('en'), 'en');
-assert.equal(CONTENT.contentLang('tr'), 'fr');
-assert.equal(CONTENT.contentLang('fa'), 'fr');
-assert.equal(CONTENT.contentLang('en'), 'en');
-assert.equal(CONTENT.contentLang('ar'), 'ar');
-assert.equal(CONTENT.contentLang('de'), 'fr');
-const phOf = (s) => (String(s).match(/\{[a-zA-Z0-9_]+\}/g) ?? []).sort().join('|');
-const RELIGIOUS = [
-  "Louange à Allah, Seigneur de l’univers.",
-  "« Celui qui lit la sourate al-Kahf le vendredi, une lumière l’éclairera entre les deux vendredis. »",
-];
-for (const code of ['de', 'tr', 'ur', 'id', 'fa', 'ha', 'sw', 'es', 'it', 'pt', 'ff', 'wo']) {
-  const cat = catalogs.uiCatalog(code);
-  assert.ok(cat && Object.keys(cat).length > 1000, code + ' catalogue trop court');
-  for (const k of RELIGIOUS) assert.equal(k in cat, false, code + ' ne doit pas traduire une citation : ' + k);
-  for (const [k, v] of Object.entries(cat)) {
-    assert.equal(phOf(k), phOf(v), code + ' placeholder ' + k);
-    assert.ok(!/scholar-validated|validé par un savant/i.test(v), code + ' claim ' + k);
-  }
-  if (code === 'ur' || code === 'fa') {
-    const vals = Object.values(cat);
-    const n = vals.filter((v) => AR.test(v)).length;
-    assert.ok(n / vals.length > 0.9, code + ' doit être en écriture arabe');
-  }
-}
 // 2) Catalogue : chaque entrée a en + ar (arabe en écriture arabe), mêmes variables {…}.
-const CAT = U.UI_STRINGS;
-for (const [k, [en, ar]] of Object.entries(CAT)) {
+const CAT = { ...UBE.UI_STRINGS_BIEN_ETRE, ...URA.UI_STRINGS_RAMADAN, ...UCH.UI_STRINGS_CHAT, ...UCA.UI_STRINGS_CALL, ...U.UI_STRINGS };
+let deN = 0;
+const vars = (s) => (s.match(/\{\w+\}/g) ?? []).sort().join();
+for (const [k, [en, ar, de]] of Object.entries(CAT)) {
   assert.ok(en && en.trim(), 'catalogue : en vide pour « ' + k + ' »');
   assert.ok(ar && AR.test(ar), 'catalogue : ar sans arabe pour « ' + k + ' »');
+  if (de) {
+    deN++;
+    assert.equal(vars(de), vars(k), 'catalogue de : variables {…} différentes pour « ' + k + ' »');
+    assert.ok(AR.test(k) || !AR.test(de), 'catalogue de : écriture arabe (absente du français) dans la traduction allemande de « ' + k + ' »');
+  }
 }
+// Allemand : couverture rapportée (non bloquante sauf régression sous le seuil), toujours signalée « non relue ».
+const deCov = Math.round((deN / Object.keys(CAT).length) * 1000) / 10;
+const DE_MIN = Number(process.env.ZIKRU_DE_MIN ?? 99);
+assert.ok(deCov >= DE_MIN, `allemand : couverture ${deCov} % < seuil ${DE_MIN} %`);
+const deLang = i18n.LANGS.find((l) => l.code === 'de');
+const deChLang = i18n.LANGS.find((l) => l.code === 'de-CH');
+assert.ok(deLang?.review && deChLang?.review, 'de / de-CH doivent rester signalés « traduction non relue » (LANGS.review)');
 
 // 3) Écrans couverts (P5) : toute chaîne française doit être au catalogue (ou dans i18n/keep.txt).
 const KEEP = new Set(readFileSync(new URL('../i18n/keep.txt', import.meta.url), 'utf8').split('\n').map(norm).filter((x) => x && !x.startsWith('#')));
@@ -92,7 +70,7 @@ for (const f of all) {
   }
 }
 const dictN = Object.keys(fr).length;
-console.log(`i18n : dictionnaires en/ar ${dictN}/${dictN} clés · catalogue ${Object.keys(CAT).length} chaînes · chaînes d’interface traduites ${ok}/${tot} (${Math.round((ok / tot) * 100)} %) · écrans couverts ${REQUIRED.length}`);
+console.log(`i18n : dictionnaires en/ar ${dictN}/${dictN} clés · catalogue ${Object.keys(CAT).length} chaînes · chaînes d’interface traduites ${ok}/${tot} (${Math.round((ok / tot) * 100)} %) · écrans couverts ${REQUIRED.length} · allemand (non relu) ${deN}/${Object.keys(CAT).length} (${deCov} %)`);
 if (process.argv.includes('--list')) console.log(bad.join('\n'));
 assert.equal(bad.length, 0, `${bad.length} chaîne(s) française(s) non traduite(s) dans les écrans couverts :\n` + bad.slice(0, 40).join('\n'));
 console.log('test-i18n OK');

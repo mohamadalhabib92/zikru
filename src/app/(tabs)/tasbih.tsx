@@ -8,7 +8,7 @@ import { useData } from '@/lib/data';
 import { useBleCounter } from '@/lib/ble/manager';
 import { useSettings } from '@/lib/settings';
 import { Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
-import { ProgressRing, tapHaptic, useLayout } from '@/ui/ds';
+import { ProgressRing, tapHaptic, useLayout, useReduceMotion } from '@/ui/ds';
 import { Arabic } from '@/ui/light';
 import { brand as b, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
@@ -40,6 +40,7 @@ export default function TasbihScreen() {
   const ble = useBleCounter();
   const bleOn = ble.status === 'connecté';
   const [scale] = useState(() => new Animated.Value(1));
+  const reduceMotion = useReduceMotion();
   const done = tasbih.target > 0 && tasbih.count > 0 && tasbih.count % tasbih.target === 0;
 
   const { width } = useLayout({ inTabs: true });
@@ -55,6 +56,7 @@ export default function TasbihScreen() {
   const tap = () => {
     tapHaptic('light');
     increment();
+    if (reduceMotion) return; // passe 6 : pas d'effet de pression si « Réduire les animations »
     Animated.sequence([
       Animated.timing(scale, { toValue: 0.96, duration: 60, useNativeDriver: Platform.OS !== 'web' }),
       Animated.spring(scale, { toValue: 1, useNativeDriver: Platform.OS !== 'web', speed: 40 }),

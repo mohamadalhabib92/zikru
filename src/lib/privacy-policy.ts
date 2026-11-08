@@ -9,12 +9,12 @@ import type { PolicyLang } from './privacy';
 export type PolicySection = { id: string; h: string; p?: string[]; li?: string[] };
 export type Policy = { title: string; updated: string; lead: string; sections: PolicySection[]; prevails?: string };
 
-export const POLICY_UPDATED = '2026-10-29';
+export const POLICY_UPDATED = '2026-11-08';
 export const CONTROLLER = 'Mohamed El Habib Ba, Chemin de la Suettaz 17, 1008 Prilly, Suisse';
 
 const fr: Policy = {
   title: 'Politique de confidentialité de Zikru',
-  updated: 'Dernière mise à jour : 30 octobre 2026 (version 1.0.24)',
+  updated: 'Dernière mise à jour : 8 novembre 2026 (version 1.0.30)',
   lead: 'Zikru fonctionne sans compte et sans publicité. Sans compte, vos compteurs, réglages et lectures restent sur votre appareil. Certaines fonctions facultatives envoient des données à des serveurs : elles sont décrites ci-dessous, une par une, et les plus sensibles ne s’activent qu’avec votre accord explicite.',
   sections: [
     {
@@ -57,6 +57,7 @@ const fr: Policy = {
         'Hébergement : Supabase (Supabase Inc., États-Unis, sous-traitant), base de données hébergée à Zurich (Suisse, région eu-central-2). L’e-mail de connexion est envoyé par le service d’authentification de Supabase.',
         'Votre session de connexion est conservée sur l’appareil pour vous éviter de vous reconnecter ; elle est effacée à la déconnexion.',
         'Messages d’encouragement et sessions : chiffrés en transit et accessibles aux seuls membres concernés ; ils ne sont pas encore chiffrés de bout en bout (prévu). Les liens sont refusés et un filtre de base écarte les insultes graves. Un enfant n’échange par défaut qu’avec ses parents, et un parent peut tout couper.',
+        'Appels de groupe (audio / vidéo, quand ils sont disponibles) : seuls les membres du groupe peuvent rejoindre un appel. Le son et l’image passent en temps réel par notre prestataire d’appels LiveKit (LiveKit Inc., États-Unis, sous-traitant), qui reçoit aussi votre identifiant de compte, votre nom affiché et votre adresse IP. Les appels sont chiffrés en transit, pas encore de bout en bout, et ne sont jamais enregistrés par Zikru. Zikru garde seulement la trace technique de votre entrée (heure, groupe, vidéo oui/non) pour limiter les abus. Un enfant n’appelle qu’au sein de sa famille, avec les mêmes règles que la discussion, et la vidéo demande l’accord d’un parent.',
         'Sécurité et modération : vous pouvez signaler un contenu ou une personne et bloquer quelqu’un. Un signalement transmet à l’équipe Zikru une copie du contenu signalé, votre identifiant, le motif et votre précision ; la personne signalée n’en est pas informée. Des compteurs techniques limitent les abus (envois, invitations, essais de code). Contact modération : mohamadalhabib@live.com.',
       ],
     },
@@ -76,7 +77,7 @@ const fr: Policy = {
       id: 'content',
       h: '6. Contenus coraniques, audio et recherche',
       li: [
-        'Le texte arabe du Coran est intégré à l’app. Certaines fonctions téléchargent des contenus à la demande : traductions et recherche (api.alquran.cloud), tafsir (api.quran.com), récitations audio (everyayah.com, cdn.islamic.network, mp3quran.net).',
+        'Le texte arabe du Coran est intégré à l’app. Certaines fonctions téléchargent des contenus à la demande : traductions et recherche (api.alquran.cloud, quranenc.com), tafsir (api.quran.com), récitations audio (everyayah.com, cdn.islamic.network, mp3quran.net). La voix d’adhan choisie, lorsque l’app est ouverte, est lue depuis upload.wikimedia.org. L’écran verrouillé n’utilise qu’un son court déjà inclus dans l’app, pas le fichier complet.',
         'Ces serveurs reçoivent, comme tout site web, votre adresse IP et l’élément demandé ; pour la recherche en ligne, le texte recherché. Aucun identifiant de compte ne leur est transmis.',
         'Le site web et la version web (PWA) sont hébergés par GitHub Pages (GitHub Inc., États-Unis), qui enregistre des journaux techniques (dont l’adresse IP) pour la sécurité.',
       ],
@@ -95,6 +96,7 @@ const fr: Policy = {
       h: '8. Transferts à l’étranger',
       p: [
         'Les données du compte sont hébergées en Suisse. Supabase Inc. (États-Unis) peut y accéder en tant que sous-traitant, sur la base de ses garanties contractuelles (clauses contractuelles types). L’envoi des messages de Bilal aux États-Unis repose sur votre consentement explicite (art. 17 al. 1 let. a nLPD, art. 49 par. 1 let. a RGPD). La météo est traitée par un prestataire suisse.',
+        'Appels de groupe : le son et l’image passent par LiveKit Inc. (États-Unis), sous-traitant, sur la base de garanties contractuelles ; la région des serveurs est choisie à l’ouverture du service et sera indiquée ici.',
       ],
     },
     {
@@ -105,6 +107,7 @@ const fr: Policy = {
         'Compte : tant que vous le gardez. « Supprimer mon compte » (Communauté) efface immédiatement votre compte et les données qui y sont liées, ainsi que les familles dont vous êtes le seul parent. Les sauvegardes techniques de l’hébergeur sont écrasées selon son cycle de rotation.',
         'Quota Bilal : compteur journalier supprimé avec le compte.',
         'Communautés (suppression automatique chaque nuit) : messages d’encouragement après 365 jours ; sessions en direct terminées après 90 jours ; invitations expirées ou révoquées après 30 jours ; signalements 365 jours après leur traitement ; compteurs anti-abus après 2 jours.',
+        'Appels de groupe : journal technique des entrées supprimé après 30 jours ; LiveKit conserve ses propres journaux techniques de connexion selon ses conditions.',
         'Prestataires : Open-Meteo, 90 jours pour les journaux ; Anthropic, en principe 30 jours.',
       ],
     },
@@ -138,7 +141,7 @@ const fr: Policy = {
 
 const en: Policy = {
   title: 'Zikru privacy policy',
-  updated: 'Last updated: 30 October 2026 (version 1.0.24)',
+  updated: 'Last updated: 8 November 2026 (version 1.0.30)',
   lead: 'Zikru works without an account and without ads. Without an account, your counters, settings and reading stay on your device. Some optional features send data to servers: each is described below, and the most sensitive ones only turn on with your explicit consent.',
   sections: [
     {
@@ -181,6 +184,7 @@ const en: Policy = {
         'Hosting: Supabase (Supabase Inc., USA, processor), database hosted in Zurich (Switzerland, region eu-central-2). The sign-in email is sent by Supabase’s authentication service.',
         'Your sign-in session is kept on the device so you do not have to sign in again; it is erased when you sign out.',
         'Encouragement messages and sessions: encrypted in transit and accessible only to the members concerned; they are not yet end-to-end encrypted (planned). Links are refused and a basic filter blocks severe insults. By default a child only exchanges messages with their parents, and a parent can turn messaging off entirely.',
+        'Group calls (audio / video, when available): only group members can join a call. Sound and video go in real time through our call provider LiveKit (LiveKit Inc., USA, processor), which also receives your account ID, display name and IP address. Calls are encrypted in transit, not yet end-to-end, and are never recorded by Zikru. Zikru only keeps a technical record of your joining (time, group, video yes/no) to limit abuse. A child only calls within their family, with the same rules as the discussion, and video requires a parent’s consent.',
         'Safety and moderation: you can report content or a person and block someone. A report sends the Zikru team a copy of the reported content, your account ID, the reason and your note; the reported person is not told. Technical counters limit abuse (messages, invitations, code attempts). Moderation contact: mohamadalhabib@live.com.',
       ],
     },
@@ -200,7 +204,7 @@ const en: Policy = {
       id: 'content',
       h: '6. Quran content, audio and search',
       li: [
-        'The Arabic Quran text is built into the app. Some features download content on demand: translations and search (api.alquran.cloud), tafsir (api.quran.com), audio recitations (everyayah.com, cdn.islamic.network, mp3quran.net).',
+        'The Arabic Quran text is built into the app. Some features download content on demand: translations and search (api.alquran.cloud, quranenc.com), tafsir (api.quran.com), audio recitations (everyayah.com, cdn.islamic.network, mp3quran.net). The chosen adhan voice, when the app is open, is played from upload.wikimedia.org. The lock screen uses only a short sound already in the app, not the full file.',
         'Like any website, these servers receive your IP address and the item requested; for online search, the search text. No account identifier is sent to them.',
         'The website and the web version (PWA) are hosted on GitHub Pages (GitHub Inc., USA), which keeps technical logs (including IP address) for security.',
       ],
@@ -219,6 +223,7 @@ const en: Policy = {
       h: '8. International transfers',
       p: [
         'Account data is hosted in Switzerland. Supabase Inc. (USA) may access it as a processor under its contractual safeguards (standard contractual clauses). Sending Bilal messages to the USA relies on your explicit consent (FADP art. 17(1)(a), GDPR art. 49(1)(a)). Weather is handled by a Swiss provider.',
+        'Group calls: sound and video go through LiveKit Inc. (USA), a processor, under contractual safeguards; the server region is chosen when the service opens and will be stated here.',
       ],
     },
     {
@@ -229,6 +234,7 @@ const en: Policy = {
         'Account: as long as you keep it. “Delete my account” (Community) immediately erases your account and linked data, and families where you are the only parent. The host’s technical backups are overwritten on its rotation cycle.',
         'Bilal quota: daily counter deleted with the account.',
         'Communities (automatic deletion every night): encouragement messages after 365 days; ended live sessions after 90 days; expired or revoked invitations after 30 days; reports 365 days after they are handled; anti-abuse counters after 2 days.',
+        'Group calls: technical join log deleted after 30 days; LiveKit keeps its own technical connection logs under its terms.',
         'Providers: Open-Meteo, 90 days for logs; Anthropic, normally 30 days.',
       ],
     },
@@ -263,7 +269,7 @@ const en: Policy = {
 
 const ar: Policy = {
   title: 'سياسة الخصوصية لتطبيق ذكرو',
-  updated: 'آخر تحديث: 30 أكتوبر 2026 (الإصدار 1.0.24)',
+  updated: 'آخر تحديث: 8 نوفمبر 2026 (الإصدار 1.0.30)',
   lead: 'يعمل ذكرو بدون حساب وبدون إعلانات. بدون حساب، تبقى عدّاداتك وإعداداتك وقراءتك على جهازك. بعض الميزات الاختيارية ترسل بيانات إلى خوادم: نصفها أدناه واحدةً واحدة، ولا تعمل أكثرها حساسيةً إلا بموافقتك الصريحة.',
   sections: [
     {
@@ -306,6 +312,7 @@ const ar: Policy = {
         'الاستضافة: Supabase (شركة Supabase Inc. في الولايات المتحدة، بصفتها معالجًا من الباطن)، وقاعدة البيانات مستضافة في زيورخ (سويسرا، منطقة eu-central-2). ويُرسَل بريد تسجيل الدخول عبر خدمة المصادقة لدى Supabase.',
         'تُحفظ جلسة تسجيل الدخول على الجهاز حتى لا تحتاج إلى تسجيل الدخول من جديد، وتُمسح عند تسجيل الخروج.',
         'رسائل التشجيع والجلسات: مشفّرة أثناء النقل ولا يطّلع عليها إلا الأعضاء المعنيون، وليست مشفّرة بعدُ تشفيرًا تامًّا بين الطرفين (مخطَّط له). الروابط مرفوضة، ويحجب مرشّح أساسي الشتائم الجسيمة. لا يراسل الطفل افتراضيًا إلا والديه، ويمكن للوالد إيقاف المراسلة كليًا.',
+        'المكالمات الجماعية (صوت / فيديو، عند توفرها): لا ينضم إلى المكالمة إلا أعضاء المجموعة. يمر الصوت والصورة في الوقت الفعلي عبر مزوّد المكالمات لدينا LiveKit (شركة LiveKit Inc.، الولايات المتحدة، معالج من الباطن)، الذي يتلقى أيضًا معرّف حسابك واسمك الظاهر وعنوان IP. المكالمات مشفّرة أثناء النقل، وليست بعدُ مشفّرة من طرف إلى طرف، ولا يسجّلها Zikru أبدًا. لا يحتفظ Zikru إلا بأثر تقني لانضمامك (الوقت، المجموعة، فيديو نعم/لا) للحد من الإساءة. لا يتصل الطفل إلا داخل عائلته، بنفس قواعد المحادثة، والفيديو يتطلب موافقة أحد الوالدين.',
         'الأمان والإشراف: يمكنك الإبلاغ عن محتوى أو شخص وحظر أحد. يرسل البلاغ إلى فريق Zikru نسخة من المحتوى المبلَّغ عنه ومعرّف حسابك والسبب وملاحظتك، ولا يُعلَم الشخص المبلَّغ عنه. وتحدّ عدّادات تقنية من الإساءة (الرسائل والدعوات ومحاولات الرموز). عنوان الإشراف: mohamadalhabib@live.com.',
       ],
     },
@@ -325,7 +332,7 @@ const ar: Policy = {
       id: 'content',
       h: '6. المحتوى القرآني والصوت والبحث',
       li: [
-        'نص القرآن بالعربية مُدمَج في التطبيق. وبعض الميزات تُنزّل المحتوى عند الطلب: الترجمات والبحث (api.alquran.cloud)، والتفسير (api.quran.com)، والتلاوات الصوتية (everyayah.com وcdn.islamic.network وmp3quran.net).',
+        'نص القرآن بالعربية مُدمَج في التطبيق. وبعض الميزات تُنزّل المحتوى عند الطلب: الترجمات والبحث (api.alquran.cloud وquranenc.com)، والتفسير (api.quran.com)، والتلاوات الصوتية (everyayah.com وcdn.islamic.network وmp3quran.net). صوت الأذان المختار، عندما يكون التطبيق مفتوحًا، يُشغَّل من upload.wikimedia.org. شاشة القفل لا تستخدم إلا صوتًا قصيرًا مُضمَّنًا في التطبيق، وليس الملف الكامل.',
         'تستقبل هذه الخوادم، مثل أي موقع ويب، عنوان IP الخاص بك والعنصر المطلوب؛ وفي البحث عبر الإنترنت، نص البحث. ولا يُرسَل إليها أي معرّف حساب.',
         'الموقع الإلكتروني والنسخة الويب (PWA) مستضافان على GitHub Pages (شركة GitHub Inc. في الولايات المتحدة) التي تحتفظ بسجلات تقنية (منها عنوان IP) لأغراض الأمان.',
       ],
@@ -344,6 +351,7 @@ const ar: Policy = {
       h: '8. النقل إلى الخارج',
       p: [
         'بيانات الحساب مستضافة في سويسرا. وقد تصل إليها شركة Supabase Inc. (الولايات المتحدة) بصفتها معالجًا من الباطن وفق ضماناتها التعاقدية (البنود التعاقدية النموذجية). أما إرسال رسائل بلال إلى الولايات المتحدة فيقوم على موافقتك الصريحة (المادة 17 الفقرة 1 أ من القانون السويسري، والمادة 49 الفقرة 1 أ من اللائحة الأوروبية). ويعالج الطقسَ مزوّدٌ سويسري.',
+        'المكالمات الجماعية: يمر الصوت والصورة عبر شركة LiveKit Inc. (الولايات المتحدة)، بصفتها معالجًا من الباطن، على أساس ضمانات تعاقدية؛ تُختار منطقة الخوادم عند فتح الخدمة وستُذكر هنا.',
       ],
     },
     {
@@ -354,6 +362,7 @@ const ar: Policy = {
         'الحساب: ما دمت تحتفظ به. يمسح خيار «حذف حسابي» (المجتمع) حسابك والبيانات المرتبطة به فورًا، وكذلك العائلات التي أنت وليّها الوحيد. وتُستبدل النسخ الاحتياطية التقنية لدى المستضيف حسب دورتها.',
         'حصة بلال: عدّاد يومي يُحذف مع الحساب.',
         'المجتمعات (حذف تلقائي كل ليلة): رسائل التشجيع بعد 365 يومًا؛ الجلسات المباشرة المنتهية بعد 90 يومًا؛ الدعوات المنتهية أو الملغاة بعد 30 يومًا؛ البلاغات بعد 365 يومًا من معالجتها؛ عدّادات مكافحة الإساءة بعد يومين.',
+        'المكالمات الجماعية: يُحذف السجل التقني للانضمام بعد 30 يومًا؛ وتحتفظ LiveKit بسجلات الاتصال التقنية الخاصة بها وفق شروطها.',
         'المزوّدون: Open-Meteo، 90 يومًا للسجلات؛ Anthropic، عادةً 30 يومًا.',
       ],
     },

@@ -1,0 +1,38 @@
+# Import de programmes multilingue : langues détectées, note lue sous la formule, images depuis Fichiers (02.11.2026) (ar : traduction à relire)
+Importer un fichier (PDF ou image)	Import a file (PDF or image)	استيراد ملف (PDF أو صورة)
+Cette version d’iOS ne lit pas l’écriture arabe sur les photos (iOS 18 ou plus) : seul le texte en écriture latine sera lu. Pour l’arabe, utilisez « Texte en direct » puis « Coller ».	This iOS version cannot read Arabic script in photos (iOS 18 or later is needed): only Latin-script text will be read. For Arabic, use “Live Text”, then “Paste”.	لا يقرأ هذا الإصدار من iOS الخط العربي في الصور (يلزم iOS 18 أو أحدث): لن يُقرأ إلا النص المكتوب بالحروف اللاتينية. للعربية، استخدم «النص المباشر» ثم «لصق».
+Langues détectées (estimation) : {l}	Detected languages (estimate): {l}	اللغات المكتشفة (تقدير): {l}
+Lu sous la formule : {t}	Read under the formula: {t}	المقروء تحت الصيغة: {t}
+arabe	Arabic	العربية
+ourdou	Urdu	الأردية
+français	French	الفرنسية
+anglais	English	الإنجليزية
+allemand	German	الألمانية
+italien	Italian	الإيطالية
+espagnol	Spanish	الإسبانية
+portugais	Portuguese	البرتغالية
+turc	Turkish	التركية
+indonésien / malais	Indonesian / Malay	الإندونيسية / الملايوية
+wolof	Wolof	الولوفية
+écriture latine (langue non identifiée)	Latin script (language not identified)	حروف لاتينية (لغة غير محددة)
+Importer un programme (photo, fichier)	Import a programme (photo, file)	استيراد برنامج (صورة، ملف)
+Vous ne pouvez pas ajouter d’objectifs à ce groupe : le programme sera enregistré dans vos zikrs.	You can’t add goals to this group: the programme will be saved in your zikrs.	لا يمكنك إضافة أهداف إلى هذه المجموعة: سيُحفظ البرنامج في أذكارك.
+Enregistrer dans	Save to	الحفظ في
+Mes zikrs (personnel)	My zikrs (personal)	أذكاري (شخصي)
+Famille · {n}	Family · {n}	العائلة · {n}
+Cercle · {n}	Circle · {n}	الحلقة · {n}
+Connectez-vous à la communauté pour importer dans une famille ou un cercle.	Sign in to the community to import into a family or circle.	سجّل الدخول إلى المجتمع للاستيراد في عائلة أو حلقة.
+Seuls les parents et adultes d’une famille, ou les fondateurs et modérateurs d’un cercle, peuvent y ajouter des objectifs.	Only parents and adults of a family, or founders and moderators of a circle, can add goals there.	لا يستطيع إضافة الأهداف إلا الوالدان والبالغون في العائلة، أو المؤسسون والمشرفون في الحلقة.
+Aperçu avant partage	Preview before sharing	معاينة قبل المشاركة
+Chaque étape deviendra un objectif commun du groupe, dans l’ordre. Seul le texte validé est partagé : la photo reste sur votre appareil.	Each step will become a shared goal of the group, in order. Only the validated text is shared: the photo stays on your device.	ستصبح كل خطوة هدفًا مشتركًا للمجموعة، بالترتيب. لا يُشارَك إلا النص الذي اعتمدته: تبقى الصورة على جهازك.
+Aperçu : {n} objectif(s) pour « {g} »	Preview: {n} goal(s) for “{g}”	معاينة: {n} هدف/أهداف لـ «{g}»
+Tous les membres de « {g} » verront ces objectifs (titre, formule, nombre). La photo n’est pas envoyée.	All members of “{g}” will see these goals (title, formula, count). The photo is not sent.	سيرى جميع أعضاء «{g}» هذه الأهداف (العنوان، الصيغة، العدد). لا تُرسَل الصورة.
+Objectif : {n}	Goal: {n}	الهدف: {n}
+Texte non vérifié (lu sur votre document)	Unverified text (read from your document)	نص غير مُتحقَّق منه (مقروء من مستندك)
+Titre coupé à {n} caractères (limite des objectifs communs).	Title cut to {n} characters (shared goal limit).	قُصّ العنوان إلى {n} حرفًا (حدّ الأهداف المشتركة).
+Formule trop longue : coupée à {n} caractères (« … »). Le texte complet reste dans le document.	Formula too long: cut to {n} characters (“…”). The full text remains in the document.	الصيغة طويلة جدًا: قُصّت إلى {n} حرفًا («…»). يبقى النص الكامل في المستند.
+Remplacer aussi le wird familial par ce résumé	Also replace the family wird with this summary	استبدال الوِرد العائلي أيضًا بهذا الملخّص
+Wird actuel (sera remplacé) : {w}	Current wird (will be replaced): {w}	الوِرد الحالي (سيُستبدَل): {w}
+Le résumé dépasse 500 caractères : le wird familial ne sera pas modifié.	The summary exceeds 500 characters: the family wird will not be changed.	الملخّص يتجاوز 500 حرف: لن يُعدَّل الوِرد العائلي.
+Confirmer et partager avec le groupe	Confirm and share with the group	تأكيد ومشاركة مع المجموعة
+Vous pouvez réessayer : les étapes déjà ajoutées ne seront pas dupliquées.	You can try again: steps already added will not be duplicated.	يمكنك إعادة المحاولة: لن تتكرر الخطوات المضافة سابقًا.

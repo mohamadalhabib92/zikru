@@ -1,0 +1,77 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+Arrêt dans {t}	Stoppt in {t}
+Arrêt en fin de sourate	Stoppt am Ende der Sure
+CHAQUE VERSET	JEDER VERS
+Commence dans {n} jour(s) · le {d}	Beginnt in {n} Tag(en) · am {d}
+Du {a} au {b} ({n} jours), selon le calendrier hégirien tabulaire et votre décalage ({o}). Le début réel dépend de l’observation du croissant : ajustez le décalage hégirien dans Réglages si besoin.	Vom {a} bis {b} ({n} Tage), basierend auf dem tabellarischen Hidschri-Kalender und Ihrer Verschiebung ({o}). Der tatsächliche Beginn hängt von der Sichtung der Mondsichel ab: Passen Sie die Hidschri-Verschiebung bei Bedarf in den Einstellungen an.
+DÉBUT (A)	START (A)
+Désactiver	Ausschalten
+En attente	In der Warteschlange
+Enchaîne la sourate suivante (le juz’ suivant dans le Mushaf)	Weiter mit der nächsten Sure (dem nächsten Juz’ im Mushaf)
+Environ {n}. Préférez le Wi-Fi.	Etwa {n}. WLAN empfohlen.
+Espace libre : inconnu sur ce navigateur	Freier Speicher: in diesem Browser unbekannt
+Espace libre sur l’appareil : {n}	Freier Speicher auf dem Gerät: {n}
+Espace utilisé : {n}	Belegter Speicher: {n}
+FIN (B)	ENDE (B)
+Fin de la sourate	Ende der Sure
+La récitation se met en pause automatiquement.	Die Rezitation pausiert automatisch.
+Lancer la répétition	Wiederholung starten
+Lecture continue	Fortlaufende Wiedergabe
+Licences du Coran (texte, traductions, audio)	Koran-Lizenzen (Text, Übersetzungen, Audio)
+Mesure par requêtes légères (en-têtes uniquement), une par verset.	Mit leichten Anfragen gemessen (nur Header), eine pro Vers.
+Mesurer les tailles	Größen messen
+Mesure… {d}/{t}	Messung… {d}/{t}
+Minuterie de sommeil	Schlaf-Timer
+Ouvrir la sourate {n}	Sure {n} öffnen
+Partager en image	Als Bild teilen
+Phonétique : {t}	Lautschrift: {t}
+Premier wird	Erster Wird
+Programmer la khatma du Ramadan	Die Ramadan-Khatma planen
+Ramadan {y}	Ramadan {y}
+Recherche phonétique (ex. « qul huwa allahu ahad ») : télécharger la translittération, ≈ 1,4 Mo, une fois	Phonetische Suche (z. B. „qul huwa allahu ahad“): Transliteration herunterladen, ≈ 1,4 MB, einmalig
+Recherche phonétique : la translittération est une aide pour retrouver un verset ; elle peut contenir des irrégularités, le texte arabe reste la référence.	Phonetische Suche: Die Transliteration ist eine Hilfe, um einen Vers zu finden; sie kann Unregelmäßigkeiten enthalten, der arabische Text bleibt die Referenz.
+Reste à télécharger : au moins {n} ({u} sourates non mesurées)	Noch herunterzuladen: mindestens {n} ({u} Suren nicht gemessen)
+Reste à télécharger : {n}	Noch herunterzuladen: {n}
+RÉPÉTER LA PLAGE	BEREICH WIEDERHOLEN
+Répéter A-B	A-B wiederholen
+Répétition A-B	A-B-Wiederholung
+Source audio : {s}. Les fichiers restent sur cet appareil et ne sont pas partagés. Conditions de réutilisation hors ligne : {l}.	Audioquelle: {s}. Die Dateien bleiben auf diesem Gerät und werden nicht geteilt. Bedingungen für die Offline-Nutzung: {l}.
+Statut de chaque source utilisée par le lecteur. « À confirmer » : consultable avec sa source affichée, mais jamais incrustée dans une image partagée tant que la licence n’est pas confirmée.	Status jeder vom Leser verwendeten Quelle. „Zu bestätigen“: mit angegebener Quelle einsehbar, aber nie in ein geteiltes Bild eingebettet, bis die Lizenz bestätigt ist.
+Supprimer la sourate {s}	Sure {s} löschen
+Supprimer les téléchargements ?	Downloads löschen?
+Sur le web, l’écoute hors ligne fonctionne dans l’app installée (PWA) ; le navigateur peut libérer cet espace s’il en manque.	Im Web funktioniert das Offline-Hören in der installierten App (PWA); der Browser kann diesen Speicher freigeben, wenn er knapp wird.
+Taille estimée inconnue : mesurez d’abord pour la connaître. Préférez le Wi-Fi.	Geschätzte Größe unbekannt: Messen Sie zuerst, um sie zu erfahren. WLAN empfohlen.
+Taille non mesurée	Größe nicht gemessen
+Tanzil (CC BY 3.0)	Tanzil (CC BY 3.0)
+Texte : {t}	Text: {t}
+Tout supprimer	Alle löschen
+Tout télécharger	Alle herunterladen
+Tout télécharger ?	Alle herunterladen?
+Traduction : {t}	Übersetzung: {t}
+Téléchargement interrompu : {e}	Download unterbrochen: {e}
+Téléchargements audio	Audio-Downloads
+Téléchargements audio (hors ligne)	Audio-Downloads (offline)
+Téléchargements audio hors ligne : copies privées sur votre appareil, jamais partagées ni renvoyées ; supprimables à tout moment (Coran → Téléchargements audio).	Offline-Audio-Downloads: private Kopien auf Ihrem Gerät, nie geteilt oder weitergesendet; jederzeit löschbar (Koran → Audio-Downloads).
+Téléchargement… {a}/{t}	Wird heruntergeladen… {a}/{t}
+Télécharger	Herunterladen
+Télécharger la sourate {s}	Sure {s} herunterladen
+Téléchargée · {n}	Heruntergeladen · {n}
+Verset A	Vers A
+Verset B	Vers B
+dès le {d}	ab {d}
+vérifiée	überprüft
+{c} sourates complètes · {p} en cours · {n}	{c} vollständige Suren · {p} in Arbeit · {n}
+{n} fois	{n}-mal
+{n} jours restants	noch {n} Tage
+{n} sourates en attente	{n} Suren in der Warteschlange
+{r} : {n} seront libérés.	{r}: {n} werden freigegeben.
+{r} · Sourate {s} : verset {a}/{t}	{r} · Sure {s}: Vers {a}/{t}
+{t} versets	{t} Verse
+{v} versets × {t} passages = {n} lectures.	{v} Verse × {t} Durchgänge = {n} Wiedergaben.
+{v} versets, en boucle jusqu’à l’arrêt.	{v} Verse, in Schleife bis zum Stoppen.
+{v}/{t} versets · {n}	{v}/{t} Verse · {n}
+« Fin de la sourate » arrête la lecture continue avant la sourate suivante.	„Ende der Sure“ stoppt die fortlaufende Wiedergabe vor der nächsten Sure.
+Échec du téléchargement — réessayer	Download fehlgeschlagen — erneut versuchen
+à confirmer	zu bestätigen
+Vous pouvez commencer dès maintenant si vous le souhaitez.	Sie können sofort beginnen, wenn Sie möchten.

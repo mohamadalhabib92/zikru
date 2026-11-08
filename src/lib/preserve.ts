@@ -3,7 +3,8 @@
  * Ce n'est pas une sauvegarde chiffrée, ni une preuve qu'un appareil a été restauré.
  * Les fichiers de fixtures/preservation sont synthétiques.
  */
-export const MARKETING_VERSION = '1.0.26';
+/** Version marketing de cette branche d’intégration. Strictement au-dessus de 1.0.29 pour que TestFlight ne soit pas un retour arrière. Ce n’est pas une preuve que les portes de sauvegarde sont passées. */
+export const MARKETING_VERSION = '1.0.30';
 
 export const LOCAL_EXPORT_FORMAT = 'zikru-local-export';
 
@@ -69,8 +70,8 @@ export type ProgramProgress = {
 
 /**
  * Lecture du cache local « community/program-progress/… » (forme vue sur la branche 1.0.29).
- * Les clés inconnues restent dans `extras`. Cette fonction n'est pas branchée à un écran :
- * l'écran de programme n'est pas sur cette branche.
+ * Les clés inconnues restent dans `extras`. La fonction ne réassigne pas un compteur
+ * historique sur un autre objectif.
  */
 export function readProgramProgress(raw: unknown): ProgramProgress {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { counts: {}, dirty: [], extras: {} };

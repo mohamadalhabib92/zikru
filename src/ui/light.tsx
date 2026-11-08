@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
-import { brand as b, elevation, fonts } from './theme';
+import { brand as b, elevation, fonts, onColor } from './theme';
 import { L } from "@/lib/l10n";
 
 /** Composants « cartes claires » de la palette Zikru originale. */
@@ -59,7 +59,7 @@ export function Pill({ label, active, onPress, color = b.green }: { label: strin
       onPress={onPress}
       style={{ paddingHorizontal: 14, paddingVertical: 6, minHeight: 40, maxWidth: '100%', justifyContent: 'center', borderRadius: 19, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
     >
-      <Text maxFontSizeMultiplier={1.35} style={{ color: active ? '#FFFFFF' : b.ink, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.35} style={{ color: active ? onColor(color) : b.ink, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{label}</Text>
     </Pressable>
   );
 }

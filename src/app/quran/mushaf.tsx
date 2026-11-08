@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ABSheet } from '@/components/quran/ABSheet';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { useAyahFlow } from '@/components/quran/AyahFlow';
 import { useUthmani } from '@/components/quran/data';
@@ -14,15 +15,16 @@ import { dayKey } from '@/lib/dates';
 import { khatmaStatus, markPage } from '@/lib/khatma';
 import { arNum, fromIndex, gIndex, hizbOfIndex, juzOfIndex, juzRange, pageOf, pageRange, rubStartAt, TOTAL_PAGES } from '@/lib/quran-nav';
 import { BASMALA_UTHMANI } from '@/lib/quran-reader-data';
-import { keyOf, khatma as khatmaStore, marks, readerPrefs, recordRead, type Marks } from '@/lib/quran-store';
+import { keyOf, khatma as khatmaStore, logPageRead, marks, readerPrefs, recordRead, type Marks } from '@/lib/quran-store';
 import { buildQueue } from '@/lib/recitation';
 import { useShared } from '@/lib/shared-state';
 import { SURAHS } from '@/lib/surahs';
-import { useRecitation } from '@/lib/use-recitation';
+import { useGlobalRecitation } from '@/lib/recitation-context';
 import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import { NuraniText } from '@/components/quran/NuraniText';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1);
 
@@ -51,12 +53,12 @@ const MushafPage = memo(function MushafPage({ page, all, width, height, pal, siz
               {bk.from === 1 ? (
                 <View style={{ alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
                   <View style={{ alignSelf: 'stretch', borderRadius: 12, borderWidth: 1, borderColor: alpha(pal.gold, 0.6), backgroundColor: alpha(pal.gold, 0.08), paddingVertical: 2, alignItems: 'center' }}>
-                    <Text style={{ color: pal.gold, fontFamily: fonts.quran, fontSize: 22, lineHeight: 48 }}>{SURAHS[bk.s - 1][1]}</Text>
+                    <Text {...arLang} style={{ color: pal.gold, fontFamily: fonts.quran, fontSize: 22, lineHeight: 48 }}>{SURAHS[bk.s - 1][1]}</Text>
                   </View>
-                  {bk.s !== 1 && bk.s !== 9 ? <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: size * 0.9, lineHeight: Math.round(size * 0.9 * 2.1) }}>{BASMALA_UTHMANI}</Text> : null}
+                  {bk.s !== 1 && bk.s !== 9 ? <Text {...arLang} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: size * 0.9, lineHeight: Math.round(size * 0.9 * 2.1) }}>{BASMALA_UTHMANI}</Text> : null}
                 </View>
               ) : null}
-              <Text style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: size, lineHeight: Math.round(size * lineH), textAlign: 'justify', writingDirection: 'rtl' }}>
+              <Text {...arLang} style={{ color: pal.ink, fontFamily: fonts.quran, fontSize: size, lineHeight: Math.round(size * lineH), textAlign: 'justify', writingDirection: 'rtl' }}>
                 {bk.idx.map((i) => {
                   const [s, a] = fromIndex(i);
                   const k = keyOf(s, a);
@@ -99,9 +101,10 @@ export default function Mushaf() {
   const [settings, setSettings] = useState(false);
   const list = useRef<FlatList<number>>(null);
   useReaderKeepAwake(pr.keepAwake);
-  const rec = useRecitation({ reciter: pr.reciter, rate: pr.rate, gap: 0, mode: pr.readingMode });
+  const rec = useGlobalRecitation();
+  const [ab, setAb] = useState<{ s: number; a: number } | null>(null);
   const playing = rec.step ? keyOf(rec.step.s, rec.step.a) : '';
-  const flow = useAyahFlow(pal, (t) => playFrom(gIndex(t.s, t.a)));
+  const flow = useAyahFlow(pal, (t) => playFrom(gIndex(t.s, t.a)), (t) => setAb({ s: t.s, a: t.a }));
   const today = dayKey();
   const kst = k && !k.finished ? khatmaStatus(k, today) : null;
 
@@ -110,7 +113,18 @@ export default function Mushaf() {
     const end = juzRange(juzOfIndex(i))[1];
     const v: [number, number][] = [];
     for (let x = i; x < end; x++) v.push(fromIndex(x));
-    rec.start(buildQueue(v), 0);
+    rec.start(buildQueue(v), 0, false, { next: nextJuz });
+  };
+  // lecture continue (réglage « Lecture continue ») : enchaîne le juz’ suivant
+  const nextJuz = (q: { s: number; a: number }[]) => {
+    const last = q[q.length - 1];
+    if (!last || !readerPrefs.get().autoNext) return null;
+    const i = gIndex(last.s, last.a) + 1;
+    if (i >= 6236) return null;
+    const end = juzRange(juzOfIndex(i))[1];
+    const v: [number, number][] = [];
+    for (let x = i; x < end; x++) v.push(fromIndex(x));
+    return v.length ? buildQueue(v) : null;
   };
   const goPage = useCallback(
     (q: number, animated = true) => {
@@ -207,7 +221,11 @@ export default function Mushaf() {
                 icon={pageDoneInKhatma ? 'checkmark-done' : 'checkmark'}
                 label={pageDoneInKhatma ? 'Lue' : 'Page lue'}
                 active={pageDoneInKhatma}
-                onPress={() => k && setK(markPage(k, page, today))}
+                onPress={() => {
+                  if (!k) return;
+                  setK(markPage(k, page, today));
+                  logPageRead(page);
+                }}
                 pal={pal}
               />
             ) : null}
@@ -216,7 +234,8 @@ export default function Mushaf() {
           {kst?.today ? <Text style={{ color: pal.muted, fontSize: 11, marginTop: 6, backgroundColor: alpha(pal.bg, 0.8), paddingHorizontal: 8, borderRadius: 8 }}>{L('Wird du jour : p. {a}–{b} · khatma {p} %', { a: kst.today.from, b: kst.today.to, p: Math.round(kst.progress * 100) })}</Text> : null}
         </View>
       ) : null}
-      <AudioBar rec={rec} pal={pal} extra={L('Page {p}', { p: page })} showReadingMode />
+      <AudioBar rec={rec} pal={pal} extra={L('Page {p}', { p: page })} onAB={() => setAb(rec.step ? { s: rec.step.s, a: rec.step.a } : null)} />
+      {ab ? <ABSheet visible onClose={() => setAb(null)} s={ab.s} a={ab.a} pal={pal} start={(q, pos, loop) => rec.start(q, pos, loop)} /> : null}
       <ReaderSettings visible={settings} onClose={() => setSettings(false)} pal={pal} />
       {flow.sheets}
     </View>

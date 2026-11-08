@@ -130,7 +130,7 @@ function DaySchedule() {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
-  const list = useMemo(() => computeDay(now, s.place, s.method, s.madhab), [now.toDateString(), s.place, s.method, s.madhab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const list = useMemo(() => computeDay(now, s.place, s.method, s.madhab, s.prayer), [now.toDateString(), s.place, s.method, s.madhab, s.prayer]); // eslint-disable-line react-hooks/exhaustive-deps
   const at = (k: PrayerKey) => list.find((x) => x.key === k)!.time;
   const mins = (d: Date) => d.getHours() * 60 + d.getMinutes();
   const pad = 8;
@@ -218,7 +218,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
         </Arabic>
         <Text style={{ color: b.ink, fontSize: 20, fontWeight: '900', textAlign: 'center' }}>{p.name}</Text>
       </View>
-      <View style={{ flexDirection: 'row', backgroundColor: b.green }}>
+      <View style={{ flexDirection: 'row', backgroundColor: b.greenDeep }}>
         {[
           ['Étapes', String(p.steps.length)],
           ['Faites', String(checked.length)],
@@ -245,11 +245,11 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
             return (
               <View key={i} style={{ borderRadius: 14, borderWidth: 1, borderColor: isOn ? b.wirdGreen : b.line, backgroundColor: isOn ? b.greenTint : b.paper }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 10 }}>
-                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isOn }} accessibilityLabel={`${L(f.title)} — ${isOn ? L('fait') : L('marquer comme fait')}`} onPress={() => toggle(i)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isOn }} aria-checked={isOn} accessibilityLabel={`${L(f.title)} — ${isOn ? L('fait') : L('marquer comme fait')}`} onPress={() => toggle(i)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                     {isOn ? (
                       <Ionicons name="checkmark-circle" size={30} color={b.wirdGreen} />
                     ) : (
-                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.green, alignItems: 'center', justifyContent: 'center' }}>
+                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: b.greenDeep, alignItems: 'center', justifyContent: 'center' }}>
                         <Text style={{ color: b.gold, fontWeight: '900' }}>{i + 1}</Text>
                       </View>
                     )}
