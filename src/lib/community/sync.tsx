@@ -12,9 +12,9 @@ import type { ClickSource } from '../tasbih-core';
 import { allSharingModes, insertContributions, type ContributionRow, type ScopeType, type SharingMode } from './api';
 import { useAuth } from './auth';
 import { onClicks } from './clicks';
-import { ackAttempts, classifyContributionError, coalesceQueue, partitionByOwner, sealAttempts, shareAllowsSend, type OutboxRow } from './queue';
+import { ackAttempts, autoShareTargets, classifyContributionError, coalesceQueue, partitionByOwner, sealAttempts, shareAllowsSend, type OutboxRow } from './queue';
 
-export type GoalLink = { goalId: string; title: string; scope: ScopeType; scopeId: string; scopeName: string; memberId?: string | null };
+export type GoalLink = { goalId: string; title: string; scope: ScopeType; scopeId: string; scopeName: string; memberId?: string | null; focused?: boolean };
 type Queued = ContributionRow & OutboxRow & { tries?: number };
 type Ctx = {
   links: GoalLink[];
@@ -165,7 +165,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     () =>
       onClicks((n, source: ClickSource) => {
         if (!userId) return;
-        for (const l of linksRef.current) {
+        for (const l of autoShareTargets(linksRef.current)) {
           if (!shareAllowsSend(modesRef.current[l.scopeId], modesLoaded.current)) continue;
           add(l.goalId, n, source, l.memberId, userId);
         }
@@ -188,7 +188,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const value: Ctx = {
     links,
     isLinked: (g) => links.some((l) => l.goalId === g),
-    link: (l) => setLinks((ls) => [...ls.filter((x) => x.goalId !== l.goalId), l]),
+    link: (l) => setLinks((ls) => [...ls.filter((x) => x.goalId !== l.goalId).map((x) => ({ ...x, focused: false })), { ...l, focused: true }]),
     unlink: (g) => setLinks((ls) => ls.filter((x) => x.goalId !== g)),
     contribute: (goalId, n, source = 'manuel', memberId) => {
       if (!(n > 0) || !userId) return;

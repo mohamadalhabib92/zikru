@@ -48,6 +48,18 @@ export function partitionByOwner<R extends { owner?: string }>(rows: readonly R[
   return { mine, held };
 }
 
+/**
+ * Tasbih automatique : un seul objectif explicite.
+ * Plusieurs liens sans choix, ou un lien ancien sans marque : rien n'est envoyé (pas de report sur le dernier).
+ * Un seul lien est univoque. Le bouton d'un objectif reste un envoi manuel vers cet identifiant.
+ */
+export function autoShareTargets<T extends { goalId: string; focused?: boolean }>(links: readonly T[]): T[] {
+  const focused = links.filter((l) => l.focused);
+  if (focused.length === 1) return focused;
+  if (links.length === 1 && focused.length === 0) return [links[0]];
+  return [];
+}
+
 /** Partage connu : « nothing » n'envoie pas. Tant que les modes ne sont pas chargés, on n'envoie pas. */
 export function shareAllowsSend(mode: string | undefined, modesLoaded: boolean): boolean {
   if (!modesLoaded) return false;

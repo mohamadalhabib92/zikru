@@ -129,6 +129,15 @@ test('file : un autre compte ou un propriétaire inconnu ne reçoit pas la ligne
   assert.equal(merged.find((r) => r.owner === 'compte-b').count, 5);
 });
 
+test('objectifs : plusieurs liens sans choix ne reçoivent pas les appuis, un seul lien oui', () => {
+  const two = [{ goalId: 'famille' }, { goalId: 'cercle' }];
+  assert.deepEqual(Q.autoShareTargets(two).map((l) => l.goalId), []);
+  assert.deepEqual(Q.autoShareTargets([{ goalId: 'famille', focused: true }, { goalId: 'cercle' }]).map((l) => l.goalId), ['famille']);
+  assert.deepEqual(Q.autoShareTargets([{ goalId: 'seul' }]).map((l) => l.goalId), ['seul']);
+  const legacy = [{ goalId: 'ancien-a' }, { goalId: 'ancien-b' }];
+  assert.equal(Q.autoShareTargets(legacy).length, 0);
+});
+
 test('partage : rien n’est envoyé tant que le mode n’est pas connu, ni si le choix est « nothing »', () => {
   assert.equal(Q.shareAllowsSend(undefined, false), false);
   assert.equal(Q.shareAllowsSend('nothing', true), false);
