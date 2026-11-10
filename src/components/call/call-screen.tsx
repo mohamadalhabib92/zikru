@@ -8,7 +8,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { DisconnectReason, Room, RoomEvent, Track, type Participant, type RemoteParticipant } from 'livekit-client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { BlockButton, confirmAsk, ReportButton } from '@/components/community/parts';
 import { callRights, CallError, endCall, joinCall, moderateCall } from '@/lib/calls/api';
 import { availability, canModerate, canReport, fmtDuration, isSoonReason, LABEL_TRANSIT, orderPeople, parseMeta, reasonText, type CallAvailability, type CallScope, type Person } from '@/lib/calls/core';
@@ -239,10 +239,10 @@ export default function CallScreen() {
   // ---------- Rendu ----------
   if (phase === 'loading')
     return (
-      <>
+      <Screen>
         <Stack.Screen options={{ title }} />
-        <ActivityIndicator color={t.primary} style={{ marginTop: 48 }} />
-      </>
+        <Muted>Préparation de l’appel</Muted>
+      </Screen>
     );
 
   if (phase === 'ended')

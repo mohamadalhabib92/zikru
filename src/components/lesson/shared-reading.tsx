@@ -1,10 +1,11 @@
 /**
  * Texte de la leçon, le même des deux côtés. Hafs Tanzil embarqué, recopié tel quel.
- * Les marques et le curseur passent par LiveKit pendant l’appel, sinon par Supabase Realtime.
- * Le rôle enseignant et le drapeau teaching.shared_reading (faux par défaut) ouvrent la conduite.
+ * Le curseur part tout de suite sur le canal LiveKit ; le serveur confirme ensuite.
+ * Le suivi se met en pause quand l’élève fait défiler, et reprend d’un toucher.
  */
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text as RNText, View } from 'react-native';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Pressable, View, type LayoutChangeEvent } from 'react-native';
+import Animated, { Easing, interpolateColor, scrollTo, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
@@ -24,11 +25,20 @@ import {
 } from '@/lib/lessons/api';
 import {
   acceptRemote,
+  applyReadingOp,
   decodeReading,
   encodeReading,
+  followAfterScroll,
+  HIGHLIGHT_MS,
   marksOn,
+  onReconnect,
   passageFromTanzil,
+  reconcileReading,
+  resumeFollow,
+  revertIfCurrent,
+  SCROLL_MS,
   verseIntact,
+  type FollowMode,
   type ReadingState,
   type VerseLine,
 } from '@/lib/lessons/reading';
@@ -37,6 +47,12 @@ import { SURAHS } from '@/lib/surahs';
 import { Button, Card, Field, H2, Muted, Notice, Row, Spacer } from '@/ui/kit';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
+
+const ARABIC = {
+  fontFamily: 'AmiriQuran_400Regular' as const,
+  fontSize: 36,
+  lineHeight: 68,
+};
 
 function passage(surah: string, from: string, to: string): { s: number; a: number; b: number } | null {
   const s = parseInt(surah, 10);
@@ -50,6 +66,36 @@ function passage(surah: string, from: string, to: string): { s: number; a: numbe
 function placed(row: ReadingRow): ReadingState {
   return rowToState(row, pageOf(row.surah, row.focus_ayah));
 }
+
+const Word = memo(function Word({
+  word,
+  space,
+  active,
+  marked,
+  onPress,
+}: {
+  word: string;
+  space: string;
+  active: boolean;
+  marked: boolean;
+  onPress?: () => void;
+}) {
+  const v = useSharedValue(active ? 1 : 0);
+  useEffect(() => {
+    v.value = withTiming(active ? 1 : 0, { duration: HIGHLIGHT_MS, easing: Easing.out(Easing.cubic) });
+  }, [active, v]);
+  const hi = t.warningBg;
+  const mark = t.dangerBg;
+  const style = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(v.value, [0, 1], [marked ? mark : 'transparent', hi]),
+  }));
+  return (
+    <Animated.Text onPress={onPress} style={[ARABIC, { color: t.text }, style]}>
+      {word}
+      {space}
+    </Animated.Text>
+  );
+});
 
 export function SharedReading({
   lessonId,
@@ -85,7 +131,10 @@ export function SharedReading({
   const [to, setTo] = useState('7');
   const [comment, setComment] = useState('');
   const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [follow, setFollow] = useState<FollowMode>('live');
+  const ayahY = useRef<Record<number, number>>({});
+  const programmatic = useRef(false);
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
   useEffect(() => {
     const lesson = boot.data && 'lesson' in boot.data ? boot.data.lesson : null;
@@ -102,17 +151,19 @@ export function SharedReading({
     const pull = () =>
       fetchReading(lessonId)
         .then((row) => {
-          if (stop || !row) return;
-          setState((prev) => (!prev || row.revision >= prev.revision ? placed(row) : prev));
+          if (stop) return;
+          setState((prev) => onReconnect(prev, row ? placed(row) : null));
         })
         .catch((e) => {
           if (!stop) setErr(api.frError(e));
         });
     void pull();
-    void watchReading(lessonId, () => void pull()).then((u) => {
-      if (stop) u();
-      else unsub = u;
-    }).catch(() => {});
+    void watchReading(lessonId, () => void pull())
+      .then((u) => {
+        if (stop) u();
+        else unsub = u;
+      })
+      .catch(() => {});
     return () => {
       stop = true;
       unsub();
@@ -138,6 +189,75 @@ export function SharedReading({
     };
   }, [state?.surah, state?.ayahFrom, state?.ayahTo]);
 
+  const teacher = !!(boot.data && boot.data.on && boot.data.lesson && boot.data.teacher);
+  const driving = !!state && !!userId && (state.driverId === null ? teacher : state.driverId === userId);
+
+  const glideTo = (ayah: number) => {
+    const y = ayahY.current[ayah];
+    if (y == null) return;
+    programmatic.current = true;
+    scrollTo(scrollRef, 0, Math.max(0, y - 8), true);
+    setTimeout(() => {
+      programmatic.current = false;
+    }, SCROLL_MS + 40);
+  };
+
+  useEffect(() => {
+    if (!state || follow !== 'live') return;
+    glideTo(state.focusAyah);
+  }, [state?.focusAyah, follow, lines.length]);
+
+  const publishNow = (next: ReadingState) => {
+    setState(next);
+    onBroadcast?.(encodeReading(next, Date.now()));
+  };
+
+  const focusAt = (ayah: number, word: number | null) => {
+    if (!state || !driving || !userId) return;
+    const count = lines.find((l) => l.ayah === ayah)?.words.length ?? 1;
+    const op = applyReadingOp(state, {
+      type: 'focus',
+      ayah,
+      word,
+      wordCount: count,
+      actorId: userId,
+      teacher,
+      page: pageOf(state.surah, ayah),
+    });
+    if (!op.ok) return;
+    const snapshot = state;
+    const attempted = op.state;
+    publishNow(attempted);
+    void setFocus(lessonId, ayah, word)
+      .then((row) => {
+        setState((prev) => reconcileReading(prev ?? placed(row), placed(row)));
+        setErr(null);
+      })
+      .catch((e) => {
+        setState((prev) => (prev ? revertIfCurrent(prev, attempted, snapshot) : snapshot));
+        setErr(api.frError(e));
+      });
+  };
+
+  const run = (fn: () => Promise<ReadingRow>, optimistic?: ReadingState) => {
+    const snapshot = state;
+    if (optimistic) publishNow(optimistic);
+    void fn()
+      .then((row) => {
+        setState((prev) => reconcileReading(prev ?? placed(row), placed(row)));
+        setErr(null);
+      })
+      .catch((e) => {
+        if (snapshot && optimistic) setState((prev) => (prev ? revertIfCurrent(prev, optimistic, snapshot) : snapshot));
+        setErr(api.frError(e));
+      });
+  };
+
+  const pause = () => {
+    if (programmatic.current || driving) return;
+    setFollow((mode) => followAfterScroll(mode, true));
+  };
+
   if (boot.loading) return null;
   if (!boot.data?.on) {
     if (embedded) return null;
@@ -145,24 +265,51 @@ export function SharedReading({
   }
   if (!boot.data.lesson) return embedded ? null : <Notice tone="warning" title="Cette leçon n’est plus disponible." />;
 
-  const teacher = boot.data.teacher;
-  const driving = !!state && (state.driverId === null ? teacher : state.driverId === userId);
-  const publish = (row: ReadingRow) => {
-    const next = placed(row);
-    setState(next);
-    onBroadcast?.(encodeReading(next));
-  };
-  const run = async (fn: () => Promise<ReadingRow>) => {
-    setBusy(true);
-    try {
-      publish(await fn());
-      setErr(null);
-    } catch (e) {
-      setErr(api.frError(e));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const verses = (
+    <Animated.ScrollView
+      ref={scrollRef}
+      style={embedded ? { maxHeight: 420 } : undefined}
+      nestedScrollEnabled
+      keyboardShouldPersistTaps="handled"
+      onScrollBeginDrag={pause}
+    >
+      <View style={{ direction: 'rtl' }}>
+        {lines.map((line) => {
+          const intact = verseIntact(line);
+          const ayahOn = state?.focusAyah === line.ayah && state.focusWord === null;
+          return (
+            <View
+              key={line.ayah}
+              onLayout={(e: LayoutChangeEvent) => {
+                ayahY.current[line.ayah] = e.nativeEvent.layout.y;
+              }}
+              style={{ marginBottom: 12 }}
+            >
+              <Pressable disabled={!driving} onPress={() => focusAt(line.ayah, null)} hitSlop={6}>
+                <Text style={{ color: ayahOn ? t.primary : t.muted, fontSize: 13, textAlign: 'right' }}>{L('Verset {n}', { n: line.ayah })}</Text>
+              </Pressable>
+              {intact ? (
+                <Animated.Text style={{ textAlign: 'right', writingDirection: 'rtl' }}>
+                  {line.words.map((word, i) => (
+                    <Word
+                      key={`${line.ayah}-${i}`}
+                      word={word}
+                      space={i < line.words.length - 1 ? ' ' : ''}
+                      active={state?.focusAyah === line.ayah && state.focusWord === i}
+                      marked={state ? marksOn(state, line.ayah, i).length > 0 : false}
+                      onPress={driving ? () => focusAt(line.ayah, i) : undefined}
+                    />
+                  ))}
+                </Animated.Text>
+              ) : (
+                <Animated.Text style={[ARABIC, { textAlign: 'right', writingDirection: 'rtl' }]}>{line.text}</Animated.Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    </Animated.ScrollView>
+  );
 
   const body = (
     <View>
@@ -171,11 +318,21 @@ export function SharedReading({
       {state ? (
         <Muted>
           {L('Page {n}', { n: pageOf(state.surah, state.focusAyah) })}
-          {driving ? ' · Vous conduisez le curseur.' : state.driverId === null ? ' · Vous suivez l’enseignant.' : ' · Vous suivez l’élève.'}
+          {driving ? ' · Vous conduisez le curseur.' : follow === 'paused' ? ' · Vous lisez à votre rythme.' : state.driverId === null ? ' · Vous suivez l’enseignant.' : ' · Vous suivez l’élève.'}
         </Muted>
       ) : (
         <Muted>{teacher ? 'Choisissez le passage, puis montrez-le.' : 'L’enseignant n’a pas encore affiché le passage.'}</Muted>
       )}
+      {!driving && follow === 'paused' && state ? (
+        <Button
+          small
+          title="Reprendre le suivi"
+          onPress={() => {
+            setFollow(resumeFollow());
+            glideTo(state.focusAyah);
+          }}
+        />
+      ) : null}
       {teacher ? (
         <>
           <Row gap={8}>
@@ -186,69 +343,48 @@ export function SharedReading({
           <Button
             small
             title="Montrer ce passage"
-            loading={busy}
             onPress={() => {
               const p = passage(surah, from, to);
               if (!p) return setErr('Ce passage ne correspond pas à la sourate.');
-              void run(() => openReading(lessonId, p.s, p.a, p.b));
+              const base = state ?? {
+                lessonId,
+                surah: p.s,
+                ayahFrom: p.a,
+                ayahTo: p.b,
+                focusAyah: p.a,
+                focusWord: null,
+                driverId: null,
+                revision: 0,
+                page: pageOf(p.s, p.a),
+                marks: [],
+              };
+              const op = applyReadingOp({ ...base, revision: Math.max(1, base.revision) }, {
+                type: 'passage',
+                surah: p.s,
+                from: p.a,
+                to: p.b,
+                actorTeacher: true,
+                page: pageOf(p.s, p.a),
+              });
+              if (!op.ok) return setErr('Ce passage ne correspond pas à la sourate.');
+              run(() => openReading(lessonId, p.s, p.a, p.b), op.state);
             }}
           />
         </>
       ) : null}
       <Spacer h={8} />
-      {lines.map((line) => {
-        const intact = verseIntact(line);
-        const ayahOn = state?.focusAyah === line.ayah && state.focusWord === null;
-        return (
-          <View key={line.ayah} style={{ marginBottom: 10 }}>
-            <Pressable disabled={!driving} onPress={() => void run(() => setFocus(lessonId, line.ayah, null))}>
-              <Text style={{ color: ayahOn ? t.primary : t.muted, fontSize: 13 }}>{L('Verset {n}', { n: line.ayah })}</Text>
-            </Pressable>
-            {intact ? (
-              <RNText style={{ textAlign: 'right', writingDirection: 'rtl' }}>
-                {line.words.map((word, i) => {
-                  const on = state?.focusAyah === line.ayah && state.focusWord === i;
-                  const marked = state ? marksOn(state, line.ayah, i).length > 0 : false;
-                  return (
-                    <RNText
-                      key={`${line.ayah}-${i}`}
-                      onPress={driving ? () => void run(() => setFocus(lessonId, line.ayah, i)) : undefined}
-                      style={{
-                        fontFamily: 'AmiriQuran_400Regular',
-                        fontSize: 28,
-                        lineHeight: 52,
-                        color: t.text,
-                        backgroundColor: on ? t.warningBg : marked ? t.dangerBg : 'transparent',
-                      }}
-                    >
-                      {word}
-                      {i < line.words.length - 1 ? ' ' : ''}
-                    </RNText>
-                  );
-                })}
-              </RNText>
-            ) : (
-              <RNText style={{ fontFamily: 'AmiriQuran_400Regular', fontSize: 28, lineHeight: 52, textAlign: 'right', writingDirection: 'rtl', color: t.text }}>{line.text}</RNText>
-            )}
-          </View>
-        );
-      })}
+      {verses}
       {teacher && state ? (
         <>
           <Row gap={8} wrap>
-            <Button
-              small
-              variant="secondary"
-              title="Marque de tajwīd"
-              onPress={() => void run(() => addMark(lessonId, state.focusAyah, state.focusWord, 'tajweed', ''))}
-            />
+            <Button small variant="secondary" title="Marque de tajwīd" onPress={() => run(() => addMark(lessonId, state.focusAyah, state.focusWord, 'tajweed', ''))} />
             {boot.data.members.map((m) => (
               <Row key={m.id} gap={6} style={{ alignItems: 'center' }}>
-                <Button small variant="ghost" title="Donner la main" onPress={() => void run(() => handReading(lessonId, m.id))} />
+                <Button small variant="ghost" title="Donner la main" onPress={() => run(() => handReading(lessonId, m.id))} />
                 <Muted>{m.name}</Muted>
               </Row>
             ))}
-            {state.driverId ? <Button small variant="ghost" title="Reprendre la main" onPress={() => void run(() => handReading(lessonId, null))} /> : null}
+            {state.driverId ? <Button small variant="ghost" title="Reprendre la main" onPress={() => run(() => handReading(lessonId, null))} /> : null}
           </Row>
           <Muted>{boot.data.members.length ? 'Donner la main laisse l’élève déplacer le curseur. Les marques restent à l’enseignant.' : 'Vous conduisez le curseur.'}</Muted>
           <Field label="Commentaire" value={comment} onChangeText={setComment} />
@@ -258,11 +394,8 @@ export function SharedReading({
             onPress={() => {
               const note = comment.trim();
               if (!note) return setErr('Écrivez le commentaire avant de l’ajouter.');
-              void run(async () => {
-                const row = await addMark(lessonId, state.focusAyah, state.focusWord, 'comment', note);
-                setComment('');
-                return row;
-              });
+              setComment('');
+              run(() => addMark(lessonId, state.focusAyah, state.focusWord, 'comment', note));
             }}
           />
         </>
@@ -281,7 +414,7 @@ export function SharedReading({
                   {m.comment ? ` · ${m.comment}` : ''}
                 </Muted>
               </View>
-              {teacher ? <Button small variant="ghost" title="Retirer la marque" onPress={() => void run(() => removeMark(m.id))} /> : null}
+              {teacher ? <Button small variant="ghost" title="Retirer la marque" onPress={() => run(() => removeMark(m.id))} /> : null}
             </Row>
           ))}
         </>
@@ -292,14 +425,5 @@ export function SharedReading({
     </View>
   );
 
-  if (embedded) {
-    return (
-      <Card>
-        <ScrollView style={{ maxHeight: 360 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-          {body}
-        </ScrollView>
-      </Card>
-    );
-  }
   return <Card>{body}</Card>;
 }

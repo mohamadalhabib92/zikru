@@ -117,10 +117,54 @@ assert.equal(R.acceptRemote(back.state, { ...newer, lessonId: '42000000-0000-400
 assert.equal(R.decodeReading('{"v":1}'), null);
 assert.equal(R.readingText(R.readingBytes(wire)), wire);
 
+// --- délai : le traitement local est négligeable, le canal simulé reste sous 200 ms ---
+assert.equal(R.SYNC_TARGET_MS, 200);
+assert.equal(R.MOTION.fps, 60);
+assert.ok(R.HIGHLIGHT_MS <= R.SYNC_TARGET_MS, 'le surlignage tient dans la cible');
+assert.equal(R.HIGHLIGHT_MS, Math.round(10 * (1000 / 60)));
+const hops = Array.from({ length: 40 }, () => R.clientHopMs(back.state));
+const hop = R.latencyReport(hops);
+assert.ok(hop.p95 < 50, `traitement local p95 ${hop.p95} ms`);
+const delays = [30, 80, 150];
+const simulated = delays.map((d) => R.simulateSync(back.state, d, 1_700_000_000_000));
+for (const s of simulated) {
+  assert.equal(s.withinTarget, true, `canal ${s.latencyMs} ms`);
+  assert.equal(s.ayah, back.state.focusAyah);
+  assert.ok(s.latencyMs + hop.p95 <= R.SYNC_TARGET_MS, `local + canal ${s.latencyMs + hop.p95} ms`);
+}
+const late = R.simulateSync(back.state, 240, 1_700_000_000_000);
+assert.equal(late.withinTarget, false);
+assert.equal(late.latencyMs, 240);
+const optimistic = R.applyReadingOp(back.state, { type: 'focus', ayah: 6, word: 0, wordCount: 4, actorId: teacher, teacher: true, page: 1 });
+assert.equal(optimistic.ok, true);
+const stamped = R.decodeReading(R.encodeReading(optimistic.state, 5_000));
+assert.equal(stamped.sentAt, 5_000);
+assert.equal(R.measureSync(stamped.sentAt, 5_120).latencyMs, 120);
+const serverSame = { ...optimistic.state, revision: optimistic.state.revision };
+assert.equal(R.reconcileReading(optimistic.state, serverSame).focusAyah, 6);
+const ahead = { ...optimistic.state, revision: optimistic.state.revision + 1, focusAyah: 7, focusWord: null };
+assert.equal(R.reconcileReading(ahead, optimistic.state).focusAyah, 7, 'une confirmation en retard ne ramène pas le curseur');
+assert.equal(R.revertIfCurrent(optimistic.state, optimistic.state, back.state).focusAyah, back.state.focusAyah);
+assert.equal(R.revertIfCurrent(ahead, optimistic.state, back.state).focusAyah, 7, 'un échec ancien n’efface pas le geste suivant');
+assert.equal(R.onReconnect(optimistic.state, null).focusAyah, 6, 'coupure : la position reste');
+assert.equal(R.onReconnect(optimistic.state, ahead).focusAyah, 7);
+assert.equal(R.onReconnect(ahead, optimistic.state).focusAyah, 7, 'une réponse plus ancienne ne remplace pas');
+assert.equal(R.followAfterScroll('live', true), 'paused');
+assert.equal(R.followAfterScroll('live', false), 'live');
+assert.equal(R.resumeFollow(), 'live');
+assert.equal(R.scrollTarget('paused', 6, 2), 2);
+assert.equal(R.scrollTarget('live', 6, 2), 6);
+console.log(`lecture : local p50 ${hop.p50.toFixed(2)} ms, p95 ${hop.p95.toFixed(2)} ms ; canal simulé ${delays.join('/')} ms sous ${R.SYNC_TARGET_MS} ms ; surlignage ${R.HIGHLIGHT_MS} ms, défilement ${R.SCROLL_MS} ms`);
+
 const screen = readFileSync(join(root, 'src/components/lesson/shared-reading.tsx'), 'utf8');
 assert.ok(screen.includes("import('@/lib/quran-uthmani')"), 'le texte lu est le Hafs embarqué');
 assert.ok(!screen.includes('stripBasmala'), 'la basmala n’est pas retirée');
 assert.ok(!screen.includes('alquran.cloud'), 'pas de texte téléchargé à la place du Tanzil');
+assert.ok(screen.includes('react-native-reanimated'), 'le surlignage est animé');
+assert.ok(screen.includes('fontSize: 36'), 'le texte arabe est grand');
+assert.ok(screen.includes("writingDirection: 'rtl'"), 'le verset se lit de droite à gauche');
+assert.ok(!screen.includes('ActivityIndicator') && !screen.includes('loading={'), 'pas de roue qui bloque le texte');
+assert.ok(screen.includes('encodeReading(next, Date.now())'), 'le canal part avant la confirmation du serveur');
 const home = readFileSync(join(root, 'src/app/(tabs)/index.tsx'), 'utf8');
 assert.ok(!home.includes('SharedReading') && !home.includes('/lesson/'), 'l’accueil n’ouvre pas la lecture');
 

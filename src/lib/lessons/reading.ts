@@ -43,6 +43,8 @@ export type ReadingEnvelope = {
   revision: number;
   page: number;
   marks: ReadingMark[];
+  /** Horodatage d’envoi. 0 si l’émetteur n’en a pas mis. */
+  sentAt: number;
 };
 
 export type VerseLine = { ayah: number; text: string; words: string[] };
@@ -141,7 +143,7 @@ export function applyReadingOp(
   return { ok: true, state: next(state, { marks: [...state.marks, { ...mark, comment }] }) };
 }
 
-export function encodeReading(state: ReadingState): string {
+export function encodeReading(state: ReadingState, sentAt = 0): string {
   const env: ReadingEnvelope = {
     v: 1,
     lessonId: state.lessonId,
@@ -154,6 +156,7 @@ export function encodeReading(state: ReadingState): string {
     revision: state.revision,
     page: state.page,
     marks: state.marks,
+    sentAt: sentAt > 0 ? Math.round(sentAt) : 0,
   };
   return JSON.stringify(env);
 }
@@ -185,6 +188,8 @@ export function decodeReading(raw: string): ReadingEnvelope | null {
   if (o.word !== null && (!Number.isInteger(o.word) || o.word < 0 || o.word > 400)) return null;
   if (o.driverId !== null && (typeof o.driverId !== 'string' || o.driverId.length < 8)) return null;
   if (!Number.isInteger(o.page) || o.page < 1 || o.page > 604) return null;
+  const sentAt = o.sentAt == null ? 0 : o.sentAt;
+  if (!Number.isInteger(sentAt) || sentAt < 0 || sentAt > 1e15) return null;
   if (!Array.isArray(o.marks) || o.marks.length > 100 || !o.marks.every(isMark)) return null;
   return {
     v: 1,
@@ -197,6 +202,7 @@ export function decodeReading(raw: string): ReadingEnvelope | null {
     driverId: o.driverId,
     revision: o.revision,
     page: o.page,
+    sentAt,
     marks: o.marks.map((m) => ({ id: m.id, surah: m.surah, ayah: m.ayah, word: m.word, kind: m.kind, comment: m.comment })),
   };
 }
@@ -231,4 +237,98 @@ export function readingBytes(json: string): Uint8Array<ArrayBuffer> {
 
 export function readingText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes);
+}
+
+/** Cible : le canal de données livre la position en moins de 200 ms. L’animation tient dans ce délai. */
+export const SYNC_TARGET_MS = 200;
+
+/** 60 images par seconde. Le surlignage dure un nombre entier d’images, sous la cible. */
+export const MOTION = {
+  fps: 60,
+  frameMs: 1000 / 60,
+  highlightFrames: 10,
+  scrollFrames: 16,
+} as const;
+
+export const HIGHLIGHT_MS = Math.round(MOTION.highlightFrames * MOTION.frameMs);
+export const SCROLL_MS = Math.round(MOTION.scrollFrames * MOTION.frameMs);
+
+export type SyncSample = { sentAt: number; receivedAt: number; latencyMs: number; withinTarget: boolean };
+
+export function measureSync(sentAt: number, receivedAt: number): SyncSample {
+  const latencyMs = Math.max(0, receivedAt - sentAt);
+  return { sentAt, receivedAt, latencyMs, withinTarget: latencyMs <= SYNC_TARGET_MS };
+}
+
+/** Coût local d’un aller encode → decode, sans réseau. */
+export function clientHopMs(state: ReadingState, now: () => number = () => performance.now()): number {
+  const t0 = now();
+  const back = decodeReading(encodeReading(state, t0));
+  const t1 = now();
+  if (!back) return Number.POSITIVE_INFINITY;
+  return t1 - t0;
+}
+
+export type LatencyReport = { n: number; p50: number; p95: number; max: number; withinTarget: number };
+
+export function latencyReport(samples: number[]): LatencyReport {
+  const sorted = [...samples].sort((a, b) => a - b);
+  const at = (q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(q * sorted.length) - 1))] ?? 0;
+  return {
+    n: sorted.length,
+    p50: at(0.5),
+    p95: at(0.95),
+    max: sorted[sorted.length - 1] ?? 0,
+    withinTarget: sorted.filter((n) => n <= SYNC_TARGET_MS).length,
+  };
+}
+
+/**
+ * Délai simulé d’un canal. `delayMs` est le réseau ; le traitement local est mesuré à part.
+ * La position qui sort est celle qui est entrée : le verset n’est pas dans le message.
+ */
+export function simulateSync(state: ReadingState, delayMs: number, now: number): SyncSample & { ayah: number; word: number | null } {
+  const raw = encodeReading(state, now);
+  const env = decodeReading(raw);
+  if (!env || env.sentAt == null) return { sentAt: now, receivedAt: now, latencyMs: Number.POSITIVE_INFINITY, withinTarget: false, ayah: -1, word: null };
+  const sample = measureSync(env.sentAt, now + delayMs);
+  const applied = stateFromEnvelope(env);
+  return { ...sample, ayah: applied.focusAyah, word: applied.focusWord };
+}
+
+/** Le serveur confirme. S’il est en retard sur un curseur déjà affiché, on garde ce curseur. */
+export function reconcileReading(local: ReadingState, server: ReadingState): ReadingState {
+  if (server.lessonId !== local.lessonId) return local;
+  if (server.revision < local.revision) return local;
+  return server;
+}
+
+/** Un échec n’efface le curseur que s’il est encore celui de cette tentative. */
+export function revertIfCurrent(current: ReadingState, attempted: ReadingState, snapshot: ReadingState): ReadingState {
+  if (current.revision === attempted.revision && current.focusAyah === attempted.focusAyah && current.focusWord === attempted.focusWord) return snapshot;
+  return current;
+}
+
+/** Une reconnexion sans réponse garde la dernière position. Une réponse plus récente la remplace. */
+export function onReconnect(held: ReadingState | null, server: ReadingState | null): ReadingState | null {
+  if (!server) return held;
+  if (!held) return server;
+  if (server.lessonId !== held.lessonId) return held;
+  return server.revision >= held.revision ? server : held;
+}
+
+export type FollowMode = 'live' | 'paused';
+
+/** Un doigt qui fait défiler met le suivi en pause. Un défilement lancé par l’app ne le fait pas. */
+export function followAfterScroll(mode: FollowMode, userDrag: boolean): FollowMode {
+  return userDrag ? 'paused' : mode;
+}
+
+export function resumeFollow(): FollowMode {
+  return 'live';
+}
+
+/** En pause, l’écran reste sur le verset que l’élève lit. En suivi, il va au verset de l’enseignant. */
+export function scrollTarget(mode: FollowMode, teacherAyah: number, heldAyah: number): number {
+  return mode === 'live' ? teacherAyah : heldAyah;
 }
