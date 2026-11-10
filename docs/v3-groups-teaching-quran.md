@@ -2,7 +2,7 @@
 
 Document pour Mohamed. Il décrit trois souhaits : que les membres d’un groupe de zikr puissent s’écrire, et s’ils le veulent se voir ; que certaines personnes puissent enseigner le Coran et le tajwīd ; que l’on puisse lire le Coran en riwaya Hafs et en riwaya Warsh, avec les règles de tajwīd en couleurs.
 
-Décisions de Mohamed, le 10 novembre 2026 : la discussion de groupe sera appliquée par lui sur la base en ligne ; les appels audio et vidéo passeront par un LiveKit hébergé par lui en Europe (pas encore acheté) ; enseigner demande Premium et une validation Bissabi, jamais une case cochée ; les élèves paieront leurs enseignants et Zikru prendra une commission dont le taux n’est pas encore choisi ; Zikru voudra recevoir des dons pour des causes. Le texte Warsh et les couleurs de tajwīd attendent. Le serveur d’appels est dans `docs/livekit-server-setup.md`. Aucun paiement ni aucun don n’est branché.
+Décisions de Mohamed, le 10 novembre 2026 : la discussion de groupe sera appliquée par lui sur la base en ligne ; les appels audio et vidéo passeront par un LiveKit hébergé par lui en Europe (pas encore acheté) ; enseigner demande Premium et une validation Bissabi, jamais une case cochée ; les élèves paieront leurs enseignants et Zikru prendra 5 % ; Zikru voudra recevoir des dons pour des causes. Le texte Warsh et les couleurs de tajwīd attendent. Le serveur d’appels est dans `docs/livekit-server-setup.md`. Aucun paiement ni aucun don n’est branché.
 
 Cette étape livrait d’abord le plan. Elle ne branche pas les appels tant que le serveur n’est pas là, et n’ajoute ni texte Warsh ni couleurs de tajwīd. La raison est dans les sections 2, 3 et 4 : les appels et l’enseignement attendent vos décisions, et les licences du Warsh et des couleurs ne sont pas assez claires pour les mettre dans l’application.
 
@@ -197,7 +197,7 @@ Pour les couleurs, plus tard, deux portes propres : le même écrit du Complexe,
 7. Tranché : enseigner exige Premium et la validation Bissabi. Rejoindre une classe reste gratuit.
 8. Écrire au Complexe du Roi Fahd pour le texte Warsh et les couleurs, avant toute intégration.
 9. Le chiffrement de bout en bout des messages (prévu plus tard, phase 3) et des appels : ne pas le promettre. Le libellé reste « chiffré en transit, pas encore de bout en bout ».
-10. Le taux de commission, en dix-millièmes dans `teaching.commission_bps` (100 veut dire 1 %). Aujourd’hui la valeur est vide : aucun prélèvement n’est possible. Dire aussi si ce taux se calcule sur le prix payé par l’élève, ou sur ce qui reste après Apple ou Google.
+10. Tranché : la commission est 5 % (`teaching.commission_bps` = 500). Elle se calcule sur ce qui reste après la commission du magasin. Pour un cours Stripe, il n’y a pas de commission de magasin : 5 % du prix du cours. Les frais de traitement Stripe ne réduisent pas cette base. L’encaissement reste fermé (`teaching.payments_enabled` = faux).
 11. Le prestataire : Stripe Connect en Suisse, formule « vous fixez les prix » (la commission est la vôtre ; Stripe facture 2 CHF par enseignant qui reçoit un virement dans le mois, plus 0,25 % + 0,55 CHF par virement), ou une autre formule. Confirmer que TWINT passe bien sur les comptes enseignants.
 12. Le cours en tête-à-tête (paiement hors magasin) et le cours à plusieurs (achat intégré Apple et Google) sont deux prix. Les ouvrir ensemble, ou commencer par l’un des deux.
 13. Quelles causes, et avec quelle fondation partenaire. Bissabi Drinks - BA, entreprise individuelle, ne peut pas être présentée comme une œuvre d’utilité publique.
@@ -205,7 +205,21 @@ Pour les couleurs, plus tard, deux portes propres : le même écrit du Complexe,
 
 ## 6. Payer un enseignant, et donner
 
-Décision du 10 novembre 2026 : l’élève paie l’enseignant, Zikru garde une commission, et Zikru veut pouvoir recevoir des dons. Le taux n’est pas choisi. Rien n’est encaissé dans cette étape : pas de Stripe, pas de bouton donner, pas de prix. Deux interrupteurs serveur restent sur faux (`teaching.payments_enabled`, `donations.enabled`). La commission est une case vide (`teaching.commission_bps`), pas un nombre écrit dans l’application. Tant qu’elle est vide, aucun paiement d’enseignement ne peut s’ouvrir.
+Décision du 10 novembre 2026 : l’élève paie l’enseignant, Zikru garde **5 %**, et Zikru veut pouvoir recevoir des dons. Rien n’est encaissé dans cette étape : pas de Stripe branché, pas de bouton donner. `teaching.payments_enabled` et `donations.enabled` restent faux. Le taux est posé : `teaching.commission_bps` = **500** (500 dix-millièmes = 5 %). L’interrupteur fermé empêche tout prélèvement, même avec ce taux.
+
+La base du calcul est le montant reçu **après la commission du magasin** (Apple ou Google). Les frais de traitement Stripe ne sont pas une commission de magasin : sur un cours tête-à-tête, les 5 % portent sur le prix du cours.
+
+Exemple, cours à **100 CHF**.
+
+| | Cours à deux, Stripe | Cours à plusieurs, achat Apple (15 %) |
+|---|---|---|
+| Prix payé par l’élève | 100.00 | 100.00 |
+| Commission du magasin | aucune | 15.00 |
+| Montant sur lequel portent les 5 % | 100.00 | 85.00 |
+| Commission Zikru | 5.00 | 4.25 |
+| Reste pour l’enseignant, avant les frais de traitement Stripe | 95.00 | 80.75 |
+
+Les frais de carte ou de virement Stripe se paient en plus de ce tableau. Ils ne font pas passer la base de 100 CHF à « 100 moins les frais Stripe ». Sur le cours Apple, la base est bien 85 CHF, pas 100.
 
 Ce chapitre décrit le cadre. Ce n’est pas un avis d’avocat ni de fiduciaire. Avant d’encaisser, Mohamed fait relire le montage.
 
@@ -288,7 +302,7 @@ Branche : `cursor/v3-groups-teaching-quran-5f31`, au-dessus de `cursor/premium-l
 
 - Créateur administrateur, demandes d’entrée : `supabase/migrations/20261110130000_admin_groupe.sql` (`private.is_group_admin`, `group_join_requests`). Non appliquée.
 - Premium : création de zikr personnel et de groupe seulement. Migration `supabase/migrations/20261110120000_premium_creation.sql`, verrou `premium_creation_gate` à `false`. Produit `ch.mohamadba.zikru.premium.lifetime`. Détail : `docs/premium-iap.md`.
-- Paiements enseignants et dons, éteints : `supabase/migrations/20261110150000_paiements_config.sql`. `teaching.payments_enabled` et `donations.enabled` sont faux. `teaching.commission_bps` est vide (JSON `null`), aucun taux dans le code. Non appliquée.
+- Paiements enseignants et dons, éteints : `supabase/migrations/20261110150000_paiements_config.sql`. `teaching.payments_enabled` et `donations.enabled` sont faux. `teaching.commission_bps` vaut 500 (5 % du montant reçu après la commission du magasin ; pour Stripe, 5 % du prix du cours). Non appliquée.
 - Les compteurs (`goal_contributions`, `zikr_session_counts`, tasbih) ne sont pas écrits par la discussion ni par les appels.
 
 ### Appels (non activés, non modifiés ici)
