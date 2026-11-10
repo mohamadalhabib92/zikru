@@ -81,10 +81,12 @@ export function GoalCard({
   canAdmin,
   gentle,
   managedChildren = [],
+  onMove,
 }: {
   goal: api.Goal;
   scopeName: string;
   canAdmin: boolean;
+  onMove?: (dir: -1 | 1) => Promise<void>;
   /** Mode enfant : pas de comparaison entre membres. */
   gentle?: boolean;
   managedChildren?: { id: string; name: string }[];
@@ -93,6 +95,8 @@ export function GoalCard({
   const [p, setP] = useState<api.GoalProgress | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [custom, setCustom] = useState('');
+  const [targetTxt, setTargetTxt] = useState(String(goal.target));
+  const [moveErr, setMoveErr] = useState<string | null>(null);
   const [forMember, setForMember] = useState<string | null>(null);
   const scopeId = (goal.family_id ?? goal.circle_id) as string;
   const load = useCallback(async () => {
@@ -184,13 +188,30 @@ export function GoalCard({
         </View>
       ) : null}
       {canAdmin ? (
-        <Button
-          small
-          variant="ghost"
-          icon="archive-outline"
-          title="Archiver l’objectif"
-          onPress={() => confirmAsk('Archiver cet objectif ?', 'Il ne sera plus affiché.', 'Archiver', () => void api.archiveGoal(goal.id).then(load).catch(() => {}))}
-        />
+        <View style={{ marginTop: 8, gap: 8 }}>
+          <Field label={L('Nombre cible')} keyboardType="number-pad" value={targetTxt} onChangeText={setTargetTxt} />
+          <Row gap={8}>
+            <Button
+              small
+              title={L('Enregistrer le nombre')}
+              onPress={() => {
+                const n = parseInt(targetTxt, 10);
+                if (!(n > 0)) return;
+                void api.updateGoalComposition(goal.id, { target: n }).then(load).catch((e) => setMoveErr(api.frError(e)));
+              }}
+            />
+            {onMove ? <Button small variant="ghost" title={L('Monter')} onPress={() => void onMove(-1).catch((e) => setMoveErr(api.frError(e)))} /> : null}
+            {onMove ? <Button small variant="ghost" title={L('Descendre')} onPress={() => void onMove(1).catch((e) => setMoveErr(api.frError(e)))} /> : null}
+          </Row>
+          {moveErr ? <Muted style={{ color: t.danger }}>{moveErr}</Muted> : null}
+          <Button
+            small
+            variant="ghost"
+            icon="archive-outline"
+            title="Archiver l’objectif"
+            onPress={() => confirmAsk('Archiver cet objectif ?', 'Il ne sera plus affiché.', 'Archiver', () => void api.archiveGoal(goal.id).then(load).catch(() => {}))}
+          />
+        </View>
       ) : null}
     </Card>
   );
@@ -479,7 +500,7 @@ export function CallCard({ scope, scopeId, name }: { scope: api.ScopeType; scope
   );
 }
 
-export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: string }) {
+export function LivePanel({ scope, scopeId, canCompose = false }: { scope: api.ScopeType; scopeId: string; canCompose?: boolean }) {
   const { userId } = useAuth();
   const list = useLoad(() => api.liveSessions(scope, scopeId), [scope, scopeId]);
   const [title, setTitle] = useState('Zikr du soir');
@@ -493,6 +514,7 @@ export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: s
       {list.data?.map((s) => (
         <Button key={s.id} icon="radio-outline" title={L('Rejoindre : {x}', { x: s.title })} onPress={() => router.push(`/live/${s.id}`)} style={{ marginBottom: 8 }} />
       ))}
+      {canCompose ? (
       <Row gap={8}>
         <View style={{ flex: 1 }}>
           <Field label="Nouvelle session" value={title} onChangeText={setTitle} />
@@ -516,6 +538,7 @@ export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: s
           }}
         />
       </Row>
+      ) : null}
       {err ? <Muted style={{ color: t.danger }}>{err}</Muted> : null}
     </Card>
   );

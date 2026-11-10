@@ -58,5 +58,6 @@ module.exports = ({ config }) => {
     config.experiments = { ...exp, inlineModules: { ...inline, watchedDirectories: [...dirs] } };
     config.plugins = [...(config.plugins || []), 'expo-app-intents'];
   }
+  config.plugins = [...(config.plugins || []), 'expo-iap'];
   return config;
 };

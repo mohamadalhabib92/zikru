@@ -120,8 +120,8 @@ select tests.as_user('M'); select public.accept_invitation(tests.get('inv_m'), '
 do $$ begin
   assert tests.state(format($q$select public.create_invitation('circle', %L, 'moderator', 1, 7)$q$, tests.get('circle'))) = '42501',
     'un modérateur ne crée pas d''invitation modérateur';
-  assert tests.state(format($q$select public.create_invitation('circle', %L, 'member', 1, 7)$q$, tests.get('circle'))) = 'ok',
-    'un modérateur invite des membres';
+  assert tests.state(format($q$select public.create_invitation('circle', %L, 'member', 1, 7)$q$, tests.get('circle'))) = '42501',
+    'un modérateur n’invite pas : seule l’administration (fondateur) invite';
 end $$;
 select tests.as_user('X');
 do $$ begin
@@ -159,10 +159,12 @@ do $$ begin
 end $$;
 
 -- ============================================================ Zikr en direct : nom serveur, cadence
-select tests.as_user('X');
+-- La session est composée par le fondateur. Un membre compte encore.
+select tests.as_user('F');
 with s as (insert into public.zikr_sessions (scope_type, circle_id, started_by, title)
   values ('circle', tests.get('circle')::uuid, auth.uid(), 'Zikr du soir') returning id)
 insert into tests.ctx select 'ses', id::text from s;
+select tests.as_user('X');
 insert into public.zikr_session_counts (session_id, user_id, display_name, count)
   values (tests.get('ses')::uuid, auth.uid(), 'Fatou (fondatrice)', 999999);
 do $$ declare r public.zikr_session_counts; begin

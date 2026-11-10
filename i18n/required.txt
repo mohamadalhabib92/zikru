@@ -31,6 +31,9 @@ src/app/names.tsx
 src/app/onboarding.tsx
 src/app/planner.tsx
 src/app/privacy.tsx
+src/app/premium.tsx
+src/app/terms.tsx
+src/components/community/admin.tsx
 src/app/qibla.tsx
 src/app/quran/[n].tsx
 src/app/quran/bookmarks.tsx

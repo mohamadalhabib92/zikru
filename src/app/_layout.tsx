@@ -16,6 +16,7 @@ import { SettingsProvider, useSettings } from '@/lib/settings';
 import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
 import { takePendingRoute } from '@/ui/appearance';
 import { GrowthProvider } from '@/lib/growth';
+import { PremiumProvider } from '@/lib/premium';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
@@ -83,6 +84,8 @@ function Root() {
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
         <Stack.Screen name="privacy" options={{ title: L("Confidentialité") }} />
+        <Stack.Screen name="premium" options={{ title: L("Zikru Premium") }} />
+        <Stack.Screen name="terms" options={{ title: L("Conditions d’utilisation") }} />
         <Stack.Screen name="ring" options={{ title: tr.ring }} />
         <Stack.Screen name="ble-diag" options={{ title: L("Diagnostic Bluetooth") }} />
         <Stack.Screen name="qibla" options={{ title: tr.qibla_title }} />
@@ -145,6 +148,7 @@ export default function Layout() {
           <DataProvider>
             <ZikrProvider>
               <AuthProvider>
+                <PremiumProvider>
                 <CommunityProvider>
                   <GrowthProvider>
                     <RecitationProvider>
@@ -152,6 +156,7 @@ export default function Layout() {
                     </RecitationProvider>
                   </GrowthProvider>
                 </CommunityProvider>
+                </PremiumProvider>
               </AuthProvider>
             </ZikrProvider>
           </DataProvider>

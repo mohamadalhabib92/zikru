@@ -29,6 +29,8 @@ export type Goal = {
   status: 'active' | 'done' | 'archived';
   ends_on: string | null;
   created_at: string;
+  /** null tant que l’administrateur n’a pas choisi d’ordre, ou si la colonne n’est pas encore en base. */
+  position: number | null;
 };
 export type GoalProgress = {
   goal_id: string;
@@ -86,6 +88,8 @@ export function frError(e: unknown): string {
       return L('Ce groupe est complet ({n} personnes maximum, créateur inclus).', { n: Number(d.limit) || 4 });
     case 'ZKG02':
       return L('Vous avez atteint la limite de {n} groupes créés.', { n: Number(d.limit) || 0 });
+    case 'ZKP01':
+      return L('Créer un groupe est réservé à Zikru Premium.');
     case 'ZKR01':
       return L('Trop de tentatives. Réessayez dans {t}.', { t: waitText(Number(d.retry_after_s) || 60) });
     case 'ZKF01':
@@ -228,10 +232,31 @@ export async function allSharingModes(userId: string) {
 }
 
 // ---------- Objectifs ----------
-export const listGoals = (scope: ScopeType, id: string) =>
-  q<Goal[]>(sb().then((c) => c.from('shared_goals').select('id,scope_type,family_id,circle_id,title,formula,target,status,ends_on,created_at').eq(scopeCol(scope), id).neq('status', 'archived').order('created_at', { ascending: false })));
+const GOAL_COLS = 'id,scope_type,family_id,circle_id,title,formula,target,status,ends_on,created_at';
+export async function listGoals(scope: ScopeType, id: string): Promise<Goal[]> {
+  const c = await sb();
+  const withPos = await c.from('shared_goals').select(`${GOAL_COLS},position`).eq(scopeCol(scope), id).neq('status', 'archived').order('created_at', { ascending: false });
+  if (withPos.error && /position|schema cache|column/i.test(withPos.error.message ?? '')) {
+    const rows = await q<Omit<Goal, 'position'>[]>(c.from('shared_goals').select(GOAL_COLS).eq(scopeCol(scope), id).neq('status', 'archived').order('created_at', { ascending: false }));
+    return rows.map((g) => ({ ...g, position: null }));
+  }
+  if (withPos.error) throw new CommunityError(frError(withPos.error), withPos.error.code);
+  return ((withPos.data ?? []) as Goal[]).map((g) => ({ ...g, position: g.position ?? null }));
+}
 export const createGoal = (scope: ScopeType, id: string, userId: string, g: { title: string; formula?: string; target: number; ends_on?: string | null }) =>
   q(sb().then((c) => c.from('shared_goals').insert({ scope_type: scope, [scopeCol(scope)]: id, created_by: userId, title: g.title, formula: g.formula || null, target: g.target, ends_on: g.ends_on || null })));
+/** Change le nombre (et éventuellement l’ordre) d’un objectif. N’écrit pas les compteurs. */
+export async function updateGoalComposition(id: string, patch: { target?: number; position?: number | null }): Promise<void> {
+  const c = await sb();
+  const res = await c.from('shared_goals').update(patch).eq('id', id);
+  if (res.error && patch.position != null && /position|schema cache|column/i.test(res.error.message ?? '')) {
+    if (patch.target == null) throw new CommunityError(L('Le serveur n’a pas encore cette mise à jour : l’ordre sera modifiable dès qu’elle est appliquée. Rien n’a été effacé.'));
+    const retry = await c.from('shared_goals').update({ target: patch.target }).eq('id', id);
+    if (retry.error) throw new CommunityError(frError(retry.error), retry.error.code);
+    return;
+  }
+  if (res.error) throw new CommunityError(frError(res.error), res.error.code);
+}
 /** Rôles de l’utilisateur dans ses familles et cercles (pour savoir où il peut créer des objectifs communs). */
 export async function myGroupRoles(userId: string): Promise<{ family: Record<string, string>; circle: Record<string, string> }> {
   const [f, c] = await Promise.all([
@@ -400,3 +425,70 @@ export const setGroupProgramStatus = (id: string, status: 'active' | 'archived')
 /** Avancée personnelle (valeur absolue) sur une étape ; le serveur la borne au nombre de l’étape et renvoie la valeur gardée. */
 export const setProgramProgress = (stepId: string, count: number) => pq<number>(sb().then((c) => c.rpc('set_program_progress', { p_step: stepId, p_count: count })));
 export const groupProgramView = (id: string) => pq<GroupProgramView>(sb().then((c) => c.rpc('group_program_view', { p_id: id })));
+
+const orderMissing = (message: string) => /schema cache|does not exist|could not find|PGRST202|move_program_step|set_program_step_target/i.test(message);
+
+export async function setProgramStepTarget(stepId: string, target: number): Promise<void> {
+  const c = await sb();
+  const res = await c.rpc('set_program_step_target', { p_step: stepId, p_target: target });
+  if (res.error) {
+    if (orderMissing(res.error.message ?? '')) throw new CommunityError(L('Le serveur n’a pas encore cette mise à jour : l’ordre sera modifiable dès qu’elle est appliquée. Rien n’a été effacé.'));
+    throw new CommunityError(frError(res.error), res.error.code);
+  }
+}
+export async function moveProgramStep(stepId: string, direction: -1 | 1): Promise<void> {
+  const c = await sb();
+  const res = await c.rpc('move_program_step', { p_step: stepId, p_direction: direction });
+  if (res.error) {
+    if (orderMissing(res.error.message ?? '')) throw new CommunityError(L('Le serveur n’a pas encore cette mise à jour : l’ordre sera modifiable dès qu’elle est appliquée. Rien n’a été effacé.'));
+    throw new CommunityError(frError(res.error), res.error.code);
+  }
+}
+
+export type JoinRequest = {
+  id: string;
+  scope_type: ScopeType;
+  family_id: string | null;
+  circle_id: string | null;
+  user_id: string;
+  display_name: string;
+  message: string | null;
+  status: 'pending' | 'approved' | 'refused';
+  created_at: string;
+};
+
+export async function listJoinRequests(scope: ScopeType, id: string): Promise<JoinRequest[]> {
+  const c = await sb();
+  const res = await c.from('group_join_requests').select('id,scope_type,family_id,circle_id,user_id,display_name,message,status,created_at').eq(scopeCol(scope), id).eq('status', 'pending').order('created_at');
+  if (res.error && /schema cache|does not exist|group_join_requests/i.test(res.error.message ?? '')) return [];
+  if (res.error) throw new CommunityError(frError(res.error), res.error.code);
+  return (res.data ?? []) as JoinRequest[];
+}
+export const requestGroupJoin = (scope: ScopeType, id: string, displayName: string, message?: string) =>
+  q<string>(sb().then((c) => c.rpc('request_group_join', { p_scope: scope, p_scope_id: id, p_display_name: displayName, p_message: message ?? null })));
+export const reviewJoinRequest = (id: string, approve: boolean) => q(sb().then((c) => c.rpc('review_group_join_request', { p_id: id, p_approve: approve })));
+export const deleteGroup = (scope: ScopeType, id: string) => q(sb().then((c) => c.rpc('delete_group', { p_scope: scope, p_scope_id: id })));
+
+/** true si ce compte a déjà créé une famille, un cercle ou un programme. null si on ne peut pas le savoir (hors ligne). */
+export async function createdAnyServerGroup(): Promise<boolean | null> {
+  try {
+    const c = await getSupabase();
+    if (!c) return null;
+    const uid = (await c.auth.getUser()).data.user?.id;
+    if (!uid) return false;
+    const fam = await c.from('families').select('id').eq('created_by', uid).limit(1);
+    if (fam.error) return null;
+    if ((fam.data ?? []).length > 0) return true;
+    const cir = await c.from('circles').select('id').eq('created_by', uid).limit(1);
+    if (cir.error) return null;
+    if ((cir.data ?? []).length > 0) return true;
+    const prog = await c.from('group_programs').select('id').eq('created_by', uid).limit(1);
+    if (prog.error) {
+      if (/does not exist|schema cache|PGRST|column/i.test(prog.error.message ?? '')) return false;
+      return null;
+    }
+    return (prog.data ?? []).length > 0;
+  } catch {
+    return null;
+  }
+}

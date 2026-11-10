@@ -9,12 +9,12 @@ import type { PolicyLang } from './privacy';
 export type PolicySection = { id: string; h: string; p?: string[]; li?: string[] };
 export type Policy = { title: string; updated: string; lead: string; sections: PolicySection[]; prevails?: string };
 
-export const POLICY_UPDATED = '2026-11-08';
+export const POLICY_UPDATED = '2026-11-10';
 export const CONTROLLER = 'Mohamed El Habib Ba, Chemin de la Suettaz 17, 1008 Prilly, Suisse';
 
 const fr: Policy = {
   title: 'Politique de confidentialité de Zikru',
-  updated: 'Dernière mise à jour : 8 novembre 2026 (version 1.0.30)',
+  updated: 'Dernière mise à jour : 10 novembre 2026 (version 1.0.30)',
   lead: 'Zikru fonctionne sans compte et sans publicité. Sans compte, vos compteurs, réglages et lectures restent sur votre appareil. Certaines fonctions facultatives envoient des données à des serveurs : elles sont décrites ci-dessous, une par une, et les plus sensibles ne s’activent qu’avec votre accord explicite.',
   sections: [
     {
@@ -132,8 +132,17 @@ const fr: Policy = {
       p: ['Connexions chiffrées (HTTPS), connexion sans mot de passe, règles d’accès par utilisateur dans la base de données, codes d’invitation enregistrés sous forme hachée, aucune clé secrète dans l’application. Les messages ne sont pas encore chiffrés de bout en bout.'],
     },
     {
+      id: 'purchases',
+      h: '13. Achats intégrés',
+      li: [
+        'Zikru Premium est un achat unique, à vie, traité par Apple (App Store). Le même type d’achat pourra plus tard passer par Google Play. Zikru ne reçoit ni numéro de carte ni coordonnées bancaires.',
+        'L’application mémorise sur l’appareil que Premium est débloqué (identifiant du produit et identifiant de transaction), pour que l’accès reste disponible hors ligne. Dans cette version, ce reçu n’est pas envoyé aux serveurs de Zikru.',
+        'Apple conserve l’historique d’achat selon ses propres règles. Cet achat sert uniquement à débloquer la création de zikrs personnels et de groupes. Il n’est pas utilisé pour la publicité ni pour le pistage.',
+      ],
+    },
+    {
       id: 'changes',
-      h: '13. Modifications',
+      h: '14. Modifications',
       p: ['En cas de changement important (nouveau flux de données, nouveau prestataire), nous mettons à jour cette page et vous redemandons votre consentement lorsque c’est nécessaire.'],
     },
   ],
@@ -141,7 +150,7 @@ const fr: Policy = {
 
 const en: Policy = {
   title: 'Zikru privacy policy',
-  updated: 'Last updated: 8 November 2026 (version 1.0.30)',
+  updated: 'Last updated: 10 November 2026 (version 1.0.30)',
   lead: 'Zikru works without an account and without ads. Without an account, your counters, settings and reading stay on your device. Some optional features send data to servers: each is described below, and the most sensitive ones only turn on with your explicit consent.',
   sections: [
     {
@@ -259,8 +268,17 @@ const en: Policy = {
       p: ['Encrypted connections (HTTPS), password-less sign-in, per-user access rules in the database, invitation codes stored hashed, no secret keys in the app. Messages are not yet end-to-end encrypted.'],
     },
     {
+      id: 'purchases',
+      h: '13. In-app purchases',
+      li: [
+        'Zikru Premium is a one-time lifetime purchase processed by Apple (App Store). The same kind of purchase may later go through Google Play. Zikru does not receive a card number or bank details.',
+        'The app remembers on the device that Premium is unlocked (product identifier and transaction identifier), so access stays available offline. In this version, that receipt is not sent to Zikru’s servers.',
+        'Apple keeps the purchase history under its own rules. The purchase only unlocks creating personal zikrs and creating groups. It is not used for advertising or tracking.',
+      ],
+    },
+    {
       id: 'changes',
-      h: '13. Changes',
+      h: '14. Changes',
       p: ['If something important changes (new data flow, new provider), we update this page and ask for your consent again where needed.'],
     },
   ],
@@ -269,7 +287,7 @@ const en: Policy = {
 
 const ar: Policy = {
   title: 'سياسة الخصوصية لتطبيق ذكرو',
-  updated: 'آخر تحديث: 8 نوفمبر 2026 (الإصدار 1.0.30)',
+  updated: 'آخر تحديث: 10 نوفمبر 2026 (الإصدار 1.0.30)',
   lead: 'يعمل ذكرو بدون حساب وبدون إعلانات. بدون حساب، تبقى عدّاداتك وإعداداتك وقراءتك على جهازك. بعض الميزات الاختيارية ترسل بيانات إلى خوادم: نصفها أدناه واحدةً واحدة، ولا تعمل أكثرها حساسيةً إلا بموافقتك الصريحة.',
   sections: [
     {
@@ -387,8 +405,17 @@ const ar: Policy = {
       p: ['اتصالات مشفّرة (HTTPS)، وتسجيل دخول بدون كلمة مرور، وقواعد وصول لكل مستخدم في قاعدة البيانات، ورموز الدعوة محفوظة بصيغة مجزّأة (hash)، ولا مفاتيح سرية داخل التطبيق. الرسائل ليست مشفّرة بعدُ تشفيرًا تامًّا بين الطرفين.'],
     },
     {
+      id: 'purchases',
+      h: '13. المشتريات داخل التطبيق',
+      li: [
+        'ذكرو بريميوم شراء واحد مدى الحياة تعالجه Apple (آب ستور). ويمكن لاحقًا أن يمر النوع نفسه عبر Google Play. لا يتلقى ذكرو رقم البطاقة ولا بيانات مصرفية.',
+        'يتذكر التطبيق على الجهاز أن بريميوم مفتوح (معرّف المنتج ومعرّف العملية)، ليبقى الوصول متاحًا دون اتصال. في هذه النسخة لا يُرسَل هذا الإيصال إلى خوادم ذكرو.',
+        'تحتفظ Apple بسجل الشراء وفق قواعدها. ولا يُستخدم هذا الشراء إلا لفتح إنشاء الأذكار الشخصية وإنشاء المجموعات. ولا يُستعمل للإعلان ولا للتتبّع.',
+      ],
+    },
+    {
       id: 'changes',
-      h: '13. التعديلات',
+      h: '14. التعديلات',
       p: ['عند أي تغيير مهم (تدفق بيانات جديد أو مزوّد جديد) نحدّث هذه الصفحة ونطلب موافقتك من جديد عند الحاجة.'],
     },
   ],

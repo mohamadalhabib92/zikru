@@ -24,6 +24,7 @@ import { usePersistentState } from '@/lib/storage';
 import { SURAHS } from '@/lib/surahs';
 import { PRACTICES, practiceDoneKey } from '@/lib/tijani';
 import { getWeather, wmo, type Weather } from '@/lib/weather';
+import { usePremium } from '@/lib/premium';
 import { useZikrs } from '@/lib/zikrs';
 import { khatmaStatus, streak as readStreak } from '@/lib/khatma';
 import { pageOf } from '@/lib/quran-nav';
@@ -47,7 +48,8 @@ export default function Home() {
   const { s, t: tr } = useSettings();
   const uiL = useUiLang();
   const { tasbih, content } = useData();
-  const { zikrs } = useZikrs();
+  const { zikrs, create } = useZikrs();
+  const premium = usePremium();
   const g = useGrowth();
   const { neutral } = useDispense();
   const router = useRouter();
@@ -154,6 +156,16 @@ export default function Home() {
   const go = (h: Href) => () => {
     tapHaptic('select');
     router.push(h);
+  };
+  const composeZikr = () => {
+    tapHaptic('select');
+    if (!premium.ready) return;
+    if (!premium.canCreate) {
+      router.push('/premium');
+      return;
+    }
+    const z = create('Mon zikr');
+    router.push({ pathname: '/zikrs/edit', params: { id: z.id } });
   };
 
   const hero = (
@@ -375,7 +387,7 @@ export default function Home() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={L("Composer un zikr")}
-            onPress={go('/zikrs/edit')}
+            onPress={composeZikr}
             style={({ pressed }) => ({ width: 120, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: b.line, alignItems: 'center', justifyContent: 'center', gap: 6, opacity: pressed ? 0.8 : 1 })}
           >
             <Ionicons name="add-circle" size={30} color={b.green} />
@@ -383,7 +395,7 @@ export default function Home() {
           </Pressable>
         </ScrollView>
       ) : (
-        <LCard onPress={go('/zikrs/edit')} label="Composer mon premier zikr" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <LCard onPress={composeZikr} label="Composer mon premier zikr" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <IconBadge icon="add" color={b.green} size={44} />
           <View style={{ flex: 1 }}>
             <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15 }}>Composez votre premier zikr</Text>

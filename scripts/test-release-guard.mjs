@@ -30,7 +30,7 @@ assert.match(policy, /chiffrés en transit, pas encore de bout en bout/);
 assert.doesNotMatch(policy, /Frankfurt/);
 assert.match(ui, /pas encore de chiffrement de bout en bout/);
 assert.match(policy, /ne sont pas encore chiffrés de bout en bout/);
-assert.match(html, /8 novembre 2026 \(version 1\.0\.30\)/);
+assert.match(html, /10 novembre 2026 \(version 1\.0\.30\)/);
 assert.match(html, /LiveKit/);
 assert.match(html, /pas encore de bout en bout/);
 assert.match(sounds, /adhan_cue\.wav/);

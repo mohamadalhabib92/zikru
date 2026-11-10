@@ -2,7 +2,9 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { GroupAdminTools } from '@/components/community/admin';
 import { BlockButton, CallCard, confirmAsk, DiscussionCard, EncouragementsPanel, ModerationContact, ReportButton, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
+import { orderGroupGoals, positionsAfterMove } from '@/lib/group-order';
 import * as api from '@/lib/community/api';
 import { ProgramsPanel } from '@/components/community/programs';
 import { useAuth } from '@/lib/community/auth';
@@ -49,17 +51,32 @@ export default function CircleScreen() {
       <H2>Objectifs</H2>
       <ErrorNote error={goals.error} onRetry={goals.reload} />
       {goals.data?.length ? null : <Muted>Aucun objectif pour l’instant.</Muted>}
-      {goals.data?.map((g) => (
-        <GoalCard key={g.id} goal={g} scopeName={name} canAdmin={isMod} />
+      {orderGroupGoals(goals.data ?? []).map((g) => (
+        <GoalCard
+          key={g.id}
+          goal={g}
+          scopeName={name}
+          canAdmin={isFounder}
+          onMove={
+            isFounder
+              ? async (dir) => {
+                  const next = positionsAfterMove(orderGroupGoals(goals.data ?? []), g.id, dir);
+                  if (!next) return;
+                  await Promise.all(next.map((x) => api.updateGoalComposition(x.id, { position: x.position })));
+                  await goals.reload();
+                }
+              : undefined
+          }
+        />
       ))}
-      {isMod ? (
+      {isFounder ? (
         <Button small variant="ghost" icon="camera-outline" title="Importer un programme (photo, fichier)" onPress={() => router.push({ pathname: '/zikrs/import', params: { scope: 'circle', id: cid } })} />
       ) : null}
-      {isMod ? <NewGoal onCreate={async (g) => (await api.createGoal('circle', cid, userId!, g), void goals.reload())} /> : null}
+      {isFounder ? <NewGoal onCreate={async (g) => (await api.createGoal('circle', cid, userId!, g), void goals.reload())} /> : null}
       <Spacer />
       <SharingPicker scope="circle" scopeId={cid} />
       <Spacer />
-      <LivePanel scope="circle" scopeId={cid} />
+      <LivePanel scope="circle" scopeId={cid} canCompose={isFounder} />
       <Spacer />
       {members.data ? (
         <EncouragementsPanel scope="circle" scopeId={cid} recipients={members.data.filter((m) => m.user_id !== userId).map((m) => ({ userId: m.user_id, name: m.display_name }))} />
@@ -95,7 +112,7 @@ export default function CircleScreen() {
             </Text>
             <Badge label={roleFr(m.role)} tone={m.role === 'member' ? 'neutral' : 'info'} />
           </Row>
-          {isMod && m.user_id !== userId && m.role !== 'founder' ? (
+          {isFounder && m.user_id !== userId && m.role !== 'founder' ? (
             <Row wrap gap={8} style={{ marginTop: 6 }}>
               {isFounder ? (
                 <Button
@@ -124,7 +141,7 @@ export default function CircleScreen() {
       ))}
       {err ? <Muted style={{ color: t.danger }}>{err}</Muted> : null}
       <Spacer />
-      {isMod && cap.data && !cap.data.full ? (
+      {isFounder && cap.data && !cap.data.full ? (
         <InvitePanel
           scope="circle"
           scopeId={cid}
@@ -134,7 +151,7 @@ export default function CircleScreen() {
             ...(isFounder ? [{ label: 'Modérateur', value: 'moderator' }] : []),
           ]}
         />
-      ) : isMod && cap.data?.full ? (
+      ) : isFounder && cap.data?.full ? (
         <Muted>{L('Le cercle est complet ({n} personnes maximum, créateur inclus).', { n: cap.data.limit })}</Muted>
       ) : null}
       <Spacer />
@@ -144,6 +161,8 @@ export default function CircleScreen() {
         <ReportButton target="circle" targetId={cid} label="Signaler ce cercle" />
         <ModerationContact />
       </Card>
+      <Spacer />
+      {isFounder ? <GroupAdminTools scope="circle" scopeId={cid} /> : null}
       <Spacer />
       {me ? (
         <View>

@@ -6,6 +6,7 @@ import { LocalGroups } from '@/components/LocalGroups';
 import { BlockedList, confirmAsk, ErrorNote, ModerationContact, UnreadBadge, useGroupUnread, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
+import { usePremium } from '@/lib/premium';
 import { useCommunity } from '@/lib/community/sync';
 import { HeroHeader } from '@/ui/ds';
 import { Button, Card, Field, H2, Ionicons, ListItem, Muted, Notice, Row, Screen, Spacer, type IconName } from '@/ui/kit';
@@ -108,6 +109,7 @@ function SyncStatus() {
 
 function MyFamilies() {
   const { displayName, profile } = useAuth();
+  const premium = usePremium();
   const fams = useLoad(() => api.listFamilies(), []);
   const unread = useGroupUnread();
   useFocusEffect(
@@ -150,6 +152,8 @@ function MyFamilies() {
               loading={busy}
               onPress={async () => {
                 if (!name.trim() || !me.trim()) return setErr('Nom requis.');
+                if (!premium.ready) return;
+                if (!premium.canCreate) return router.push('/premium');
                 setBusy(true);
                 try {
                   const id = await api.createFamily(name.trim(), me.trim());
@@ -166,7 +170,7 @@ function MyFamilies() {
           </Row>
         </Card>
       ) : (
-        <Button small variant="secondary" icon="home-outline" title="Créer une famille" onPress={() => setCreating(true)} />
+        <Button small variant="secondary" icon="home-outline" title="Créer une famille" onPress={() => { if (!premium.ready) return; if (!premium.canCreate) return router.push('/premium'); setCreating(true); }} />
       )}
     </View>
   );
@@ -174,6 +178,7 @@ function MyFamilies() {
 
 function MyCircles() {
   const { displayName, profile } = useAuth();
+  const premium = usePremium();
   const list = useLoad(() => api.listCircles(), []);
   const unread = useGroupUnread();
   useFocusEffect(
@@ -218,6 +223,8 @@ function MyCircles() {
               loading={busy}
               onPress={async () => {
                 if (!name.trim()) return setErr('Nom requis.');
+                if (!premium.ready) return;
+                if (!premium.canCreate) return router.push('/premium');
                 setBusy(true);
                 try {
                   const id = await api.createCircle(name.trim(), desc.trim(), rules.trim(), displayName);
@@ -234,7 +241,7 @@ function MyCircles() {
           </Row>
         </Card>
       ) : (
-        <Button small variant="secondary" icon="people-outline" title="Créer un cercle" onPress={() => setCreating(true)} />
+        <Button small variant="secondary" icon="people-outline" title="Créer un cercle" onPress={() => { if (!premium.ready) return; if (!premium.canCreate) return router.push('/premium'); setCreating(true); }} />
       )}
     </View>
   );
