@@ -22,14 +22,17 @@ import { theme as t } from '@/ui/theme';
 import { bindRemoteAudio, prepareMedia, releaseMedia, setSpeaker, showRoutePicker, VideoTile } from './media';
 import { cameraOptions, micCapture, roomOptions } from './room-options';
 import type { DataMode } from '@/lib/calls/quality';
+import { SharedReading } from '@/components/lesson/shared-reading';
+import { READING_TOPIC, decodeReading, readingBytes, readingText } from '@/lib/lessons/reading';
 
 type Phase = 'loading' | 'lobby' | 'joining' | 'in' | 'ended';
 const KEEP_AWAKE = 'zikru-call';
 
 export default function CallScreen() {
-  const p = useLocalSearchParams<{ scope?: string; id?: string; name?: string }>();
+  const p = useLocalSearchParams<{ scope?: string; id?: string; name?: string; lesson?: string }>();
   const scope: CallScope = p.scope === 'family' ? 'family' : 'circle';
   const sid = String(p.id ?? '');
+  const lessonId = /^[0-9a-f-]{36}$/i.test(String(p.lesson ?? '')) ? String(p.lesson) : '';
   const title = String(p.name ?? '') || L('Appel de groupe');
   const { userId } = useAuth();
 
@@ -52,12 +55,27 @@ export default function CallScreen() {
   const [active, setActive] = useState<Room | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [remoteReading, setRemoteReading] = useState<string | null>(null);
   const room = useRef<Room | null>(null);
   const unbind = useRef<() => void>(() => {});
   const hiddenRef = useRef(hidden);
   useEffect(() => {
     hiddenRef.current = hidden;
   }, [hidden]);
+
+  useEffect(() => {
+    const r = active;
+    if (!r || !lessonId) return;
+    const onData = (payload: Uint8Array, _who?: unknown, _kind?: unknown, topic?: string) => {
+      if (topic !== READING_TOPIC) return;
+      const text = readingText(payload);
+      if (decodeReading(text)?.lessonId === lessonId) setRemoteReading(text);
+    };
+    r.on(RoomEvent.DataReceived, onData);
+    return () => {
+      r.off(RoomEvent.DataReceived, onData);
+    };
+  }, [active, lessonId]);
 
   // ---------- Droits (kill-switch serveur, module natif présent ?) ----------
   useEffect(() => {
@@ -323,6 +341,18 @@ export default function CallScreen() {
           );
         })}
         {hidden.size ? <Muted style={{ fontSize: 12 }}>Vous n’entendez plus et ne voyez plus les personnes bloquées pendant cet appel.</Muted> : null}
+        {lessonId ? (
+          <SharedReading
+            lessonId={lessonId}
+            embedded
+            remoteRaw={remoteReading}
+            onBroadcast={(json) => {
+              const live = room.current;
+              if (!live) return;
+              void live.localParticipant.publishData(readingBytes(json), { reliable: true, topic: READING_TOPIC }).catch(() => {});
+            }}
+          />
+        ) : null}
       </ScrollView>
       <Row gap={10} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16, justifyContent: 'center', backgroundColor: t.surface }}>
         <Button small variant={mic ? 'secondary' : 'primary'} icon={mic ? 'mic' : 'mic-off'} title={mic ? 'Couper le micro' : 'Ouvrir le micro'} onPress={() => void toggleMic()} />

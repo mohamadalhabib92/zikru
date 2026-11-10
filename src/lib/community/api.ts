@@ -104,6 +104,8 @@ export function frError(e: unknown): string {
       return L('Créer un groupe est réservé à Zikru Premium.');
     case 'ZKT01':
       return L('Le rôle d’enseignant est accordé par Bissabi, pas dans l’application.');
+    case 'ZKL01':
+      return L('La lecture partagée n’est pas ouverte.');
     case 'ZKR01':
       return L('Trop de tentatives. Réessayez dans {t}.', { t: waitText(Number(d.retry_after_s) || 60) });
     case 'ZKF01':

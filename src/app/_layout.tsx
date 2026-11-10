@@ -132,6 +132,7 @@ function Root() {
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
         <Stack.Screen name="program/[id]" options={{ title: L("Programme de groupe") }} />
         <Stack.Screen name="discussion" options={{ title: L("Discussion") }} />
+        <Stack.Screen name="lesson/[id]" options={{ title: L("Lecture partagée") }} />
       </Stack>
       <MiniPlayer path={path} />
       <StorageAlert />

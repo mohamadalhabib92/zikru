@@ -27,6 +27,7 @@ src/app/join.tsx
 src/app/journey.tsx
 src/app/kahf.tsx
 src/app/live/[id].tsx
+src/app/lesson/[id].tsx
 src/app/names.tsx
 src/app/onboarding.tsx
 src/app/planner.tsx
@@ -35,6 +36,7 @@ src/app/premium.tsx
 src/app/terms.tsx
 src/components/community/admin.tsx
 src/components/community/classes.tsx
+src/components/lesson/shared-reading.tsx
 src/app/qibla.tsx
 src/app/quran/[n].tsx
 src/app/quran/bookmarks.tsx

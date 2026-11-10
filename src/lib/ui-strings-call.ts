@@ -33,7 +33,6 @@ export const UI_STRINGS_CALL: Record<string, [en: string, ar: string, de: string
   "Moins d’image, le son d’abord. Utile en 4G ou si la batterie est basse.": ["Less picture, sound first. Useful on 4G or when the battery is low.","صورة أقل والصوت أولاً. مفيد على الجيل الرابع أو عندما تكون البطارية ضعيفة.","Weniger Bild, Ton zuerst. Nützlich im Mobilfunk oder bei schwacher Batterie."],
   "Ouvrir le micro": ["Unmute microphone","فتح الميكروفون","Mikrofon einschalten"],
   "Ouvrir mon micro": ["Turn on my microphone","فتح ميكروفوني","Mein Mikrofon einschalten"],
-  "Rejoindre en audio": ["Join with audio","الانضمام بالصوت","Mit Audio beitreten"],
   "Rejoindre en silence": ["Join in silence","الانضمام بصمت","Still beitreten"],
   "Rejoindre en vidéo": ["Join with video","الانضمام بالفيديو","Mit Video beitreten"],
   "Rejoindre l’appel": ["Join the call","الانضمام إلى المكالمة","Anruf beitreten"],

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
+import { sharedReadingEnabled } from '@/lib/lessons/api';
 import { useAuth } from '@/lib/community/auth';
 import { L } from '@/lib/l10n';
 import { usePremium } from '@/lib/premium';
@@ -94,6 +95,7 @@ export function ClassesHome() {
 /** Leçon en direct (l’appel du groupe) et récitation à préparer. L’app n’écoute pas la voix. */
 export function ClassRoom({ id, isTeacher, allowMinors, allowMixed, onChanged }: { id: string; isTeacher: boolean; allowMinors: boolean; allowMixed: boolean; onChanged: () => void }) {
   const lessons = useLoad(() => api.listClassLessons(id), [id]);
+  const reading = useLoad(() => sharedReadingEnabled(), [id]);
   const duties = useLoad(() => api.listClassAssignments(id), [id]);
   const [title, setTitle] = useState('');
   const [when, setWhen] = useState('');
@@ -124,7 +126,10 @@ export function ClassRoom({ id, isTeacher, allowMinors, allowMixed, onChanged }:
       {(lessons.data ?? []).filter((l) => !l.cancelled_at).map((l) => (
         <View key={l.id} style={{ marginBottom: 8 }}>
           <Muted>{l.title} · {surahLabel(l.surah)} {l.ayah_from}–{l.ayah_to} · {new Date(l.starts_at).toLocaleString()}</Muted>
-          <Button small icon="call-outline" title="Rejoindre l’appel de la leçon" onPress={() => router.push({ pathname: '/call', params: { scope: 'circle', id, name: l.title } })} />
+          <Row gap={8} wrap>
+            {reading.data ? <Button small icon="book-outline" title="Lire le passage ensemble" onPress={() => router.push(`/lesson/${l.id}`)} /> : null}
+            <Button small icon="call-outline" title="Rejoindre l’appel de la leçon" onPress={() => router.push({ pathname: '/call', params: { scope: 'circle', id, name: l.title, ...(reading.data ? { lesson: l.id } : {}) } })} />
+          </Row>
         </View>
       ))}
       {isTeacher ? (
