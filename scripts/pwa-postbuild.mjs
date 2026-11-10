@@ -25,7 +25,8 @@ const files = [];
 })(dist);
 
 // pdf.js (≈ 1,8 Mo) : chargé seulement quand l’utilisateur importe un PDF, jamais pré-caché ni gardé hors-ligne.
-const ON_DEMAND = /^pdfjs\//;
+// Paysages : un seul fichier est demandé quand le thème est choisi (puis mis en cache à cette occasion).
+const ON_DEMAND = /^pdfjs\/|\/landscapes\/[^/]+\.webp$/;
 const precache = files.filter((f) => !/(^|\/)(sw\.js|404\.html|metadata\.json|\.nojekyll)$/.test(f) && !f.endsWith('.map') && !ON_DEMAND.test(f));
 const hash = createHash('sha256');
 for (const f of precache) hash.update(f).update(readFileSync(join(dist, f)));

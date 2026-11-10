@@ -15,6 +15,7 @@ import { WidgetSettings } from '@/components/WidgetSettings';
 import { DispenseSettings } from '@/components/DispenseSettings';
 import { PrayerOptions } from '@/components/PrayerOptions';
 import { useSettings } from '@/lib/settings';
+import { LANDSCAPE_THEMES_REQUIRE_PREMIUM, sanitizeLandscape, type LandscapeChoice } from '@/lib/landscapes';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
@@ -37,6 +38,14 @@ export default function SettingsScreen() {
   const [consent, choose] = useConsent();
   const pt = privacyText(s.lang);
   const premium = usePremium();
+  const landscape = sanitizeLandscape(s.landscape);
+  const pickLandscape = (id: LandscapeChoice) => {
+    if (id !== 'none' && LANDSCAPE_THEMES_REQUIRE_PREMIUM) {
+      if (!premium.ready) return;
+      if (!premium.canCreate) return router.push('/premium');
+    }
+    set({ landscape: id });
+  };
   return (
     <Screen>
       <Eyebrow>{tr.settings_title}</Eyebrow>
@@ -55,6 +64,19 @@ export default function SettingsScreen() {
           setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
         }}
       />
+      <H2>Paysages</H2>
+      <Muted>Fond calme pour le compteur, pendant le dhikr. Le choix reste enregistré sur cet appareil.</Muted>
+      <Spacer h={8} />
+      <Row wrap>
+        <Chip label="Aucun" active={landscape === 'none'} onPress={() => pickLandscape('none')} />
+        <Chip label="Lagon clair" active={landscape === 'lagoon'} onPress={() => pickLandscape('lagoon')} />
+        <Chip label="Dunes à l’aube" active={landscape === 'dunes'} onPress={() => pickLandscape('dunes')} />
+        <Chip label="Forêt dans la brume" active={landscape === 'mist'} onPress={() => pickLandscape('mist')} />
+        <Chip label="Désert sous les étoiles" active={landscape === 'stars'} onPress={() => pickLandscape('stars')} />
+        <Chip label="Oasis" active={landscape === 'oasis'} onPress={() => pickLandscape('oasis')} />
+      </Row>
+      <Muted>Images créées pour Zikru, libres d’usage dans l’application. Pas de photo tierce.</Muted>
+      <Spacer h={8} />
       <H2>{tr.language}</H2>
       <Row wrap>
         {pickableLangs(s.lang).map((l) => (
