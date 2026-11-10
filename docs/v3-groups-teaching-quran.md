@@ -202,6 +202,7 @@ Pour les couleurs, plus tard, deux portes propres : le même écrit du Complexe,
 12. Le cours en tête-à-tête (paiement hors magasin) et le cours à plusieurs (achat intégré Apple et Google) sont deux prix. Les ouvrir ensemble, ou commencer par l’un des deux.
 13. Quelles causes, et avec quelle fondation partenaire. Bissabi Drinks - BA, entreprise individuelle, ne peut pas être présentée comme une œuvre d’utilité publique.
 14. Qui, fiduciaire ou avocat en Suisse, relit la TVA, la LBA et le fait de ne pas garder l’argent des élèves sur le compte de Bissabi.
+15. Ouverte : qui doit avoir Premium pour participer. Pour l’instant, l’hôte (enseignant validé, fondateur, modérateur ou parent) paie pour ouvrir l’appel, la classe et la lecture partagée. Une personne invitée rejoint sans Premium. La discussion de groupe et le fait de rejoindre un groupe restent gratuits. Mohamed peut encore dire que tout le monde dans l’appel doit payer.
 
 ## 6. Payer un enseignant, et donner
 

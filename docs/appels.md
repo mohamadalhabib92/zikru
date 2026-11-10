@@ -28,6 +28,7 @@ Isolement : prière, Coran, dhikr, discussion, etc. n'importent rien des appels 
 - À l'entrée, la base vérifie chaque paire avec les personnes déjà présentes (blocage dans les deux sens ; règles enfant / invité de la discussion). Course possible entre deux entrées simultanées : documentée, acceptée en v1.
 - Jeton : micro toujours, caméra seulement si `calls.video` et (adulte ou accord parental). Jamais `roomAdmin`, jamais `roomRecord`, pas de données, pas de partage d'écran.
 - Hôtes : fondateur / modérateurs d'un cercle, parents d'une famille. Modération uniquement via la fonction (tracée).
+- Ouvrir une salle vide exige Premium à vie (`ch.mohamadba.zikru.premium.lifetime`, y compris l’antériorité). `call-token` répond `premium_required` et ne signe pas de jeton. Une personne déjà invitée rejoint une salle ouverte sans Premium. Décision encore ouverte : Mohamed peut exiger Premium pour tout le monde. La discussion et l’adhésion au groupe ne sont pas concernées.
 - Plafond : `calls.max_participants` (12). **Pas de plafond de durée en v1** : LiveKit renouvelle le jeton des personnes connectées ; le coût est tenu par le plafond de personnes, la limite de débit, l'interrupteur et les limites du projet LiveKit.
 
 ## Limites connues (v1)

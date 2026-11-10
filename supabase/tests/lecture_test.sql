@@ -122,6 +122,23 @@ do $$ declare r jsonb; begin
   assert tests.state(format($q$select public.set_reading_focus(%L, 6, null)$q$, tests.get('lesson'))) = '42501', 'la main est revenue à l’enseignant';
 end $$;
 
+reset role;
+delete from public.user_entitlements where user_id = tests.get('u_T')::uuid;
+set role authenticated;
+select tests.as_user('S');
+do $$ declare r jsonb; begin
+  r := public.lesson_reading(tests.get('lesson')::uuid);
+  assert r is not null and (r ->> 'ayah_from')::int = 5, 'l’élève lit sans Premium';
+end $$;
+select tests.as_user('T');
+do $$ begin
+  assert not public.am_i_teacher(), 'sans Premium : plus enseignant';
+  assert tests.state(format($q$select public.open_lesson_reading(%L, 1, 1, 7)$q$, tests.get('lesson'))) = 'ZKP01', 'conduire la lecture exige Premium';
+end $$;
+reset role;
+insert into public.user_entitlements (user_id, plan_id, source, external_ref, note)
+  values (tests.get('u_T')::uuid, 'lifetime', 'manual', 'test:reading-T-restore', 'restauré pour clore la leçon');
+set role authenticated;
 select tests.as_user('T');
 select public.cancel_class_lesson(tests.get('lesson')::uuid);
 do $$ begin

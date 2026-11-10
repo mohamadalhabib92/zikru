@@ -439,6 +439,7 @@ export const CAT: Record<string, string> = {
   "Compteur détecté automatiquement": "تم اكتشاف العدّاد تلقائيًا",
   "Compteurs, réglages et contenu local seront effacés.": "سيتم مسح العدّادات والإعدادات والمحتوى المحلي.",
   "Conditions de la voie": "شروط الطريقة",
+  "Conduire la lecture demande Zikru Premium et la validation Bissabi. Les élèves suivent sans Premium.": "قيادة القراءة تتطلب Zikru Premium واعتماد بيسّابي. التلاميذ يتابعون دون Premium.",
   "Confidentialité": "الخصوصية",
   "Confiez le téléphone à un enfant : un grand bouton de tasbih, sans chiffres des autres ni comparaison. Ses dhikr comptent pour l’objectif familial.": "أعطِ الهاتف لطفل: زر تسبيح كبير، دون أرقام الآخرين ولا مقارنة. ويُحتسب ذكره في هدف العائلة.",
   "Configuré": "مُهيّأ",

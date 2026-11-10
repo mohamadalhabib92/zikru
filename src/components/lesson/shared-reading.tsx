@@ -10,6 +10,7 @@ import { useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { L } from '@/lib/l10n';
+import { usePremium } from '@/lib/premium';
 import {
   addMark,
   fetchReading,
@@ -109,6 +110,7 @@ export function SharedReading({
   remoteRaw?: string | null;
 }) {
   const { userId } = useAuth();
+  const premium = usePremium();
   const boot = useLoad(async () => {
     const on = await sharedReadingEnabled();
     if (!on) return { on: false as const };
@@ -119,10 +121,11 @@ export function SharedReading({
     return {
       on: true as const,
       lesson,
-      teacher: !!mine && me?.role === 'founder',
+      teacher: !!mine && me?.role === 'founder' && (!premium.ready || premium.canCreate),
+      founder: me?.role === 'founder',
       members: members.filter((m) => m.user_id !== userId).map((m) => ({ id: m.user_id, name: m.display_name })),
     };
-  }, [lessonId, userId]);
+  }, [lessonId, userId, premium.canCreate]);
 
   const [state, setState] = useState<ReadingState | null>(null);
   const [lines, setLines] = useState<VerseLine[]>([]);
@@ -314,6 +317,9 @@ export function SharedReading({
   const body = (
     <View>
       <H2>Lecture partagée</H2>
+      {boot.data.founder && premium.ready && !premium.canCreate ? (
+        <Muted>Conduire la lecture demande Zikru Premium et la validation Bissabi. Les élèves suivent sans Premium.</Muted>
+      ) : null}
       <Muted>Le texte est le Hafs de Tanzil, embarqué, sans modification. Une marque ne change pas le verset. La caméra n’est pas nécessaire : le texte reste avec le son.</Muted>
       {state ? (
         <Muted>

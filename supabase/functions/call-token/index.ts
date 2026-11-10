@@ -78,7 +78,10 @@ Deno.serve(async (req) => {
         if (error.code === '42501') return json({ error: 'forbidden' }, 403);
         return json({ error: 'join' }, 500);
       }
-      if (!j?.ok) return json({ error: j?.reason ?? 'join' }, j?.reason === 'disabled' ? 503 : 403);
+      if (!j?.ok) {
+        if (j?.reason === 'premium_host') return json({ error: 'premium_required', product: 'ch.mohamadba.zikru.premium.lifetime' }, 402);
+        return json({ error: j?.reason ?? 'join' }, j?.reason === 'disabled' ? 503 : 403);
+      }
       const ok = j as JoinOk;
       await lk.createRoom(ok.room, ok.max_participants);
       const token = await signJwt(cfg, participantClaims(ok), ok.token_ttl_s);

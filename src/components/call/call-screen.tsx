@@ -16,6 +16,7 @@ import { callsSupported } from '@/lib/calls/support';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { L } from '@/lib/l10n';
+import { usePremium } from '@/lib/premium';
 import { Badge, Button, Card, Eyebrow, H1, H2, Ionicons, Muted, Notice, Row, Screen, Spacer, Toggle } from '@/ui/kit';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
@@ -35,6 +36,7 @@ export default function CallScreen() {
   const lessonId = /^[0-9a-f-]{36}$/i.test(String(p.lesson ?? '')) ? String(p.lesson) : '';
   const title = String(p.name ?? '') || L('Appel de groupe');
   const { userId } = useAuth();
+  const premium = usePremium();
 
   const [av, setAv] = useState<CallAvailability>({ kind: 'hidden' });
   const [phase, setPhase] = useState<Phase>('loading');
@@ -286,7 +288,17 @@ export default function CallScreen() {
               <Muted style={{ fontSize: 12 }}>{L(av.mixedClosed ? 'La vidéo de cette classe est fermée. L’enseignant peut l’ouvrir.' : av.videoNeedsConsent ? 'Audio seulement : la vidéo demande l’accord d’un parent.' : 'Audio seulement.')}</Muted>
             )}
             <Spacer h={8} />
-            <Button title={withVideo && av.video ? 'Rejoindre en vidéo' : withMic ? 'Rejoindre en audio' : 'Rejoindre en silence'} icon={withVideo && av.video ? 'videocam' : 'call'} loading={phase === 'joining'} onPress={() => void join()} />
+            {av.admin && premium.ready && (!premium.canCreate || !av.canStart) ? (
+              <>
+                <Notice tone="info" title="Ouvrir l’appel demande Zikru Premium." text="Les personnes invitées rejoignent sans Premium. Cette répartition reste une décision ouverte." />
+                <Button title="Zikru Premium" icon="star-outline" onPress={() => router.push('/premium')} />
+              </>
+            ) : (
+              <>
+                {av.admin ? null : <Muted>L’hôte Premium ouvre l’appel. Vous pouvez le rejoindre sans Premium.</Muted>}
+                <Button title={withVideo && av.video ? 'Rejoindre en vidéo' : withMic ? 'Rejoindre en audio' : 'Rejoindre en silence'} icon={withVideo && av.video ? 'videocam' : 'call'} loading={phase === 'joining'} onPress={() => void join()} />
+              </>
+            )}
           </Card>
         ) : null}
         {err ? <Notice tone="warning" title={err} /> : null}

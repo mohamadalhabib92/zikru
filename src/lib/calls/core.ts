@@ -16,6 +16,8 @@ export type CallRights = {
   video_needs_consent?: boolean;
   mixed_closed?: boolean;
   admin?: boolean;
+  /** L’hôte a Premium et peut ouvrir la salle. Absent : ancien serveur, on ne bloque pas l’écran. */
+  can_start?: boolean;
   max_participants?: number;
 };
 
@@ -24,7 +26,7 @@ export type CallAvailability =
   | { kind: 'hidden' } // pas membre, pas connecté
   | { kind: 'soon' } // fonction absente côté serveur, interrupteur coupé, ou app sans module d'appel (build actuel)
   | { kind: 'blocked'; reason: string } // suspendu·e, réglage parental
-  | { kind: 'ready'; video: boolean; videoNeedsConsent: boolean; admin: boolean; max: number; mixedClosed: boolean };
+  | { kind: 'ready'; video: boolean; videoNeedsConsent: boolean; admin: boolean; max: number; mixedClosed: boolean; canStart: boolean };
 
 export const LABEL_TRANSIT = 'chiffré en transit, pas encore de bout en bout';
 
@@ -34,7 +36,7 @@ export function availability(r: CallRights | null, opts: { missing?: boolean; na
   if (!r.member) return r.enabled ? { kind: 'hidden' } : { kind: 'soon' };
   if (!r.enabled || !opts.nativeOk) return { kind: 'soon' };
   if (!r.can_join) return { kind: 'blocked', reason: r.reason || 'parental' };
-  return { kind: 'ready', video: !!r.video, videoNeedsConsent: !!r.video_needs_consent, admin: !!r.admin, max: r.max_participants ?? 0, mixedClosed: !!r.mixed_closed };
+  return { kind: 'ready', video: !!r.video, videoNeedsConsent: !!r.video_needs_consent, admin: !!r.admin, max: r.max_participants ?? 0, mixedClosed: !!r.mixed_closed, canStart: r.can_start === true };
 }
 
 /** Motifs serveur → texte français (clé de traduction ; l'écran applique L()). Jamais de détail sur autrui. */
@@ -48,6 +50,8 @@ const REASONS: Record<string, string> = {
   suspended: 'Votre compte est suspendu : les appels ne sont pas disponibles.',
   full: 'L’appel est complet.',
   pair: 'Vous ne pouvez pas rejoindre cet appel pour le moment.',
+  premium_host: 'L’appel n’est pas encore ouvert par un hôte Premium.',
+  premium_required: 'L’appel n’est pas encore ouvert par un hôte Premium.',
   rate: 'Trop de tentatives. Réessayez dans un moment.',
   offline: 'Connexion requise pour l’appel',
   native: 'Les appels arrivent avec une prochaine version de l’app.',
