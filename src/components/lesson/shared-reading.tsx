@@ -11,6 +11,7 @@ import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { L } from '@/lib/l10n';
 import { usePremium } from '@/lib/premium';
+import { PremiumPaywall } from '@/components/premium/paywall';
 import {
   addMark,
   fetchReading,
@@ -148,7 +149,7 @@ export function SharedReading({
   }, [boot.data]);
 
   useEffect(() => {
-    if (!boot.data?.on || !boot.data.lesson) return;
+    if (!boot.data?.on || !boot.data.lesson || (premium.ready && !premium.canCreate)) return;
     let stop = false;
     let unsub = () => {};
     const pull = () =>
@@ -171,7 +172,7 @@ export function SharedReading({
       stop = true;
       unsub();
     };
-  }, [boot.data, lessonId]);
+  }, [boot.data, lessonId, premium.ready, premium.canCreate]);
 
   useEffect(() => {
     if (!remoteRaw) return;
@@ -267,6 +268,9 @@ export function SharedReading({
     return <Notice tone="info" title="La lecture partagée n’est pas ouverte." />;
   }
   if (!boot.data.lesson) return embedded ? null : <Notice tone="warning" title="Cette leçon n’est plus disponible." />;
+  if (premium.ready && !premium.canCreate) {
+    return <PremiumPaywall title="Cette lecture demande Zikru Premium." text="Tout le monde dans la leçon doit avoir Zikru Premium, y compris les élèves." />;
+  }
 
   const verses = (
     <Animated.ScrollView
@@ -318,7 +322,7 @@ export function SharedReading({
     <View>
       <H2>Lecture partagée</H2>
       {boot.data.founder && premium.ready && !premium.canCreate ? (
-        <Muted>Conduire la lecture demande Zikru Premium et la validation Bissabi. Les élèves suivent sans Premium.</Muted>
+        <Muted>Conduire la lecture demande aussi la validation Bissabi. Tout le monde dans la leçon doit avoir Zikru Premium.</Muted>
       ) : null}
       <Muted>Le texte est le Hafs de Tanzil, embarqué, sans modification. Une marque ne change pas le verset. La caméra n’est pas nécessaire : le texte reste avec le son.</Muted>
       {state ? (

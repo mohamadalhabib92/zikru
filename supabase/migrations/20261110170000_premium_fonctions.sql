@@ -3,11 +3,10 @@
 -- ne sont pas touchés. premium_creation_gate reste false : la création de famille ou de cercle
 -- n’est pas verrouillée ici.
 --
--- Décision provisoire, encore ouverte : l’hôte (enseignant, fondateur, modérateur, parent)
--- doit avoir Premium pour OUVRIR l’appel ou conduire la lecture. Une personne invitée
--- rejoint sans Premium. Mohamed peut inverser ce choix.
+-- Décision de Mohamed : tout le monde dans l’appel ou la leçon doit avoir Premium,
+-- y compris les personnes invitées et les élèves. La discussion et l’adhésion restent libres.
 
--- L’hôte ouvre seulement si la salle est vide et qu’il a Premium. Sinon motif premium_host.
+-- Sans Premium, un membre ne peut ni ouvrir ni rejoindre. Motif premium_required.
 create or replace function private.call_rights(p_scope text, p_scope_id uuid) returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 declare me uuid := (select auth.uid()); r text; minor boolean; c record; video boolean; reason text; n int;
@@ -60,6 +59,7 @@ begin
   end if;
   if private.is_suspended(me) then reason := 'suspended'; end if;
   if not on_ then reason := 'disabled'; end if;
+  if reason is null and not private.may_create_groups(me) then reason := 'premium_required'; end if;
   host := case p_scope when 'circle' then r in ('founder', 'moderator') else r = 'parent' end and reason is null;
   return jsonb_build_object('member', true, 'enabled', on_, 'role', r,
     'can_join', reason is null, 'reason', reason,
@@ -80,9 +80,6 @@ begin
   if me is null then raise exception 'Connexion requise' using errcode = '42501'; end if;
   if not coalesce((r ->> 'member')::boolean, false) then return jsonb_build_object('ok', false, 'reason', 'not_member'); end if;
   if not coalesce((r ->> 'can_join')::boolean, false) then return jsonb_build_object('ok', false, 'reason', r ->> 'reason'); end if;
-  if coalesce(cardinality(p_present), 0) = 0 and not coalesce((r ->> 'can_start')::boolean, false) then
-    return jsonb_build_object('ok', false, 'reason', 'premium_host');
-  end if;
   if coalesce(cardinality(p_present), 0) >= (r ->> 'max_participants')::int then return jsonb_build_object('ok', false, 'reason', 'full'); end if;
   foreach p in array coalesce(p_present, '{}'::uuid[]) loop
     if p <> me and not private.call_pair_ok(p_scope, p_scope_id, me, p) then
@@ -146,3 +143,32 @@ begin
   where lesson_id = p_lesson;
   return private.reading_payload(p_lesson);
 end $$;
+
+-- Lire la leçon aussi : élève, hôte, personne invitée. Sans Premium, la ligne n’est pas visible.
+create or replace function private.assert_reading_open(p_lesson uuid) returns uuid
+language plpgsql stable security definer set search_path = '' as $$
+declare cid uuid;
+begin
+  if not private.shared_reading_open() then
+    raise exception 'Lecture partagée fermée' using errcode = 'ZKL01',
+      detail = jsonb_build_object('reason', 'disabled')::text;
+  end if;
+  if (select auth.uid()) is null or not private.reading_participant(p_lesson) then
+    raise exception 'Réservé aux participants de la leçon' using errcode = '42501';
+  end if;
+  if not private.may_create_groups((select auth.uid())) then
+    raise exception 'La leçon demande Zikru Premium' using errcode = 'ZKP01',
+      detail = jsonb_build_object('reason', 'premium_required', 'product', 'ch.mohamadba.zikru.premium.lifetime')::text;
+  end if;
+  select circle_id into cid from public.class_lessons where id = p_lesson and cancelled_at is null;
+  if cid is null then raise exception 'Leçon introuvable' using errcode = '42501'; end if;
+  return cid;
+end $$;
+
+drop policy if exists lesson_readings_select on public.lesson_readings;
+create policy lesson_readings_select on public.lesson_readings for select to authenticated
+  using (private.shared_reading_open() and private.reading_participant(lesson_id) and private.may_create_groups((select auth.uid())));
+
+drop policy if exists lesson_marks_select on public.lesson_marks;
+create policy lesson_marks_select on public.lesson_marks for select to authenticated
+  using (private.shared_reading_open() and private.reading_participant(lesson_id) and private.may_create_groups((select auth.uid())));

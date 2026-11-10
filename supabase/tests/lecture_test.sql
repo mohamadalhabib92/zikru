@@ -17,8 +17,9 @@ insert into tests.ctx (k, v) values
   ('u_S', '42000000-0000-4000-8000-000000000003');
 insert into auth.users (id, raw_user_meta_data) select v::uuid, jsonb_build_object('display_name', substr(k, 3)) from tests.ctx where k like 'u\_%';
 insert into private.app_roles (user_id, role) values ('42000000-0000-4000-8000-000000000001', 'admin');
-insert into public.user_entitlements (user_id, plan_id, source, external_ref, note)
-  values ('42000000-0000-4000-8000-000000000002', 'lifetime', 'manual', 'test:reading-T', 'test lecture');
+insert into public.user_entitlements (user_id, plan_id, source, external_ref, note) values
+  ('42000000-0000-4000-8000-000000000002', 'lifetime', 'manual', 'test:reading-T', 'test lecture'),
+  ('42000000-0000-4000-8000-000000000003', 'lifetime', 'manual', 'test:reading-S', 'élève Premium');
 
 do $$ begin
   assert not public.shared_reading_open(), 'drapeau fermé par défaut';
@@ -123,12 +124,22 @@ do $$ declare r jsonb; begin
 end $$;
 
 reset role;
+delete from public.user_entitlements where user_id = tests.get('u_S')::uuid;
+set role authenticated;
+select tests.as_user('S');
+do $$ begin
+  assert tests.state(format($q$select public.lesson_reading(%L)$q$, tests.get('lesson'))) = 'ZKP01', 'élève sans Premium : lecture refusée';
+  assert (select count(*) from public.lesson_readings) = 0, 'RLS : sans Premium, la position est invisible';
+end $$;
+reset role;
+insert into public.user_entitlements (user_id, plan_id, source, external_ref, note)
+  values (tests.get('u_S')::uuid, 'lifetime', 'manual', 'test:reading-S2', 'élève rétabli');
 delete from public.user_entitlements where user_id = tests.get('u_T')::uuid;
 set role authenticated;
 select tests.as_user('S');
 do $$ declare r jsonb; begin
   r := public.lesson_reading(tests.get('lesson')::uuid);
-  assert r is not null and (r ->> 'ayah_from')::int = 5, 'l’élève lit sans Premium';
+  assert r is not null and (r ->> 'ayah_from')::int = 5, 'élève Premium lit encore si l’enseignant perd Premium';
 end $$;
 select tests.as_user('T');
 do $$ begin

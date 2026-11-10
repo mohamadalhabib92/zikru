@@ -39,7 +39,7 @@ async function invoke<T>(body: Record<string, unknown>): Promise<T> {
   if (ctx && typeof ctx.json === 'function') {
     const out = await ctx.json().catch(() => ({}) as { error?: string });
     if (ctx.status === 404) throw new CallError('soon'); // fonction pas encore déployée
-    if (out.error === 'premium_required') throw new CallError('premium_host');
+    if (out.error === 'premium_required') throw new CallError('premium_required');
     throw new CallError(out.error || 'livekit');
   }
   const name = (error as { name?: string }).name;

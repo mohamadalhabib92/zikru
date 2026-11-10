@@ -202,7 +202,7 @@ Pour les couleurs, plus tard, deux portes propres : le même écrit du Complexe,
 12. Le cours en tête-à-tête (paiement hors magasin) et le cours à plusieurs (achat intégré Apple et Google) sont deux prix. Les ouvrir ensemble, ou commencer par l’un des deux.
 13. Quelles causes, et avec quelle fondation partenaire. Bissabi Drinks - BA, entreprise individuelle, ne peut pas être présentée comme une œuvre d’utilité publique.
 14. Qui, fiduciaire ou avocat en Suisse, relit la TVA, la LBA et le fait de ne pas garder l’argent des élèves sur le compte de Bissabi.
-15. Ouverte : qui doit avoir Premium pour participer. Pour l’instant, l’hôte (enseignant validé, fondateur, modérateur ou parent) paie pour ouvrir l’appel, la classe et la lecture partagée. Une personne invitée rejoint sans Premium. La discussion de groupe et le fait de rejoindre un groupe restent gratuits. Mohamed peut encore dire que tout le monde dans l’appel doit payer.
+15. Tranché : tout le monde dans un appel ou une leçon en direct doit avoir Premium, y compris les personnes invitées et les élèves. Rejoindre le groupe ou la classe, et la discussion écrite, restent gratuits.
 
 ## 6. Payer un enseignant, et donner
 
@@ -233,6 +233,8 @@ Apple, [consignes de revue](https://developer.apple.com/app-store/review/guideli
 - Hors des exceptions, l’application ne doit pas pousser vers un autre paiement. Apple permet d’écrire aux gens **en dehors** de l’application.
 
 Conséquence pour Zikru : une leçon en direct **un enseignant, un élève**, non enregistrée, peut passer par Stripe (carte, et TWINT si le compte enseignant l’accepte). Une classe où plusieurs élèves paient le même cours en direct doit passer par l’achat intégré sur iPhone. Le Premium déjà prévu reste un achat intégré : ce n’est pas le paiement de l’enseignant.
+
+Décision du 10 novembre 2026, après coup : **l’élève aussi** doit avoir acheté Zikru Premium pour entrer dans l’appel ou la lecture. Sur un cours à deux payé par Stripe, l’élève paie donc deux fois. Une fois à Apple, l’achat à vie `ch.mohamadba.zikru.premium.lifetime`, pour avoir le droit d’ouvrir l’appel. Une fois à l’enseignant, via Stripe, pour le prix du cours. La règle 3.1.3(d) permet le paiement hors magasin pour le cours particulier. Elle ne dit pas qu’on peut ajouter cet achat intégré obligatoire par-dessus. Apple peut juger que l’accès à l’appel est déjà le service, et que Stripe n’est plus seulement le cours. Ce n’est pas un avis. Mohamed le fait relire avant le premier franc. Le tableau plus haut ne compte pas cet achat Premium : il reste en plus des 100 CHF.
 
 La commission Apple, [programme petites entreprises](https://developer.apple.com/app-store/small-business-program/) : 15 % si les recettes App Store de l’année restent sous 1 million de dollars, sinon 30 %. Ce pourcentage sort du prix payé par l’élève **avant** de partager le reste entre Zikru et l’enseignant. Exemple sans choisir le taux de Zikru : sur 100 francs d’un cours à plusieurs, Apple peut garder 15 francs. Il reste 85 francs à répartir. Si la commission Zikru s’ajoute encore, l’enseignant reçoit moins. Il faut décider si le taux Zikru se calcule sur les 100 francs, ou sur les 85.
 

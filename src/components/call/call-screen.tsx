@@ -24,6 +24,7 @@ import { bindRemoteAudio, prepareMedia, releaseMedia, setSpeaker, showRoutePicke
 import { cameraOptions, micCapture, roomOptions } from './room-options';
 import type { DataMode } from '@/lib/calls/quality';
 import { SharedReading } from '@/components/lesson/shared-reading';
+import { PremiumPaywall } from '@/components/premium/paywall';
 import { READING_TOPIC, decodeReading, readingBytes, readingText } from '@/lib/lessons/reading';
 
 type Phase = 'loading' | 'lobby' | 'joining' | 'in' | 'ended';
@@ -58,6 +59,7 @@ export default function CallScreen() {
   const [open, setOpen] = useState<string | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [remoteReading, setRemoteReading] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState(false);
   const room = useRef<Room | null>(null);
   const unbind = useRef<() => void>(() => {});
   const hiddenRef = useRef(hidden);
@@ -150,6 +152,10 @@ export default function CallScreen() {
 
   const join = async () => {
     if (av.kind !== 'ready') return;
+    if ((premium.ready && !premium.canCreate) || av.needsPremium) {
+      setPaywall(true);
+      return;
+    }
     setErr(null);
     setPhase('joining');
     try {
@@ -204,6 +210,11 @@ export default function CallScreen() {
     } catch (e) {
       await leave();
       const reason = e instanceof CallError ? e.reason : /network|fetch|websocket|connect/i.test(String((e as Error)?.message)) ? 'offline' : 'livekit';
+      if (reason === 'premium_required' || reason === 'premium_host') {
+        setPaywall(true);
+        setPhase('lobby');
+        return;
+      }
       if (isSoonReason(reason)) setAv({ kind: 'soon' });
       setErr(reasonText(reason) === 'Bientôt disponible' ? null : L(reasonText(reason)));
       setPhase('lobby');
@@ -288,16 +299,10 @@ export default function CallScreen() {
               <Muted style={{ fontSize: 12 }}>{L(av.mixedClosed ? 'La vidéo de cette classe est fermée. L’enseignant peut l’ouvrir.' : av.videoNeedsConsent ? 'Audio seulement : la vidéo demande l’accord d’un parent.' : 'Audio seulement.')}</Muted>
             )}
             <Spacer h={8} />
-            {av.admin && premium.ready && (!premium.canCreate || !av.canStart) ? (
-              <>
-                <Notice tone="info" title="Ouvrir l’appel demande Zikru Premium." text="Les personnes invitées rejoignent sans Premium. Cette répartition reste une décision ouverte." />
-                <Button title="Zikru Premium" icon="star-outline" onPress={() => router.push('/premium')} />
-              </>
+            {paywall ? (
+              <PremiumPaywall title="Cet appel demande Zikru Premium." text="Tout le monde dans l’appel doit avoir Zikru Premium, y compris les personnes invitées." />
             ) : (
-              <>
-                {av.admin ? null : <Muted>L’hôte Premium ouvre l’appel. Vous pouvez le rejoindre sans Premium.</Muted>}
-                <Button title={withVideo && av.video ? 'Rejoindre en vidéo' : withMic ? 'Rejoindre en audio' : 'Rejoindre en silence'} icon={withVideo && av.video ? 'videocam' : 'call'} loading={phase === 'joining'} onPress={() => void join()} />
-              </>
+              <Button title={withVideo && av.video ? 'Rejoindre en vidéo' : withMic ? 'Rejoindre en audio' : 'Rejoindre en silence'} icon={withVideo && av.video ? 'videocam' : 'call'} loading={phase === 'joining'} onPress={() => void join()} />
             )}
           </Card>
         ) : null}

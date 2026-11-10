@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         return json({ error: 'join' }, 500);
       }
       if (!j?.ok) {
-        if (j?.reason === 'premium_host') return json({ error: 'premium_required', product: 'ch.mohamadba.zikru.premium.lifetime' }, 402);
+        if (j?.reason === 'premium_required' || j?.reason === 'premium_host') return json({ error: 'premium_required', product: 'ch.mohamadba.zikru.premium.lifetime' }, 402);
         return json({ error: j?.reason ?? 'join' }, j?.reason === 'disabled' ? 503 : 403);
       }
       const ok = j as JoinOk;

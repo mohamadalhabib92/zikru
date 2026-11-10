@@ -117,7 +117,16 @@ select tests.as_user('K');
 select public.accept_invitation(tests.get('invc'), 'Kadi', true);
 do $$ declare r jsonb; begin
   r := public.call_rights('circle', tests.get('class')::uuid);
-  assert (r ->> 'can_join')::boolean and not (r ->> 'video')::boolean, 'mineur dans la classe, sans vidéo : ' || r::text;
+  assert not (r ->> 'can_join')::boolean and r ->> 'reason' = 'premium_required', 'mineur sans Premium : pas d’appel : ' || r::text;
+end $$;
+reset role;
+insert into public.user_entitlements (user_id, plan_id, source, external_ref, note)
+  values (tests.get('u_K')::uuid, 'lifetime', 'manual', 'test:class-K', 'élève Premium');
+set role authenticated;
+select tests.as_user('K');
+do $$ declare r jsonb; begin
+  r := public.call_rights('circle', tests.get('class')::uuid);
+  assert (r ->> 'can_join')::boolean and not (r ->> 'video')::boolean, 'mineur Premium dans la classe, sans vidéo : ' || r::text;
   assert (select count(*) from public.goal_contributions) = 0, 'toujours aucun compteur de dhikr';
 end $$;
 
