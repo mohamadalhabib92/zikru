@@ -11,7 +11,7 @@ import { loadLib } from './load-lib.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : /\.tsx?$/.test(f) ? [p] : []; });
-const { 'calls/core': C } = await loadLib(['calls/core'], 'calls');
+const { 'calls/core': C, 'calls/quality': Q } = await loadLib(['calls/core', 'calls/quality'], 'calls');
 
 // --- core.ts ---
 assert.equal(C.LABEL_TRANSIT, 'chiffré en transit, pas encore de bout en bout');
@@ -44,6 +44,26 @@ assert.equal(C.canReport(P({ name: 'x', local: true })), false);
 assert.equal(C.fmtDuration(65_000), '01:05');
 assert.equal(C.fmtDuration(3_725_000), '1:02:05');
 assert.equal(C.fmtDuration(-5), '00:00');
+
+// --- quality.ts : cibles mesurables, sans chiffrement de bout en bout ---
+assert.equal(Q.E2EE_ENABLED, false, 'pas de bout en bout : le drapeau reste coupé');
+assert.equal(Q.AUDIO.codec, 'opus');
+assert.equal(Q.AUDIO.echoCancellation && Q.AUDIO.noiseSuppression && Q.AUDIO.autoGainControl, true);
+assert.equal(Q.AUDIO.channelCount, 1);
+assert.equal(Q.AUDIO.dtx, true);
+assert.equal(Q.AUDIO.red, true);
+assert.equal(Q.AUDIO.maxBitrate, 24_000);
+assert.deepEqual(Q.captureProfile('standard', 1), { width: 1280, height: 720, maxBitrate: 1_200_000, maxFramerate: 30, simulcast: true });
+assert.deepEqual(Q.captureProfile('standard', 2), Q.captureProfile('standard', 1), 'tête-à-tête = 720p');
+assert.equal(Q.captureProfile('standard', 3).height, 360, 'grille à partir de 3');
+assert.equal(Q.captureProfile('standard', 12).maxBitrate, 450_000);
+assert.deepEqual(Q.captureProfile('low-data', 2), { width: 320, height: 180, maxBitrate: 160_000, maxFramerate: 15, simulcast: false });
+assert.deepEqual(Q.reconnectDelaysMs(), [0, 200, 500, 1000, 2000, 4000]);
+assert.equal(Q.uplinkBitsPerSecond('standard', 2), 24_000 + 1_200_000 + 160_000 + 450_000);
+assert.equal(Q.uplinkBitsPerSecond('low-data', 2), 24_000 + 160_000);
+assert.equal(Q.VIDEO.primaryCodec, 'vp8');
+assert.equal(Q.VIDEO.backupCodec, 'h264');
+assert.ok(!readFileSync(join(root, 'src/app/(tabs)/index.tsx'), 'utf8').includes("'/call'"), 'l’accueil n’ouvre pas un appel');
 
 // --- livekit.ts (Edge Function, sans Deno) ---
 const base = join(root, 'node_modules', '.cache');

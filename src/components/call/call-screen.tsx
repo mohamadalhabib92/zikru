@@ -19,7 +19,9 @@ import { L } from '@/lib/l10n';
 import { Badge, Button, Card, Eyebrow, H1, H2, Ionicons, Muted, Notice, Row, Screen, Spacer, Toggle } from '@/ui/kit';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
-import { bindRemoteAudio, prepareMedia, releaseMedia, VideoTile } from './media';
+import { bindRemoteAudio, prepareMedia, releaseMedia, setSpeaker, showRoutePicker, VideoTile } from './media';
+import { cameraOptions, micCapture, roomOptions } from './room-options';
+import type { DataMode } from '@/lib/calls/quality';
 
 type Phase = 'loading' | 'lobby' | 'joining' | 'in' | 'ended';
 const KEEP_AWAKE = 'zikru-call';
@@ -35,6 +37,9 @@ export default function CallScreen() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [withMic, setWithMic] = useState(false);
   const [withVideo, setWithVideo] = useState(false);
+  const [lowData, setLowData] = useState(false);
+  const [speaker, setSpeakerOn] = useState(true);
+  const dataMode: DataMode = lowData ? 'low-data' : 'standard';
   const [err, setErr] = useState<string | null>(null);
   const [endNote, setEndNote] = useState<string | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
@@ -131,7 +136,7 @@ export default function CallScreen() {
       // Le jeton peut autoriser la caméra ; elle reste éteinte tant que la personne ne l’ouvre pas.
       const info = await joinCall(scope, sid, av.video);
       await prepareMedia();
-      const r = new Room({ adaptiveStream: true, dynacast: true });
+      const r = new Room(roomOptions());
       room.current = r;
       setAdmin(info.admin);
       setVideoOk(av.video);
@@ -163,14 +168,18 @@ export default function CallScreen() {
       setNow(t0);
       setActive(r);
       setPhase('in');
+      const peopleNow = r.remoteParticipants.size + 1;
       if (withMic) {
         try {
-          await r.localParticipant.setMicrophoneEnabled(true);
+          await r.localParticipant.setMicrophoneEnabled(true, micCapture());
         } catch {
           setErr(L('Autorisez le micro dans les réglages du téléphone pour parler. Vous pouvez écouter en attendant.'));
         }
       }
-      if (info.video && withVideo) await r.localParticipant.setCameraEnabled(true).catch(() => setErr(L('Caméra indisponible ou refusée : l’appel continue en audio.')));
+      if (info.video && withVideo) {
+        const cam = cameraOptions(dataMode, peopleNow);
+        await r.localParticipant.setCameraEnabled(true, cam.capture, cam.publish).catch(() => setErr(L('Caméra indisponible ou refusée : l’appel continue en audio.')));
+      }
       refresh();
     } catch (e) {
       await leave();
@@ -184,14 +193,25 @@ export default function CallScreen() {
   const toggleMic = async () => {
     const r = room.current;
     if (!r) return;
-    await r.localParticipant.setMicrophoneEnabled(!r.localParticipant.isMicrophoneEnabled).catch(() => setErr(L('Micro indisponible.')));
+    const next = !r.localParticipant.isMicrophoneEnabled;
+    await r.localParticipant.setMicrophoneEnabled(next, next ? micCapture() : undefined).catch(() => setErr(L('Micro indisponible.')));
     refresh();
   };
-  const toggleCam = async () => {
+  const applyCamera = async (on: boolean, mode: DataMode) => {
     const r = room.current;
     if (!r) return;
-    await r.localParticipant.setCameraEnabled(!r.localParticipant.isCameraEnabled).catch(() => setErr(L('Caméra indisponible ou refusée : l’appel continue en audio.')));
+    if (!on) {
+      await r.localParticipant.setCameraEnabled(false).catch(() => setErr(L('Caméra indisponible ou refusée : l’appel continue en audio.')));
+    } else {
+      const cam = cameraOptions(mode, r.remoteParticipants.size + 1);
+      await r.localParticipant.setCameraEnabled(true, cam.capture, cam.publish).catch(() => setErr(L('Caméra indisponible ou refusée : l’appel continue en audio.')));
+    }
     refresh();
+  };
+  const toggleCam = () => {
+    const r = room.current;
+    if (!r) return;
+    void applyCamera(!r.localParticipant.isCameraEnabled, dataMode);
   };
   const moderate = (who: Person, action: 'mute' | 'remove') =>
     moderateCall(scope, sid, action, who.identity)
@@ -236,6 +256,12 @@ export default function CallScreen() {
             <Muted>{L('Jusqu’à {n} personnes.', { n: av.max })}</Muted>
             <Spacer h={8} />
             <Toggle label="Ouvrir mon micro" hint="Le micro reste coupé tant que vous ne l’ouvrez pas." value={withMic} onChange={setWithMic} />
+            <Toggle
+              label="Économie de données"
+              hint="Moins d’image, le son d’abord. Utile en 4G ou si la batterie est basse."
+              value={lowData}
+              onChange={setLowData}
+            />
             {av.video ? (
               <Toggle label="Avec la vidéo" hint="La caméra reste éteinte, sauf si vous la cochez ici ou si vous l’allumez pendant l’appel." value={withVideo} onChange={setWithVideo} />
             ) : (
@@ -301,6 +327,30 @@ export default function CallScreen() {
       <Row gap={10} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16, justifyContent: 'center', backgroundColor: t.surface }}>
         <Button small variant={mic ? 'secondary' : 'primary'} icon={mic ? 'mic' : 'mic-off'} title={mic ? 'Couper le micro' : 'Ouvrir le micro'} onPress={() => void toggleMic()} />
         {videoOk ? <Button small variant={cam ? 'secondary' : 'ghost'} icon={cam ? 'videocam' : 'videocam-off'} title={cam ? 'Éteindre la caméra' : 'Allumer la caméra'} onPress={() => void toggleCam()} /> : null}
+        <Button
+          small
+          variant={lowData ? 'secondary' : 'ghost'}
+          icon="cellular-outline"
+          title="Économie de données"
+          onPress={() => {
+            const next = !lowData;
+            setLowData(next);
+            if (room.current?.localParticipant.isCameraEnabled) void applyCamera(true, next ? 'low-data' : 'standard');
+          }}
+        />
+        {Platform.OS === 'web' ? null : (
+          <Button
+            small
+            variant={speaker ? 'secondary' : 'ghost'}
+            icon={speaker ? 'volume-high-outline' : 'ear-outline'}
+            title={speaker ? 'Haut-parleur' : 'Écouteur'}
+            onPress={() => {
+              const next = !speaker;
+              setSpeakerOn(next);
+              void (Platform.OS === 'ios' && !next ? showRoutePicker() : setSpeaker(next)).catch(() => setErr(L('Le haut-parleur n’a pas pu être changé.')));
+            }}
+          />
+        )}
         {admin ? (
           <Button
             small

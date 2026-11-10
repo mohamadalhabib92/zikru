@@ -7,6 +7,8 @@ import { View, type ViewStyle } from 'react-native';
 
 export async function prepareMedia(): Promise<void> {}
 export async function releaseMedia(): Promise<void> {}
+export async function setSpeaker(_on: boolean): Promise<void> {}
+export async function showRoutePicker(): Promise<void> {}
 
 /** Le navigateur ne joue l'audio distant que s'il est attaché à un élément <audio>. */
 export function bindRemoteAudio(room: Room): () => void {
