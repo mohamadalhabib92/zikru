@@ -2,7 +2,7 @@
 
 Document pour Mohamed. Il décrit trois souhaits : que les membres d’un groupe de zikr puissent s’écrire, et s’ils le veulent se voir ; que certaines personnes puissent enseigner le Coran et le tajwīd ; que l’on puisse lire le Coran en riwaya Hafs et en riwaya Warsh, avec les règles de tajwīd en couleurs.
 
-Décisions de Mohamed, le 10 novembre 2026 : la discussion de groupe sera appliquée par lui sur la base en ligne ; les appels audio et vidéo passeront par un LiveKit hébergé par lui en Europe (pas encore acheté) ; enseigner demande Premium et une validation Bissabi, jamais une case cochée ; le texte Warsh et les couleurs de tajwīd attendent. Le détail du serveur est dans `docs/livekit-server-setup.md`.
+Décisions de Mohamed, le 10 novembre 2026 : la discussion de groupe sera appliquée par lui sur la base en ligne ; les appels audio et vidéo passeront par un LiveKit hébergé par lui en Europe (pas encore acheté) ; enseigner demande Premium et une validation Bissabi, jamais une case cochée ; les élèves paieront leurs enseignants et Zikru prendra une commission dont le taux n’est pas encore choisi ; Zikru voudra recevoir des dons pour des causes. Le texte Warsh et les couleurs de tajwīd attendent. Le serveur d’appels est dans `docs/livekit-server-setup.md`. Aucun paiement ni aucun don n’est branché.
 
 Cette étape livrait d’abord le plan. Elle ne branche pas les appels tant que le serveur n’est pas là, et n’ajoute ni texte Warsh ni couleurs de tajwīd. La raison est dans les sections 2, 3 et 4 : les appels et l’enseignement attendent vos décisions, et les licences du Warsh et des couleurs ne sont pas assez claires pour les mettre dans l’application.
 
@@ -193,14 +193,86 @@ Pour les couleurs, plus tard, deux portes propres : le même écrit du Complexe,
 3. Les appels : les laisser éteints, ou accepter un serveur en Europe (ordre de grandeur 10 à 20 CHF par mois pour l’audio) pour LiveKit auto-hébergé. Pas d’abonnement LiveKit Cloud.
 4. Si les appels s’ouvrent : vidéo autorisée dans un cercle d’adultes, ou audio seulement au début. La caméra reste éteinte par défaut dans les deux cas.
 5. Enseignant : qui à Bissabi valide, sur quelle preuve, et le nom affiché dans les crédits de validation.
-6. Une classe peut-elle accueillir des mineurs, et la vidéo mixte est-elle fermée par défaut (proposition : oui, fermée).
-7. Un enseignant validé peut-il ouvrir une classe sans acheter Premium (proposition : oui, une classe, l’enseignement n’est pas vendu).
+6. Tranché : une classe peut accueillir des mineurs seulement si l’enseignant ouvre l’option, et un parent doit aussi l’autoriser. La vidéo mixte reste fermée tant que l’enseignant ne l’ouvre pas.
+7. Tranché : enseigner exige Premium et la validation Bissabi. Rejoindre une classe reste gratuit.
 8. Écrire au Complexe du Roi Fahd pour le texte Warsh et les couleurs, avant toute intégration.
 9. Le chiffrement de bout en bout des messages (prévu plus tard, phase 3) et des appels : ne pas le promettre. Le libellé reste « chiffré en transit, pas encore de bout en bout ».
+10. Le taux de commission, en dix-millièmes dans `teaching.commission_bps` (100 veut dire 1 %). Aujourd’hui la valeur est vide : aucun prélèvement n’est possible. Dire aussi si ce taux se calcule sur le prix payé par l’élève, ou sur ce qui reste après Apple ou Google.
+11. Le prestataire : Stripe Connect en Suisse, formule « vous fixez les prix » (la commission est la vôtre ; Stripe facture 2 CHF par enseignant qui reçoit un virement dans le mois, plus 0,25 % + 0,55 CHF par virement), ou une autre formule. Confirmer que TWINT passe bien sur les comptes enseignants.
+12. Le cours en tête-à-tête (paiement hors magasin) et le cours à plusieurs (achat intégré Apple et Google) sont deux prix. Les ouvrir ensemble, ou commencer par l’un des deux.
+13. Quelles causes, et avec quelle fondation partenaire. Bissabi Drinks - BA, entreprise individuelle, ne peut pas être présentée comme une œuvre d’utilité publique.
+14. Qui, fiduciaire ou avocat en Suisse, relit la TVA, la LBA et le fait de ne pas garder l’argent des élèves sur le compte de Bissabi.
+
+## 6. Payer un enseignant, et donner
+
+Décision du 10 novembre 2026 : l’élève paie l’enseignant, Zikru garde une commission, et Zikru veut pouvoir recevoir des dons. Le taux n’est pas choisi. Rien n’est encaissé dans cette étape : pas de Stripe, pas de bouton donner, pas de prix. Deux interrupteurs serveur restent sur faux (`teaching.payments_enabled`, `donations.enabled`). La commission est une case vide (`teaching.commission_bps`), pas un nombre écrit dans l’application. Tant qu’elle est vide, aucun paiement d’enseignement ne peut s’ouvrir.
+
+Ce chapitre décrit le cadre. Ce n’est pas un avis d’avocat ni de fiduciaire. Avant d’encaisser, Mohamed fait relire le montage.
+
+### Cours à deux, et cours à plusieurs
+
+Apple, [consignes de revue](https://developer.apple.com/app-store/review/guidelines/), lues le 10 novembre 2026.
+
+- **3.1.1.** Débloquer une fonction dans l’application se paie avec l’achat intégré.
+- **3.1.3(d).** Un service en direct entre **deux** personnes (l’exemple donné par Apple est le cours particulier) peut se payer **autrement** que par l’achat intégré. Un service en direct « un vers quelques-uns » ou « un vers plusieurs » **doit** passer par l’achat intégré.
+- Hors des exceptions, l’application ne doit pas pousser vers un autre paiement. Apple permet d’écrire aux gens **en dehors** de l’application.
+
+Conséquence pour Zikru : une leçon en direct **un enseignant, un élève**, non enregistrée, peut passer par Stripe (carte, et TWINT si le compte enseignant l’accepte). Une classe où plusieurs élèves paient le même cours en direct doit passer par l’achat intégré sur iPhone. Le Premium déjà prévu reste un achat intégré : ce n’est pas le paiement de l’enseignant.
+
+La commission Apple, [programme petites entreprises](https://developer.apple.com/app-store/small-business-program/) : 15 % si les recettes App Store de l’année restent sous 1 million de dollars, sinon 30 %. Ce pourcentage sort du prix payé par l’élève **avant** de partager le reste entre Zikru et l’enseignant. Exemple sans choisir le taux de Zikru : sur 100 francs d’un cours à plusieurs, Apple peut garder 15 francs. Il reste 85 francs à répartir. Si la commission Zikru s’ajoute encore, l’enseignant reçoit moins. Il faut décider si le taux Zikru se calcule sur les 100 francs, ou sur les 85.
+
+Google, [règle Payments](https://support.google.com/googleplay/android-developer/answer/9858738?hl=en) et [explications](https://support.google.com/googleplay/android-developer/answer/10281818?hl=en), lues le même jour.
+
+- Un cours en ligne **entre deux personnes**, qui n’est pas réécoutable ensuite, n’est pas obligé d’utiliser la facturation Google. L’exemple de Google est le cours de musique ou de loisir.
+- Dès que ce n’est plus ce cas, la facturation Google est exigée, et l’application ne doit pas mener vers un autre paiement.
+- [Frais de service](https://support.google.com/googleplay/android-developer/answer/112622?hl=en) : pour les pays pas encore dans la nouvelle grille (Australie, EEE, Japon, Royaume-Uni, États-Unis), la page indique 15 % sur le premier million de dollars de recettes de l’année, puis 30 %. La Suisse n’est pas dans la liste des pays déjà basculés. Le cours à plusieurs sur Android subit donc ces frais, du même ordre que chez Apple, tant que Google n’a pas étendu l’autre grille.
+
+Le web (le site) n’a pas ces commissions de magasin. Un paiement commencé dans l’application iPhone pour un cours à plusieurs ne peut pas être renvoyé vers le site pour éviter Apple.
+
+### Dons
+
+Apple, mêmes consignes.
+
+- **3.2.1(vi).** Une organisation **déjà approuvée** par Apple peut collecter dans l’application, avec Apple Pay, en disant à quoi sert l’argent et en pouvant remettre un reçu. Une plateforme qui liste plusieurs œuvres doit faire approuver **chacune**.
+- **3.2.2(iv).** Sinon, on ne collecte pas dans l’application. L’application qui veut lever des fonds doit être **gratuite** sur l’App Store, et l’argent se donne **dehors**, par Safari ou par SMS.
+- Hors des États-Unis, l’approbation Apple Pay pour dons passe par [Benevity](https://developer.apple.com/apple-pay/nonprofits/). Apple dit ne pas prendre de commission sur Apple Pay. Bissabi Drinks - BA n’est pas une organisation sans but lucratif : cette approbation ne lui est pas ouverte.
+
+Zikru a déjà un achat Premium. La phrase d’Apple « l’application qui lève des fonds doit être gratuite » entre en tension avec cet achat. Tant que ce point n’est pas éclairci avec Apple, le don ne doit pas avoir de bouton dans l’application iPhone. Un lien qui ouvre Safari vers la page de la fondation partenaire est le seul geste envisagé, et encore seulement après relecture, parce que la règle parle d’une application gratuite.
+
+Google, règle Payments, point 3 : la facturation Google **ne doit pas** servir aux dons exonérés d’impôt. Un pourboire peut rester hors facturation Google seulement si **100 %** va au destinataire et si le paiement n’ouvre aucun contenu. Une commission Zikru prélevée sur un don casserait cette condition. Dessin retenu : le montant annoncé arrive entier à la cause. Les frais du prestataire sont affichés à part. Zikru ne prend pas de commission sur le don tant que ce point n’est pas décidé autrement.
+
+### Encaisser en Suisse, sans abonnement mensuel
+
+Page officielle [Stripe Connect, Suisse](https://stripe.com/en-ch/connect/pricing), lue le 10 novembre 2026. Deux formules.
+
+- **Stripe fixe les prix des enseignants.** La plateforme ne paie ni abonnement, ni frais de virement, ni frais de vérification. Stripe encaisse ses frais de paiement auprès de l’enseignant. La commission de Zikru n’est pas un taux que l’on pose librement : c’est un partage que Stripe accorde s’il l’accepte. Cette formule ne suffit pas seule pour un taux choisi par Mohamed.
+- **Vous fixez les prix.** C’est celle qui permet une commission réglée dans `teaching.commission_bps`. Stripe facture alors **2 CHF par compte enseignant actif dans le mois** (un compte est actif s’il reçoit un virement) et **0,25 % + 0,55 CHF par virement**. Ce n’est pas un abonnement de la plateforme : s’il n’y a aucun virement, cette ligne est à zéro. Les frais de carte s’ajoutent. Stripe dit que, en paiement direct sur le compte de l’enseignant, les remboursements et les contestations sont à la charge de ce compte.
+
+[TWINT chez Stripe](https://stripe.com/en-ch/payment-method/twint) : les clients en Suisse peuvent payer en francs, avec remboursement total ou partiel. La page ne dit pas que le versement séparé vers chaque enseignant est inclus. À faire confirmer par Stripe avant de promettre TWINT sur les cours. Sinon, [Payrexx](https://payrexx.com/en-ch/plattformen) sait partager un paiement suisse (TWINT compris) entre la plateforme et l’enseignant, mais ses offres plateforme sont des abonnements : ce n’est pas « zéro franc par mois ».
+
+Vérification des enseignants (KYC), décrite par Stripe et résumée pour un particulier en Suisse : nom, date de naissance, adresse, téléphone, e-mail, site, compte bancaire. Tant qu’il manque une pièce, Stripe bloque les encaissements et les virements. Zikru ne stocke pas la pièce d’identité : l’enseignant la donne à Stripe.
+
+Remboursement : l’élève annule avant le cours selon une règle écrite (à fixer). Le versement à l’enseignant attend la fin du délai, pour ne pas reverser puis courir après l’argent. Une contestation de carte reste possible après coup : le compte enseignant Stripe la porte, pas une caisse cachée dans l’application.
+
+### TVA, et ne pas garder l’argent des autres
+
+[Administration fédérale des contributions](https://www.estv.admin.ch/fr/assujettissement-a-la-tva), page lue le 10 novembre 2026. Une entreprise en Suisse devient en principe assujettie à la TVA si son chiffre d’affaires de prestations atteint **100 000 francs**. Les dons et les subventions, qui ne sont pas la contrepartie d’une prestation (art. 18 al. 2 LTVA, cités sur cette page), **ne comptent pas** dans ce seuil.
+
+La commission est une prestation. Elle compte. Le prix du cours compte pour Zikru **si Zikru facture l’élève en son nom**. Il ne compte que pour la commission **si l’enseignant est le vendeur** et si Zikru ne fait que prélever son taux. C’est le dessin à viser avec Stripe : l’argent du cours va chez l’enseignant, la commission va chez Zikru. Un fiduciaire doit le confirmer, parce que le bon classement change le moment où la TVA devient obligatoire.
+
+[FINMA, fiche crowdfunding](https://www.finma.ch/en/~/media/finma/dokumente/dokumentencenter/myfinma/faktenblaetter/faktenblatt-crowdfunding.pdf) : si une plateforme reçoit l’argent sur **ses** comptes et le garde, elle doit vérifier si une autorisation bancaire est nécessaire. La garder plus de 60 jours, ou dépasser 1 million de francs, change la réponse. Faire transiter des paiements à titre professionnel relève en principe de la loi contre le blanchiment : adhésion à un organisme d’autorégulation si aucune autre autorisation ne couvre déjà l’activité. Le dessin Stripe évite que le compte de Bissabi encaisse le prix du cours pour le reverser. Ce n’est pas une dispense écrite par la FINMA pour ce projet. À faire confirmer avant le premier franc.
+
+### Bissabi Drinks - BA peut-elle recevoir les dons ?
+
+Non, pas comme une œuvre. C’est une entreprise individuelle. Un versement reçu par elle est une recette de l’entreprise, ou un cadeau au titulaire. Ce n’est pas un don déductible pour la personne qui donne, et Apple ne l’approuvera pas comme organisation sans but lucratif.
+
+Pour que le don soit clair, il faut une **fondation ou une association reconnue d’utilité publique**, partenaire, qui encaisse en son nom. Zikru affiche la cause, le lien, et le fait que le reçu fiscal vient de cette partenaire, pas de Bissabi. Le label [ZEWO](https://zewo.ch) n’est pas une loi, mais c’est le repère que les donneurs en Suisse connaissent. La liste des institutions exonérées se vérifie auprès du canton et de l’administration fédérale des contributions.
+
+Tant que cette partenaire n’est pas choisie, `donations.enabled` reste faux. Aucun nom de cause n’est inventé ici.
 
 ## Annexe technique
 
-Branche : `cursor/v3-groups-teaching-quran-5f31`, au-dessus de `cursor/premium-lifetime-iap-2f4e` (PR 10, elle-même au-dessus de la PR 9). Aucun fichier de Coran, aucune migration, aucun secret ajoutés. Seul ce document est nouveau.
+Branche : `cursor/v3-groups-teaching-quran-5f31`, au-dessus de `cursor/premium-lifetime-iap-2f4e` (PR 10, elle-même au-dessus de la PR 9). Aucun texte Warsh, aucun secret, aucun encaissement.
 
 ### Discussion
 
@@ -216,6 +288,7 @@ Branche : `cursor/v3-groups-teaching-quran-5f31`, au-dessus de `cursor/premium-l
 
 - Créateur administrateur, demandes d’entrée : `supabase/migrations/20261110130000_admin_groupe.sql` (`private.is_group_admin`, `group_join_requests`). Non appliquée.
 - Premium : création de zikr personnel et de groupe seulement. Migration `supabase/migrations/20261110120000_premium_creation.sql`, verrou `premium_creation_gate` à `false`. Produit `ch.mohamadba.zikru.premium.lifetime`. Détail : `docs/premium-iap.md`.
+- Paiements enseignants et dons, éteints : `supabase/migrations/20261110150000_paiements_config.sql`. `teaching.payments_enabled` et `donations.enabled` sont faux. `teaching.commission_bps` est vide (JSON `null`), aucun taux dans le code. Non appliquée.
 - Les compteurs (`goal_contributions`, `zikr_session_counts`, tasbih) ne sont pas écrits par la discussion ni par les appels.
 
 ### Appels (non activés, non modifiés ici)

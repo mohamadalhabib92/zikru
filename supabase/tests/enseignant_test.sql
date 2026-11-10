@@ -120,3 +120,19 @@ do $$ declare r jsonb; begin
   assert (r ->> 'can_join')::boolean and not (r ->> 'video')::boolean, 'mineur dans la classe, sans vidéo : ' || r::text;
   assert (select count(*) from public.goal_contributions) = 0, 'toujours aucun compteur de dhikr';
 end $$;
+
+reset role;
+do $$ begin
+  assert (select value from public.app_config where key = 'teaching.payments_enabled') = 'false'::jsonb, 'paiements éteints';
+  assert jsonb_typeof((select value from public.app_config where key = 'teaching.commission_bps')) = 'null', 'aucun taux codé';
+  assert private.teaching_commission_bps() is null, 'taux illisible tant qu’il est vide';
+  assert not private.teaching_payments_open(), 'on ne peut pas encaisser sans taux';
+  assert (select value from public.app_config where key = 'donations.enabled') = 'false'::jsonb, 'dons éteints';
+  assert not private.donations_open();
+  update public.app_config set value = 'true' where key = 'teaching.payments_enabled';
+  assert not private.teaching_payments_open(), 'l’interrupteur seul ne suffit pas';
+  update public.app_config set value = '1500' where key = 'teaching.commission_bps';
+  assert private.teaching_commission_bps() = 1500 and private.teaching_payments_open(), 'un taux posé ensuite ouvre, sans valeur d’usine';
+  update public.app_config set value = 'null' where key = 'teaching.commission_bps';
+  update public.app_config set value = 'false' where key = 'teaching.payments_enabled';
+end $$;
