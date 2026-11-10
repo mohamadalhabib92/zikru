@@ -7,7 +7,8 @@ const { 'premium-logic': P, 'group-order': G } = await loadLib(['premium-logic',
 const now = '2026-11-10T08:00:00.000Z';
 const empty = P.emptyPremiumRecord();
 
-assert.equal(P.PREMIUM_PRODUCT_ID, 'com.vibecode.zikru-76mpdv.premium.lifetime');
+assert.equal(P.PREMIUM_PRODUCT_ID, 'ch.mohamadba.zikru.premium.lifetime');
+assert.equal(/^[A-Za-z0-9._]+$/.test(P.PREMIUM_PRODUCT_ID), true);
 assert.equal(P.canCreatePremiumContent(empty, false), false, 'pas prêt : pas de création');
 assert.equal(P.canCreatePremiumContent(empty, true), false, 'rien constaté : pas de création');
 

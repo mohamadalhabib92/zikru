@@ -90,4 +90,4 @@ Classification attendue : **13+** (messagerie + UGC sans modération complète).
 
 ⚠️ **Guideline 1.2 (UGC)** : Apple exige pour toute app avec UGC/messagerie : (a) un filtre ou une modération, (b) un moyen de **signaler** un contenu, (c) un moyen de **bloquer** un utilisateur abusif, (d) un contact publié. Ces éléments ne sont **pas encore** dans l’app → **P6 obligatoire avant d’activer la Communauté en production**, sinon risque de refus 1.2.
 
-Google Play → IARC : répondre « Users can interact/exchange content » = **Yes** ; « Shares user location with other users » = No ; « Digital purchases » = **Yes** (achat unique à vie `com.vibecode.zikru-76mpdv.premium.lifetime`, pas encore soumis : le produit Play se crée plus tard, même identifiant).
+Google Play → IARC : répondre « Users can interact/exchange content » = **Yes** ; « Shares user location with other users » = No ; « Digital purchases » = **Yes** (achat unique à vie `ch.mohamadba.zikru.premium.lifetime`, pas encore soumis : le produit Play se crée plus tard, même identifiant).

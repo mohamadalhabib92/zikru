@@ -4,9 +4,9 @@ Branche d’intégration : au-dessus de `cursor/testflight-integration-5e5e` (1.
 
 ## Identifiant
 
-`com.vibecode.zikru-76mpdv.premium.lifetime`
+`ch.mohamadba.zikru.premium.lifetime`
 
-Le bundle iOS déclaré dans `app.json` et dans App Store Connect est `com.vibecode.zikru-76mpdv`, pas `ch.mohamadba.zikru` (c’est le package Android). L’identifiant d’achat reprend le bundle iOS. Le même identifiant est prévu pour Google Play plus tard.
+App Store Connect n’accepte dans un identifiant d’achat que des lettres, des chiffres, des underscores et des points. Le bundle iOS reste `com.vibecode.zikru-76mpdv` (il contient un trait d’union, donc il ne peut pas servir de préfixe). L’identifiant d’achat est celui du package Android `ch.mohamadba.zikru`, le même sur l’App Store et sur Google Play.
 
 ## Bibliothèque
 
@@ -51,7 +51,7 @@ Ajusté dans `20261110130000_admin_groupe.sql` (fichier local, non appliqué) : 
 2. Fonctionnalité : **In-App Purchases** activée pour l’app `com.vibecode.zikru-76mpdv`.
 3. Produit :
    - Type : **Non-Consumable** (non consommable, pas un abonnement).
-   - Product ID : `com.vibecode.zikru-76mpdv.premium.lifetime` (exactement).
+   - Product ID : `ch.mohamadba.zikru.premium.lifetime` (exactement, sans trait d’union).
    - Reference name : `Zikru Premium lifetime`.
    - Prix : palier **CHF 8.45** (le palier Apple le plus proche si 8.45 n’existe pas tel quel ; ne pas écrire ce montant dans l’app). Disponibilité : tous les pays.
    - Localisations au minimum français et anglais : nom « Zikru Premium », description « Achat unique à vie : créer ses zikrs et ses groupes. Le reste de Zikru reste gratuit. »

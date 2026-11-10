@@ -62,7 +62,7 @@ Autorisations :
 ## Notes pour l'équipe de révision (App Review)
 L'app fonctionne sans compte et hors ligne (horaires, qibla, tasbih, Coran). Un compte e-mail (code à usage unique) n'est requis que pour la Communauté / Famille ; il peut être supprimé dans l'app (Réglages › Confidentialité › Supprimer mon compte). L'assistant Bilal (IA) demande un consentement explicite avant tout envoi et peut être désactivé dans Réglages › Confidentialité. La météo est facultative et demande aussi un consentement. Le Bluetooth sert uniquement à lire les appuis d'un compteur (une simulation est disponible dans l'écran Tasbih). Aucune publicité, aucun suivi.
 
-Achat intégré (non consommable, à vie) : `com.vibecode.zikru-76mpdv.premium.lifetime`. Le téléchargement reste gratuit. Premium débloque seulement la création d’un zikr personnel et la création d’un groupe. Rejoindre par invitation ou demande acceptée reste gratuit. Écran Premium : prix localisé StoreKit, Restaurer les achats, liens confidentialité et conditions. Compte sandbox : voir `docs/premium-iap.md`. Aucun paiement sur la version web.
+Achat intégré (non consommable, à vie) : `ch.mohamadba.zikru.premium.lifetime`. Le téléchargement reste gratuit. Premium débloque seulement la création d’un zikr personnel et la création d’un groupe. Rejoindre par invitation ou demande acceptée reste gratuit. Écran Premium : prix localisé StoreKit, Restaurer les achats, liens confidentialité et conditions. Compte sandbox : voir `docs/premium-iap.md`. Aucun paiement sur la version web.
 
 Contact révision : à compléter (prénom, nom, téléphone, e-mail de Mohamed). Compte de démonstration : à fournir si la Communauté est visible (YOUR_DEMO_EMAIL — code OTP).
 

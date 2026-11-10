@@ -8,8 +8,8 @@
  * Les zikrs déjà présents restent modifiables même sans cet enregistrement.
  */
 
-/** Identifiant App Store / Play, aligné sur le bundle iOS réel (ASC). */
-export const PREMIUM_PRODUCT_ID = 'com.vibecode.zikru-76mpdv.premium.lifetime';
+/** Identifiant App Store et Play. Lettres, chiffres, underscores et points seulement : App Store Connect refuse le trait d’union. Le bundle iOS reste com.vibecode.zikru-76mpdv. */
+export const PREMIUM_PRODUCT_ID = 'ch.mohamadba.zikru.premium.lifetime';
 
 /** Groupe local livré avec l’app. Il ne compte pas comme une création de l’utilisateur. */
 export const SEEDED_LOCAL_GROUP_ID = 'g-allahu-akbar';

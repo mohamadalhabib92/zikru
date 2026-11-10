@@ -23,7 +23,7 @@ on conflict (plan_id, key) do nothing;
 
 insert into public.app_config (key, value, description) values
   ('premium_creation_gate', 'false', 'Tant que false, create_family / create_circle / create_group_program ne vérifient pas Premium. Le client applique le verrou. Passer à true seulement quand les achats vérifiés écrivent user_entitlements.'),
-  ('premium_product_id', '"com.vibecode.zikru-76mpdv.premium.lifetime"', 'Identifiant d’achat unique, aligné sur le bundle iOS com.vibecode.zikru-76mpdv.')
+  ('premium_product_id', '"ch.mohamadba.zikru.premium.lifetime"', 'Identifiant d’achat unique (App Store et Play). Pas de trait d’union : App Store Connect n’en accepte pas. Le bundle iOS reste com.vibecode.zikru-76mpdv.')
 on conflict (key) do nothing;
 
 alter table public.user_entitlements drop constraint if exists user_entitlements_source_check;
@@ -53,7 +53,7 @@ begin
   if not coalesce(private.config('premium_creation_gate') = 'true'::jsonb, false) then return; end if;
   if me is not null and private.may_create_groups(me) then return; end if;
   raise exception 'Créer un groupe est réservé à Zikru Premium' using errcode = 'ZKP01',
-    detail = jsonb_build_object('reason', 'premium_required', 'product', 'com.vibecode.zikru-76mpdv.premium.lifetime')::text;
+    detail = jsonb_build_object('reason', 'premium_required', 'product', 'ch.mohamadba.zikru.premium.lifetime')::text;
 end $$;
 
 -- Antériorité : qui avait déjà créé une famille, un cercle ou un programme. N’altère pas ces lignes.
