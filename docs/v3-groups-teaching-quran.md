@@ -2,7 +2,9 @@
 
 Document pour Mohamed. Il décrit trois souhaits : que les membres d’un groupe de zikr puissent s’écrire, et s’ils le veulent se voir ; que certaines personnes puissent enseigner le Coran et le tajwīd ; que l’on puisse lire le Coran en riwaya Hafs et en riwaya Warsh, avec les règles de tajwīd en couleurs.
 
-Cette étape livre le plan. Elle ne branche pas les appels, ne crée pas le rôle d’enseignant, et n’ajoute ni texte Warsh ni couleurs de tajwīd. La raison est dans les sections 2, 3 et 4 : les appels et l’enseignement attendent vos décisions, et les licences du Warsh et des couleurs ne sont pas assez claires pour les mettre dans l’application.
+Décisions de Mohamed, le 10 novembre 2026 : la discussion de groupe sera appliquée par lui sur la base en ligne ; les appels audio et vidéo passeront par un LiveKit hébergé par lui en Europe (pas encore acheté) ; enseigner demande Premium et une validation Bissabi, jamais une case cochée ; le texte Warsh et les couleurs de tajwīd attendent. Le détail du serveur est dans `docs/livekit-server-setup.md`.
+
+Cette étape livrait d’abord le plan. Elle ne branche pas les appels tant que le serveur n’est pas là, et n’ajoute ni texte Warsh ni couleurs de tajwīd. La raison est dans les sections 2, 3 et 4 : les appels et l’enseignement attendent vos décisions, et les licences du Warsh et des couleurs ne sont pas assez claires pour les mettre dans l’application.
 
 Rien n’est fusionné dans `main`. Aucune migration n’est appliquée au Supabase en ligne. Aucun build, aucune soumission aux magasins. Les zikrs, les compteurs et les objectifs déjà enregistrés ne sont pas touchés.
 
@@ -128,7 +130,9 @@ Il ne voit pas les compteurs privés. Il ne parle pas à un enfant en dehors des
 
 ### Gratuit ou Premium
 
-Proposition : suivre un cours et enseigner ne sont pas des achats. Premium continue de réserver la création d’un zikr personnel et d’un groupe privé. Un enseignant validé par Bissabi reçoit le droit d’ouvrir une classe, sans acheter Premium, pour que l’enseignement ne soit pas vendu. Les élèves rejoignent gratuitement, comme aujourd’hui pour une invitation.
+Décision du 10 novembre 2026 : enseigner demande Premium et la validation Bissabi. Rejoindre une classe reste gratuit.
+
+Proposition laissée de côté : suivre un cours et enseigner ne sont pas des achats. Premium continue de réserver la création d’un zikr personnel et d’un groupe privé. Un enseignant validé par Bissabi reçoit le droit d’ouvrir une classe, sans acheter Premium, pour que l’enseignement ne soit pas vendu. Les élèves rejoignent gratuitement, comme aujourd’hui pour une invitation.
 
 Ce rôle n’est pas construit dans cette étape : ce n’est pas un petit ajout, et plusieurs choix vous reviennent.
 

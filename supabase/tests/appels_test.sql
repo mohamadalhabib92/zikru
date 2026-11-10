@@ -52,6 +52,14 @@ do $$ declare r jsonb; begin
 end $$;
 reset role;
 update public.app_config set value = 'true' where key = 'calls.enabled';
+set role authenticated;
+do $$ declare r jsonb; begin
+  perform tests.as_user('X');
+  r := public.call_rights('circle', tests.get('circle')::uuid);
+  assert not (r ->> 'enabled')::boolean and r ->> 'reason' = 'disabled', 'calls.enabled sans adresse de serveur : toujours fermé';
+end $$;
+reset role;
+update public.app_config set value = '"wss://appels.test.invalid"' where key = 'calls.server_url';
 update public.app_config set value = 'true' where key = 'calls.push';
 set role authenticated;
 
@@ -96,10 +104,15 @@ do $$ begin
   perform tests.as_user('F');
   assert public.call_moderate('circle', tests.get('circle')::uuid, 'call_remove', tests.get('u_M')::uuid), 'fondatrice retire le modérateur';
   assert tests.state(format($q$select public.call_moderate('circle', %L, 'call_mute', %L)$q$, tests.get('circle'), tests.get('u_F'))) = '42501', 'pas soi-même';
+  perform tests.as_user('X');
+  assert tests.state(format($q$select public.end_group_call('circle', %L)$q$, tests.get('circle'))) = '42501', 'un membre ne termine pas l’appel';
+  perform tests.as_user('F');
+  assert public.end_group_call('circle', tests.get('circle')::uuid), 'l’hôte termine l’appel';
 end $$;
 reset role;
 do $$ begin
   assert (select count(*) from private.moderation_actions where action in ('call_mute', 'call_remove')) = 2, 'actions journalisées';
+  assert (select count(*) from private.moderation_actions where action = 'call_end') = 1, 'fin d’appel journalisée';
   assert (select count(*) from private.call_joins) = 3, 'journal des entrées (refus non journalisés)';
 end $$;
 set role authenticated;

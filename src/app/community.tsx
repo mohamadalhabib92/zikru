@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { ClassesHome } from '@/components/community/classes';
 import { LocalGroups } from '@/components/LocalGroups';
 import { BlockedList, confirmAsk, ErrorNote, ModerationContact, UnreadBadge, useGroupUnread, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
@@ -50,6 +51,7 @@ export default function Community() {
       <Spacer />
       <MyCircles />
       <Spacer />
+      <ClassesHome />
       <JoinWithCode />
       <Spacer />
       <Account />

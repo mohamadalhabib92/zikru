@@ -34,7 +34,7 @@
 <li>Hébergement : Supabase (Supabase Inc., États-Unis, sous-traitant), base de données hébergée à Zurich (Suisse, région eu-central-2). L’e-mail de connexion est envoyé par le service d’authentification de Supabase.</li>
 <li>Votre session de connexion est conservée sur l’appareil pour vous éviter de vous reconnecter ; elle est effacée à la déconnexion.</li>
 <li>Messages d’encouragement et sessions : chiffrés en transit et accessibles aux seuls membres concernés ; ils ne sont pas encore chiffrés de bout en bout (prévu). Les liens sont refusés et un filtre de base écarte les insultes graves. Un enfant n’échange par défaut qu’avec ses parents, et un parent peut tout couper.</li>
-<li>Appels de groupe (audio / vidéo, quand ils sont disponibles) : seuls les membres du groupe peuvent rejoindre un appel. Le son et l’image passent en temps réel par notre prestataire d’appels LiveKit (LiveKit Inc., États-Unis, sous-traitant), qui reçoit aussi votre identifiant de compte, votre nom affiché et votre adresse IP. Les appels sont chiffrés en transit, pas encore de bout en bout, et ne sont jamais enregistrés par Zikru. Zikru garde seulement la trace technique de votre entrée (heure, groupe, vidéo oui/non) pour limiter les abus. Un enfant n’appelle qu’au sein de sa famille, avec les mêmes règles que la discussion, et la vidéo demande l’accord d’un parent.</li>
+<li>Appels de groupe (audio / vidéo, quand ils sont disponibles) : seuls les membres du groupe peuvent rejoindre un appel. Le son et l’image passent en temps réel par un serveur LiveKit que nous hébergeons en Europe (logiciel libre, pas un nuage aux États-Unis). Ce serveur reçoit votre identifiant de compte, votre nom affiché et votre adresse IP le temps de l’appel. Les appels sont chiffrés en transit, pas encore de bout en bout, et ne sont jamais enregistrés par Zikru. Le micro et la caméra restent éteints tant que vous ne les ouvrez pas. Zikru garde seulement la trace technique de votre entrée (heure, groupe, vidéo oui/non) pour limiter les abus. Un enfant n’appelle qu’au sein de sa famille, avec les mêmes règles que la discussion, et la vidéo demande l’accord d’un parent. Dans une classe, la vidéo mixte reste fermée tant que l’enseignant ne l’ouvre pas.</li>
 <li>Sécurité et modération : vous pouvez signaler un contenu ou une personne et bloquer quelqu’un. Un signalement transmet à l’équipe Zikru une copie du contenu signalé, votre identifiant, le motif et votre précision ; la personne signalée n’en est pas informée. Des compteurs techniques limitent les abus (envois, invitations, essais de code). Contact modération : mohamadalhabib@live.com.</li>
 </ul>
 <h2 id="fr-ai">5. Bilal, l’assistant IA (facultatif)</h2>
@@ -63,7 +63,7 @@
 </ul>
 <h2 id="fr-transfers">8. Transferts à l’étranger</h2>
 <p>Les données du compte sont hébergées en Suisse. Supabase Inc. (États-Unis) peut y accéder en tant que sous-traitant, sur la base de ses garanties contractuelles (clauses contractuelles types). L’envoi des messages de Bilal aux États-Unis repose sur votre consentement explicite (art. 17 al. 1 let. a nLPD, art. 49 par. 1 let. a RGPD). La météo est traitée par un prestataire suisse.</p>
-<p>Appels de groupe : le son et l’image passent par LiveKit Inc. (États-Unis), sous-traitant, sur la base de garanties contractuelles ; la région des serveurs est choisie à l’ouverture du service et sera indiquée ici.</p>
+<p>Appels de groupe : le son et l’image passent par un serveur LiveKit que nous hébergeons nous-mêmes en Europe. La ville exacte sera indiquée ici à l’ouverture du service. Ce n’est pas un nuage LiveKit aux États-Unis.</p>
 <h2 id="fr-retention">9. Durées de conservation et suppression</h2>
 
 <ul>
@@ -131,7 +131,7 @@
 <li>Hosting: Supabase (Supabase Inc., USA, processor), database hosted in Zurich (Switzerland, region eu-central-2). The sign-in email is sent by Supabase’s authentication service.</li>
 <li>Your sign-in session is kept on the device so you do not have to sign in again; it is erased when you sign out.</li>
 <li>Encouragement messages and sessions: encrypted in transit and accessible only to the members concerned; they are not yet end-to-end encrypted (planned). Links are refused and a basic filter blocks severe insults. By default a child only exchanges messages with their parents, and a parent can turn messaging off entirely.</li>
-<li>Group calls (audio / video, when available): only group members can join a call. Sound and video go in real time through our call provider LiveKit (LiveKit Inc., USA, processor), which also receives your account ID, display name and IP address. Calls are encrypted in transit, not yet end-to-end, and are never recorded by Zikru. Zikru only keeps a technical record of your joining (time, group, video yes/no) to limit abuse. A child only calls within their family, with the same rules as the discussion, and video requires a parent’s consent.</li>
+<li>Group calls (audio / video, when available): only group members can join a call. Sound and video go in real time through a LiveKit server we host in Europe (open-source software, not a US cloud). That server receives your account ID, display name and IP address for the duration of the call. Calls are encrypted in transit, not yet end-to-end, and are never recorded by Zikru. The microphone and camera stay off until you turn them on. Zikru only keeps a technical record of your joining (time, group, video yes/no) to limit abuse. A child only calls within their family, with the same rules as the discussion, and video requires a parent’s consent. In a class, mixed video stays closed until the teacher opens it.</li>
 <li>Safety and moderation: you can report content or a person and block someone. A report sends the Zikru team a copy of the reported content, your account ID, the reason and your note; the reported person is not told. Technical counters limit abuse (messages, invitations, code attempts). Moderation contact: mohamadalhabib@live.com.</li>
 </ul>
 <h2 id="en-ai">5. Bilal, the AI assistant (optional)</h2>
@@ -160,7 +160,7 @@
 </ul>
 <h2 id="en-transfers">8. International transfers</h2>
 <p>Account data is hosted in Switzerland. Supabase Inc. (USA) may access it as a processor under its contractual safeguards (standard contractual clauses). Sending Bilal messages to the USA relies on your explicit consent (FADP art. 17(1)(a), GDPR art. 49(1)(a)). Weather is handled by a Swiss provider.</p>
-<p>Group calls: sound and video go through LiveKit Inc. (USA), a processor, under contractual safeguards; the server region is chosen when the service opens and will be stated here.</p>
+<p>Group calls: sound and video go through a LiveKit server we host ourselves in Europe. The exact city will be stated here when the service opens. It is not a LiveKit cloud in the United States.</p>
 <h2 id="en-retention">9. Retention and deletion</h2>
 
 <ul>
@@ -228,7 +228,7 @@
 <li>الاستضافة: Supabase (شركة Supabase Inc. في الولايات المتحدة، بصفتها معالجًا من الباطن)، وقاعدة البيانات مستضافة في زيورخ (سويسرا، منطقة eu-central-2). ويُرسَل بريد تسجيل الدخول عبر خدمة المصادقة لدى Supabase.</li>
 <li>تُحفظ جلسة تسجيل الدخول على الجهاز حتى لا تحتاج إلى تسجيل الدخول من جديد، وتُمسح عند تسجيل الخروج.</li>
 <li>رسائل التشجيع والجلسات: مشفّرة أثناء النقل ولا يطّلع عليها إلا الأعضاء المعنيون، وليست مشفّرة بعدُ تشفيرًا تامًّا بين الطرفين (مخطَّط له). الروابط مرفوضة، ويحجب مرشّح أساسي الشتائم الجسيمة. لا يراسل الطفل افتراضيًا إلا والديه، ويمكن للوالد إيقاف المراسلة كليًا.</li>
-<li>المكالمات الجماعية (صوت / فيديو، عند توفرها): لا ينضم إلى المكالمة إلا أعضاء المجموعة. يمر الصوت والصورة في الوقت الفعلي عبر مزوّد المكالمات لدينا LiveKit (شركة LiveKit Inc.، الولايات المتحدة، معالج من الباطن)، الذي يتلقى أيضًا معرّف حسابك واسمك الظاهر وعنوان IP. المكالمات مشفّرة أثناء النقل، وليست بعدُ مشفّرة من طرف إلى طرف، ولا يسجّلها Zikru أبدًا. لا يحتفظ Zikru إلا بأثر تقني لانضمامك (الوقت، المجموعة، فيديو نعم/لا) للحد من الإساءة. لا يتصل الطفل إلا داخل عائلته، بنفس قواعد المحادثة، والفيديو يتطلب موافقة أحد الوالدين.</li>
+<li>المكالمات الجماعية (صوت / فيديو، عند توفرها): لا ينضم إلى المكالمة إلا أعضاء المجموعة. يمر الصوت والصورة في الوقت الفعلي عبر خادم LiveKit نستضيفه في أوروبا (برنامج حر، وليس سحابة في الولايات المتحدة). يتلقى هذا الخادم معرّف حسابك واسمك الظاهر وعنوان IP طوال المكالمة. المكالمات مشفّرة أثناء النقل، وليست بعدُ مشفّرة من طرف إلى طرف، ولا يسجّلها Zikru أبدًا. يبقى الميكروفون والكاميرا مغلقين حتى تفتحهما. لا يحتفظ Zikru إلا بأثر تقني لانضمامك (الوقت، المجموعة، فيديو نعم/لا) للحد من الإساءة. لا يتصل الطفل إلا داخل عائلته، بنفس قواعد المحادثة، والفيديو يتطلب موافقة أحد الوالدين. في الصف يبقى الفيديو المختلط مغلقًا حتى يفتحه المعلّم.</li>
 <li>الأمان والإشراف: يمكنك الإبلاغ عن محتوى أو شخص وحظر أحد. يرسل البلاغ إلى فريق Zikru نسخة من المحتوى المبلَّغ عنه ومعرّف حسابك والسبب وملاحظتك، ولا يُعلَم الشخص المبلَّغ عنه. وتحدّ عدّادات تقنية من الإساءة (الرسائل والدعوات ومحاولات الرموز). عنوان الإشراف: mohamadalhabib@live.com.</li>
 </ul>
 <h2 id="ar-ai">5. بلال، المساعد بالذكاء الاصطناعي (اختياري)</h2>
@@ -257,7 +257,7 @@
 </ul>
 <h2 id="ar-transfers">8. النقل إلى الخارج</h2>
 <p>بيانات الحساب مستضافة في سويسرا. وقد تصل إليها شركة Supabase Inc. (الولايات المتحدة) بصفتها معالجًا من الباطن وفق ضماناتها التعاقدية (البنود التعاقدية النموذجية). أما إرسال رسائل بلال إلى الولايات المتحدة فيقوم على موافقتك الصريحة (المادة 17 الفقرة 1 أ من القانون السويسري، والمادة 49 الفقرة 1 أ من اللائحة الأوروبية). ويعالج الطقسَ مزوّدٌ سويسري.</p>
-<p>المكالمات الجماعية: يمر الصوت والصورة عبر شركة LiveKit Inc. (الولايات المتحدة)، بصفتها معالجًا من الباطن، على أساس ضمانات تعاقدية؛ تُختار منطقة الخوادم عند فتح الخدمة وستُذكر هنا.</p>
+<p>المكالمات الجماعية: يمر الصوت والصورة عبر خادم LiveKit نستضيفه بأنفسنا في أوروبا. ستُذكر المدينة بدقة هنا عند فتح الخدمة. ليست سحابة LiveKit في الولايات المتحدة.</p>
 <h2 id="ar-retention">9. مدة الحفظ والحذف</h2>
 
 <ul>

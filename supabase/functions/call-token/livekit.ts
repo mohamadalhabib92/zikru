@@ -133,6 +133,10 @@ export function roomService(cfg: LiveKitConfig, fetchFn: Fetch) {
     muteTrack(room: string, identity: string, trackSid: string) {
       return call('MutePublishedTrack', { room, roomAdmin: true }, { room, identity, track_sid: trackSid, muted: true });
     },
+    /** L’hôte termine l’appel : la salle disparaît, tout le monde est déconnecté. Pas d’enregistrement. */
+    deleteRoom(room: string) {
+      return call('DeleteRoom', { room, roomAdmin: true }, { room });
+    },
   };
 }
 

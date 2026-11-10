@@ -40,6 +40,7 @@ export default function FamilyScreen() {
     const r = await callRights('family', fid);
     return r.rights?.enabled && !r.missing ? await videoConsents(fid) : null;
   }, [fid, isParent]);
+  const classesOk = useLoad(() => (isParent ? api.classConsents(fid) : Promise.resolve(null)), [fid, isParent]);
   const [kid, setKid] = useState<{ memberId: string; name: string } | null>(null);
   const [leaveErr, setLeaveErr] = useState<string | null>(null);
   const managed = (members.data ?? []).filter((m) => m.role === 'child' && !m.user_id).map((m) => ({ id: m.id, name: m.display_name }));
@@ -130,7 +131,7 @@ export default function FamilyScreen() {
 
       <H2>Membres</H2>
       {members.data?.map((m) => (
-        <MemberRow key={m.id} m={m} isParent={isParent} isMe={m.user_id === userId} pc={pcs.data?.find((p) => p.child_member_id === m.id)} familyId={fid} onChanged={() => (members.reload(), pcs.reload())} video={vids.data ? (vids.data[m.id] ?? false) : undefined} onVideoChanged={vids.reload} />
+        <MemberRow key={m.id} m={m} isParent={isParent} isMe={m.user_id === userId} pc={pcs.data?.find((p) => p.child_member_id === m.id)} familyId={fid} onChanged={() => (members.reload(), pcs.reload())} video={vids.data ? (vids.data[m.id] ?? false) : undefined} onVideoChanged={vids.reload} classes={classesOk.data ? (classesOk.data[m.id] ?? false) : undefined} onClassesChanged={classesOk.reload} />
       ))}
       {isParent ? <AddChild familyId={fid} onAdded={members.reload} /> : null}
       <Spacer />
@@ -202,6 +203,8 @@ function MemberRow({
   onChanged,
   video,
   onVideoChanged,
+  classes,
+  onClassesChanged,
 }: {
   m: api.FamilyMember;
   isParent: boolean;
@@ -212,6 +215,9 @@ function MemberRow({
   /** Consentement vidéo pour les appels ; undefined = appels pas encore ouverts (réglage masqué). */
   video?: boolean;
   onVideoChanged?: () => void;
+  /** Autorisation d’une classe ; undefined = colonne pas encore en base (réglage masqué). */
+  classes?: boolean;
+  onClassesChanged?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -302,7 +308,15 @@ function MemberRow({
                   onChange={(v) => void setVideoConsent(familyId, m.id, v).then(() => onVideoChanged?.()).catch(() => setErr(L('Réglage non enregistré. Réessayez.')))}
                 />
               ) : null}
-              <Muted>Les enfants ne rejoignent aucun cercle et ne sont jamais visibles hors de la famille.</Muted>
+              {m.user_id && classes !== undefined ? (
+                <Toggle
+                  label="Autoriser les classes"
+                  hint="Fermé par défaut. L’enfant ne rejoint une classe que si vous l’autorisez et si l’enseignant a ouvert sa classe aux mineurs."
+                  value={classes}
+                  onChange={(v) => void api.setClassConsent(familyId, m.id, v).then(() => onClassesChanged?.()).catch(() => setErr(L('Réglage non enregistré. Réessayez.')))}
+                />
+              ) : null}
+              <Muted>Les enfants ne rejoignent aucun cercle de proches. Une classe n’est possible qu’avec votre accord.</Muted>
             </>
           ) : null}
           {err ? <Muted style={{ color: t.danger }}>{err}</Muted> : null}

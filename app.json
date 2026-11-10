@@ -25,9 +25,9 @@
         "NSLocationTemporaryUsageDescriptionDictionary": {
           "ExpoLocationFullAccuracy": "La position précise permet un résultat plus exact."
         },
-        "NSCameraUsageDescription": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre prestataire d’appels, sans enregistrement.",
+        "NSCameraUsageDescription": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez vous-même la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre serveur d’appels, sans enregistrement.",
         "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
-        "NSMicrophoneUsageDescription": "Zikru utilise le micro seulement pendant un appel de groupe que vous rejoignez : votre voix est transmise aux participants via notre prestataire d’appels, sans enregistrement."
+        "NSMicrophoneUsageDescription": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
       },
       "buildNumber": "1",
       "config": {
@@ -181,7 +181,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Zikru utilise le micro seulement pendant un appel de groupe que vous rejoignez : votre voix est transmise aux participants via notre prestataire d’appels, sans enregistrement.",
+          "microphonePermission": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement.",
           "enableBackgroundPlayback": true,
           "recordAudioAndroid": true
         }
@@ -211,8 +211,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
-          "cameraPermission": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre prestataire d’appels, sans enregistrement.",
-          "microphonePermission": "Zikru utilise le micro seulement pendant un appel de groupe que vous rejoignez : votre voix est transmise aux participants via notre prestataire d’appels, sans enregistrement."
+          "cameraPermission": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez vous-même la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre serveur d’appels, sans enregistrement.",
+          "microphonePermission": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
         }
       ],
       [
@@ -229,8 +229,8 @@
       [
         "@config-plugins/react-native-webrtc",
         {
-          "cameraPermission": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre prestataire d’appels, sans enregistrement.",
-          "microphonePermission": "Zikru utilise le micro seulement pendant un appel de groupe que vous rejoignez : votre voix est transmise aux participants via notre prestataire d’appels, sans enregistrement."
+          "cameraPermission": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez vous-même la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre serveur d’appels, sans enregistrement.",
+          "microphonePermission": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
         }
       ]
     ],

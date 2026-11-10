@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { GroupAdminTools } from '@/components/community/admin';
+import { ClassRoom } from '@/components/community/classes';
 import { BlockButton, CallCard, confirmAsk, DiscussionCard, EncouragementsPanel, ModerationContact, ReportButton, ErrorNote, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
 import { orderGroupGoals, positionsAfterMove } from '@/lib/group-order';
 import * as api from '@/lib/community/api';
@@ -32,7 +33,7 @@ export default function CircleScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: name }} />
-      <Eyebrow>Mes cercles · Ahbab</Eyebrow>
+      <Eyebrow>{circle.data?.kind === 'class' ? 'Classe' : 'Mes cercles · Ahbab'}</Eyebrow>
       <H1>{name}</H1>
       {circle.data?.description ? <Muted>{circle.data.description}</Muted> : null}
       {cap.data ? (
@@ -43,6 +44,15 @@ export default function CircleScreen() {
       ) : null}
       <ErrorNote error={circle.error || members.error} onRetry={() => (circle.reload(), members.reload())} />
       <Spacer />
+      {circle.data?.kind === 'class' ? (
+        <ClassRoom
+          id={cid}
+          isTeacher={!!isFounder}
+          allowMinors={!!circle.data.allow_minors}
+          allowMixed={!!circle.data.allow_mixed_video}
+          onChanged={circle.reload}
+        />
+      ) : null}
       {me ? <DiscussionCard scope="circle" scopeId={cid} name={name} /> : null}
       {me ? <CallCard scope="circle" scopeId={cid} name={name} /> : null}
       <Spacer />

@@ -21,7 +21,8 @@ assert.deepEqual(C.availability({ member: false, enabled: true }, { nativeOk: tr
 assert.deepEqual(C.availability({ member: true, enabled: false }, { nativeOk: true }), { kind: 'soon' }, 'interrupteur serveur coupé');
 const ok = { member: true, enabled: true, can_join: true, video: true, admin: false, max_participants: 8 };
 assert.deepEqual(C.availability(ok, { nativeOk: false }), { kind: 'soon' }, 'build sans module natif (build 61) → Bientôt disponible');
-assert.deepEqual(C.availability(ok, { nativeOk: true }), { kind: 'ready', video: true, videoNeedsConsent: false, admin: false, max: 8 });
+assert.deepEqual(C.availability(ok, { nativeOk: true }), { kind: 'ready', video: true, videoNeedsConsent: false, admin: false, max: 8, mixedClosed: false });
+assert.equal(C.availability({ ...ok, video: false, mixed_closed: true }, { nativeOk: true }).mixedClosed, true, 'vidéo mixte fermée par l’enseignant');
 assert.deepEqual(C.availability({ ...ok, can_join: false, reason: 'suspended' }, { nativeOk: true }), { kind: 'blocked', reason: 'suspended' });
 assert.deepEqual(C.availability({ ...ok, can_join: false }, { nativeOk: true }), { kind: 'blocked', reason: 'parental' });
 assert.equal(C.reasonText('rate'), 'Trop de tentatives. Réessayez dans un moment.');

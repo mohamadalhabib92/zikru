@@ -1,0 +1,14 @@
+# Traduction allemande (de) — NON RELUE.
+Lecture méditative indisponible : audio en un seul fichier, sans séparation des versets.	Meditative Lesung nicht verfügbar: die Audiodatei ist eine einzige Datei, ohne Versaufteilung.
+Auteur : {name}	Autor: {name}
+Licence : {license}	Lizenz: {license}
+Page de la source	Quellseite
+Voix de l’adhan	Adhan-Stimme
+Enregistrements publiés, lus en ligne et non copiés dans l’application. Le choix reste sur cet appareil.	Veröffentlichte Aufnahmen, online abgespielt und nicht in die App kopiert. Die Wahl bleibt auf diesem Gerät.
+Fichier manquant pour cette voix : lecture désactivée (aucun crash).	Datei für diese Stimme fehlt: Wiedergabe aus (kein Absturz).
+Adhan à l’heure de la prière	Adhan zur Gebetszeit
+À l’heure des prières cochées, Zikru joue la voix choisie si l’application est ouverte, et quand vous ouvrez la notification. L’écran verrouillé ne lance pas l’enregistrement complet : iOS n’accepte qu’un son embarqué de moins de 30 secondes, et une notification Android ne lit pas une adresse distante. Sur le téléphone, ce son court est une lecture publiée (Jarih, CC BY-SA 3.0), pas la voix choisie. Le mode silencieux peut le couper. Dans le navigateur, la notification garde le son du système et la voix choisie ne part que si la page est ouverte. Si ce réglage est coupé, la notification de prière reste, sans cet appel.	Zur gewählten Gebetszeit spielt Zikru die gewählte Stimme, wenn die App offen ist und wenn Sie die Mitteilung öffnen. Der Sperrbildschirm startet nicht die ganze Aufnahme: iOS akzeptiert nur einen eingebetteten Ton unter 30 Sekunden, und eine Android-Mitteilung spielt keine ferne Adresse. Auf dem Telefon ist dieser kurze Ton eine veröffentlichte Aufnahme (Jarih, CC BY-SA 3.0), nicht die gewählte Stimme. Der Stummmodus kann ihn abschalten. Im Browser behält die Mitteilung den Systemton, und die gewählte Stimme startet nur bei offener Seite. Ist diese Einstellung aus, bleibt die Gebetsmitteilung, ohne diesen Ruf.
+Mode de lecture	Lesemodus
+Lecture normale	Normale Lesung
+Lecture méditative	Meditative Lesung
+Lecture normale enchaîne les versets. Lecture méditative attend 5 secondes à la fin de chaque verset, puis continue. Une pause ou un arrêt annule cette attente. Le fichier unique d’al-Kahf n’a pas de découpage verset par verset : ce mode n’y est pas disponible.	Normale Lesung reiht die Verse aneinander. Meditative Lesung wartet 5 Sekunden am Ende jedes Verses und fährt dann fort. Pause oder Stopp bricht diese Wartezeit ab. Die einzelne al-Kahf-Datei hat keine Versaufteilung: dieser Modus ist dort nicht verfügbar.

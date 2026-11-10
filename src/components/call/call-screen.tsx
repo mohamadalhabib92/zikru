@@ -10,7 +10,7 @@ import { DisconnectReason, Room, RoomEvent, Track, type Participant, type Remote
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, View } from 'react-native';
 import { BlockButton, confirmAsk, ReportButton } from '@/components/community/parts';
-import { callRights, CallError, joinCall, moderateCall } from '@/lib/calls/api';
+import { callRights, CallError, endCall, joinCall, moderateCall } from '@/lib/calls/api';
 import { availability, canModerate, canReport, fmtDuration, isSoonReason, LABEL_TRANSIT, orderPeople, parseMeta, reasonText, type CallAvailability, type CallScope, type Person } from '@/lib/calls/core';
 import { callsSupported } from '@/lib/calls/support';
 import * as api from '@/lib/community/api';
@@ -33,6 +33,7 @@ export default function CallScreen() {
 
   const [av, setAv] = useState<CallAvailability>({ kind: 'hidden' });
   const [phase, setPhase] = useState<Phase>('loading');
+  const [withMic, setWithMic] = useState(false);
   const [withVideo, setWithVideo] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [endNote, setEndNote] = useState<string | null>(null);
@@ -127,7 +128,8 @@ export default function CallScreen() {
     setErr(null);
     setPhase('joining');
     try {
-      const info = await joinCall(scope, sid, withVideo && av.video);
+      // Le jeton peut autoriser la caméra ; elle reste éteinte tant que la personne ne l’ouvre pas.
+      const info = await joinCall(scope, sid, av.video);
       await prepareMedia();
       const r = new Room({ adaptiveStream: true, dynacast: true });
       room.current = r;
@@ -161,10 +163,12 @@ export default function CallScreen() {
       setNow(t0);
       setActive(r);
       setPhase('in');
-      try {
-        await r.localParticipant.setMicrophoneEnabled(true);
-      } catch {
-        setErr(L('Autorisez le micro dans les réglages du téléphone pour parler. Vous pouvez écouter en attendant.'));
+      if (withMic) {
+        try {
+          await r.localParticipant.setMicrophoneEnabled(true);
+        } catch {
+          setErr(L('Autorisez le micro dans les réglages du téléphone pour parler. Vous pouvez écouter en attendant.'));
+        }
       }
       if (info.video && withVideo) await r.localParticipant.setCameraEnabled(true).catch(() => setErr(L('Caméra indisponible ou refusée : l’appel continue en audio.')));
       refresh();
@@ -227,16 +231,18 @@ export default function CallScreen() {
         {av.kind === 'ready' ? (
           <Card>
             <H2>Rejoindre l’appel</H2>
-            <Muted>Aucun enregistrement. Le son et l’image passent par notre prestataire d’appels (LiveKit), sans être conservés.</Muted>
+            <Muted>Aucun enregistrement. Le son et l’image passent par notre serveur d’appels (LiveKit), sans être conservés.</Muted>
+            <Muted>{L('Le micro et la caméra restent éteints tant que vous ne les ouvrez pas.')}</Muted>
             <Muted>{L('Jusqu’à {n} personnes.', { n: av.max })}</Muted>
             <Spacer h={8} />
+            <Toggle label="Ouvrir mon micro" hint="Le micro reste coupé tant que vous ne l’ouvrez pas." value={withMic} onChange={setWithMic} />
             {av.video ? (
-              <Toggle label="Avec la vidéo" hint="Vous pourrez allumer ou éteindre la caméra pendant l’appel." value={withVideo} onChange={setWithVideo} />
+              <Toggle label="Avec la vidéo" hint="La caméra reste éteinte, sauf si vous la cochez ici ou si vous l’allumez pendant l’appel." value={withVideo} onChange={setWithVideo} />
             ) : (
-              <Muted style={{ fontSize: 12 }}>{L(av.videoNeedsConsent ? 'Audio seulement : la vidéo demande l’accord d’un parent.' : 'Audio seulement.')}</Muted>
+              <Muted style={{ fontSize: 12 }}>{L(av.mixedClosed ? 'La vidéo de cette classe est fermée. L’enseignant peut l’ouvrir.' : av.videoNeedsConsent ? 'Audio seulement : la vidéo demande l’accord d’un parent.' : 'Audio seulement.')}</Muted>
             )}
             <Spacer h={8} />
-            <Button title={withVideo && av.video ? 'Rejoindre en vidéo' : 'Rejoindre en audio'} icon={withVideo && av.video ? 'videocam' : 'call'} loading={phase === 'joining'} onPress={() => void join()} />
+            <Button title={withVideo && av.video ? 'Rejoindre en vidéo' : withMic ? 'Rejoindre en audio' : 'Rejoindre en silence'} icon={withVideo && av.video ? 'videocam' : 'call'} loading={phase === 'joining'} onPress={() => void join()} />
           </Card>
         ) : null}
         {err ? <Notice tone="warning" title={err} /> : null}
@@ -295,6 +301,25 @@ export default function CallScreen() {
       <Row gap={10} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16, justifyContent: 'center', backgroundColor: t.surface }}>
         <Button small variant={mic ? 'secondary' : 'primary'} icon={mic ? 'mic' : 'mic-off'} title={mic ? 'Couper le micro' : 'Ouvrir le micro'} onPress={() => void toggleMic()} />
         {videoOk ? <Button small variant={cam ? 'secondary' : 'ghost'} icon={cam ? 'videocam' : 'videocam-off'} title={cam ? 'Éteindre la caméra' : 'Allumer la caméra'} onPress={() => void toggleCam()} /> : null}
+        {admin ? (
+          <Button
+            small
+            variant="danger"
+            icon="close-circle-outline"
+            title="Terminer l’appel"
+            onPress={() =>
+              confirmAsk(L('Terminer l’appel pour tout le monde ?'), 'Tout le monde sera déconnecté. Rien n’est enregistré.', 'Terminer', () =>
+                void endCall(scope, sid)
+                  .then(() => leave())
+                  .then(() => {
+                    setEndNote(L('L’appel est terminé.'));
+                    setPhase('ended');
+                  })
+                  .catch((e) => setErr(L(reasonText(e instanceof CallError ? e.reason : 'livekit')))),
+              )
+            }
+          />
+        ) : null}
         <Button
           small
           variant="danger"
