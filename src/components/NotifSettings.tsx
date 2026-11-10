@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { BEFORE_OPTIONS, DEFAULT_QUIET, FARD_KEYS, type NotifPrefs } from '@/lib/notify-plan';
+import { BEFORE_OPTIONS, DEFAULT_QUIET, FARD_KEYS, remindersStored, type NotifPrefs } from '@/lib/notify-plan';
 import { reminderPermission, remindersNative, remindersSupported, requestReminderPermission, scheduledCount, sendTestNotification } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
 import { Button, Card, Chip, Divider, H2, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
@@ -34,11 +34,16 @@ export function NotifSettings() {
         <Toggle
           label={tr.reminders}
           hint={tr.reminders_hint}
-          value={s.reminders && perm !== 'denied'}
+          value={s.reminders}
           onChange={async (v) => {
-            const ok = v ? await requestReminderPermission() : false;
-            setPerm(await reminderPermission());
-            set({ reminders: ok });
+            if (!v) {
+              set({ reminders: false });
+              return;
+            }
+            const ok = await requestReminderPermission();
+            const next = await reminderPermission();
+            setPerm(next);
+            set({ reminders: remindersStored(true, ok && next === 'granted') });
           }}
         />
         {perm === 'denied' ? <Notice tone="warning" title={tr.notif_denied} /> : null}

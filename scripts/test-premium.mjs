@@ -38,9 +38,11 @@ assert.equal(bought.store.transactionId, 'txn-1');
 assert.equal(P.hasStorePremium(bought), true);
 const offline = P.applyStoreCheck(bought, { online: false, owned: null, platform: 'ios', now: 20 });
 assert.equal(offline.store.transactionId, 'txn-1', 'hors ligne : le cache reste');
-const refunded = P.applyStoreCheck(bought, { online: true, owned: false, platform: 'ios', now: 30 });
-assert.equal(refunded.store, null, 'remboursement en ligne : l’achat part');
-const kept = P.applyStoreCheck({ ...bought, grandfather: true }, { online: true, owned: false, platform: 'ios', now: 30 });
+const raced = P.applyStoreCheck(bought, { online: true, owned: false, platform: 'ios', now: 10 + 1000 });
+assert.equal(raced.store.transactionId, 'txn-1', 'juste après l’achat, un store encore vide ne retire pas le droit');
+const refunded = P.applyStoreCheck(bought, { online: true, owned: false, platform: 'ios', now: 10 + P.STORE_REVOKE_GRACE_MS });
+assert.equal(refunded.store, null, 'remboursement en ligne, après le délai : l’achat part');
+const kept = P.applyStoreCheck({ ...bought, grandfather: true }, { online: true, owned: false, platform: 'ios', now: 10 + P.STORE_REVOKE_GRACE_MS });
 assert.equal(kept.grandfather, true, 'le remboursement ne retire pas l’antériorité');
 assert.equal(P.canCreatePremiumContent(kept, true), true);
 

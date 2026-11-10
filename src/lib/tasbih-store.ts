@@ -37,6 +37,7 @@ export function createTasbihStore(o: TasbihStoreOpts) {
   let ready = false;
   /** Document plus récent que v2 : la clé principale n'est pas réécrite. */
   let holdNewer = false;
+  let epoch = 0;
   type InboxItem = { n: number; src: ClickSource; at: number; cursor?: BleCursor };
   type InboxFile = { v: 1; items: InboxItem[]; state: Tasbih | null };
   let inbox: InboxFile = { v: 1, items: [], state: null };
@@ -94,9 +95,11 @@ export function createTasbihStore(o: TasbihStoreOpts) {
   const load = (): Promise<void> => {
     if (!loading)
       loading = (async () => {
+        const ticket = epoch;
         let attempt = 0;
         for (;;) {
           const r = await readOnce();
+          if (ticket !== epoch) return;
           if (r) {
             const ops = pending;
             pending = [];
@@ -188,8 +191,12 @@ export function createTasbihStore(o: TasbihStoreOpts) {
     lastWrite: () => lastWrite,
     /** Après « Effacer toutes les données ». */
     reset() {
+      epoch++;
       doc = newDoc(o.makeDev());
       pending = [];
+      holdNewer = false;
+      inbox = { v: 1, items: [], state: null };
+      ready = true;
       emit();
     },
   };

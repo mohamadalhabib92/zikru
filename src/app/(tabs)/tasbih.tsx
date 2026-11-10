@@ -96,7 +96,7 @@ export default function TasbihScreen() {
           >
             <ProgressRing size={ring} stroke={10} progress={progress} color={done ? b.gold : t.primary}>
               <View style={{ width: ring - 36, height: ring - 36, borderRadius: (ring - 36) / 2, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}>
-                <Text style={{ color: t.text, fontSize: ring / 3.6, fontWeight: '200', fontVariant: ['tabular-nums'] }}>{tasbih.count}</Text>
+                <Text maxFontSizeMultiplier={1.2} numberOfLines={1} adjustsFontSizeToFit style={{ color: t.text, fontSize: ring / 3.6, fontWeight: '200', fontVariant: ['tabular-nums'], maxWidth: ring - 72 }}>{tasbih.count}</Text>
                 <Muted>{tasbih.target ? `/ ${tasbih.target}` : '∞'}</Muted>
                 <Muted style={{ marginTop: 6, color: done ? t.accent : t.muted, fontWeight: done ? '700' : '400' }}>{done ? tr.cycle_done : tr.tap_to_count}</Muted>
               </View>

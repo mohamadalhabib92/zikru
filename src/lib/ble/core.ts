@@ -535,6 +535,11 @@ export function analyzeLearn(samples: LearnSample[], presses: number, parse: (b:
 // ---------------------------------------------------------------- Clavier HID (anneaux télécommande)
 /** Touches envoyées par les anneaux-télécommandes / cliqueurs Bluetooth appairés comme clavier. */
 export const DEFAULT_HID_KEYS = ['Enter', ' ', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'PageDown', 'PageUp', 'AudioVolumeUp', 'AudioVolumeDown', 'VolumeUp', 'VolumeDown', 'MediaPlayPause', 'MediaTrackNext'];
+/**
+ * Le clavier ne compte pas tout seul. Sur le web, Espace et les flèches sinon bloquent
+ * le défilement et les boutons. L’utilisateur l’active dans l’écran du compteur.
+ */
+export const HID_ON_BY_DEFAULT = false;
 export function keyLabel(k: string): string {
   const m: Record<string, string> = { ' ': 'Espace', Enter: 'Entrée', ArrowRight: 'Flèche droite', ArrowLeft: 'Flèche gauche', ArrowUp: 'Flèche haut', ArrowDown: 'Flèche bas', PageDown: 'Page suivante', PageUp: 'Page précédente', AudioVolumeUp: 'Volume +', AudioVolumeDown: 'Volume −', VolumeUp: 'Volume +', VolumeDown: 'Volume −', MediaPlayPause: 'Lecture/Pause', MediaTrackNext: 'Piste suivante' };
   return m[k] ?? k;

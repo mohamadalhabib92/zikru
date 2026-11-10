@@ -182,6 +182,7 @@ test('apprentissage : échecs explicites', () => {
   assert.equal(c.analyzeLearn([], 1).ok, false);
 });
 test('touches HID', () => {
+  assert.equal(c.HID_ON_BY_DEFAULT, false, 'le clavier ne compte pas tout seul : Espace ne doit pas bloquer la page');
   const k = c.DEFAULT_HID_KEYS;
   assert.ok(c.isCounterKey({ key: 'Enter' }, k));
   assert.ok(c.isCounterKey({ key: 'AudioVolumeUp' }, k));

@@ -13,6 +13,7 @@ import {
   candidateChars,
   ClickDecoder,
   DEFAULT_HID_KEYS,
+  HID_ON_BY_DEFAULT,
   defaultMapping,
   detectCounterField,
   detectProfile,
@@ -93,7 +94,7 @@ export type BleState = {
   showAllDevices: boolean;
 };
 
-const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: Platform.OS === 'web', hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
+const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: HID_ON_BY_DEFAULT, hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
 const KEY = 'ble-counter';
 
 /** cursor : valeur absolue de l'appareil après ces appuis (compteur « absolu ») — enregistrée AVEC le compte. */

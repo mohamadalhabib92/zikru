@@ -95,6 +95,15 @@ export function writeProgramProgress(p: ProgramProgress): Record<string, unknown
   return { ...p.extras, counts: p.counts, dirty: p.dirty };
 }
 
+/**
+ * Met à jour les compteurs d’un cache déjà lu sans effacer les clés inconnues
+ * (forme 1.0.29 : clientNote, attemptIds, …).
+ */
+export function saveProgramProgress(raw: unknown, counts: Record<string, number>, dirty: string[]): Record<string, unknown> {
+  const prev = readProgramProgress(raw);
+  return writeProgramProgress({ counts, dirty, extras: prev.extras });
+}
+
 /** Génération du document tasbih stocké. `newer` ne doit pas être réécrit en v2. */
 export function tasbihGeneration(raw: unknown): 'empty' | 'legacy' | 'v2' | 'newer' | 'unreadable' {
   if (raw == null) return 'empty';

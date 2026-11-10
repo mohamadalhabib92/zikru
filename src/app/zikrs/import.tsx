@@ -20,7 +20,7 @@ import { ocrToLines } from '@/lib/ocr-lines';
 import { closePdf, ocrPdfPage, openPdf, pdfSupport, renderPdfPage, type PdfDoc } from '@/lib/pdf';
 import { pageIsScanned } from '@/lib/pdf-types';
 import { detectLanguages, LANG_LABEL, type LangCode } from '@/lib/program-lang';
-import { latinDigits, parseProgram, programHasArabic, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
+import { importTooLarge, latinDigits, MAX_IMPORT_CHARS, parseProgram, programHasArabic, sourceLinesForResplit, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
 import { confirmLoose, matchStepText, stepToItem, type CatalogEntry, type ImportVia, type LooseTarget, type StepMatch } from '@/lib/program-match';
 import { loadQuranIndex, type QuranIndex } from '@/lib/quran-match';
 import { loadJSON, saveJSON, uid } from '@/lib/storage';
@@ -92,7 +92,7 @@ function Icon({ icon, label, onPress, disabled }: { icon: IconName; label: strin
       accessibilityState={{ disabled: !!disabled }}
       onPress={disabled ? undefined : onPress}
       hitSlop={4}
-      style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, opacity: disabled ? 0.35 : pressed ? 0.7 : 1 })}
+      style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, opacity: disabled ? 0.35 : pressed ? 0.7 : 1 })}
     >
       <Ionicons name={icon} size={18} color={b.inkMuted} />
     </Pressable>
@@ -237,11 +237,19 @@ export default function ImportProgram() {
   };
   const analyse = (ps: Page[]) => {
     const texts = ps.map((p) => (p.on ? p.text : ''));
+    const joined = texts.join('\n');
+    if (importTooLarge(joined)) {
+      setSteps([]);
+      setIgnored([]);
+      setNote(L('Ce texte est trop long ({n} caractères au maximum). Coupez-le en plusieurs imports.', { n: MAX_IMPORT_CHARS }));
+      return;
+    }
     const r = parseProgram(texts);
-    setLangs(detectLanguages(texts.join('\n')));
+    setLangs(detectLanguages(joined));
     setSteps(r.steps.map((s) => toEdit(s, ps)));
     setIgnored(r.ignored);
-    if (!r.steps.length) setNote(L('Aucune étape détectée. Vérifiez le texte lu, ou ajoutez les étapes à la main.'));
+    if (r.truncated) setNote(L('Seules les {n} premières étapes ont été lues. Coupez le reste en un autre import.', { n: r.steps.length }));
+    else if (!r.steps.length) setNote(L('Aucune étape détectée. Vérifiez le texte lu, ou ajoutez les étapes à la main.'));
   };
 
   const fromPaste = async () => {
@@ -365,7 +373,7 @@ export default function ImportProgram() {
   const split = (s: EStep) => {
     const r = parseProgram([s.src.join('\n\n')]);
     if (r.steps.length < 2) return;
-    const parts = r.steps.map((p) => ({ ...toEdit({ ...p, page: s.page, lines: [] }, pages), src: [s.src[Math.min(p.lines[0] / 2, s.src.length - 1)] ?? ''], page: s.page }));
+    const parts = r.steps.map((p) => ({ ...toEdit({ ...p, page: s.page, lines: [] }, pages), src: sourceLinesForResplit(s.src, p.lines), page: s.page }));
     setSteps((ss) => (ss ?? []).flatMap((x) => (x.key === s.key ? parts : [x])));
   };
   const addIgnored = (l: IgnoredLine) => {

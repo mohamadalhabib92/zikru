@@ -174,6 +174,10 @@ test('programme : extras du cache synthétique survivent à une réécriture', (
   const again = P.readProgramProgress(P.writeProgramProgress({ ...read, counts: { ...read.counts, 'step-a': 34 } }));
   assert.equal(again.counts['step-a'], 34);
   assert.equal(again.extras.clientNote, 'synthetic');
+  const kept = P.saveProgramProgress(raw, { 'step-a': 40 }, ['step-a']);
+  assert.equal(kept.counts['step-a'], 40);
+  assert.equal(kept.clientNote, 'synthetic');
+  assert.deepEqual(kept.attemptIds, ['p-1']);
   assert.deepEqual(again.extras.attemptIds, ['p-1']);
 });
 

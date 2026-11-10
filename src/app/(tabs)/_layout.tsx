@@ -2,7 +2,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
 import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
-import { useData } from '@/lib/data';
+import { useDataReady } from '@/lib/data';
 import { usePrayerReminders } from '@/lib/reminders';
 import { useWidgetSync } from '@/lib/widget-sync';
 import { useShortcuts } from '@/lib/use-shortcuts';
@@ -11,7 +11,7 @@ import { theme as t } from '@/ui/theme';
 
 export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
-  const { ready: dataReady } = useData();
+  const dataReady = useDataReady();
   usePrayerReminders();
   useWidgetSync();
   useShortcuts({ prayers: tr.w_next, wird: tr.sc_wird, tasbih: tr.sc_tasbih });

@@ -103,13 +103,28 @@ export function usePersistentState<T>(key: string, initial: T | (() => T)) {
   const cur = useRef<T>(value);
   const loaded = useRef(false);
   const early = useRef<(T | ((prev: T) => T))[]>([]);
+  const epoch = useRef(0);
+
+  useEffect(() => {
+    return onStorageCleared(() => {
+      epoch.current += 1;
+      const fb = typeof initialRef.current === 'function' ? (initialRef.current as () => T)() : initialRef.current;
+      early.current = [];
+      loaded.current = true;
+      cur.current = fb;
+      setValue(fb);
+      setReady(true);
+    });
+  }, []);
 
   useEffect(() => {
     let alive = true;
+    const started = epoch.current;
     loaded.current = false;
+    early.current = [];
     const fb = typeof initialRef.current === 'function' ? (initialRef.current as () => T)() : initialRef.current;
     loadJSON<T>(key, fb).then((stored) => {
-      if (!alive) return;
+      if (!alive || started !== epoch.current) return;
       let v = stored;
       const ops = early.current;
       early.current = [];

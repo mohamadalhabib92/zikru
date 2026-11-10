@@ -430,6 +430,24 @@ test('tasbih de groupe : enchaînement automatique, bornes, annulation, fin', ()
   assert.deepEqual(PG.mergeCounts({ a: 1, b: 1 }, { a: 2, b: 0 }, ['a']), { a: 2, b: 1 });
 });
 
+test('redécoupe : les lignes source restent les bonnes, même sur un indice impair', () => {
+  const src = ['سبحان الله ×33', 'الحمد لله 33 fois', 'الله أكبر ×34'];
+  assert.deepEqual(P.sourceLinesForResplit(src, [0]), [src[0]]);
+  assert.deepEqual(P.sourceLinesForResplit(src, [1]), [src[0]], 'la ligne vide intercalée ne donne pas un indice fractionnaire');
+  assert.deepEqual(P.sourceLinesForResplit(src, [4, 5]), [src[2]]);
+  assert.deepEqual(P.sourceLinesForResplit(src, [99]), []);
+});
+test('import : un collage énorme est refusé, et le parseur s’arrête à 200 étapes', () => {
+  assert.equal(P.importTooLarge('a'.repeat(P.MAX_IMPORT_CHARS + 1)), true);
+  assert.equal(P.importTooLarge('a'.repeat(P.MAX_IMPORT_CHARS)), false);
+  const huge = Array.from({ length: 250 }, (_, i) => `سبحان الله ×${i + 1}`).join('\n');
+  const r = P.parseProgram([huge]);
+  assert.equal(r.steps.length, P.MAX_IMPORT_STEPS);
+  assert.equal(r.truncated, true);
+  assert.equal(r.steps[0].count, 1);
+  assert.equal(r.steps[199].count, 200);
+});
+
 let fail = 0;
 for (const [n, f] of tests) {
   try {

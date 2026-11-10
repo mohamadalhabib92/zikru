@@ -142,6 +142,13 @@ export function grantServerGrandfather(prev: PremiumRecord, now: string): Premiu
 }
 
 /**
+ * Fenêtre après un achat confirmé pendant laquelle un « non détenu » du store
+ * ne retire pas le droit. Juste après finishTransaction, getAvailablePurchases
+ * peut encore répondre vide. Un remboursement plus tard (au-delà de cette fenêtre) retire l’achat.
+ */
+export const STORE_REVOKE_GRACE_MS = 60_000;
+
+/**
  * Revérification au lancement.
  * Hors ligne ou inconnu : on garde le droit en cache.
  * Store en ligne sans le produit : on retire seulement l’achat (remboursement), jamais l’antériorité.
@@ -158,7 +165,10 @@ export function applyStoreCheck(prev: PremiumRecord, check: StoreCheck): Premium
       },
     };
   }
-  if (check.owned === false && check.online) return { ...prev, store: null };
+  if (check.owned === false && check.online) {
+    if (prev.store && check.now - prev.store.verifiedAt < STORE_REVOKE_GRACE_MS) return prev;
+    return { ...prev, store: null };
+  }
   return prev;
 }
 

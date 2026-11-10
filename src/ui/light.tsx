@@ -1,7 +1,9 @@
-import type { ReactNode } from 'react';
+import { useSyncExternalStore, type ReactNode } from 'react';
 import { Pressable, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import { brand as b, elevation, fonts, onColor } from './theme';
+import { arLang } from './ar-lang';
+import { fontsAreReady, subscribeFonts } from './fonts-ready';
 import { L } from "@/lib/l10n";
 
 /** Composants « cartes claires » de la palette Zikru originale. */
@@ -34,10 +36,12 @@ export function LMuted({ children, style, numberOfLines }: { children: ReactNode
 }
 /** Texte arabe : police Amiri (ou Amiri Quran pour les versets), RTL, interligne généreux. */
 export function Arabic({ children, size = 24, style, quran, numberOfLines }: { children: ReactNode; size?: number; style?: StyleProp<TextStyle>; quran?: boolean; numberOfLines?: number }) {
+  const ready = useSyncExternalStore(subscribeFonts, fontsAreReady, () => false);
   return (
     <Text
+      {...arLang}
       numberOfLines={numberOfLines}
-      style={[{ color: b.ink, fontSize: size, lineHeight: Math.round(size * (quran ? 2.1 : 1.85)), textAlign: 'right', writingDirection: 'rtl', fontFamily: quran ? fonts.quran : fonts.arabic }, style]}
+      style={[{ color: b.ink, fontSize: size, lineHeight: Math.round(size * (quran ? 2.2 : 2)), textAlign: 'right', writingDirection: 'rtl', fontFamily: ready ? (quran ? fonts.quran : fonts.arabic) : undefined }, style]}
     >
       {children}
     </Text>
@@ -57,7 +61,7 @@ export function Pill({ label, active, onPress, color = b.green }: { label: strin
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      style={{ paddingHorizontal: 14, paddingVertical: 6, minHeight: 40, maxWidth: '100%', justifyContent: 'center', borderRadius: 19, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
+      style={{ paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, maxWidth: '100%', justifyContent: 'center', borderRadius: 22, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
     >
       <Text maxFontSizeMultiplier={1.35} style={{ color: active ? onColor(color) : b.ink, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{label}</Text>
     </Pressable>

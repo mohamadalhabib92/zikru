@@ -32,8 +32,6 @@ type Ctx = {
 };
 const C = createContext<Ctx | null>(null);
 const FLUSH_MS = 6000;
-/** Délai avant de ranger les appuis dans la file persistante (un arrêt brutal ne perd au plus que ce délai). */
-const STASH_MS = 400;
 /** Au-delà, les lignes en attente sont regroupées par objectif (avant : les plus anciennes étaient supprimées). */
 const QUEUE_SOFT_MAX = 1000;
 
@@ -53,7 +51,6 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const queueRef = useRef(queue);
   const busy = useRef(false);
   const inflight = useRef<Set<string>>(new Set());
-  const stashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const qReadyRef = useRef(qReady);
   useEffect(() => {
     qReadyRef.current = qReady;
@@ -81,10 +78,6 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
 
   /** Transfère l'accumulateur dans la file persistante (une ligne par objectif). */
   const stash = useCallback(() => {
-    if (stashTimer.current) {
-      clearTimeout(stashTimer.current);
-      stashTimer.current = null;
-    }
     // avant le chargement de la file, les appuis restent dans l'accumulateur (sinon la file chargée serait écrasée)
     if (!qReadyRef.current || !acc.current.size) return;
     {
@@ -157,7 +150,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     const key = `${owner}|${memberId ? `${goalId}|${memberId}` : goalId}`;
     const cur = acc.current.get(key);
     acc.current.set(key, { goalId, n: (cur?.n ?? 0) + n, source: cur && cur.source !== source ? 'manuel' : source, memberId, owner });
-    if (!stashTimer.current) stashTimer.current = setTimeout(() => stashRef.current(), STASH_MS);
+    // Tout de suite : un arrêt dans les 400 ms ne doit pas perdre la contribution.
+    stashRef.current();
   };
 
   // Appuis du tasbih → objectifs reliés (respect du choix de partage par lieu).

@@ -130,6 +130,9 @@ export const premiumStore = {
       if (!matches(purchase)) return;
       if (purchase.purchaseState === 'pending') {
         listener?.onCode(ErrorCode.Pending);
+        // Ask to Buy : on ne bloque pas l’attente. Le droit reste inconnu jusqu’à l’approbation.
+        purchaseWait?.resolve();
+        purchaseWait = null;
         return;
       }
       void finishTransaction({ purchase, isConsumable: false })

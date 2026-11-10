@@ -217,6 +217,7 @@ export function Segmented<T extends string | number>({ options, value, onChange,
               key={String(o.value)}
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
+              accessibilityLabel={o.label}
               accessibilityState={{ checked: on }} aria-checked={on}
               style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
             >

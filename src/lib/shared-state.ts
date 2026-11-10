@@ -20,15 +20,23 @@ export function shared<T>(key: string, init: T, merge?: (stored: T) => T): Share
   let loaded = false;
   let loading: Promise<T> | null = null;
   let early: (T | ((prev: T) => T))[] = [];
+  let epoch = 0;
   const subs = new Set<() => void>();
   const emit = () => subs.forEach((f) => f());
   onStorageCleared(() => {
+    epoch += 1;
     value = init;
     early = [];
+    loaded = true;
+    loading = null;
+    emit();
   });
   const load = () => {
-    if (!loading)
+    if (loaded) return Promise.resolve(value);
+    if (!loading) {
+      const ticket = epoch;
       loading = loadJSON<T>(key, init).then((v) => {
+        if (ticket !== epoch) return value;
         value = merge ? merge(v) : v;
         const ops = early;
         early = [];
@@ -38,6 +46,7 @@ export function shared<T>(key: string, init: T, merge?: (stored: T) => T): Share
         emit();
         return value;
       });
+    }
     return loading;
   };
   return {

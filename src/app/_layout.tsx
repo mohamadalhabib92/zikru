@@ -23,6 +23,7 @@ import { StorageAlert } from '@/components/StorageAlert';
 import { MiniPlayer } from '@/components/quran/MiniPlayer';
 import { RecitationProvider } from '@/lib/recitation-context';
 import { L, useUiCatalog } from '@/lib/l10n';
+import { setFontsReady } from '@/ui/fonts-ready';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -47,7 +48,10 @@ function Root() {
   const [fontsLoaded] = useFonts({ Amiri_400Regular, Amiri_700Bold, AmiriQuran_400Regular });
   const [fontTimeout, setFontTimeout] = useState(false);
   useEffect(() => {
-    const id = setTimeout(() => setFontTimeout(true), 2500);
+    setFontsReady(fontsLoaded);
+  }, [fontsLoaded]);
+  useEffect(() => {
+    const id = setTimeout(() => setFontTimeout(true), 8000);
     return () => clearTimeout(id);
   }, []);
   // Lien de connexion refusé (expiré, déjà utilisé) arrivé sur n'importe quelle page : écran de connexion avec « Renvoyer un lien ».

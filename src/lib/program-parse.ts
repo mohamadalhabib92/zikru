@@ -29,7 +29,25 @@ export type ProgramStep = {
   note: string;
 };
 export type IgnoredLine = { page: number; line: number; text: string };
-export type ParsedProgram = { steps: ProgramStep[]; ignored: IgnoredLine[] };
+export type ParsedProgram = { steps: ProgramStep[]; ignored: IgnoredLine[]; truncated: boolean };
+
+/** Au-delà, le collage n’est pas analysé (il figerait l’écran). */
+export const MAX_IMPORT_CHARS = 80_000;
+/** Au-delà, on s’arrête et on le dit : un programme de dhikr ne fait pas des milliers d’étapes. */
+export const MAX_IMPORT_STEPS = 200;
+
+export function importTooLarge(text: string): boolean {
+  return text.length > MAX_IMPORT_CHARS;
+}
+
+/**
+ * Lignes d’origine d’une étape re-découpée. Le texte est recollé avec une ligne vide entre chaque
+ * ligne source, donc l’indice du parseur vaut 2 × l’indice d’origine (les indices impairs sont la ligne vide).
+ */
+export function sourceLinesForResplit(src: readonly string[], parsedLines: readonly number[]): string[] {
+  const idx = [...new Set(parsedLines.map((n) => Math.floor(n / 2)).filter((i) => i >= 0 && i < src.length))];
+  return idx.map((i) => src[i]).filter((s) => s.trim());
+}
 
 const AR_LETTER = /[\u0621-\u064A\u066E-\u06D3\u06D5\u06FA-\u06FC\uFB50-\uFDFF\uFE70-\uFEFC]/;
 const HAS_AR = new RegExp(AR_LETTER.source);
@@ -202,6 +220,7 @@ function lex(text: string, line: number): Lexed {
 export function parseProgram(pages: string[]): ParsedProgram {
   const steps: ProgramStep[] = [];
   const ignored: IgnoredLine[] = [];
+  let truncated = false;
   pages.forEach((pageText, page) => {
     const lines = pageText.replace(/\r\n?/g, '\n').split('\n');
     let pend: Lexed[] = [];
@@ -209,6 +228,10 @@ export function parseProgram(pages: string[]): ParsedProgram {
     let notes: Lexed[] = [];
     let heading: Lexed | null = null;
     const push = (parts: Lexed[], countFrom: Lexed | null, latin = '', unsure = false) => {
+      if (steps.length >= MAX_IMPORT_STEPS) {
+        truncated = true;
+        return;
+      }
       const counts = countFrom ? countFrom.counts : [];
       const distinct = [...new Set(counts.map((c) => c.n))];
       steps.push({
@@ -303,7 +326,7 @@ export function parseProgram(pages: string[]): ParsedProgram {
     flush();
     dropHeading();
   });
-  return { steps, ignored };
+  return { steps, ignored, truncated };
 }
 
 /** Le texte contient-il de l’arabe (lettres de base ou formes de présentation) ? */
