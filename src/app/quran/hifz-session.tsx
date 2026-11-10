@@ -216,11 +216,10 @@ function Review({ pal }: { pal: Pal }) {
   const [i, setI] = useState(0);
   const [reveal, setReveal] = useState(false);
   const [tally, setTally] = useState<Record<Grade, number>>({ easy: 0, medium: 0, hard: 0 });
-  useEffect(() => {
-    if (!ready || items) return;
+  if (ready && items === null) {
     const q = dailyQueue(cards, dayKey());
     setItems([...q.sabaq.map((k) => ({ k, part: 'Sabaq · leçon du jour' })), ...q.sabqi.map((k) => ({ k, part: 'Sabqi · révision récente' })), ...q.manzil.map((k) => ({ k, part: 'Manzil · révision ancienne' }))]);
-  }, [ready, cards, items]);
+  }
   const mode: HideMode = hp.hide === 'none' ? 'all' : hp.hide;
   if (!items || !all) return <ActivityIndicator color={pal.accent} style={{ marginTop: 60 }} />;
   const done = i >= items.length;

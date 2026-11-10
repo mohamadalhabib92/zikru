@@ -33,6 +33,11 @@ export default function BluetoothCounterScreen() {
   const av = s.availability;
   const custom = s.prefs.customService.trim();
   const [capture, setCapture] = useState('');
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
   // Ouverture de l'écran : état du Bluetooth (et autorisations Android, demandées ici seulement).
   useEffect(() => {
     void bleCounter.refreshAvailability();
@@ -50,7 +55,7 @@ export default function BluetoothCounterScreen() {
       <Spacer h={8} />
       <BleStatusChip />
       <Spacer />
-      {s.lastSync && Date.now() - s.lastSync.at < 10 * 60 * 1000 ? (
+      {s.lastSync && nowMs - s.lastSync.at < 10 * 60 * 1000 ? (
         <>
           <Notice tone="success" icon="sync-outline" title={L('Synchronisé : +{n}', { n: s.lastSync.added })} text="Appuis faits pendant que l’appareil était déconnecté, ajoutés une seule fois à la session et à l’historique." />
           <Spacer />

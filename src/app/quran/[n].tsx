@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { ABSheet } from '@/components/quran/ABSheet';
@@ -52,11 +52,10 @@ export default function SurahReader() {
     if (cur && lastS.current === n && cur === n + 1 && rec.playing && p.follow) router.replace(`/quran/${cur}`);
     lastS.current = cur;
   }, [rec.step?.s, rec.playing, n, p.follow, router]);
-  const flow = useAyahFlow(pal, (t) => play(t.a), (t) => setAb(t.a));
-
   const data = useMemo(() => Array.from({ length: meta[4] }, (_, i) => i + 1), [meta]);
   // lecture jusqu’à la fin de la sourate, puis sourate suivante si « Lecture continue » est activée
   const play = (from: number) => rec.start(buildQueue(data.slice(from - 1).map((a) => [n, a] as [number, number])), 0, false, { next: 'surah' });
+  const flow = useAyahFlow(pal, (t) => play(t.a), (t) => setAb(t.a));
 
   const scrollTo = useCallback((a: number, animated = true) => {
     try {
@@ -76,19 +75,24 @@ export default function SurahReader() {
 
   // dernière lecture + progression khatma (débouncé)
   const saveT = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onViewable = useRef(({ viewableItems }: { viewableItems: { item: unknown; isViewable: boolean }[] }) => {
+  const nRef = useRef(n);
+  useLayoutEffect(() => {
+    nRef.current = n;
+  });
+  const onViewable = useCallback(({ viewableItems }: { viewableItems: { item: unknown; isViewable: boolean }[] }) => {
+    const surah = nRef.current;
     const vis = viewableItems.filter((v) => v.isViewable && typeof v.item === 'number').map((v) => v.item as number);
     if (!vis.length) return;
     const first = Math.min(...vis), last = Math.max(...vis);
     setTop(first);
     if (saveT.current) clearTimeout(saveT.current);
     saveT.current = setTimeout(() => {
-      const li = gIndex(n, last);
+      const li = gIndex(surah, last);
       const lp = pageOfIndex(li);
       const endsPage = li + 1 >= 6236 || pageOfIndex(li + 1) !== lp;
-      recordRead(n, first, 'verse', { page: pageOf(n, first), pageDone: endsPage ? lp : lp - 1 });
+      recordRead(surah, first, 'verse', { page: pageOf(surah, first), pageDone: endsPage ? lp : lp - 1 });
     }, 1200);
-  }).current;
+  }, []);
   useEffect(() => () => void (saveT.current && clearTimeout(saveT.current)), []);
 
   const gi0 = gIndex(n, top);

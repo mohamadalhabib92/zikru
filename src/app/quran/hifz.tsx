@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { Sheet, QStepper } from '@/components/quran/Sheet';
@@ -41,11 +41,11 @@ export default function HifzHub() {
   }, [s, cards, meta]);
   const [from, setFrom] = useState(firstNew);
   const [to, setTo] = useState(Math.min(meta[4], firstNew + 4));
+  const [placed, setPlaced] = useState(false);
   const [pick, setPick] = useState(false);
   const [view, setView] = useState<'surah' | 'juz'>('surah');
   const pal = readerPalette('auto');
-  useEffect(() => {
-    if (!ready || !keys.length) return;
+  if (ready && keys.length && !placed) {
     const lastK = keys.map(Number).sort((a, z) => z - a)[0];
     const n = fromIndex(lastK)[0];
     let f = 1;
@@ -54,11 +54,11 @@ export default function HifzHub() {
         f = a;
         break;
       }
+    setPlaced(true);
     setS(n);
     setFrom(f);
     setTo(Math.min(SURAHS[n - 1][4], f + 4));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+  }
   const chooseSurah = (n: number) => {
     setS(n);
     let f = 1;

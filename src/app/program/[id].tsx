@@ -75,9 +75,12 @@ export default function GroupProgramScreen() {
   const counts = useMemo(() => mergeCounts(server, local.counts, local.dirty), [server, local]);
   const cur = sel ?? currentStep(chain, counts);
   const step = steps[cur];
-  useEffect(() => {
-    if (step) setTargetTxt(String(step.target));
-  }, [step?.id, step?.target]);
+  const stepSig = step ? `${step.id}:${step.target}` : '';
+  const [seenStep, setSeenStep] = useState('');
+  if (step && seenStep !== stepSig) {
+    setSeenStep(stepSig);
+    setTargetTxt(String(step.target));
+  }
   const done = programDone(chain, counts);
   const active = v?.status === 'active';
 

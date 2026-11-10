@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform, Pressable, Share, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { arNum } from '@/lib/quran-nav';
@@ -35,12 +35,13 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
   const [copied, setCopied] = useState(false);
   const k = target ? keyOf(target.s, target.a) : '';
   const bm = target ? m.bookmarks.find((x) => x.s === target.s && x.a === target.a) : undefined;
-  useEffect(() => {
+  const [seenK, setSeenK] = useState(k);
+  if (seenK !== k) {
+    setSeenK(k);
     setName(bm?.name ?? '');
     setNoteTxt(target ? (m.notes[k]?.text ?? '') : '');
     setCopied(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [k]);
+  }
   if (!target) return null;
   const meta = SURAHS[target.s - 1];
   const title = `${meta[2]} · ${target.s}:${target.a}`;

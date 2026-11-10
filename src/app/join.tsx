@@ -17,12 +17,16 @@ export default function Join() {
   const auth = useAuth();
   const [p, setP] = useState<api.InvitePreview | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [nameFrom, setNameFrom] = useState(auth.displayName);
   const [name, setName] = useState(auth.displayName);
+  if (auth.displayName !== nameFrom) {
+    setNameFrom(auth.displayName);
+    setName(auth.displayName);
+  }
   const [accept, setAccept] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
   const [sent, setSent] = useState(false);
-  useEffect(() => setName(auth.displayName), [auth.displayName]);
   useEffect(() => {
     if (!auth.session || !code) return;
     api

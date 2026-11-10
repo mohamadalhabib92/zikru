@@ -5,7 +5,7 @@
  * file d'attente persistante (hors-ligne) et envoyées avec un identifiant client
  * unique : aucun double comptage, aucune perte.
  */
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { flushStorage, uid, usePersistentState } from '../storage';
 import type { ClickSource } from '../tasbih-core';
@@ -55,9 +55,11 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     qReadyRef.current = qReady;
   }, [qReady]);
-  linksRef.current = links;
-  modesRef.current = modes;
-  queueRef.current = queue;
+  useLayoutEffect(() => {
+    linksRef.current = links;
+    modesRef.current = modes;
+    queueRef.current = queue;
+  });
 
   const refreshModes = useCallback(async () => {
     modesLoaded.current = false;
@@ -73,8 +75,23 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     }
   }, [userId]);
   useEffect(() => {
-    void refreshModes();
-  }, [refreshModes]);
+    if (!userId) return;
+    let alive = true;
+    void allSharingModes(userId)
+      .then((rows) => {
+        if (!alive) return;
+        const m: Record<string, SharingMode> = {};
+        for (const r of rows) m[(r.family_id ?? r.circle_id) as string] = r.mode;
+        modesLoaded.current = true;
+        setModes(m);
+      })
+      .catch(() => {
+        modesLoaded.current = false;
+      });
+    return () => {
+      alive = false;
+    };
+  }, [userId]);
 
   /** Transfère l'accumulateur dans la file persistante (une ligne par objectif). */
   const stash = useCallback(() => {
@@ -144,7 +161,9 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     }
   }, [userId, setQueue, stash]);
   const flushRef = useRef(flush);
-  flushRef.current = flush;
+  useLayoutEffect(() => {
+    flushRef.current = flush;
+  });
 
   const add = (goalId: string, n: number, source: Src, memberId: string | null | undefined, owner: string) => {
     const key = `${owner}|${memberId ? `${goalId}|${memberId}` : goalId}`;
@@ -164,6 +183,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
           add(l.goalId, n, source, l.memberId, userId);
         }
       }),
+    // add lit des refs et le userId de cet effet : le relister redémarrait l’abonnement à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [userId],
   );
 

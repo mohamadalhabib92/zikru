@@ -1,6 +1,8 @@
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { useLatest } from '@/ui/use-latest';
 import { AppState, Platform } from 'react-native';
 import { maybePlayScheduledAdhan, useBindAdhanPlayback } from './adhan-call';
 import { ADHAN_CHANNEL_ID, ADHAN_CUE_SOUND, adhanResponseIsFresh, payloadPlaysAdhan } from './adhan-voices';
@@ -44,7 +46,7 @@ const CHANNEL = 'prayers';
 const CHANNEL_OTHER = 'reminders';
 async function ensureChannel() {
   if (Platform.OS !== 'android') return;
-  const imp = Notifications.AndroidImportance;
+  const imp = AndroidImportance;
   await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: imp.HIGH, sound: 'default' });
   await Notifications.setNotificationChannelAsync(CHANNEL_OTHER, { name: 'Rappels (adhkar, wird, Coran, bilan)', importance: imp.DEFAULT, sound: 'default' });
   // Le son court n’est dans le binaire qu’après un prebuild. S’il manque, on garde le canal par défaut.
@@ -54,7 +56,7 @@ async function ensureChannel() {
 export async function reminderPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
   try {
     const p = await Notifications.getPermissionsAsync();
-    if (p.granted || p.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) return 'granted';
+    if (p.granted || p.ios?.status === IosAuthorizationStatus.PROVISIONAL) return 'granted';
     return p.canAskAgain ? 'undetermined' : 'denied';
   } catch {
     return 'denied';
@@ -67,7 +69,7 @@ export async function requestReminderPermission(): Promise<boolean> {
     if (cur.granted) return true;
     if (!cur.canAskAgain) return false;
     const r = await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } });
-    return r.granted || r.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
+    return r.granted || r.ios?.status === IosAuthorizationStatus.PROVISIONAL;
   } catch {
     return false;
   }
@@ -140,8 +142,7 @@ export function usePrayerReminders() {
   const router = useRouter();
   const { pause } = useDispense();
   const { fast } = useRamadan();
-  const latest = useRef({ s, tr, pause, fast });
-  latest.current = { s, tr, pause, fast };
+  const latest = useLatest({ s, tr, pause, fast });
   useBindAdhanPlayback();
 
   // Ouverture depuis une notification → écran concerné, et adhan si c’est l’heure d’une prière.
@@ -188,5 +189,5 @@ export function usePrayerReminders() {
       sub.remove();
       clearTimeout(timer);
     };
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, s.lang, pause, fast]);
+  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, s.lang, pause, fast, latest]);
 }

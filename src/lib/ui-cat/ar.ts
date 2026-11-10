@@ -1795,7 +1795,7 @@ export const CAT: Record<string, string> = {
   "Voix de l’adhan": "صوت الأذان",
   "Vos appuis sont gardés en mémoire et seront enregistrés dès que possible (nouvel essai automatique). Si le stockage du téléphone est plein, libérez de la place. Ne fermez pas l’app tant que ce message est affiché.": "ضغطاتك محفوظة في الذاكرة وستُسجَّل حالما يتيسّر ذلك (إعادة محاولة تلقائية). إذا كانت ذاكرة الهاتف ممتلئة، أفرغ بعض المساحة. لا تغلق التطبيق ما دام هذا التنبيه ظاهرًا.",
   "Vos compositions sont enregistrées sur cet appareil. Les sessions pratiquées apparaissent dans l’historique du tasbih.": "تُحفظ تركيباتك على هذا الجهاز. وتظهر الجلسات المنجزة في سجل التسبيح.",
-  "Vos données restent sur l'appareil. Touchez « Réessayer » ; si l'erreur persiste, faites une capture de cet écran.": "بياناتك باقية على الجهاز. المس «إعادة المحاولة»؛ وإن استمر الخطأ فالتقط صورة لهذه الشاشة.",
+  "Vos données restent sur l’appareil. Touchez « Réessayer » ; si l’erreur persiste, faites une capture de cet écran.": "بياناتك باقية على الجهاز. المس «إعادة المحاولة»؛ وإن استمر الخطأ فالتقط صورة لهذه الشاشة.",
   "Vos familles et cercles de dhikr.": "عائلاتك وحلقات ذكرك.",
   "Vos parents gèrent vos réglages. Vous ne pourrez pas rejoindre de cercles en dehors de la famille.": "يدير والداك إعداداتك. لن تتمكن من الانضمام إلى حلقات خارج العائلة.",
   "Vos proches (Ahbab) : petits cercles, sur invitation uniquement.": "أحبابك: حلقات صغيرة، بالدعوة فقط.",

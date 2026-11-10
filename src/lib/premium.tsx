@@ -3,6 +3,7 @@
  * Le web n’achète pas. Les zikrs déjà enregistrés ne sont jamais effacés ici.
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLatest } from '@/ui/use-latest';
 import { AppState } from 'react-native';
 import { createdAnyServerGroup } from './community/api';
 import { registerUiStrings } from './l10n';
@@ -49,15 +50,14 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [price, setPrice] = useState<string | null>(null);
   const [phase, setPhase] = useState<PurchasePhase>('idle');
-  const recordRef = useRef(record);
-  recordRef.current = record;
+  const recordRef = useLatest(record);
   const snapped = useRef(false);
 
   const commit = useCallback(async (next: PremiumRecord) => {
     recordRef.current = next;
     setRecord(next);
     await saveJSON(KEY, next);
-  }, []);
+  }, [recordRef]);
 
   const apply = useCallback(
     async (check: StoreCheck) => {
@@ -65,7 +65,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       if (next !== recordRef.current) await commit(next);
       if (check.owned === true) setPhase('success');
     },
-    [commit],
+    [commit, recordRef],
   );
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     return () => {
       live = false;
     };
-  }, [ready, auth.session, commit]);
+  }, [ready, auth.session, commit, recordRef]);
 
   const reverify = useCallback(async () => {
     if (!premiumStore.payments) return;

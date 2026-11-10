@@ -19,6 +19,39 @@ import { L } from '@/lib/l10n';
 
 type StepId = 'lang' | 'madhab' | 'place' | 'notif' | 'ble' | 'done';
 
+function Option({ active, title, sub, icon, onPress }: { active: boolean; title: string; sub?: string; icon?: IconName; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected: active }} aria-checked={active}
+      onPress={() => {
+        tapHaptic('select');
+        onPress();
+      }}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, borderWidth: 1.5, borderColor: active ? b.green : b.line, backgroundColor: active ? b.greenTint : b.paper, opacity: pressed ? 0.9 : 1 })}
+    >
+      {icon ? <IconBadge icon={icon} color={b.green} size={36} /> : null}
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: b.ink, fontWeight: '700', fontSize: 16 }}>{title}</Text>
+        {sub ? <Text style={{ color: b.inkMuted, fontSize: 13 }}>{sub}</Text> : null}
+      </View>
+      <Ionicons name={active ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={active ? b.green : b.line} />
+    </Pressable>
+  );
+}
+
+function Title({ icon, title, sub }: { icon: IconName; title: string; sub?: string }) {
+  return (
+    <View style={{ alignItems: 'center', marginBottom: 18, gap: 8 }}>
+      <IconBadge icon={icon} color={b.goldDeep} size={56} />
+      <Text accessibilityRole="header" style={{ color: b.ink, fontSize: 26, fontWeight: '800', textAlign: 'center', letterSpacing: -0.4 }}>
+        {title}
+      </Text>
+      {sub ? <Text style={{ color: b.inkMuted, fontSize: 15, textAlign: 'center', lineHeight: 21 }}>{sub}</Text> : null}
+    </View>
+  );
+}
+
 /** Onboarding : langue → école → lieu → rappels → compteur BT (facultatif) → prêt. Tout est passable et modifiable dans Réglages. */
 export default function Onboarding() {
   const { s, set, t: tr } = useSettings();
@@ -46,35 +79,6 @@ export default function Onboarding() {
     router.replace('/');
     if (to !== '/') setTimeout(() => router.push(to), 50);
   };
-
-  const Option = ({ active, title, sub, icon, onPress }: { active: boolean; title: string; sub?: string; icon?: IconName; onPress: () => void }) => (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ selected: active }} aria-checked={active}
-      onPress={() => {
-        tapHaptic('select');
-        onPress();
-      }}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, borderWidth: 1.5, borderColor: active ? b.green : b.line, backgroundColor: active ? b.greenTint : b.paper, opacity: pressed ? 0.9 : 1 })}
-    >
-      {icon ? <IconBadge icon={icon} color={b.green} size={36} /> : null}
-      <View style={{ flex: 1 }}>
-        <Text style={{ color: b.ink, fontWeight: '700', fontSize: 16 }}>{title}</Text>
-        {sub ? <Text style={{ color: b.inkMuted, fontSize: 13 }}>{sub}</Text> : null}
-      </View>
-      <Ionicons name={active ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={active ? b.green : b.line} />
-    </Pressable>
-  );
-
-  const Title = ({ icon, title, sub }: { icon: IconName; title: string; sub?: string }) => (
-    <View style={{ alignItems: 'center', marginBottom: 18, gap: 8 }}>
-      <IconBadge icon={icon} color={b.goldDeep} size={56} />
-      <Text accessibilityRole="header" style={{ color: b.ink, fontSize: 26, fontWeight: '800', textAlign: 'center', letterSpacing: -0.4 }}>
-        {title}
-      </Text>
-      {sub ? <Text style={{ color: b.inkMuted, fontSize: 15, textAlign: 'center', lineHeight: 21 }}>{sub}</Text> : null}
-    </View>
-  );
 
   let body: ReactNode = null;
   if (step === 'lang')

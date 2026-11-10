@@ -64,8 +64,10 @@ export default function Abjad() {
   const [text, setText] = useState(ABJAD_EXAMPLES[0]);
   const { prefs: p, setPrefs } = useZikrs();
   const [copied, setCopied] = useState(false);
-  const opts: AbjadOptions = { taMarbuta: p.ta, hamza: p.hamza };
-  const res = useMemo(() => ({ mashriqi: computeAbjad(text, 'mashriqi', opts), maghribi: computeAbjad(text, 'maghribi', opts) }), [text, p.ta, p.hamza]);
+  const res = useMemo(() => {
+    const o: AbjadOptions = { taMarbuta: p.ta, hamza: p.hamza };
+    return { mashriqi: computeAbjad(text, 'mashriqi', o), maghribi: computeAbjad(text, 'maghribi', o) };
+  }, [text, p.ta, p.hamza]);
   const shown: AbjadSystem[] = p.view === 'both' ? ['mashriqi', 'maghribi'] : [p.view];
   const set = (patch: Partial<Prefs>) => setPrefs(patch);
   const fmt = (n: number) => n.toLocaleString('fr-CH');

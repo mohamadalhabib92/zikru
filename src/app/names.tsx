@@ -42,7 +42,8 @@ export default function Names() {
     const nq = norm(q.trim());
     if (!nq) return NAMES;
     const num = parseInt(nq, 10);
-    return NAMES.filter((x) => (Number.isFinite(num) ? x.n === num || String(computeAbjad(nameBare(x.ar), repSys, opts).total) === nq : norm(`${x.tr} ${x.fr} ${NAMES_EN[x.n - 1] ?? ''} ${x.ar}`).includes(nq)));
+    const o = { taMarbuta: opts.taMarbuta, hamza: opts.hamza };
+    return NAMES.filter((x) => (Number.isFinite(num) ? x.n === num || String(computeAbjad(nameBare(x.ar), repSys, o).total) === nq : norm(`${x.tr} ${x.fr} ${NAMES_EN[x.n - 1] ?? ''} ${x.ar}`).includes(nq)));
   }, [q, repSys, opts.taMarbuta, opts.hamza, NAMES_EN]);
 
   return (

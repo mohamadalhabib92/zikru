@@ -97,7 +97,19 @@ export default function Kahf() {
       .then((r) => setAyahs(r.ayahs))
       .catch(() => setErr(L('Texte indisponible : vérifiez la connexion internet (il sera ensuite gardé hors ligne).')));
   };
-  useEffect(() => load(), []);
+  useEffect(() => {
+    let alive = true;
+    getKahfText(false)
+      .then((r) => {
+        if (!alive) return;
+        setAyahs(r.ayahs);
+        setErr(null);
+      })
+      .catch(() => alive && setErr(L('Texte indisponible : vérifiez la connexion internet (il sera ensuite gardé hors ligne).')));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <Screen>

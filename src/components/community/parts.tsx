@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Share, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { PWA_URL } from '@/lib/backend';
@@ -29,26 +29,45 @@ export function confirmAsk(title: string, text: string, ok: string, onOk: () => 
 
 /** Chargement simple avec erreur lisible et rechargement. */
 export function useLoad<T>(fn: () => Promise<T>, deps: unknown[]) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const run = useCallback(fn, deps);
+  const key = JSON.stringify(deps);
+  const fnRef = useRef(fn);
+  useLayoutEffect(() => {
+    fnRef.current = fn;
+  });
+  const [slot, setSlot] = useState<{ key: string; data: T | null; error: string | null } | null>(null);
+  const [pending, setPending] = useState(false);
+  const current = slot && slot.key === key ? slot : null;
   const reload = useCallback(async () => {
-    setLoading(true);
+    setPending(true);
     try {
-      setData(await run());
-      setError(null);
+      const data = await fnRef.current();
+      setSlot({ key, data, error: null });
     } catch (e) {
-      setError(api.frError(e));
+      setSlot({ key, data: null, error: api.frError(e) });
     } finally {
-      setLoading(false);
+      setPending(false);
     }
-  }, [run]);
+  }, [key]);
   useEffect(() => {
-    void reload();
-  }, [reload]);
-  return { data, error, loading, reload, setData };
+    let alive = true;
+    void fnRef.current()
+      .then((data) => {
+        if (alive) setSlot({ key, data, error: null });
+      })
+      .catch((e) => {
+        if (alive) setSlot({ key, data: null, error: api.frError(e) });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [key]);
+  const setData = useCallback(
+    (data: T | null) => {
+      setSlot({ key, data, error: null });
+    },
+    [key],
+  );
+  return { data: current?.data ?? null, error: current?.error ?? null, loading: current == null || pending, reload, setData };
 }
 
 export function ProgressBar({ value, target }: { value: number; target: number }) {
@@ -99,22 +118,22 @@ export function GoalCard({
   const [moveErr, setMoveErr] = useState<string | null>(null);
   const [forMember, setForMember] = useState<string | null>(null);
   const scopeId = (goal.family_id ?? goal.circle_id) as string;
-  const load = useCallback(async () => {
-    try {
-      setP(await api.goalProgress(goal.id));
-      setErr(null);
-    } catch (e) {
-      setErr(api.frError(e));
-    }
+  const load = useCallback(() => {
+    void api
+      .goalProgress(goal.id)
+      .then((next) => {
+        setP(next);
+        setErr(null);
+      })
+      .catch((e) => setErr(api.frError(e)));
   }, [goal.id]);
   useEffect(() => {
-    void load();
-    const i = setInterval(() => void load(), 15000);
+    load();
+    const i = setInterval(() => load(), 15000);
     return () => clearInterval(i);
   }, [load]);
-  // Recharge après chaque envoi réussi.
   useEffect(() => {
-    if (c.lastSync) void load();
+    if (c.lastSync) load();
   }, [c.lastSync, load]);
 
   const total = p?.total ?? 0;

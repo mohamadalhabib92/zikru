@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -104,17 +104,9 @@ export default function Mushaf() {
   const rec = useGlobalRecitation();
   const [ab, setAb] = useState<{ s: number; a: number } | null>(null);
   const playing = rec.step ? keyOf(rec.step.s, rec.step.a) : '';
-  const flow = useAyahFlow(pal, (t) => playFrom(gIndex(t.s, t.a)), (t) => setAb({ s: t.s, a: t.a }));
   const today = dayKey();
   const kst = k && !k.finished ? khatmaStatus(k, today) : null;
 
-  // lecture : de ce verset jusqu’à la fin du juz’ (la page suit)
-  const playFrom = (i: number) => {
-    const end = juzRange(juzOfIndex(i))[1];
-    const v: [number, number][] = [];
-    for (let x = i; x < end; x++) v.push(fromIndex(x));
-    rec.start(buildQueue(v), 0, false, { next: nextJuz });
-  };
   // lecture continue (réglage « Lecture continue ») : enchaîne le juz’ suivant
   const nextJuz = (q: { s: number; a: number }[]) => {
     const last = q[q.length - 1];
@@ -126,6 +118,14 @@ export default function Mushaf() {
     for (let x = i; x < end; x++) v.push(fromIndex(x));
     return v.length ? buildQueue(v) : null;
   };
+  // lecture : de ce verset jusqu’à la fin du juz’ (la page suit)
+  const playFrom = (i: number) => {
+    const end = juzRange(juzOfIndex(i))[1];
+    const v: [number, number][] = [];
+    for (let x = i; x < end; x++) v.push(fromIndex(x));
+    rec.start(buildQueue(v), 0, false, { next: nextJuz });
+  };
+  const flow = useAyahFlow(pal, (t) => playFrom(gIndex(t.s, t.a)), (t) => setAb({ s: t.s, a: t.a }));
   const goPage = useCallback(
     (q: number, animated = true) => {
       const t = Math.min(TOTAL_PAGES, Math.max(1, q));
@@ -137,12 +137,16 @@ export default function Mushaf() {
     [],
   );
   // suivi de la récitation d’une page à l’autre
+  const followPage = rec.step && pr.follow ? pageOf(rec.step.s, rec.step.a) : null;
   useEffect(() => {
-    if (!rec.step || !pr.follow) return;
-    const q = pageOf(rec.step.s, rec.step.a);
-    if (q !== page) goPage(q);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rec.step?.s, rec.step?.a]);
+    if (followPage == null || followPage === page) return;
+    const t = Math.min(TOTAL_PAGES, Math.max(1, followPage));
+    try {
+      list.current?.scrollToIndex({ index: t - 1, animated: true });
+    } catch {}
+    const id = setTimeout(() => setPage(t), 0);
+    return () => clearTimeout(id);
+  }, [followPage, page]);
   // dernière lecture + progression : arriver sur la page p = pages < p lues
   useEffect(() => {
     const t = setTimeout(() => {
@@ -152,10 +156,10 @@ export default function Mushaf() {
     return () => clearTimeout(t);
   }, [page]);
 
-  const onViewable = useRef(({ viewableItems }: { viewableItems: { item: unknown; isViewable: boolean }[] }) => {
+  const onViewable = useCallback(({ viewableItems }: { viewableItems: { item: unknown; isViewable: boolean }[] }) => {
     const v = viewableItems.find((x) => x.isViewable);
     if (v && typeof v.item === 'number') setPage(v.item);
-  }).current;
+  }, []);
 
   const size = Math.max(20, Math.round(pr.arSize * (width >= 700 ? 1 : 0.86)));
   const [s0] = fromIndex(pageRange(page)[0]);

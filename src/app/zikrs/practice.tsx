@@ -112,6 +112,8 @@ export default function Practice() {
     finishedRef.current = allDone;
     setFinished(allDone);
     setTasbih((t) => aim(closeSession(t, uid('s'), now()), view.step, view.count));
+    // Une seule fois à l’ouverture : dépendre du tasbih refermerait la séance à chaque appui.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [z?.id, dr]);
 
   // Sortie : enregistre l’étape entamée et rétablit le dhikr précédent.
@@ -124,6 +126,8 @@ export default function Practice() {
         target: prev.current.target,
       }));
     },
+    // Nettoyage au démontage seulement : le dhikr précédent ne doit pas être rétabli à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -151,6 +155,8 @@ export default function Practice() {
       setFinished(true);
       update(zz.id, (y) => markDone({ ...y, practice: r.ledger }));
     }
+    // Seul le total déclenche les appuis : aim et update sont lus au moment de l’appui.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasbih.total]);
 
   const skip = () => {

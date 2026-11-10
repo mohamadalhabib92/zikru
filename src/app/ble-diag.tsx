@@ -41,9 +41,16 @@ export default function BleDiagScreen() {
     await bleCounter.refreshAvailability();
   };
   useEffect(() => {
-    void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let alive = true;
+    void (async () => {
+      const next = transport.rawState ? await transport.rawState().catch((e: unknown) => String(e)) : web ? 'Web Bluetooth' : '—';
+      if (alive) setRaw(next);
+      await bleCounter.refreshAvailability();
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [web]);
 
   const header = {
     App: `Zikru ${version}`,

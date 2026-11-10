@@ -164,7 +164,7 @@ assert.ok(screen.includes('react-native-reanimated'), 'le surlignage est animé'
 assert.ok(screen.includes('fontSize: 36'), 'le texte arabe est grand');
 assert.ok(screen.includes("writingDirection: 'rtl'"), 'le verset se lit de droite à gauche');
 assert.ok(!screen.includes('ActivityIndicator') && !screen.includes('loading={'), 'pas de roue qui bloque le texte');
-assert.ok(screen.includes('encodeReading(next, Date.now())'), 'le canal part avant la confirmation du serveur');
+assert.ok(/encodeReading\(next, (?:Date\.now|readingSentAt)\(\)\)/.test(screen), 'le canal part avant la confirmation du serveur');
 const home = readFileSync(join(root, 'src/app/(tabs)/index.tsx'), 'utf8');
 assert.ok(!home.includes('SharedReading') && !home.includes('/lesson/'), 'l’accueil n’ouvre pas la lecture');
 

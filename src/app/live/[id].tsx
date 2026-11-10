@@ -10,6 +10,7 @@ import { feedback } from '@/lib/feedback';
 import { getSupabase } from '@/lib/supabase';
 import { Badge, Button, Card, Eyebrow, H1, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { useLatest } from '@/ui/use-latest';
 import { L } from '@/lib/l10n';
 
 /**
@@ -71,15 +72,15 @@ export default function LiveScreen() {
   }, [sid, userId]);
 
   const live = session?.status === 'live';
-  const liveRef = useRef(live);
-  liveRef.current = live;
+  const liveRef = useLatest(live);
   const tap = (n: number) => {
     if (!liveRef.current) return;
     mineRef.current += n;
     setMine(mineRef.current);
   };
+  const tapRef = useLatest(tap);
   // Appuis Bluetooth / clavier pendant la session.
-  useEffect(() => onClicks((n, src) => (src !== 'manuel' ? tap(n) : undefined)), []);
+  useEffect(() => onClicks((n, src) => (src !== 'manuel' ? tapRef.current(n) : undefined)), [tapRef]);
   // Envoi groupé (compteur absolu : aucune perte ni double comptage).
   useEffect(() => {
     const i = setInterval(() => {
@@ -91,7 +92,7 @@ export default function LiveScreen() {
         .catch(() => {});
     }, 1500);
     return () => clearInterval(i);
-  }, [sid, userId, displayName]);
+  }, [sid, userId, displayName, liveRef]);
 
   const others = counts.filter((c) => c.user_id !== userId);
   const total = others.reduce((a, c) => a + c.count, 0) + mine;

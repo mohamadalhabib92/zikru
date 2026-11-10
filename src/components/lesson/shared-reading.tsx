@@ -50,6 +50,11 @@ import { Button, Card, Field, H2, Muted, Notice, Row, Spacer } from '@/ui/kit';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
 
+/** Horodatage d’un geste d’envoi (pas pendant le rendu). */
+function readingSentAt() {
+  return Date.now();
+}
+
 const ARABIC = {
   fontFamily: 'AmiriQuran_400Regular' as const,
   fontSize: 36,
@@ -140,13 +145,15 @@ export function SharedReading({
   const programmatic = useRef(false);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
-  useEffect(() => {
-    const lesson = boot.data && 'lesson' in boot.data ? boot.data.lesson : null;
-    if (!lesson) return;
+  const lesson = boot.data && 'lesson' in boot.data ? boot.data.lesson : null;
+  const lessonSig = lesson ? `${lesson.surah}:${lesson.ayah_from}:${lesson.ayah_to}` : '';
+  const [seenLesson, setSeenLesson] = useState('');
+  if (lesson && seenLesson !== lessonSig) {
+    setSeenLesson(lessonSig);
     setSurah(String(lesson.surah));
     setFrom(String(lesson.ayah_from));
     setTo(String(lesson.ayah_to));
-  }, [boot.data]);
+  }
 
   useEffect(() => {
     if (!boot.data?.on || !boot.data.lesson || (premium.ready && !premium.canCreate)) return;
@@ -174,24 +181,27 @@ export function SharedReading({
     };
   }, [boot.data, lessonId, premium.ready, premium.canCreate]);
 
-  useEffect(() => {
-    if (!remoteRaw) return;
-    const env = decodeReading(remoteRaw);
-    if (!env || env.lessonId !== lessonId) return;
-    setState((prev) => acceptRemote(prev, env) ?? prev);
-  }, [remoteRaw, lessonId]);
+  const [seenRemote, setSeenRemote] = useState<typeof remoteRaw>(null);
+  if (seenRemote !== remoteRaw) {
+    setSeenRemote(remoteRaw);
+    const env = remoteRaw ? decodeReading(remoteRaw) : null;
+    if (env && env.lessonId === lessonId) setState((prev) => acceptRemote(prev, env) ?? prev);
+  }
 
+  const rangeSurah = state?.surah;
+  const rangeFrom = state?.ayahFrom;
+  const rangeTo = state?.ayahTo;
   useEffect(() => {
-    if (!state) return;
+    if (rangeSurah == null || rangeFrom == null || rangeTo == null) return;
     let on = true;
     void import('@/lib/quran-uthmani').then(({ QURAN_UTHMANI }) => {
       if (!on) return;
-      setLines(passageFromTanzil(QURAN_UTHMANI, state.surah, state.ayahFrom, state.ayahTo));
+      setLines(passageFromTanzil(QURAN_UTHMANI, rangeSurah, rangeFrom, rangeTo));
     });
     return () => {
       on = false;
     };
-  }, [state?.surah, state?.ayahFrom, state?.ayahTo]);
+  }, [rangeSurah, rangeFrom, rangeTo]);
 
   const teacher = !!(boot.data && boot.data.on && boot.data.lesson && boot.data.teacher);
   const driving = !!state && !!userId && (state.driverId === null ? teacher : state.driverId === userId);
@@ -206,14 +216,22 @@ export function SharedReading({
     }, SCROLL_MS + 40);
   };
 
+  const focusAyah = state?.focusAyah ?? null;
   useEffect(() => {
-    if (!state || follow !== 'live') return;
-    glideTo(state.focusAyah);
-  }, [state?.focusAyah, follow, lines.length]);
+    if (focusAyah == null || follow !== 'live') return;
+    const y = ayahY.current[focusAyah];
+    if (y == null) return;
+    programmatic.current = true;
+    scrollTo(scrollRef, 0, Math.max(0, y - 8), true);
+    const id = setTimeout(() => {
+      programmatic.current = false;
+    }, SCROLL_MS + 40);
+    return () => clearTimeout(id);
+  }, [focusAyah, follow, lines.length, scrollRef]);
 
   const publishNow = (next: ReadingState) => {
     setState(next);
-    onBroadcast?.(encodeReading(next, Date.now()));
+    onBroadcast?.(encodeReading(next, readingSentAt()));
   };
 
   const focusAt = (ayah: number, word: number | null) => {

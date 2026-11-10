@@ -27,13 +27,11 @@ export default function Prayers() {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
-  const day = now.toDateString();
   const { rows, next, list } = useMemo(() => {
     const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
     const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { ...withStates(today, now, tomorrow[0].time), list: today };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day, Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab, s.prayer]);
+  }, [now, s.place, s.method, s.madhab, s.prayer]);
 
   let greg = now.toDateString();
   try {

@@ -1,4 +1,3 @@
-/* eslint-disable */
 // GÉNÉRÉ par scripts/gen-quran-uthmani.mjs — ne pas modifier. Texte coranique Tanzil « Uthmani » v1.1 (riwaya Hafs ‘an ‘Asim),
 // reproduit à l’identique (format sourate|verset|texte) avec son bloc de copyright. Source : https://tanzil.net — Licence : CC BY 3.0.
 // Chargé à la demande (import dynamique) : lecture en écriture uthmanie, hors-ligne.
