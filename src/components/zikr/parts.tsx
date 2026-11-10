@@ -6,6 +6,7 @@ import { Text } from '@/ui/Text';
 import { computeAbjad } from '@/lib/abjad';
 import { nameBare, nameCall, nameCallTr, type AllahName } from '@/lib/names';
 import type { ZikrItem } from '@/lib/zikr';
+import { usePremium } from '@/lib/premium';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
@@ -150,6 +151,7 @@ export async function shareZikr(text: string, title: string): Promise<'shared' |
 /** Feuille « Ajouter à un zikr » : choisir une composition existante ou en créer une. */
 export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onClose: () => void }) {
   const { zikrs, addItem, create } = useZikrs();
+  const premium = usePremium();
   const router = useRouter();
   const [name, setName] = useState('');
   const [done, setDone] = useState<string | null>(null);
@@ -275,6 +277,12 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
                   label="Créer"
                   solid
                   onPress={() => {
+                    if (!premium.ready) return;
+                    if (!premium.canCreate) {
+                      onClose();
+                      router.push('/premium');
+                      return;
+                    }
                     const z = create(name.trim() || 'Mon zikr');
                     pick(z.id, z.name);
                   }}

@@ -9,7 +9,7 @@ import { bleCounter } from '@/lib/ble/manager';
 import { feedback } from '@/lib/feedback';
 import { currentStep, mergeCounts, programDone, tapStep } from '@/lib/program-group';
 import { loadJSON, saveJSON } from '@/lib/storage';
-import { Badge, Button, Card, Eyebrow, H1, H2, Muted, Row, Screen, Spacer } from '@/ui/kit';
+import { Badge, Button, Card, Eyebrow, Field, H1, H2, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { Arabic } from '@/ui/light';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
@@ -50,6 +50,8 @@ export default function GroupProgramScreen() {
   const [sel, setSel] = useState<number | null>(null);
   const [syncErr, setSyncErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [compErr, setCompErr] = useState<string | null>(null);
+  const [targetTxt, setTargetTxt] = useState('');
   const key = v ? cacheKey(v.id, v.version) : null;
 
   // Appuis non envoyés gardés sur l’appareil (par version : une nouvelle version repart de zéro, comme le serveur).
@@ -69,6 +71,9 @@ export default function GroupProgramScreen() {
   const counts = useMemo(() => mergeCounts(server, local.counts, local.dirty), [server, local]);
   const cur = sel ?? currentStep(chain, counts);
   const step = steps[cur];
+  useEffect(() => {
+    if (step) setTargetTxt(String(step.target));
+  }, [step?.id, step?.target]);
   const done = programDone(chain, counts);
   const active = v?.status === 'active';
 
@@ -185,6 +190,21 @@ export default function GroupProgramScreen() {
             <Button small variant="ghost" icon="chevron-back" title="Étape précédente" disabled={cur <= 0} onPress={() => setSel(cur - 1)} />
             <Button small variant="ghost" icon="chevron-forward" title="Étape suivante" disabled={cur >= steps.length - 1} onPress={() => setSel(cur + 1)} />
           </Row>
+          {v?.can_admin && active && step ? (
+            <Row gap={8}>
+              <Field label={L('Nombre cible')} keyboardType="number-pad" value={targetTxt} onChangeText={setTargetTxt} />
+              <Button
+                small
+                title={L('Enregistrer le nombre')}
+                onPress={() => {
+                  const n = parseInt(targetTxt, 10);
+                  if (!(n > 0)) return;
+                  void api.setProgramStepTarget(step.id, n).then(() => view.reload()).catch((e) => setCompErr(api.frError(e)));
+                }}
+              />
+            </Row>
+          ) : null}
+          {compErr ? <Muted style={{ color: t.danger }}>{compErr}</Muted> : null}
           {done ? <Text style={{ color: t.success, fontWeight: '700' }}>Programme terminé.</Text> : null}
           {local.dirty.length ? <Muted style={{ fontSize: 12 }}>{syncErr ? L('Pas encore envoyé : {e}', { e: syncErr }) : L('Envoi…')}</Muted> : syncErr ? <Muted style={{ fontSize: 12, color: t.danger }}>{syncErr}</Muted> : null}
         </Card>
@@ -201,6 +221,12 @@ export default function GroupProgramScreen() {
             <Text style={{ color: t.text }}>{`${counts[s.id] ?? 0} / ${s.target}`}</Text>
           </Row>
           <Muted style={{ fontSize: 12 }}>{L('Groupe : {total} au total · {n} membre(s) ont terminé', { total: s.total, n: s.done_by })}</Muted>
+          {v.can_admin && active ? (
+            <Row gap={8}>
+              <Button small variant="ghost" title={L('Monter')} onPress={() => void api.moveProgramStep(s.id, -1).then(() => view.reload()).catch((e) => setCompErr(api.frError(e)))} />
+              <Button small variant="ghost" title={L('Descendre')} onPress={() => void api.moveProgramStep(s.id, 1).then(() => view.reload()).catch((e) => setCompErr(api.frError(e)))} />
+            </Row>
+          ) : null}
         </Card>
       ))}
       <Spacer />

@@ -94,7 +94,7 @@ export function planIds(pending: PendingBatch | null, sig: string, n: number, ne
   return Array.from({ length: n }, () => newId());
 }
 
-/** Destinations autorisées — mêmes règles que la RLS (shared_goals_insert → private.scope_admin) : famille = parent ou adulte, cercle = fondateur ou modérateur. Jamais pour un compte enfant. */
+/** Destinations autorisées — mêmes règles que la RLS (shared_goals_insert → private.is_group_admin) : famille = parent, cercle = fondateur. Jamais un adulte, un modérateur ou un compte enfant. */
 export function allowedDestinations(
   families: { id: string; name: string; wird?: string | null }[],
   circles: { id: string; name: string }[],
@@ -102,8 +102,8 @@ export function allowedDestinations(
   isMinor: boolean,
 ): GroupDest[] {
   if (isMinor) return [];
-  const fam = families.filter((f) => ['parent', 'adult'].includes(roles.family[f.id] ?? '')).map((f) => ({ scope: 'family' as const, id: f.id, name: f.name, role: roles.family[f.id], wird: f.wird ?? null }));
-  const cir = circles.filter((c) => ['founder', 'moderator'].includes(roles.circle[c.id] ?? '')).map((c) => ({ scope: 'circle' as const, id: c.id, name: c.name, role: roles.circle[c.id] }));
+  const fam = families.filter((f) => roles.family[f.id] === 'parent').map((f) => ({ scope: 'family' as const, id: f.id, name: f.name, role: roles.family[f.id], wird: f.wird ?? null }));
+  const cir = circles.filter((c) => roles.circle[c.id] === 'founder').map((c) => ({ scope: 'circle' as const, id: c.id, name: c.name, role: roles.circle[c.id] }));
   return [...fam, ...cir];
 }
 /** Le wird familial ne peut être modifié que par un parent (RLS families_update). */

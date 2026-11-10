@@ -65,11 +65,11 @@ begin
   assert (select count(*) from public.group_programs) = 1, 'aucun programme partiel après un refus';
   -- Rôles.
   perform tests.as_user('A');
-  assert tests.state(tests.mk('c0000000-0000-4000-8000-000000000002', 'family', tests.get('fam'), 'Programme adulte')) = 'ok', 'adulte : autorisé';
-  assert tests.state(tests.mk('c0000000-0000-4000-8000-000000000001', 'family', tests.get('fam'), 'Programme test')) = '23505', 'identifiant d''un autre : refusé';
+  assert tests.state(tests.mk('c0000000-0000-4000-8000-000000000002', 'family', tests.get('fam'), 'Programme adulte')) = '42501', 'adulte : ne compose pas le programme';
+  assert tests.state(tests.mk('c0000000-0000-4000-8000-000000000001', 'family', tests.get('fam'), 'Programme test')) = '42501', 'adulte : ne réutilise pas l’identifiant d’un autre';
   perform tests.as_user('G');
   assert tests.state(tests.mk('c0000000-0000-4000-8000-000000000003', 'family', tests.get('fam'), 'x')) = '42501', 'invité : refusé';
-  assert (select count(*) from public.group_programs) = 2, 'invité : voit les programmes';
+  assert (select count(*) from public.group_programs) = 1, 'invité : voit le programme du parent';
   perform tests.as_user('K');
   assert tests.state(tests.mk('c0000000-0000-4000-8000-000000000004', 'family', tests.get('fam'), 'x')) = '42501', 'enfant : refusé';
   perform tests.as_user('X');
@@ -126,7 +126,9 @@ begin
   assert (select (m ->> 'participated')::boolean from jsonb_array_elements(v -> 'members') m where m ->> 'name' = 'Xavier'), 'cercle : participation visible';
   -- Nouvelle version : contrôle de concurrence, avancées remises à zéro.
   perform tests.as_user('A');
-  assert public.update_group_program(pid, 1, 'Programme test v2', '[{"label":"Formule test A","target":5}]'::jsonb) = 2, 'adulte : nouvelle version';
+  assert tests.state(format('select public.update_group_program(%L, 1, %L, %L::jsonb)', pid, 'Programme test v2', '[{"label":"Formule test A","target":5}]')) = '42501', 'adulte : ne modifie pas le programme';
+  perform tests.as_user('P');
+  assert public.update_group_program(pid, 1, 'Programme test v2', '[{"label":"Formule test A","target":5}]'::jsonb) = 2, 'parent : nouvelle version';
   assert tests.state(format('select public.update_group_program(%L, 1, %L, %L::jsonb)', pid, 'x', '[{"label":"x","target":1}]')) = '40001', 'version périmée refusée';
   assert (select count(*) from public.group_program_steps where program_id = pid) = 1, 'étapes remplacées';
   perform tests.as_user('P');

@@ -2,7 +2,9 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { GroupAdminTools } from '@/components/community/admin';
 import { CallCard, confirmAsk, DiscussionCard, EncouragementsPanel, ErrorNote, fmt, GoalCard, InvitePanel, LivePanel, NewGoal, roleFr, SharingPicker, useLoad } from '@/components/community/parts';
+import { orderGroupGoals, positionsAfterMove } from '@/lib/group-order';
 import * as api from '@/lib/community/api';
 import { ProgramsPanel } from '@/components/community/programs';
 import { callRights, setVideoConsent, videoConsents } from '@/lib/calls/api';
@@ -82,13 +84,30 @@ export default function FamilyScreen() {
       <H2>Objectifs communs</H2>
       <ErrorNote error={goals.error} onRetry={goals.reload} />
       {goals.data?.length ? null : <Muted>Aucun objectif pour l’instant.</Muted>}
-      {goals.data?.map((g) => (
-        <GoalCard key={g.id} goal={g} scopeName={name} canAdmin={isAdult} gentle={isChild} managedChildren={isAdult ? managed : []} />
+      {orderGroupGoals(goals.data ?? []).map((g) => (
+        <GoalCard
+          key={g.id}
+          goal={g}
+          scopeName={name}
+          canAdmin={isParent}
+          gentle={isChild}
+          managedChildren={isParent ? managed : []}
+          onMove={
+            isParent
+              ? async (dir) => {
+                  const next = positionsAfterMove(orderGroupGoals(goals.data ?? []), g.id, dir);
+                  if (!next) return;
+                  await Promise.all(next.map((x) => api.updateGoalComposition(x.id, { position: x.position })));
+                  await goals.reload();
+                }
+              : undefined
+          }
+        />
       ))}
-      {isAdult && !isChild ? (
+      {isParent && !isChild ? (
         <Button small variant="ghost" icon="camera-outline" title="Importer un programme (photo, fichier)" onPress={() => router.push({ pathname: '/zikrs/import', params: { scope: 'family', id: fid } })} />
       ) : null}
-      {isAdult ? <NewGoal onCreate={async (g) => (await api.createGoal('family', fid, userId!, g), void goals.reload())} /> : null}
+      {isParent ? <NewGoal onCreate={async (g) => (await api.createGoal('family', fid, userId!, g), void goals.reload())} /> : null}
       {isAdult && managed.length ? (
         <Card>
           <H2>Mode enfant</H2>
@@ -102,7 +121,7 @@ export default function FamilyScreen() {
       ) : null}
       <Spacer />
 
-      <LivePanel scope="family" scopeId={fid} />
+      <LivePanel scope="family" scopeId={fid} canCompose={isParent} />
       <Spacer />
       <Calendar familyId={fid} canEdit={isAdult} />
       <Spacer />
@@ -129,6 +148,8 @@ export default function FamilyScreen() {
       ) : null}
       <Spacer />
       {!isChild ? <SharingPicker scope="family" scopeId={fid} /> : null}
+      <Spacer />
+      {isParent ? <GroupAdminTools scope="family" scopeId={fid} /> : null}
       <Spacer />
       {me && !isChild ? (
         <Button

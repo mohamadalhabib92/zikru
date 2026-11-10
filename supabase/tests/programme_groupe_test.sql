@@ -38,16 +38,16 @@ select tests.as_user('X'); select public.accept_invitation(tests.get('inv_x'), '
 do $$ begin assert private.is_circle_member(tests.get('cir')::uuid), 'X est membre du cercle'; end $$;
 
 do $$ begin
-  -- Famille : parent et adulte peuvent ajouter les étapes ; invité et enfant non.
+  -- Famille : seul le parent (administrateur) ajoute les étapes ; adulte, invité et enfant non.
   perform tests.as_user('P');
   assert tests.state(tests.goal('family', 'a0000000-0000-4000-8000-000000000001', tests.get('u_P'), '1. Formule test')) = 'ok', 'parent : étape ajoutée';
   assert tests.state(tests.goal('family', 'a0000000-0000-4000-8000-000000000001', tests.get('u_P'), '1. Formule test')) = '23505', 'renvoi du même lot : refusé (pas de doublon)';
   perform tests.as_user('A');
-  assert tests.state(tests.goal('family', 'a0000000-0000-4000-8000-000000000002', tests.get('u_A'), '2. Formule test')) = 'ok', 'adulte : étape ajoutée';
+  assert tests.state(tests.goal('family', 'a0000000-0000-4000-8000-000000000002', tests.get('u_A'), '2. Formule test')) = '42501', 'adulte : ne compose pas le zikr du groupe';
   assert tests.state(tests.goal('family', 'a0000000-0000-4000-8000-000000000003', tests.get('u_P'), 'usurpation')) = '42501', 'created_by doit être soi';
   perform tests.as_user('G');
   assert tests.state(tests.goal('family', 'a0000000-0000-4000-8000-000000000004', tests.get('u_G'), 'x')) = '42501', 'invité : refusé';
-  assert (select count(*) from public.shared_goals where family_id = tests.get('fam')::uuid) = 2, 'les membres voient les étapes';
+  assert (select count(*) from public.shared_goals where family_id = tests.get('fam')::uuid) = 1, 'les membres voient l’étape du parent ; l’adulte n’en ajoute pas';
   perform tests.as_user('K');
   assert tests.state(tests.goal('family', 'a0000000-0000-4000-8000-000000000005', tests.get('u_K'), 'x')) = '42501', 'enfant : refusé';
   -- Wird familial : seul un parent le modifie.

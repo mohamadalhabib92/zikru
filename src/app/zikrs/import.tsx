@@ -14,6 +14,7 @@ import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, V
 import { KbInput } from '@/ui/keyboard-done';
 import { LBtn } from '@/components/zikr/parts';
 import { L } from '@/lib/l10n';
+import { usePremium } from '@/lib/premium';
 import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { ocrToLines } from '@/lib/ocr-lines';
 import { closePdf, ocrPdfPage, openPdf, pdfSupport, renderPdfPage, type PdfDoc } from '@/lib/pdf';
@@ -151,6 +152,7 @@ export default function ImportProgram() {
   // Programmes de groupe disponibles sur le serveur pour cette destination ? (null = inconnu ; false = repli objectifs communs)
   const [progAvail, setProgAvail] = useState<Record<string, boolean>>({});
   const { create } = useZikrs();
+  const premium = usePremium();
   const [via, setVia] = useState<ImportVia>('paste');
   const [pages, setPages] = useState<Page[]>([]);
   const [paste, setPaste] = useState('');
@@ -385,6 +387,11 @@ export default function ImportProgram() {
 
   const save = () => {
     if (!steps || !canCreate) return;
+    if (!premium.ready) return;
+    if (!premium.canCreate) {
+      router.push('/premium');
+      return;
+    }
     const kept = new Map<number, string | undefined>();
     const photoOf = (page: number) => {
       if (!kept.has(page)) kept.set(page, pages[page]?.image && Platform.OS !== 'web' ? keepPhoto(pages[page].image!) : undefined);
@@ -409,6 +416,10 @@ export default function ImportProgram() {
   const wird = useMemo(() => (canSetWird(dest) ? wirdSummary(name.trim() || L('Programme importé'), groupItems) : null), [dest, name, groupItems]);
   const share = async () => {
     if (!dest || !userId || !drafts.length || sharing) return;
+    if (asProgram && (!premium.ready || !premium.canCreate)) {
+      if (premium.ready && !premium.canCreate) router.push('/premium');
+      return;
+    }
     setSharing(true);
     setShareErr(null);
     try {
@@ -706,7 +717,7 @@ export default function ImportProgram() {
                     ))}
                   </View>
                   {destNote ? <LMuted style={{ fontSize: 12, color: t.warning }}>{destNote}</LMuted> : null}
-                  {!userId ? <LMuted style={{ fontSize: 12 }}>Connectez-vous à la communauté pour importer dans une famille ou un cercle.</LMuted> : dests && !dests.length ? <LMuted style={{ fontSize: 12 }}>Seuls les parents et adultes d’une famille, ou les fondateurs et modérateurs d’un cercle, peuvent y ajouter des objectifs.</LMuted> : null}
+                  {!userId ? <LMuted style={{ fontSize: 12 }}>Connectez-vous à la communauté pour importer dans une famille ou un cercle.</LMuted> : dests && !dests.length ? <LMuted style={{ fontSize: 12 }}>{L('Seuls les parents d’une famille, ou le fondateur d’un cercle, peuvent y composer le zikr.')}</LMuted> : null}
                   {!dest ? (
                     <>
                       <LBtn icon="checkmark-circle" label="Créer la composition" solid disabled={!canCreate} onPress={save} />

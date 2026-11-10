@@ -22,6 +22,7 @@ import { DEFAULT_CONSENT } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
 import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { L } from '@/lib/l10n';
+import { usePremium } from '@/lib/premium';
 
 export default function SettingsScreen() {
   const { s, set, t: tr } = useSettings();
@@ -35,6 +36,7 @@ export default function SettingsScreen() {
   };
   const [consent, choose] = useConsent();
   const pt = privacyText(s.lang);
+  const premium = usePremium();
   return (
     <Screen>
       <Eyebrow>{tr.settings_title}</Eyebrow>
@@ -142,6 +144,16 @@ export default function SettingsScreen() {
       <ListItem title={L('Mode Ramadan')} subtitle={L('Suhur et iftar, jeûne, tarawih, dix dernières nuits')} icon="moon-outline" onPress={() => router.push('/ramadan')} />
       <Spacer h={20} />
 
+      <H2>{L('Zikru Premium')}</H2>
+      <Card>
+        <ListItem
+          title={L('Zikru Premium')}
+          subtitle={premium.canCreate ? L('Premium est actif sur cet appareil.') : L('Achat unique à vie')}
+          icon="star-outline"
+          onPress={() => router.push('/premium')}
+        />
+      </Card>
+      <Spacer h={20} />
       <H2>Mes zikrs</H2>
       <Segmented
         label="Commencer par Al-Fatiha"

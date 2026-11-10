@@ -5,6 +5,7 @@ import { Text } from '@/ui/Text';
 import { LBtn, fmt, shareZikr } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { compositionTotals, dayKey, exportText, type Zikr } from '@/lib/zikr';
+import { usePremium } from '@/lib/premium';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText } from '@/ui/light';
@@ -25,6 +26,7 @@ function confirm(msg: string, ok: () => void) {
 export default function Zikrs() {
   const router = useRouter();
   const { zikrs, create, remove, systems, opts, ready } = useZikrs();
+  const premium = usePremium();
   const [msg, setMsg] = useState<string | null>(null);
   const today = dayKey();
   const flash = (m: string) => {
@@ -67,6 +69,11 @@ export default function Zikrs() {
           label="Nouvelle composition"
           solid
           onPress={() => {
+            if (!premium.ready) return;
+            if (!premium.canCreate) {
+              router.push('/premium');
+              return;
+            }
             const z = create('Mon zikr');
             router.push({ pathname: '/zikrs/edit', params: { id: z.id } });
           }}

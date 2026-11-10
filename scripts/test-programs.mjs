@@ -348,14 +348,14 @@ test('groupe : idempotence — même lot = mêmes identifiants (double appui, ho
   assert.notEqual(PG.batchSignature(dest, PG.stepsToGoals([{ label: 'Formule test', ar: SUB, reps: 34 }])), sig);
   assert.notDeepEqual(PG.planIds({ sig: 'autre', ids }, sig, 1, mk), ids);
 });
-test('groupe : destinations = mêmes règles que la RLS (famille parent/adulte, cercle fondateur/modérateur, jamais un enfant)', () => {
+test('groupe : destinations = administrateur seulement (famille parent, cercle fondateur, jamais un enfant)', () => {
   const fams = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }, { id: 'd', name: 'D' }];
   const cirs = [{ id: 'x', name: 'X' }, { id: 'y', name: 'Y' }, { id: 'z', name: 'Z' }];
   const roles = { family: { a: 'parent', b: 'adult', c: 'child', d: 'guest' }, circle: { x: 'founder', y: 'moderator', z: 'member' } };
-  assert.deepEqual(PG.allowedDestinations(fams, cirs, roles, false).map((d) => d.scope + ':' + d.id), ['family:a', 'family:b', 'circle:x', 'circle:y']);
+  assert.deepEqual(PG.allowedDestinations(fams, cirs, roles, false).map((d) => d.scope + ':' + d.id), ['family:a', 'circle:x']);
   assert.deepEqual(PG.allowedDestinations(fams, cirs, roles, true), []);
   const ds = PG.allowedDestinations(fams, cirs, roles, false);
-  assert.deepEqual(ds.map(PG.canSetWird), [true, false, false, false]);
+  assert.deepEqual(ds.map(PG.canSetWird), [true, false]);
 });
 test('groupe : résumé du wird (≤ 500, sinon rien)', () => {
   const items = [{ label: 'Istighfār', ar: ISTI, reps: 100 }, { label: 'Formule test', ar: SUB, reps: 33 }];

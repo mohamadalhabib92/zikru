@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Share, View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { usePremium } from '@/lib/premium';
 import { uid, usePersistentState } from '@/lib/storage';
+import { router } from 'expo-router';
 import { Badge, Button, Card, Field, H2, IconButton, Muted, Notice, Row, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
@@ -13,6 +15,7 @@ const SEED: Group[] = [{ id: 'g-allahu-akbar', name: 'Zikr Allah Akbar', formula
 
 /** Groupes locaux (hors-ligne, sans compte) : repli quand on n'est pas connecté. */
 export function LocalGroups() {
+  const premium = usePremium();
   const [groups, setGroups] = usePersistentState<Group[]>('community-groups', SEED);
   const [open, setOpen] = useState<string | null>(groups[0]?.id ?? null);
   const [who, setWho] = usePersistentState('community-name', '');
@@ -30,6 +33,11 @@ export function LocalGroups() {
   const create = () => {
     const goal = parseInt(gGoal, 10);
     if (!gName.trim() || !(goal > 0)) return;
+    if (!premium.ready) return;
+    if (!premium.canCreate) {
+      router.push('/premium');
+      return;
+    }
     const g: Group = { id: uid('g-'), name: gName.trim(), formula: gFormula.trim(), goal, entries: [], createdAt: Date.now() };
     setGroups([...groups, g]);
     setOpen(g.id);
@@ -117,7 +125,7 @@ export function LocalGroups() {
           <Button title="Créer" icon="add" onPress={create} />
         </Card>
       ) : (
-        <Button title="Créer un groupe" icon="people-outline" variant="secondary" onPress={() => setAdding(true)} />
+        <Button title="Créer un groupe" icon="people-outline" variant="secondary" onPress={() => { if (!premium.ready) return; if (!premium.canCreate) { router.push('/premium'); return; } setAdding(true); }} />
       )}
     </View>
   );
