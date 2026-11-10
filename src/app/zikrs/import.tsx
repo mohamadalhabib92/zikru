@@ -27,7 +27,7 @@ import { loadJSON, saveJSON, uid } from '@/lib/storage';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { newClientId } from '@/lib/community/chat-core';
-import { allowedDestinations, batchSignature, canSetWird, insertionOrder, planIds, programSignature, stepsToGoals, stepsToProgram, wirdSummary, type GroupDest, type PendingBatch } from '@/lib/program-group';
+import { allowedDestinations, batchSignature, canSetWird, importCommit, insertionOrder, planIds, programSignature, stepsToGoals, stepsToProgram, wirdSummary, type GroupDest, type PendingBatch } from '@/lib/program-group';
 import { moveItem } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
@@ -145,6 +145,8 @@ export default function ImportProgram() {
   const [destSel, setDest] = useState<GroupDest | null>(null);
   const dest = userId ? destSel : null;
   const [destNote, setDestNote] = useState<string | null>(null);
+  const [shareOptIn, setShareOptIn] = useState(false);
+  const savedPrivate = useRef<string | null>(null);
   const [preview, setPreview] = useState(false);
   const [withWird, setWithWird] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -161,6 +163,9 @@ export default function ImportProgram() {
   const [ignored, setIgnored] = useState<IgnoredLine[]>([]);
   const [showIgnored, setShowIgnored] = useState(false);
   const [name, setName] = useState('');
+  useEffect(() => {
+    savedPrivate.current = null;
+  }, [steps, name]);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [langs, setLangs] = useState<LangCode[]>([]);
@@ -195,8 +200,9 @@ export default function ImportProgram() {
         setDests(ds);
         if (params.scope && params.id) {
           const d = ds.find((x) => x.scope === params.scope && x.id === params.id);
-          if (d) setDest(d);
-          else setDestNote(L('Vous ne pouvez pas ajouter d’objectifs à ce groupe : le programme sera enregistré dans vos zikrs.'));
+          setDestNote(d
+            ? L('Ouvert depuis « {n} ». Rien n’est partagé : le programme va dans vos zikrs, sauf si vous choisissez ce groupe.', { n: d.name })
+            : L('Vous ne pouvez pas ajouter d’objectifs à ce groupe : le programme sera enregistré dans vos zikrs.'));
         }
       })
       .catch(() => alive && setDests([]));
@@ -385,12 +391,13 @@ export default function ImportProgram() {
   const todo = problems.filter(Boolean).length;
   const canCreate = !!steps?.length && todo === 0 && !busy;
 
-  const save = () => {
-    if (!steps || !canCreate) return;
-    if (!premium.ready) return;
+  const ensurePrivate = (): string | null => {
+    if (savedPrivate.current) return savedPrivate.current;
+    if (!steps || !canCreate) return null;
+    if (!premium.ready) return null;
     if (!premium.canCreate) {
       router.push('/premium');
-      return;
+      return null;
     }
     const kept = new Map<number, string | undefined>();
     const photoOf = (page: number) => {
@@ -403,7 +410,12 @@ export default function ImportProgram() {
       return { id: uid(), ...stepToItem({ ar: s.ar, latin: s.latin, hint: s.hint, count: parseCount(s.count)! }, m, s.official && !own, via, photoOf(s.page)) };
     });
     const z = create(name.trim() || L('Programme importé'), items);
-    router.replace({ pathname: '/zikrs/edit', params: { id: z.id } });
+    savedPrivate.current = z.id;
+    return z.id;
+  };
+  const save = () => {
+    const id = ensurePrivate();
+    if (id) router.replace({ pathname: '/zikrs/edit', params: { id } });
   };
 
   // Partage vers un groupe : uniquement le texte validé (jamais la photo), un objectif par étape.
@@ -415,24 +427,27 @@ export default function ImportProgram() {
   const program = useMemo(() => stepsToProgram(name.trim() || L('Programme importé'), groupItems), [name, groupItems]);
   const wird = useMemo(() => (canSetWird(dest) ? wirdSummary(name.trim() || L('Programme importé'), groupItems) : null), [dest, name, groupItems]);
   const share = async () => {
-    if (!dest || !userId || !drafts.length || sharing) return;
-    if (asProgram && (!premium.ready || !premium.canCreate)) {
+    const plan = importCommit(shareOptIn, dest);
+    if (!plan.share || !userId || !drafts.length || sharing) return;
+    if (!premium.ready || !premium.canCreate) {
       if (premium.ready && !premium.canCreate) router.push('/premium');
       return;
     }
+    const target = plan.share;
+    if (!ensurePrivate()) return;
     setSharing(true);
     setShareErr(null);
     try {
       if (asProgram) {
         // Programme de groupe : un seul enregistrement atomique (toutes les étapes ou rien), identifiant stable.
-        const psig = programSignature(dest, program.title, program.steps);
+        const psig = programSignature(target, program.title, program.steps);
         const [pid] = planIds(await loadJSON<PendingBatch | null>(PENDING_PROGRAM_KEY, null), psig, 1, () => newClientId());
         await saveJSON(PENDING_PROGRAM_KEY, { sig: psig, ids: [pid] });
         try {
           await api.createGroupProgram({
             id: pid,
-            scope: dest.scope,
-            scopeId: dest.id,
+            scope: target.scope,
+            scopeId: target.id,
             title: program.title,
             steps: program.steps.map(({ cut: _cut, ...st }) => st),
             sourceNote: L('Importé depuis un document'),
@@ -444,21 +459,21 @@ export default function ImportProgram() {
           setShareErr(L('Le serveur n’a pas encore les programmes de groupe : vérifiez l’aperçu (objectifs communs), puis confirmez à nouveau.'));
           return;
         }
-        if (withWird && wird && canSetWird(dest)) await api.updateFamily(dest.id, { wird });
+        if (withWird && wird && canSetWird(target)) await api.updateFamily(target.id, { wird });
         await saveJSON(PENDING_PROGRAM_KEY, null);
         router.replace({ pathname: '/program/[id]', params: { id: pid } });
         return;
       }
-      const sig = batchSignature(dest, drafts);
+      const sig = batchSignature(target, drafts);
       const ids = planIds(await loadJSON<PendingBatch | null>(PENDING_KEY, null), sig, drafts.length, () => newClientId());
       await saveJSON(PENDING_KEY, { sig, ids });
       for (const i of insertionOrder(drafts.length)) {
         const d = drafts[i];
-        await api.insertGoalOnce(dest.scope, dest.id, userId, { id: ids[i], title: d.title, formula: d.formula, target: d.target });
+        await api.insertGoalOnce(target.scope, target.id, userId, { id: ids[i], title: d.title, formula: d.formula, target: d.target });
       }
-      if (withWird && wird && canSetWird(dest)) await api.updateFamily(dest.id, { wird });
+      if (withWird && wird && canSetWird(target)) await api.updateFamily(target.id, { wird });
       await saveJSON(PENDING_KEY, null);
-      router.replace({ pathname: dest.scope === 'family' ? '/family/[id]' : '/circle/[id]', params: { id: dest.id } });
+      router.replace({ pathname: target.scope === 'family' ? '/family/[id]' : '/circle/[id]', params: { id: target.id } });
     } catch (e) {
       setShareErr(api.frError(e));
     } finally {
@@ -709,20 +724,38 @@ export default function ImportProgram() {
                       {L('{n} étape(s) à compléter : {x}', { n: todo, x: [...new Set(problems.filter(Boolean))].join(', ') })}
                     </Text>
                   ) : null}
-                  <Text style={{ color: b.ink, fontWeight: '700', marginTop: 4 }}>Enregistrer dans</Text>
+                  <Text style={{ color: b.ink, fontWeight: '700', marginTop: 4 }}>Mes zikrs (personnel)</Text>
+                  {steps && premium.ready && !premium.canCreate ? (
+                    <LMuted style={{ fontSize: 12 }}>L’aperçu est gratuit. Enregistrer cette composition demande Zikru Premium. Celles que vous avez déjà créées restent à vous.</LMuted>
+                  ) : null}
+                  <LBtn icon="checkmark-circle" label="Créer la composition" solid disabled={!canCreate} onPress={save} />
+                  <LMuted style={{ fontSize: 12 }}>Rien n’est enregistré avant de toucher « Créer la composition ». Vous pourrez encore la modifier ensuite. Chaque étape garde son propre nombre.</LMuted>
+                  <Pressable
+                    onPress={() => {
+                      setShareOptIn((v) => !v);
+                      setPreview(false);
+                      setDest(null);
+                    }}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: shareOptIn }}
+                    style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 4 }}
+                  >
+                    <Ionicons name={shareOptIn ? 'checkbox' : 'square-outline'} size={22} color={b.ink} />
+                    <Text style={{ color: b.ink, flex: 1 }}>Partager aussi avec un groupe</Text>
+                  </Pressable>
+                  {destNote ? <LMuted style={{ fontSize: 12 }}>{destNote}</LMuted> : null}
+                  {!shareOptIn ? (
+                    <LMuted style={{ fontSize: 12 }}>Le partage avec une famille ou un cercle est un choix à part. Par défaut, le programme reste dans vos zikrs.</LMuted>
+                  ) : (
+                    <>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
-                    <DestChip label={L('Mes zikrs (personnel)')} on={!dest} onPress={() => (setDest(null), setPreview(false))} />
                     {(userId ? (dests ?? []) : []).map((d) => (
                       <DestChip key={d.scope + d.id} label={L(d.scope === 'family' ? 'Famille · {n}' : 'Cercle · {n}', { n: d.name })} on={dest?.scope === d.scope && dest.id === d.id} onPress={() => (setDest(d), setPreview(false), setWithWird(false))} />
                     ))}
                   </View>
-                  {destNote ? <LMuted style={{ fontSize: 12, color: t.warning }}>{destNote}</LMuted> : null}
                   {!userId ? <LMuted style={{ fontSize: 12 }}>Connectez-vous à la communauté pour importer dans une famille ou un cercle.</LMuted> : dests && !dests.length ? <LMuted style={{ fontSize: 12 }}>{L('Seuls les parents d’une famille, ou le fondateur d’un cercle, peuvent y composer le zikr.')}</LMuted> : null}
                   {!dest ? (
-                    <>
-                      <LBtn icon="checkmark-circle" label="Créer la composition" solid disabled={!canCreate} onPress={save} />
-                      <LMuted style={{ fontSize: 12 }}>Rien n’est enregistré avant de toucher « Créer la composition ». Vous pourrez encore la modifier ensuite.</LMuted>
-                    </>
+                    <LMuted style={{ fontSize: 12 }}>Choisissez le groupe. Rien n’est partagé tant que vous ne confirmez pas. La photo reste sur l’appareil.</LMuted>
                   ) : !preview ? (
                     <>
                       <LBtn icon="eye-outline" label="Aperçu avant partage" solid disabled={!canCreate} onPress={() => setPreview(true)} />
@@ -795,6 +828,8 @@ export default function ImportProgram() {
                       </View>
                       {shareErr ? <LMuted style={{ fontSize: 12 }}>Vous pouvez réessayer : les étapes déjà ajoutées ne seront pas dupliquées.</LMuted> : null}
                     </View>
+                  )}
+                    </>
                   )}
                 </>
               ) : null}

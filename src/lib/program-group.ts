@@ -14,6 +14,15 @@ export const GOAL_TARGET_MAX = 100000;
 export type GroupScope = 'family' | 'circle';
 export type GroupDest = { scope: GroupScope; id: string; name: string; role: string; wird?: string | null };
 
+/**
+ * L’import enregistre toujours un zikr personnel.
+ * Le partage n’a lieu que si la personne l’a demandé et a choisi un groupe.
+ * Sans ce choix, `share` reste null même si un groupe était proposé.
+ */
+export function importCommit(shareOptIn: boolean, dest: GroupDest | null): { private: true; share: GroupDest | null } {
+  return { private: true, share: shareOptIn && dest ? dest : null };
+}
+
 /** Étape validée, telle que produite par stepToItem (texte officiel ou texte de l’utilisateur). */
 export type GoalSource = { label: string; ar: string; tr?: string; reps: number; unverified?: boolean; ref?: string };
 export type GoalDraft = {

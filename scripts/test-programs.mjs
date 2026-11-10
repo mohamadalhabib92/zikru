@@ -22,6 +22,12 @@ const ids = (txt) => steps(txt).map((s) => { const m = match(s); return m.type =
 
 const ISTI = F.istighfar.ar, FATIH = F.fatih.ar, HAIL = F.hailala.ar, CLOSE = F.closing.ar;
 
+test('x33, 33 fois, ٣٣ مرة : trois étapes, chaque nombre reste le sien', () => {
+  const t = `${ISTI} x33\n${FATIH} 33 fois\n${HAIL} ٣٣ مرة`;
+  const s = steps(t);
+  assert.deepEqual(s.map((x) => [x.order, x.count, x.sure]), [[1, 33, true], [2, 33, true], [3, 33, true]]);
+  assert.ok(s.every((x) => x.count !== 99), 'les trois 33 ne sont pas additionnés');
+});
 test('FR : liste numérotée « ×100 », « 100 fois », « x100 » → 3 étapes, ordre conservé, catalogue', () => {
   const t = `Programme\n1. ${ISTI} ×100\n2. ${FATIH} — 100 fois\n3. ${HAIL} x100`;
   const s = steps(t);
@@ -304,6 +310,19 @@ test('Vision : le texte fusionné n’est jamais modifié (chaque ligne vient te
 
 // ——— Programme importé → objectifs communs d’un groupe (sans migration)
 const PG = L['program-group'];
+test('import : zikr personnel par défaut, partage seulement si on le demande', () => {
+  const dest = { scope: 'family', id: 'f1', name: 'Maison', role: 'parent' };
+  assert.deepEqual(PG.importCommit(false, dest), { private: true, share: null });
+  assert.deepEqual(PG.importCommit(true, null), { private: true, share: null });
+  assert.equal(PG.importCommit(true, dest).share, dest);
+  const goals = PG.stepsToGoals([
+    { label: 'a', ar: ISTI, reps: 33 },
+    { label: 'b', ar: FATIH, reps: 33 },
+    { label: 'c', ar: HAIL, reps: 33 },
+  ]);
+  assert.deepEqual(goals.map((g) => g.target), [33, 33, 33]);
+  assert.equal(new Set(goals.map((g) => g.step)).size, 3);
+});
 const cp = (x) => [...x].length;
 test('groupe : une étape = un objectif, titre « N. libellé », formule = texte validé, cible = nombre', () => {
   const d = PG.stepsToGoals([
