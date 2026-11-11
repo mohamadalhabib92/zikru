@@ -25,6 +25,7 @@ import { RecitationProvider } from '@/lib/recitation-context';
 import { AudioPrefetch } from '@/components/AudioOffline';
 import { L, useUiCatalog } from '@/lib/l10n';
 import { setFontsReady } from '@/ui/fonts-ready';
+import { useWatchSync } from '@/lib/use-watch-sync';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -32,6 +33,7 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Pro
 }
 
 function Root() {
+  useWatchSync();
   const { s, t: tr } = useSettings();
   const sys = useColorScheme();
   const scheme: Scheme = s.appearance === 'light' || s.appearance === 'dark' ? s.appearance : sys === 'dark' ? 'dark' : 'light';

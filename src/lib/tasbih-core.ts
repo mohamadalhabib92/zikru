@@ -1,5 +1,5 @@
 /** Logique pure du compteur de tasbih (testée par scripts/test-ble.mjs et scripts/test-tasbih-history.mjs). */
-export type ClickSource = 'manuel' | 'bluetooth' | 'clavier';
+export type ClickSource = 'manuel' | 'bluetooth' | 'clavier' | 'watch';
 /**
  * Ligne d'historique. `at` = fin (dernier enregistrement), `start` = début si la ligne regroupe plusieurs
  * enregistrements consécutifs, `parts` = nombre d'enregistrements regroupés, `sealed` = ligne close
@@ -11,14 +11,29 @@ export type TasbihSession = {
   count: number;
   target: number;
   at: string;
-  source?: 'manuel' | 'bluetooth' | 'mixte';
+  source?: 'manuel' | 'bluetooth' | 'mixte' | 'watch';
+  /** Séance venue de la montre et pas encore dans le journal : le total affiché l’ajoute une fois. */
+  external?: boolean;
   deviceCount?: number;
   start?: string;
   parts?: number;
   sealed?: boolean;
 };
 /** firstAt / lastAt : dates (ms) du premier et du dernier appui de la session en cours (journal). */
-export type Tasbih = { count: number; target: number; dhikrId: string; total: number; sessions: TasbihSession[]; deviceCount?: number; firstAt?: number; lastAt?: number };
+export type Tasbih = {
+  count: number;
+  target: number;
+  dhikrId: string;
+  total: number;
+  sessions: TasbihSession[];
+  deviceCount?: number;
+  /** Appuis de la montre déjà dans ce compte affiché (pas un appareil Bluetooth). */
+  watchCount?: number;
+  /** Comptes montre d’un autre zikr, hors journal, pour ne pas les perdre ni les recompter. */
+  externalTotal?: number;
+  firstAt?: number;
+  lastAt?: number;
+};
 
 /** Au-delà de cet écart sans appui, une nouvelle ligne d'historique commence (5 min). */
 export const SESSION_GAP_MS = 5 * 60 * 1000;
@@ -29,8 +44,10 @@ export function applyClicks(t: Tasbih, n: number, source: ClickSource): { next: 
   if (n <= 0) return { next: t, cycleCompleted: false, cycles: 0 };
   const count = t.count + n;
   const cycles = t.target > 0 ? Math.floor(count / t.target) - Math.floor(t.count / t.target) : 0;
-  const dev = (t.deviceCount ?? 0) + (source === 'manuel' ? 0 : n);
-  return { next: { ...t, count, total: t.total + n, deviceCount: dev }, cycleCompleted: cycles > 0, cycles };
+  const dev = (t.deviceCount ?? 0) + (source === 'manuel' || source === 'watch' ? 0 : n);
+  const next: Tasbih = { ...t, count, total: t.total + n, deviceCount: dev };
+  if (source === 'watch' || t.watchCount != null) next.watchCount = (t.watchCount ?? 0) + (source === 'watch' ? n : 0);
+  return { next, cycleCompleted: cycles > 0, cycles };
 }
 
 const ms = (iso: string | undefined) => {
@@ -76,13 +93,17 @@ export type CloseOpts = {
 export function closeSession(t: Tasbih, id: string, at: string, opts: CloseOpts = {}): Tasbih {
   if (t.count === 0) return t;
   const dev = Math.min(t.deviceCount ?? 0, t.count);
-  const source: TasbihSession['source'] = dev === 0 ? 'manuel' : dev >= t.count ? 'bluetooth' : 'mixte';
+  const watchN = Math.min(t.watchCount ?? 0, t.count);
+  const source: TasbihSession['source'] =
+    dev === 0 && watchN === 0 ? 'manuel' : dev === 0 && watchN >= t.count ? 'watch' : dev >= t.count && watchN === 0 ? 'bluetooth' : 'mixte';
   const s: TasbihSession = { id, dhikrId: t.dhikrId, count: t.count, target: t.target, at, source, deviceCount: dev };
   if (t.firstAt != null && Number.isFinite(t.firstAt) && t.firstAt < ms(at)) s.start = new Date(t.firstAt).toISOString();
   if (opts.explicit) s.sealed = true;
   const head = t.sessions[0];
   const sessions = head && !opts.explicit && canJoin(head, s, opts.gapMs) ? [join2(head, s), ...t.sessions.slice(1)] : [s, ...t.sessions].slice(0, HISTORY_MAX);
-  return { ...t, count: 0, deviceCount: 0, firstAt: undefined, lastAt: undefined, sessions };
+  const next: Tasbih = { ...t, count: 0, deviceCount: 0, firstAt: undefined, lastAt: undefined, sessions };
+  if (t.watchCount != null) next.watchCount = 0;
+  return next;
 }
 
 /** Ferme la dernière ligne : la prochaine séance commencera une nouvelle ligne. */
@@ -94,7 +115,9 @@ export function sealHead(t: Tasbih): Tasbih {
 
 /** Remise à zéro du compte affiché (les appuis restent dans le journal et le total). */
 export function resetCount(t: Tasbih): Tasbih {
-  return { ...sealHead(t), count: 0, deviceCount: 0, firstAt: undefined, lastAt: undefined };
+  const next: Tasbih = { ...sealHead(t), count: 0, deviceCount: 0, firstAt: undefined, lastAt: undefined };
+  if (t.watchCount != null) next.watchCount = 0;
+  return next;
 }
 
 /** Changement de dhikr : la ligne précédente est close. */

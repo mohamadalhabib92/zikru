@@ -128,7 +128,7 @@ export default function TasbihScreen() {
       <Spacer h={12} />
       <ReadingPlate on={plated}>
       <H2>{tr.history}</H2>
-      <Muted>Total : {tasbih.total}</Muted>
+      <Muted>Total : {tasbih.total + (tasbih.externalTotal ?? 0)}</Muted>
       {history.length === 0 ? <Muted>{tr.no_history}</Muted> : null}
       </ReadingPlate>
       {history.length === 0 ? null : (
@@ -145,7 +145,7 @@ export default function TasbihScreen() {
               </Row>
               <Muted>
                 {when}
-                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? L('compteur Bluetooth') : L('mixte ({n} via compteur)', { n: s.deviceCount ?? 0 })}` : ''}
+                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? L('compteur Bluetooth') : s.source === 'watch' ? 'Apple Watch' : L('mixte ({n} via compteur)', { n: s.deviceCount ?? 0 })}` : ''}
                 {(s.parts ?? 1) > 1 ? ` · ${L('{n} enregistrements regroupés', { n: s.parts ?? 1 })}` : ''}
               </Muted>
             </Card>
