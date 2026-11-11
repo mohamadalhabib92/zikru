@@ -117,8 +117,20 @@ export function parseGeneric(b: Bytes): Parsed {
 }
 
 export const NUS_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'; // Nordic UART Service (spécification Nordic publique)
+/** Canal TX (notify) du Nordic UART Service — nRF5 SDK, ble_nus.h, base 6e400000-b5a3-f393-e0a9-e50e24dcca9e. */
+export const NUS_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+/**
+ * Module série HM-10 (Jinan Huamao, fiche publique) : service 0xFFE0, caractéristique 0xFFE1 (notify/write).
+ * Beaucoup de compteurs bon marché passent par ce canal, mais le format des octets n'est pas publié :
+ * on s'y abonne de préférence, puis impulsion ou apprentissage. Le service seul n'ouvre PAS la liste du scan
+ * (un module HM-10 peut être une lampe).
+ */
+export const HM10_SERVICE = normUuid('ffe0');
+export const HM10_SERIAL = normUuid('ffe1');
+/** Écriture iQibla publiée (N. Enggaliano, 2025). Le service et la notification ne le sont pas. */
+export const IQIBLA_WRITE = normUuid('d004');
 /** Services fréquents sur les accessoires BLE bon marché, demandés en mode générique (Web Bluetooth exige une liste). */
-export const GENERIC_SERVICES = [NUS_SERVICE, normUuid('fff0'), normUuid('ffe0'), normUuid('ff00'), normUuid('ae30'), normUuid('fee7')];
+export const GENERIC_SERVICES = [NUS_SERVICE, normUuid('fff0'), HM10_SERVICE, normUuid('ff00'), normUuid('ae30'), normUuid('fee7')];
 
 export const PROFILES: DeviceProfile[] = [
   {
@@ -178,7 +190,7 @@ export function detectProfile(name: string | null | undefined, chars: GattChar[]
     if (p.namePrefixes.some((x) => n.toUpperCase().startsWith(x.toUpperCase()))) return p;
     if (p.notify && chars.some((c) => sameUuid(c.service, p.notify!.service) && sameUuid(c.uuid, p.notify!.characteristic))) return p;
   }
-  if (/iqibla|zikr/i.test(n)) return profileById('iqibla');
+  if (/iqibla|zikr/i.test(n) || chars.some((c) => sameUuid(c.uuid, IQIBLA_WRITE))) return profileById('iqibla');
   return profileById('generic');
 }
 
@@ -212,6 +224,16 @@ export function candidateChars(chars: GattChar[]): GattChar[] {
   return chars.filter((c) => c.notify && !isIgnoredChar(c.uuid));
 }
 
+/** Caractéristique de notification documentée (HM-10 FFE1, Nordic UART TX), s'il y en a une parmi les candidates. */
+export function preferDocumentedNotify(chars: GattChar[]): GattChar | null {
+  const cands = candidateChars(chars);
+  for (const u of [HM10_SERIAL, NUS_TX]) {
+    const hit = cands.find((c) => sameUuid(c.uuid, u));
+    if (hit) return hit;
+  }
+  return null;
+}
+
 /** Correspondance par défaut sans apprentissage, ou null s'il faut apprendre (ambigu). */
 export function defaultMapping(profile: DeviceProfile, chars: GattChar[]): Mapping | null {
   if (profile.notify) {
@@ -219,8 +241,24 @@ export function defaultMapping(profile: DeviceProfile, chars: GattChar[]): Mappi
     if (ok) return { service: normUuid(profile.notify.service), characteristic: normUuid(profile.notify.characteristic), mode: 'absolute', byteIndex: -1 };
   }
   const cands = candidateChars(chars);
-  if (cands.length === 1) return { service: normUuid(cands[0].service), characteristic: normUuid(cands[0].uuid), mode: 'pulse', byteIndex: -1 };
-  return null;
+  // Le canal UART documenté ne sert que le profil générique : un iQibla n'annonce pas FFE1.
+  const chosen = (profile.doc === 'aucun' ? preferDocumentedNotify(chars) : null) ?? (cands.length === 1 ? cands[0] : null);
+  if (!chosen) return null;
+  // Profil dont le format de trame est publié : compteur absolu (rattrapage hors connexion). Sinon une impulsion.
+  const absolute = profile.doc === 'documenté' || profile.doc === 'partiel';
+  return { service: normUuid(chosen.service), characteristic: normUuid(chosen.uuid), mode: absolute ? 'absolute' : 'pulse', byteIndex: -1 };
+}
+
+/**
+ * Première trame d'un format publié (BSTWSH ou iQibla) alors que la correspondance est encore une impulsion
+ * non apprise : on passe en absolu avant d'avoir compté, pour rattraper le hors-connexion sans doublon.
+ * Retourne null s'il ne faut rien changer.
+ */
+export function adoptAbsoluteFrame(mapping: Mapping | null, service: string, characteristic: string, frame: Bytes, parse: (b: Bytes) => Parsed, clicksSoFar: number): Mapping | null {
+  if (!mapping || mapping.mode !== 'pulse' || mapping.learnedAt || mapping.pressSignature || clicksSoFar > 0) return null;
+  const p = parse(frame);
+  if (!p || p.kind !== 'absolute') return null;
+  return { service: normUuid(service), characteristic: normUuid(characteristic), mode: 'absolute', byteIndex: -1, auto: true };
 }
 
 // ---------------------------------------------------------------- Décodage des appuis
@@ -460,7 +498,7 @@ export function fieldLabel(f: CounterField | undefined): string {
  * Noms de compteurs de dhikr. Resserré en P4 : « ring » et « clicker » seuls retirés (bagues connectées, sonnettes,
  * télécommandes quelconques) — une bague de dhikr porte presque toujours zikr/tasbih/zkr/BW… dans son nom.
  */
-export const COUNTER_NAME_RE = /tasbi|tasbe|tesbi|tesbe|zikr|zkr|dhikr|thikr|zekr|subha|misbaha|masbaha|iqibla|qibla|bstwsh|counter|compteur|tally|noor|jood|^bw[-_ ]?\w/i;
+export const COUNTER_NAME_RE = /tasbi|tasbe|tesbi|tesbe|zikr|zkr|dhikr|thikr|zekr|subha|misbaha|masbaha|iqibla|qibla|bstwsh|counter|compteur|tally|noor|jood|^bw[-_ ]?\w|سبحة|مسبحة|تسبيح/i;
 /** Services de profils connus (documentés) et services génériques fréquents sur ces accessoires. */
 export function likelyCounter(name: string | null | undefined, services: string[] = []): { likely: boolean; reason: string | null } {
   const n = (name ?? '').trim();
@@ -573,6 +611,27 @@ export const KEEPER_SLOW_MS = 120000;
  * - wait : iOS, un seul appareil mémorisé, après un premier cycle raté → demande de connexion « en attente »
  *   CoreBluetooth (aucun scan, aucune minuterie : connexion dès le retour à portée).
  */
+export type ReconnectEvent = 'launch' | 'foreground' | 'background' | 'link-loss' | 'bluetooth-on' | 'bluetooth-off' | 'ios-restore';
+export type ReconnectAction = 'search-now' | 'wait-system' | 'pause' | 'idle';
+/**
+ * Décision de reconnexion pour un appareil mémorisé (pur, testé).
+ * - search-now : cycle immédiat au premier plan (connexion par identifiant, scan radio seulement selon keeperPlan).
+ * - wait-system : app en arrière-plan ou Bluetooth revenu pendant que l'app est suspendue. Pas de scan.
+ *   iOS : demande en attente CoreBluetooth, qui exige le mode d'arrière-plan bluetooth-central
+ *   (plugin react-native-ble-plx, modes: ['central']) et restoreStateIdentifier. Android : autoConnect.
+ * - pause : radio éteinte ; on reprend sur bluetooth-on.
+ * - idle : rien à faire (déjà lié, ou aucun appareil mémorisé).
+ * ios-restore réveille l'app : on reprend tout de suite, y compris si iOS a déjà rouvert le lien.
+ */
+export function reconnectDecision(event: ReconnectEvent, opts: { remembered: boolean; linked: boolean; background: boolean }): ReconnectAction {
+  if (event === 'bluetooth-off') return opts.linked ? 'idle' : 'pause';
+  if (!opts.remembered) return 'idle';
+  if (event === 'ios-restore') return opts.linked ? 'idle' : 'search-now';
+  if (opts.linked && event !== 'link-loss') return 'idle';
+  if (event === 'background' || opts.background) return 'wait-system';
+  return 'search-now';
+}
+
 export function keeperPlan(attempt: number, opts: { ios?: boolean; devices?: number; scanBlocked?: boolean } = {}): { delay: number; scan: boolean; wait: boolean } {
   const a = Math.max(0, Math.floor(attempt));
   const delay = a >= KEEPER_SLOW_AFTER ? KEEPER_SLOW_MS : keeperDelay(a);
@@ -646,7 +705,7 @@ export const ZKR_R1_SERVICE = 'a5480100-5630-4ce8-b243-aab253eadd56';
 /** Services qui identifient un compteur de dhikr pris en charge. */
 export const COUNTER_SERVICES = [normUuid('ae30'), ZKR_R1_SERVICE];
 /** Préfixes de nom pour le sélecteur Web Bluetooth (sensible à la casse, pas d'expression régulière possible). */
-export const COUNTER_NAME_PREFIXES = ['BW', 'ZKR', 'Zkr', 'zkr', 'Tasbih', 'TASBIH', 'tasbih', 'Smart Tasbih', 'Digital Tasbih', 'Zikr', 'ZIKR', 'zikr', 'Dhikr', 'iQIBLA', 'IQIBLA', 'iQibla', 'Misbaha', 'BSTWSH'];
+export const COUNTER_NAME_PREFIXES = ['BW', 'ZKR', 'Zkr', 'zkr', 'Tasbih', 'TASBIH', 'tasbih', 'Tesbih', 'Subha', 'Smart Tasbih', 'Digital Tasbih', 'Zikr', 'ZIKR', 'zikr', 'Dhikr', 'iQIBLA', 'IQIBLA', 'iQibla', 'Noor', 'NOOR', 'Jood', 'Misbaha', 'BSTWSH', 'سبحة', 'مسبحة', 'تسبيح'];
 /**
  * Services audio Bluetooth LE (LE Audio, Bluetooth SIG) : Volume Control 0x1844, Microphone Control 0x184D,
  * Audio Stream Control 0x184E, Broadcast Audio Scan 0x184F, Published Audio Capabilities 0x1850,

@@ -26,9 +26,11 @@ import {
   COUNTER_SERVICES,
   isDeviceVisible,
   connectRetryDelay,
+  adoptAbsoluteFrame,
   keeperDelay,
   keeperPlan,
   matchKnown,
+  reconnectDecision,
   normUuid,
   profileById,
   sameUuid,
@@ -496,6 +498,15 @@ class BleCounterManager {
       return;
     }
     let m = this.s.mapping;
+    const adopted = adoptAbsoluteFrame(m, service, characteristic, b, profile.parse, this.s.clicksThisConnection);
+    if (adopted) {
+      m = adopted;
+      const devId = this.s.device?.id;
+      this.decoder = new ClickDecoder(m, profile.parse, 0, devId ? this.storedValue(devId) : null);
+      if (devId) this.mappings[devId] = m;
+      this.set({ mapping: m });
+      this.persist();
+    }
     if (!m) {
       // Aucune correspondance : on cherche automatiquement un champ compteur (profil connu, entier 1–4 octets ou nombre ASCII).
       const p = profile.parse(b);
@@ -543,7 +554,8 @@ class BleCounterManager {
     // Hors de portée / éteint : on continue de chercher (sans limite), y compris en arrière-plan.
     this.set({ status: 'reconnexion', auto: 'recherche', autoTarget: link.name ?? this.s.device?.name ?? null });
     this.keeperAttempt = 0;
-    if (this.inBackground()) this.waitFor(id);
+    const action = reconnectDecision('link-loss', { remembered: true, linked: false, background: this.inBackground() });
+    if (action === 'wait-system') this.waitFor(id);
     else this.kick();
   }
   private async teardown() {
@@ -630,11 +642,16 @@ class BleCounterManager {
     if (transport.onStateChange) {
       this.keeperOffs.push(
         transport.onStateChange((on) => {
+          const action = reconnectDecision(on ? 'bluetooth-on' : 'bluetooth-off', { remembered: this.autoDevices().length > 0, linked: !!this.link, background: this.inBackground() });
           if (on) {
             this.set({ availability: { ok: true } });
             this.keeperAttempt = 0;
-            this.kick();
-          } else if (!this.link) {
+            if (action === 'search-now') this.kick();
+            else if (action === 'wait-system') {
+              const top = this.autoDevices()[0];
+              if (top) this.waitFor(top.id);
+            }
+          } else if (action === 'pause') {
             this.clearKeeperTimer();
             this.set({ availability: { ok: false, kind: 'disabled', reason: 'Bluetooth désactivé' }, auto: this.autoDevices().length ? 'bt-off' : 'inactif' });
           }
@@ -648,7 +665,7 @@ class BleCounterManager {
           if (!ids.length) return;
           ids.forEach((i) => this.restored.add(i));
           // reprise de l'appareil déjà connecté par iOS (pas de nouvelle connexion) : annule une attente éventuelle
-          if (!this.link) {
+          if (reconnectDecision('ios-restore', { remembered: ids.length > 0, linked: !!this.link, background: this.inBackground() }) === 'search-now') {
             this.cancelPending();
             this.keeperAttempt = 0;
             this.kick();
@@ -662,7 +679,7 @@ class BleCounterManager {
     this.appState = st;
     if (st === 'active' && prev !== 'active') {
       // retour au premier plan : nouvelle recherche immédiate
-      if (this.link) return;
+      if (reconnectDecision('foreground', { remembered: this.autoDevices().length > 0, linked: !!this.link, background: false }) !== 'search-now') return;
       this.cancelPending();
       this.keeperAttempt = 0;
       this.kick();
@@ -671,7 +688,7 @@ class BleCounterManager {
         clearTimeout(this.persistTimer);
         this.persist();
       }
-      if (Platform.OS !== 'web' && !this.link && !this.ensuring) {
+      if (Platform.OS !== 'web' && !this.ensuring && reconnectDecision('background', { remembered: this.autoDevices().length > 0, linked: !!this.link, background: true }) === 'wait-system') {
         // les minuteries JS sont suspendues en arrière-plan : connexion en attente gérée par le système
         this.clearKeeperTimer();
         const top = this.autoDevices()[0];

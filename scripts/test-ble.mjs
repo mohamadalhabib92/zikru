@@ -425,6 +425,67 @@ test('P4 annonce brute : apparence, services 16 bits, fabricant', () => {
   assert.equal(c.parseAdvertising(new Uint8Array(0)).manufacturer, null);
 });
 
+test('profils documentés : iQibla par écriture 0xD004, UART publiée, noms arabes', () => {
+  const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
+  assert.equal(k('سبحة ذكية'), 'counter');
+  assert.equal(k('تسبيح'), 'counter');
+  assert.equal(k('Noor N01'), 'counter');
+  assert.equal(k(null, [c.HM10_SERVICE]), 'other', 'HM-10 sans nom de compteur : hors liste');
+  assert.equal(k(null, [], { manufacturerId: 0x1234, manufacturerData: new Uint8Array([1, 2]) }), 'other', 'aucun identifiant fabricant de bague n’est publié');
+  const d004 = [{ service: c.normUuid('fff0'), uuid: c.IQIBLA_WRITE, notify: false, read: false }];
+  assert.equal(c.detectProfile('Noor', d004).id, 'iqibla');
+  assert.equal(c.detectProfile('Noor', []).id, 'generic', 'Noor sans 0xD004 : pas le parseur iQibla');
+  const one = [{ service: c.normUuid('fff0'), uuid: c.normUuid('fff1'), notify: true, read: false }];
+  assert.equal(c.defaultMapping(c.profileById('iqibla'), one).mode, 'absolute');
+  const uart = [
+    { service: c.HM10_SERVICE, uuid: c.HM10_SERIAL, notify: true, read: false },
+    { service: c.normUuid('fff0'), uuid: c.normUuid('fff2'), notify: true, read: false },
+  ];
+  const g = c.defaultMapping(c.profileById('generic'), uart);
+  assert.equal(g.characteristic, c.HM10_SERIAL);
+  assert.equal(g.mode, 'pulse', 'format HM-10 non publié : impulsion, puis apprentissage');
+  const nus = [{ service: c.NUS_SERVICE, uuid: c.NUS_TX, notify: true, read: false }, uart[1]];
+  assert.equal(c.defaultMapping(c.profileById('generic'), nus).characteristic, c.NUS_TX);
+  assert.equal(c.defaultMapping(c.profileById('iqibla'), uart), null, 'deux canaux et le profil iQibla n’utilise pas FFE1 : apprentissage');
+});
+
+test('simulation iQibla : hors connexion rattrapé, même total ignoré, impulsion sans rattrapage', () => {
+  const frame = (n) => A(`Q07,${String(n).padStart(4, '0')},0,0,0`);
+  const abs = { service: 's', characteristic: 'c', mode: 'absolute', byteIndex: -1 };
+  const live = new c.ClickDecoder(abs, c.parseIqibla, 0, null);
+  assert.equal(live.feed(frame(12), 200), 0, 'première trame = référence');
+  assert.equal(live.feed(frame(13), 400), 1);
+  const back = new c.ClickDecoder(abs, c.parseIqibla, 0, live.lastValue);
+  assert.equal(back.feed(frame(16), 100), 3, '13 → 16 pendant la coupure');
+  assert.equal(back.lastWasSync, true);
+  assert.equal(back.feed(frame(16), 200), 0, 'même total : pas de doublon');
+  assert.equal(back.feed(frame(17), 400), 1);
+  const pulse = { ...abs, mode: 'pulse' };
+  assert.equal(c.adoptAbsoluteFrame(pulse, 'fff0', 'fff1', frame(16), c.parseGeneric, 0).mode, 'absolute');
+  assert.equal(c.adoptAbsoluteFrame(pulse, 'fff0', 'fff1', frame(16), c.parseGeneric, 2), null, 'déjà des appuis comptés : on ne recommence pas');
+  assert.equal(c.adoptAbsoluteFrame({ ...pulse, learnedAt: 'x' }, 'fff0', 'fff1', frame(16), c.parseGeneric, 0), null);
+  const blind = new c.ClickDecoder(pulse, c.parseGeneric, 0, 10);
+  assert.equal(blind.feed(new Uint8Array([1]), 100), 1, 'trame sans total : un appui, rien à rattraper');
+});
+
+test('reconnexion : lancement, premier plan, perte, Bluetooth, restauration iOS', () => {
+  const d = (event, opts) => c.reconnectDecision(event, opts);
+  const on = { remembered: true, linked: false, background: false };
+  assert.equal(d('launch', on), 'search-now');
+  assert.equal(d('foreground', on), 'search-now');
+  assert.equal(d('link-loss', on), 'search-now');
+  assert.equal(d('bluetooth-on', on), 'search-now');
+  assert.equal(d('foreground', { ...on, linked: true }), 'idle');
+  assert.equal(d('launch', { ...on, remembered: false }), 'idle');
+  assert.equal(d('bluetooth-off', on), 'pause');
+  assert.equal(d('bluetooth-off', { ...on, linked: true }), 'idle');
+  assert.equal(d('link-loss', { ...on, background: true }), 'wait-system');
+  assert.equal(d('bluetooth-on', { ...on, background: true }), 'wait-system', 'radio revenue en arrière-plan : pas de scan');
+  assert.equal(d('background', on), 'wait-system');
+  assert.equal(d('ios-restore', { ...on, background: true }), 'search-now', 'iOS réveille l’app : reprise immédiate');
+  assert.equal(d('ios-restore', { ...on, linked: true }), 'idle');
+});
+
 if (fail) {
   console.log(`\n${fail} test(s) en échec`);
   process.exit(1);
