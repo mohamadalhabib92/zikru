@@ -51,6 +51,7 @@ src/app/sahw.tsx
 src/app/search.tsx
 src/app/settings.tsx
 src/app/songs.tsx
+src/app/sound-credits.tsx
 src/app/sources.tsx
 src/app/tijani.tsx
 src/app/validation.tsx

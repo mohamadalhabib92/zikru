@@ -88,6 +88,7 @@ function Root() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
+        <Stack.Screen name="sound-credits" options={{ title: L('Crédits et licences des sons') }} />
         <Stack.Screen name="privacy" options={{ title: L("Confidentialité") }} />
         <Stack.Screen name="premium" options={{ title: L("Zikru Premium") }} />
         <Stack.Screen name="terms" options={{ title: L("Conditions d’utilisation") }} />

@@ -23,7 +23,14 @@ export function nextSurahToFetch(done: (s: number) => boolean, priority: number 
   return null;
 }
 
-/** Ordre de la file : sourate prioritaire, puis 1..114, sans les sourates déjà complètes. */
+/**
+ * File automatique : uniquement le récitateur choisi. Les autres récitateurs ne sont ni téléchargés ni retirés.
+ * L’ordre reste : sourate prioritaire, puis 1..114, sans les sourates déjà complètes.
+ */
+export function reciterDownloadPlan(selected: string, done: (s: number) => boolean, priority: number | null): { rid: string; surahs: number[] } {
+  return { rid: selected, surahs: autoOrder(done, priority) };
+}
+
 export function autoOrder(done: (s: number) => boolean, priority: number | null): number[] {
   const first = nextSurahToFetch(done, priority);
   if (first == null) return [];

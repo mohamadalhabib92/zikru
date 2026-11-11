@@ -77,7 +77,7 @@ const fr: Policy = {
       id: 'content',
       h: '6. Contenus coraniques, audio et recherche',
       li: [
-        'Le texte arabe du Coran est intégré à l’app, ainsi que la traduction anglaise de Marmaduke Pickthall (1930, domaine public). Les autres traductions se téléchargent (api.alquran.cloud, quranenc.com). Le tafsir vient d’api.quran.com. La récitation du récitateur choisi se télécharge après l’ouverture depuis everyayah.com (secours cdn.islamic.network), en Wi-Fi sauf réglage contraire, et n’entre pas dans la sauvegarde iCloud. mp3quran.net reste une source citée pour l’audio. La voix d’adhan choisie, lorsque l’app est ouverte, est lue depuis upload.wikimedia.org. L’écran verrouillé n’utilise qu’un son court déjà inclus dans l’app, pas le fichier complet.',
+        'Le texte arabe du Coran est intégré à l’app, ainsi que la traduction anglaise de Marmaduke Pickthall (1930, domaine public). Les autres traductions se téléchargent (api.alquran.cloud, quranenc.com). Le tafsir vient d’api.quran.com. La récitation du récitateur choisi se télécharge après l’ouverture depuis everyayah.com (secours cdn.islamic.network), en Wi-Fi sauf réglage contraire, et n’entre pas dans la sauvegarde iCloud. mp3quran.net reste une source citée pour l’audio. La voix d’adhan choisie est soit un enregistrement déjà dans l’app, soit lue depuis upload.wikimedia.org. L’écran verrouillé n’utilise qu’un son court déjà inclus dans l’app, pas le fichier complet. Les crédits sont sur l’écran des licences des sons.',
         'Ces serveurs reçoivent, comme tout site web, votre adresse IP et l’élément demandé ; pour la recherche en ligne, le texte recherché. Aucun identifiant de compte ne leur est transmis.',
         'Le site web et la version web (PWA) sont hébergés par GitHub Pages (GitHub Inc., États-Unis), qui enregistre des journaux techniques (dont l’adresse IP) pour la sécurité.',
       ],
@@ -213,7 +213,7 @@ const en: Policy = {
       id: 'content',
       h: '6. Quran content, audio and search',
       li: [
-        'The Arabic Quran text is built into the app, as is the English translation by Marmaduke Pickthall (1930, public domain). Other translations are downloaded (api.alquran.cloud, quranenc.com). Tafsir comes from api.quran.com. The chosen reciter is downloaded after the app opens, from everyayah.com (fallback cdn.islamic.network), on Wi-Fi unless a setting says otherwise, and is not included in iCloud backup. mp3quran.net remains a cited audio source. The chosen adhan voice, when the app is open, is played from upload.wikimedia.org. The lock screen uses only a short sound already in the app, not the full file.',
+        'The Arabic Quran text is built into the app, as is the English translation by Marmaduke Pickthall (1930, public domain). Other translations are downloaded (api.alquran.cloud, quranenc.com). Tafsir comes from api.quran.com. The chosen reciter is downloaded after the app opens, from everyayah.com (fallback cdn.islamic.network), on Wi-Fi unless a setting says otherwise, and is not included in iCloud backup. mp3quran.net remains a cited audio source. The chosen adhan voice is either a recording already in the app or played from upload.wikimedia.org. The lock screen uses only a short sound already in the app, not the full file. Credits are on the sound-licence screen.',
         'Like any website, these servers receive your IP address and the item requested; for online search, the search text. No account identifier is sent to them.',
         'The website and the web version (PWA) are hosted on GitHub Pages (GitHub Inc., USA), which keeps technical logs (including IP address) for security.',
       ],
@@ -350,7 +350,7 @@ const ar: Policy = {
       id: 'content',
       h: '6. المحتوى القرآني والصوت والبحث',
       li: [
-        'نص القرآن بالعربية مُدمَج في التطبيق، وكذلك الترجمة الإنجليزية لمارمادوك بيكثال (1930، ملك عام). الترجمات الأخرى تُنزَّل (api.alquran.cloud وquranenc.com). التفسير من api.quran.com. تلاوة القارئ المختار تُنزَّل بعد فتح التطبيق من everyayah.com (الاحتياط cdn.islamic.network)، عبر Wi-Fi إلا إذا غُيّر الإعداد، ولا تدخل في نسخة iCloud الاحتياطية. يبقى mp3quran.net مصدرًا صوتيًا مذكورًا. صوت الأذان المختار، عندما يكون التطبيق مفتوحًا، يُشغَّل من upload.wikimedia.org. شاشة القفل لا تستخدم إلا صوتًا قصيرًا مُضمَّنًا في التطبيق، وليس الملف الكامل.',
+        'نص القرآن بالعربية مُدمَج في التطبيق، وكذلك الترجمة الإنجليزية لمارمادوك بيكثال (1930، ملك عام). الترجمات الأخرى تُنزَّل (api.alquran.cloud وquranenc.com). التفسير من api.quran.com. تلاوة القارئ المختار تُنزَّل بعد فتح التطبيق من everyayah.com (الاحتياط cdn.islamic.network)، عبر Wi-Fi إلا إذا غُيّر الإعداد، ولا تدخل في نسخة iCloud الاحتياطية. يبقى mp3quran.net مصدرًا صوتيًا مذكورًا. صوت الأذان المختار إما تسجيل داخل التطبيق أو يُشغَّل من upload.wikimedia.org. شاشة القفل لا تستخدم إلا صوتًا قصيرًا مُضمَّنًا في التطبيق، وليس الملف الكامل. الاعتمادات في شاشة تراخيص الأصوات.',
         'تستقبل هذه الخوادم، مثل أي موقع ويب، عنوان IP الخاص بك والعنصر المطلوب؛ وفي البحث عبر الإنترنت، نص البحث. ولا يُرسَل إليها أي معرّف حساب.',
         'الموقع الإلكتروني والنسخة الويب (PWA) مستضافان على GitHub Pages (شركة GitHub Inc. في الولايات المتحدة) التي تحتفظ بسجلات تقنية (منها عنوان IP) لأغراض الأمان.',
       ],

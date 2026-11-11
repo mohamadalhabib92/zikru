@@ -25,6 +25,9 @@ import { privacyText } from '@/lib/privacy-text';
 import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { L } from '@/lib/l10n';
 import { usePremium } from '@/lib/premium';
+import { readerPrefs } from '@/lib/quran-store';
+import { RECITERS, applyReciterChoice } from '@/lib/recitation';
+import { useShared } from '@/lib/shared-state';
 
 export default function SettingsScreen() {
   const { s, set, t: tr } = useSettings();
@@ -39,6 +42,7 @@ export default function SettingsScreen() {
   const [consent, choose] = useConsent();
   const pt = privacyText(s.lang);
   const premium = usePremium();
+  const [rp, setRp] = useShared(readerPrefs);
   const landscape = sanitizeLandscape(s.landscape);
   const pickLandscape = (id: LandscapeChoice) => {
     if (id !== 'none' && LANDSCAPE_THEMES_REQUIRE_PREMIUM) {
@@ -166,6 +170,18 @@ export default function SettingsScreen() {
           : L('Umm al-Qura indisponible sur cet appareil : calendrier tabulaire utilisé. La mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).')}
       </Muted>
       <ListItem title={L('Mode Ramadan')} subtitle={L('Suhur et iftar, jeûne, tarawih, dix dernières nuits')} icon="moon-outline" onPress={() => router.push('/ramadan')} />
+      <Spacer h={20} />
+
+      <H2>{L('Récitateur du Coran')}</H2>
+      <Muted>{L('Le téléchargement automatique ne concerne que ce récitateur, en Wi-Fi, en laissant au moins 200 Mo libres. Les fichiers déjà téléchargés restent.')}</Muted>
+      <Spacer h={8} />
+      <Row wrap>
+        {RECITERS.map((r) => (
+          <Chip key={r.id} label={r.name} active={rp.reciter === r.id} onPress={() => setRp((p) => ({ ...p, reciter: applyReciterChoice(null, p.reciter, r.id).selected }))} />
+        ))}
+      </Row>
+      <Spacer h={8} />
+      <ListItem title={L('Crédits et licences des sons')} icon="document-text-outline" onPress={() => router.push('/sound-credits')} />
       <Spacer h={20} />
 
       <H2>{L('Zikru Premium')}</H2>

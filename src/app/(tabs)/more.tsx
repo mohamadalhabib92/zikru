@@ -36,6 +36,7 @@ export default function More() {
       items: [
         { icon: 'settings', title: tr.settings_title, sub: `${tr.appearance} · ${tr.language} · ${L('méthode')}`, href: '/settings', color: b.inkMuted },
         { icon: 'library', title: tr.sources_title, sub: 'Références et méthodologie', href: '/sources', color: b.inkMuted },
+        { icon: 'musical-notes', title: L('Crédits et licences des sons'), sub: L('Adhans et récitations'), href: '/sound-credits', color: b.inkMuted },
       ],
     },
   ];
