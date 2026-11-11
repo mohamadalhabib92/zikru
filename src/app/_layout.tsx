@@ -22,6 +22,7 @@ import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
 import { MiniPlayer } from '@/components/quran/MiniPlayer';
 import { RecitationProvider } from '@/lib/recitation-context';
+import { AudioPrefetch } from '@/components/AudioOffline';
 import { L, useUiCatalog } from '@/lib/l10n';
 import { setFontsReady } from '@/ui/fonts-ready';
 
@@ -157,6 +158,7 @@ export default function Layout() {
                 <CommunityProvider>
                   <GrowthProvider>
                     <RecitationProvider>
+                      <AudioPrefetch />
                       <Root />
                     </RecitationProvider>
                   </GrowthProvider>

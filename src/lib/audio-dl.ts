@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
-import { addVerse, entry, isLocal, mapLimit, removeReciter, removeSurah, type DlManifest, type SizeTable } from './audio-dl-core';
-import { deleteReciter, deleteSurah, localUri, saveVerse } from './audio-store';
+import { autoOrder, downloadHold, type DownloadHold, type NetKind } from './audio-auto';
+import { addVerse, entry, isComplete, isLocal, mapLimit, removeReciter, removeSurah, type DlManifest, type SizeTable } from './audio-dl-core';
+import { deleteReciter, deleteSurah, freeSpace, localUri, saveVerse } from './audio-store';
 import { ayahCount, ayahFallbackUrl, ayahUrl, reciterById } from './recitation';
 import { shared } from './shared-state';
 
@@ -25,8 +26,8 @@ export function playableUrl(rid: string, s: number, a: number): string {
 
 // ——— File d’attente des téléchargements (en mémoire) ———
 export type DlJob = { rid: string; s: number };
-export type DlState = { active: (DlJob & { a: number; total: number }) | null; queue: DlJob[]; error: string | null; measuring: string | null };
-let st: DlState = { active: null, queue: [], error: null, measuring: null };
+export type DlState = { active: (DlJob & { a: number; total: number }) | null; queue: DlJob[]; error: string | null; measuring: string | null; hold: DownloadHold };
+let st: DlState = { active: null, queue: [], error: null, measuring: null, hold: 'ok' };
 const subs = new Set<() => void>();
 const set = (p: Partial<DlState>) => {
   st = { ...st, ...p };
@@ -39,6 +40,41 @@ const subscribe = (f: () => void) => {
 export const useDownloads = () => useSyncExternalStore(subscribe, () => st, () => st);
 let cancelled = false;
 let running = false;
+let yieldAfterBatch = false;
+let openSurah: number | null = null;
+let gate: { wifiOnly: boolean; net: NetKind; free: number | null } = { wifiOnly: true, net: 'unknown', free: null };
+
+export function setDownloadGate(next: { wifiOnly: boolean; net: NetKind; free: number | null }) {
+  gate = next;
+  const hold = downloadHold(gate);
+  set({ hold });
+  if (hold === 'ok' && st.queue.length) void pump();
+}
+
+/** La sourate affichée passe devant le reste. Une sourate déjà en cours se termine par le lot actuel, puis cède la place. */
+export function preferSurah(rid: string, s: number) {
+  openSurah = s;
+  const known = (entry(dlManifest.get(), rid, s)?.v ?? 0) >= ayahCount(s);
+  if (known) return;
+  if (st.active?.rid === rid && st.active.s === s) return;
+  if (st.active) yieldAfterBatch = true;
+  const rest = st.queue.filter((j) => !(j.rid === rid && j.s === s));
+  set({ queue: [{ rid, s }, ...rest], error: null, hold: downloadHold(gate) });
+  if (downloadHold(gate) === 'ok') void pump();
+}
+
+/** Met en file le récitateur choisi : sourate ouverte d’abord, puis le reste. Ne fait rien hors Wi-Fi ou sans place. */
+export async function ensureReciterDownload(rid: string) {
+  await dlManifest.load();
+  const free = await freeSpace();
+  gate = { ...gate, free };
+  const hold = downloadHold(gate);
+  set({ hold });
+  if (hold !== 'ok') return;
+  const m = dlManifest.get();
+  const order = autoOrder((s) => isComplete(entry(m, rid, s)), openSurah);
+  queueDownload(rid, order);
+}
 
 async function fetchVerse(rid: string, s: number, a: number): Promise<number> {
   const r = reciterById(rid);
@@ -59,6 +95,19 @@ async function runSurah(job: DlJob) {
   await dlManifest.load();
   let a = (entry(dlManifest.get(), job.rid, job.s)?.v ?? 0) + 1;
   while (a <= total && !cancelled) {
+    if (yieldAfterBatch) {
+      yieldAfterBatch = false;
+      const rest = st.queue.filter((j) => !(j.rid === job.rid && j.s === job.s));
+      set({ queue: [...rest, job] });
+      break;
+    }
+    const hold = downloadHold({ ...gate, free: await freeSpace() });
+    if (hold !== 'ok') {
+      const rest = st.queue.filter((j) => !(j.rid === job.rid && j.s === job.s));
+      set({ hold, queue: [job, ...rest] });
+      cancelled = true;
+      break;
+    }
     // lots de 4 en parallèle, enregistrés ensuite dans l’ordre
     const batch = Array.from({ length: Math.min(4, total - a + 1) }, (_, i) => a + i);
     set({ active: { ...job, a, total } });
@@ -85,7 +134,10 @@ async function pump() {
     }
   } finally {
     running = false;
-    set({ active: null, ...(cancelled ? { queue: [] } : {}) });
+    const stopped = cancelled;
+    cancelled = false;
+    set({ active: null, ...(stopped && downloadHold(gate) === 'ok' ? { queue: [] } : {}) });
+    if (!stopped && st.queue.length && downloadHold(gate) === 'ok') void pump();
   }
 }
 

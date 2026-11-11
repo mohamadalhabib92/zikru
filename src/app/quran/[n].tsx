@@ -13,6 +13,7 @@ import { ReaderSettings } from '@/components/quran/ReaderSettings';
 import { QBtn } from '@/components/quran/Sheet';
 import { arNum, gIndex, hizbOfIndex, juzOfIndex, pageOf, pageOfIndex, rubLabel, rubStartAt, sajdaAt } from '@/lib/quran-nav';
 import { BASMALA_UTHMANI, surahEdition } from '@/lib/quran-reader-data';
+import { preferSurah } from '@/lib/audio-dl';
 import { keyOf, marks, readerPrefs, recordRead } from '@/lib/quran-store';
 import { buildQueue } from '@/lib/recitation';
 import { useShared } from '@/lib/shared-state';
@@ -198,6 +199,9 @@ export default function SurahReader() {
     if (n < 114 && p.showTr) void surahEdition(n + 1, trId.id);
     if (n < 114 && p.showTl) void surahEdition(n + 1, 'en.transliteration');
   }, [n, p.showTr, p.showTl, trId.id]);
+  useEffect(() => {
+    preferSurah(p.reciter, n);
+  }, [p.reciter, n]);
 
   const scrollTo = useCallback((a: number, animated = true) => {
     try {

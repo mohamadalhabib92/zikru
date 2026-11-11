@@ -10,6 +10,7 @@ import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
+import { AudioOfflineCard } from '@/components/AudioOffline';
 import { DataExportItem, GroupPushToggle, ModerationLink } from '@/components/AccountExtras';
 import { WidgetSettings } from '@/components/WidgetSettings';
 import { DispenseSettings } from '@/components/DispenseSettings';
@@ -89,6 +90,7 @@ export default function SettingsScreen() {
       <Spacer h={20} />
 
       <NotifSettings />
+      <AudioOfflineCard />
       <GroupPushToggle lang={s.lang} />
       <WidgetSettings />
       <DispenseSettings />

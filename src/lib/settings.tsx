@@ -25,6 +25,8 @@ export type Settings = {
   appearance: 'system' | 'light' | 'dark';
   /** Fond du compteur. Absent des anciens réglages : « aucun ». */
   landscape?: LandscapeChoice;
+  /** true : la récitation peut se télécharger en réseau mobile. Absent = Wi-Fi seulement. */
+  audioCellular?: boolean;
   /** Rappels de prière (notifications web / préférence). */
   reminders: boolean;
   /** Détail des rappels (prières, avant l’adhan, vendredi, adhkar, wird). */

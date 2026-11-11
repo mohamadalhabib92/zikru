@@ -71,6 +71,10 @@ export function surahEdition(n: number, ed: string): Promise<string[] | null> {
     const p = (async () => {
       const own = await loadJSON<string[] | null>(`qtr-${n}-${ed}`, null);
       if (own?.length) return own;
+      if (ed === 'en.pickthall') {
+        const { loadPickthallSurah } = await import('./quran-tr/pickthall/load');
+        return [...(await loadPickthallSurah(n))];
+      }
       const full = await cachedTranslation(ed).catch(() => null);
       if (full?.length) return full.slice(OFFSETS[n - 1], OFFSETS[n - 1] + SURAHS[n - 1][4]);
       const old = await loadJSON<{ ayahs?: { tr: string }[] } | null>(`quran3-${n}-${ed}`, null);

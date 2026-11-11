@@ -378,3 +378,11 @@ Compris	Verstanden
 Zikru a rencontré une erreur	Zikru ist auf einen Fehler gestoßen
 Vos données restent sur l’appareil. Touchez « Réessayer » ; si l’erreur persiste, faites une capture de cet écran.	Ihre Daten bleiben auf dem Gerät. Tippen Sie auf „Erneut versuchen“; wenn der Fehler weiterhin besteht, machen Sie ein Bildschirmfoto dieses Bildschirms.
 Chargement	Wird geladen
+Récitation hors ligne	Rezitation ohne Netz
+Le récitateur choisi se télécharge tout seul, en Wi-Fi. La sourate ouverte passe en premier. Les fichiers ne vont pas dans iCloud.	Der gewählte Rezitator lädt sich von selbst über WLAN. Die geöffnete Sure kommt zuerst. Die Dateien gehen nicht nach iCloud.
+{c}/114 sourates · {name}	{c}/114 Suren · {name}
+Autoriser le réseau mobile	Mobilfunk erlauben
+En attente du Wi-Fi	Warten auf WLAN
+Hors ligne : le téléchargement reprendra	Offline: der Download wird fortgesetzt
+Pas assez d’espace libre (200 Mo à garder)	Nicht genug freier Speicher (200 MB bleiben frei)
+{name} · sourate {s}	{name} · Sure {s}

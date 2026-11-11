@@ -377,3 +377,11 @@ Compris	Got it	حسنًا
 Zikru a rencontré une erreur	Zikru ran into an error	واجه ذِكرو خطأً
 Vos données restent sur l’appareil. Touchez « Réessayer » ; si l’erreur persiste, faites une capture de cet écran.	Your data stays on the device. Tap “Retry”; if the error persists, take a screenshot of this screen.	بياناتك باقية على الجهاز. المس «إعادة المحاولة»؛ وإن استمر الخطأ فالتقط صورة لهذه الشاشة.
 Chargement	Loading	جارٍ التحميل
+Récitation hors ligne	Offline recitation	تلاوة دون اتصال
+Le récitateur choisi se télécharge tout seul, en Wi-Fi. La sourate ouverte passe en premier. Les fichiers ne vont pas dans iCloud.	The chosen reciter downloads by itself, on Wi-Fi. The open surah goes first. The files are not copied to iCloud.	يُنزَّل القارئ المختار وحده عبر Wi-Fi. السورة المفتوحة أولًا. الملفات لا تُنسخ إلى iCloud.
+{c}/114 sourates · {name}	{c}/114 surahs · {name}	{c}/114 سورة · {name}
+Autoriser le réseau mobile	Allow mobile data	السماح بشبكة الجوال
+En attente du Wi-Fi	Waiting for Wi-Fi	في انتظار Wi-Fi
+Hors ligne : le téléchargement reprendra	Offline: the download will resume	دون اتصال: سيتابع التنزيل
+Pas assez d’espace libre (200 Mo à garder)	Not enough free space (keep 200 MB)	لا توجد مساحة كافية (يُترك 200 م.ب)
+{name} · sourate {s}	{name} · surah {s}	{name} · سورة {s}
