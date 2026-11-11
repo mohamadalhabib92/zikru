@@ -31,6 +31,22 @@ for (const l of ['en', 'ar']) {
 }
 assert.deepEqual(miss.en, [], 'clés en manquantes : ' + miss.en.join(', '));
 assert.deepEqual(miss.ar, [], 'clés ar manquantes : ' + miss.ar.join(', '));
+// Libellé visible de la bibliothèque audio. Les clés songs / sec_songs et le stockage « songs » ne bougent pas.
+assert.equal(fr.songs, 'Musique spirituelle');
+assert.equal(fr.sec_songs, 'MUSIQUE SPIRITUELLE');
+assert.equal(i18n.DICTS.en.songs, 'Spiritual music');
+assert.equal(i18n.DICTS.en.sec_songs, 'SPIRITUAL MUSIC');
+assert.equal(i18n.DICTS.ar.songs, 'موسيقى روحية');
+assert.equal(i18n.DICTS.ar.sec_songs, 'موسيقى روحية');
+assert.equal(i18n.DICTS.de.songs, 'Geistliche Musik');
+assert.equal(i18n.DICTS['de-CH'].songs, 'Geistliche Musik');
+const banned = /soufi|sufi|صوف|tasaufi|suuf/i;
+for (const code of Object.keys(i18n.DICTS)) {
+  const d = i18n.DICTS[code];
+  assert.equal(banned.test(d.songs), false, code + ' songs');
+  assert.equal(banned.test(d.sec_songs), false, code + ' sec_songs');
+}
+assert.equal('songs' in fr && 'sec_songs' in fr, true);
 
 // 2) Catalogue : chaque entrée a en + ar (arabe en écriture arabe), mêmes variables {…}.
 const CAT = { ...UBE.UI_STRINGS_BIEN_ETRE, ...URA.UI_STRINGS_RAMADAN, ...UCH.UI_STRINGS_CHAT, ...UCA.UI_STRINGS_CALL, ...U.UI_STRINGS, ...UPR.UI_STRINGS_PREMIUM };

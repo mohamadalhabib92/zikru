@@ -1934,7 +1934,7 @@ export const CAT: Record<string, string> = {
   "Zikru a rencontré une erreur": "Zikru ist auf einen Fehler gestoßen",
   "Zikru est un outil d’aide. Les horaires et la date hégirienne sont des calculs ; en cas de doute, référez-vous à votre mosquée ou à une autorité religieuse locale. Les contenus marqués « Exemple » doivent être validés par un référent avant publication.": "Zikru ist ein Hilfswerkzeug. Gebetszeiten und das Hidschri-Datum sind Berechnungen; wenden Sie sich im Zweifel an Ihre Moschee oder eine örtliche religiöse Instanz. Als „Beispiel“ gekennzeichnete Inhalte müssen vor der Veröffentlichung von einer Referenzperson bestätigt werden.",
   "Zikru ne fournit aucun enregistrement : ajoutez uniquement des fichiers que vous avez le droit d’écouter. Rien n’est envoyé sur internet.": "Zikru stellt keine Aufnahmen bereit: Fügen Sie nur Dateien hinzu, die Sie anhören dürfen. Nichts wird ins Internet gesendet.",
-  "Zikru · Chants soufis": "Zikru · Sufi-Gesänge",
+  "Zikru · Musique spirituelle": "Zikru · Geistliche Musik",
   "Zikru – modération": "Zikru – Moderation",
   "Zone de capture : touchez ici, puis utilisez la télécommande": "Erfassungsbereich: hier tippen, dann die Fernbedienung benutzen",
   "Zurich": "Zürich",

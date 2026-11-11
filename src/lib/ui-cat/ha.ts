@@ -1408,7 +1408,7 @@ export const cat: Record<string, string> = {
   "Zikru a rencontré une erreur": "Zikru ya ci karo da kuskure",
   "Zikru est un outil d’aide. Les horaires et la date hégirienne sont des calculs ; en cas de doute, référez-vous à votre mosquée ou à une autorité religieuse locale. Les contenus marqués « Exemple » doivent être validés par un référent avant publication.": "Zikru kayan taimako ne. Lokuta da kwanan watan Hijira ƙididdiga ne; idan kun yi shakka, ku je wurin masallacinku ko hukuma ta addini ta gida. Abun ciki mai alama « Misali » dole ne mai nuni ya duba kafin a buga.",
   "Zikru ne fournit aucun enregistrement : ajoutez uniquement des fichiers que vous avez le droit d’écouter. Rien n’est envoyé sur internet.": "Zikru ba ya ba da wani rikodin ba: ku ƙara fayiloli da kuke da haƙƙin sauraro kawai. Babu abin da ake aikawa intanet.",
-  "Zikru · Chants soufis": "Zikru · Waƙoƙin sufi",
+  "Zikru · Musique spirituelle": "Zikru · Waƙar ruhaniya",
   "Zikru – modération": "Zikru – gudanarwa",
   "Zone de capture : touchez ici, puis utilisez la télécommande": "Yankin kama: ku taɓa nan, sannan ku yi amfani da na'urar sarrafa",
   "Zurich": "Zurich",

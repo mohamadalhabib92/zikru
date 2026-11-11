@@ -35,7 +35,7 @@ export const LANGS: { code: Lang; label: string; pending?: boolean; review?: boo
 ];
 
 const fr = {
-  tab_home: 'Accueil', prayer_times: 'Horaires de prière', sec_growth: 'PLATEFORME DE PROGRESSION', sec_knowledge: 'SAVOIR ISLAMIQUE', sec_prayer: 'PRIÈRE & DHIKR', sec_songs: 'CHANTS SOUFIS', sec_community: 'CALENDRIER & COMMUNAUTÉ', tijani: 'Voie Tijani', wird: 'Wird quotidien', sahw: 'Correction de la prière', adilla: 'Adilla (preuves)', kahf: 'Sourate al-Kahf', songs: 'Chants soufis', community: 'Communauté', weather: 'Météo', qibla_aligned: 'Face à la Qibla', qibla_turn: 'Tournez de', qibla_right: 'vers la droite', qibla_left: 'vers la gauche', reflection: 'Réflexion',
+  tab_home: 'Accueil', prayer_times: 'Horaires de prière', sec_growth: 'PLATEFORME DE PROGRESSION', sec_knowledge: 'SAVOIR ISLAMIQUE', sec_prayer: 'PRIÈRE & DHIKR', sec_songs: 'MUSIQUE SPIRITUELLE', sec_community: 'CALENDRIER & COMMUNAUTÉ', tijani: 'Voie Tijani', wird: 'Wird quotidien', sahw: 'Correction de la prière', adilla: 'Adilla (preuves)', kahf: 'Sourate al-Kahf', songs: 'Musique spirituelle', community: 'Communauté', weather: 'Météo', qibla_aligned: 'Face à la Qibla', qibla_turn: 'Tournez de', qibla_right: 'vers la droite', qibla_left: 'vers la gauche', reflection: 'Réflexion',
   tab_prayers: 'Prières', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Réglages',
   tab_read: 'Lire', tab_more: 'Plus', search: 'Rechercher', search_ph: 'Noms, du‘as, versets, zikrs…', no_results: 'Aucun résultat', see_all: 'Tout voir', skip: 'Passer', back: 'Retour', done: 'Terminé',
   appearance: 'Apparence', app_system: 'Système', app_light: 'Clair', app_dark: 'Sombre', display: 'Affichage', tools: 'Outils', spiritual_path: 'Cheminement', about: 'À propos',
@@ -57,7 +57,7 @@ const fr = {
 export type Dict = typeof fr;
 
 const en: Dict = {
-  tab_home: 'Home', prayer_times: 'Prayer times', sec_growth: 'GROWTH PLATFORM', sec_knowledge: 'ISLAMIC KNOWLEDGE', sec_prayer: 'PRAYER & DHIKR', sec_songs: 'SUFI SONGS', sec_community: 'CALENDAR & COMMUNITY', tijani: 'Tijani Path', wird: 'Daily Wird', sahw: 'Prayer correction', adilla: 'Adilla (evidence)', kahf: 'Surah al-Kahf', songs: 'Sufi songs', community: 'Community', weather: 'Weather', qibla_aligned: 'Facing the Qibla', qibla_turn: 'Turn by', qibla_right: 'to the right', qibla_left: 'to the left', reflection: 'Reflection',
+  tab_home: 'Home', prayer_times: 'Prayer times', sec_growth: 'GROWTH PLATFORM', sec_knowledge: 'ISLAMIC KNOWLEDGE', sec_prayer: 'PRAYER & DHIKR', sec_songs: 'SPIRITUAL MUSIC', sec_community: 'CALENDAR & COMMUNITY', tijani: 'Tijani Path', wird: 'Daily Wird', sahw: 'Prayer correction', adilla: 'Adilla (evidence)', kahf: 'Surah al-Kahf', songs: 'Spiritual music', community: 'Community', weather: 'Weather', qibla_aligned: 'Facing the Qibla', qibla_turn: 'Turn by', qibla_right: 'to the right', qibla_left: 'to the left', reflection: 'Reflection',
   tab_prayers: 'Prayers', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Settings',
   tab_read: 'Read', tab_more: 'More', search: 'Search', search_ph: 'Names, du‘as, verses, zikrs…', no_results: 'No results', see_all: 'See all', skip: 'Skip', back: 'Back', done: 'Done',
   appearance: 'Appearance', app_system: 'System', app_light: 'Light', app_dark: 'Dark', display: 'Display', tools: 'Tools', spiritual_path: 'Spiritual path', about: 'About',
@@ -78,7 +78,7 @@ const en: Dict = {
 };
 
 const de: Dict = {
-  tab_home: 'Start', prayer_times: 'Gebetszeiten', sec_growth: 'WACHSTUM', sec_knowledge: 'ISLAMISCHES WISSEN', sec_prayer: 'GEBET & DHIKR', sec_songs: 'SUFI-GESÄNGE', sec_community: 'KALENDER & GEMEINSCHAFT', tijani: 'Tijani-Weg', wird: 'Tägliches Wird', sahw: 'Gebetskorrektur', adilla: 'Adilla (Belege)', kahf: 'Sure al-Kahf', songs: 'Sufi-Gesänge', community: 'Gemeinschaft', weather: 'Wetter', qibla_aligned: 'Zur Qibla ausgerichtet', qibla_turn: 'Drehen Sie um', qibla_right: 'nach rechts', qibla_left: 'nach links', reflection: 'Besinnung',
+  tab_home: 'Start', prayer_times: 'Gebetszeiten', sec_growth: 'WACHSTUM', sec_knowledge: 'ISLAMISCHES WISSEN', sec_prayer: 'GEBET & DHIKR', sec_songs: 'GEISTLICHE MUSIK', sec_community: 'KALENDER & GEMEINSCHAFT', tijani: 'Tijani-Weg', wird: 'Tägliches Wird', sahw: 'Gebetskorrektur', adilla: 'Adilla (Belege)', kahf: 'Sure al-Kahf', songs: 'Geistliche Musik', community: 'Gemeinschaft', weather: 'Wetter', qibla_aligned: 'Zur Qibla ausgerichtet', qibla_turn: 'Drehen Sie um', qibla_right: 'nach rechts', qibla_left: 'nach links', reflection: 'Besinnung',
   tab_prayers: 'Gebete', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Einstellungen',
   tab_read: 'Lesen', tab_more: 'Mehr', search: 'Suchen', search_ph: 'Namen, Duas, Verse, Zikrs…', no_results: 'Keine Ergebnisse', see_all: 'Alle', skip: 'Überspringen', back: 'Zurück', done: 'Fertig',
   appearance: 'Darstellung', app_system: 'System', app_light: 'Hell', app_dark: 'Dunkel', display: 'Anzeige', tools: 'Werkzeuge', spiritual_path: 'Spiritueller Weg', about: 'Über',
@@ -99,7 +99,7 @@ const de: Dict = {
 };
 
 const ar: Dict = {
-  tab_home: 'الرئيسية', prayer_times: 'مواقيت الصلاة', sec_growth: 'منصة الترقي', sec_knowledge: 'العلم الشرعي', sec_prayer: 'الصلاة والذكر', sec_songs: 'الأناشيد الصوفية', sec_community: 'التقويم والجماعة', tijani: 'الطريقة التجانية', wird: 'الورد اليومي', sahw: 'سجود السهو', adilla: 'الأدلة', kahf: 'سورة الكهف', songs: 'الأناشيد', community: 'الجماعة', weather: 'الطقس', qibla_aligned: 'أنت مستقبل القبلة', qibla_turn: 'استدر بمقدار', qibla_right: 'نحو اليمين', qibla_left: 'نحو اليسار', reflection: 'تأمل',
+  tab_home: 'الرئيسية', prayer_times: 'مواقيت الصلاة', sec_growth: 'منصة الترقي', sec_knowledge: 'العلم الشرعي', sec_prayer: 'الصلاة والذكر', sec_songs: 'موسيقى روحية', sec_community: 'التقويم والجماعة', tijani: 'الطريقة التجانية', wird: 'الورد اليومي', sahw: 'سجود السهو', adilla: 'الأدلة', kahf: 'سورة الكهف', songs: 'موسيقى روحية', community: 'الجماعة', weather: 'الطقس', qibla_aligned: 'أنت مستقبل القبلة', qibla_turn: 'استدر بمقدار', qibla_right: 'نحو اليمين', qibla_left: 'نحو اليسار', reflection: 'تأمل',
   tab_prayers: 'الصلوات', tab_qibla: 'القبلة', tab_tasbih: 'التسبيح', tab_dhikr: 'الأذكار', tab_settings: 'الإعدادات',
   tab_read: 'اقرأ', tab_more: 'المزيد', search: 'بحث', search_ph: 'الأسماء، الأدعية، الآيات، الأذكار…', no_results: 'لا نتائج', see_all: 'عرض الكل', skip: 'تخطٍّ', back: 'رجوع', done: 'تم',
   appearance: 'المظهر', app_system: 'النظام', app_light: 'فاتح', app_dark: 'داكن', display: 'العرض', tools: 'أدوات', spiritual_path: 'السلوك', about: 'حول',

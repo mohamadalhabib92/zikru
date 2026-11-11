@@ -42,7 +42,7 @@ export default function Songs() {
       setCur(i);
       autoNext.current = true;
       player.play();
-      if (Platform.OS !== 'web') player.setActiveForLockScreen(true, { title: tk.title, artist: L('Zikru · Chants soufis') });
+      if (Platform.OS !== 'web') player.setActiveForLockScreen(true, { title: tk.title, artist: L('Zikru · Musique spirituelle') });
     } catch {
       setErr('Lecture impossible pour ce fichier.');
     }
