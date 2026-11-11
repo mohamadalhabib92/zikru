@@ -8,8 +8,8 @@
   "scope": "/zikru/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#0E1A17",
-  "background_color": "#0E1A17",
+  "theme_color": "#191919",
+  "background_color": "#191919",
   "icons": [
     {
       "src": "/zikru/icons/icon-192.png",

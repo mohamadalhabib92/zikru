@@ -1,6 +1,5 @@
-"""Génère les icônes de l'app (mobile + PWA) à partir d'un monogramme.
-Usage : python3 scripts/make-icons.py "<MONOGRAMME>" <fond #hex> <texte #hex> [accent #hex]
-Remplacez les fichiers par le logo officiel quand il est disponible."""
+"""Ancien générateur de monogramme. Ne pas l’utiliser : le logo validé est dans assets/ et public/icons/.
+Usage historique : python3 scripts/make-icons.py "<MONOGRAMME>" <fond #hex> <texte #hex> [accent #hex]"""
 import os, sys
 from PIL import Image, ImageDraw, ImageFont
 
