@@ -444,3 +444,32 @@ Prérequis optionnel	Optionale Voraussetzung
 Invocation finale	Abschließende Anrufung
 Inclure ce prérequis	Diese Voraussetzung einschließen
 Prérequis laissé de côté	Voraussetzung weggelassen
+Istikhraj	Istikhraj
+Calcul des lettres, sans promesse d’effet	Eine Buchstabensumme, ohne versprochene Wirkung
+Alif madda (آ)	Alif madda (آ)
+1 · un alif	1 · ein Alif
+2 · alif et madd	2 · Alif und Madd
+Shadda	Shadda
+Alif waslah (ٱ)	Alif wasla (ٱ)
+1 · comme alif	1 · wie Alif
+0 · ignoré	0 · ignoriert
+Les voyelles, le sukūn, l’alif suscrit et le tatwīl sont ignorés. La shadda compte une fois, sauf si vous demandez deux. آ compte 1, sauf si vous demandez 2. Un texte sans sens connu se calcule quand même : ce n’est qu’une somme de lettres.	Vokale, Sukūn, das hochgestellte Alif und das Tatwīl werden ignoriert. Eine Schadda zählt einmal, außer Sie verlangen zweimal. آ zählt 1, außer Sie verlangen 2. Ein Text ohne bekannte Bedeutung wird trotzdem berechnet: nur eine Summe von Buchstaben.
+Réduction : {n}	Quersumme: {n}
+Abjad saghir : {n}	Abjad saghir: {n}
+Créer un compteur de {n}	Zähler mit {n} erstellen
+Le nombre devient l’objectif du compteur. Le texte reste celui que vous avez saisi, même s’il n’a pas de sens connu.	Die Zahl wird das Ziel des Zählers. Der Text bleibt, was Sie eingegeben haben, auch ohne bekannte Bedeutung.
+NOMS DE CETTE VALEUR	NAMEN DIESES WERTES
+Chercher un nombre	Eine Zahl suchen
+Par exemple 66	Zum Beispiel 66
+Nombre à chercher parmi les 99 Noms	Zahl, die unter den 99 Namen gesucht wird
+Seuls les 99 Noms de la liste de l’app (Tirmidhī 3507, énumération faible) sont proposés, sans l’article. Aucun effet n’est affirmé.	Nur die 99 Namen der Liste der App (Tirmidhī 3507, schwache Aufzählung) werden vorgeschlagen, ohne Artikel. Es wird keine Wirkung behauptet.
+Ordre maghribi vérifié : ص 60, ض 90, س 300, ظ 800, غ 900, ش 1000. Source : G. S. Colin, « Abjad », Encyclopaedia of Islam, 2e éd.	Maghribi-Reihenfolge geprüft: ص 60, ض 90, س 300, ظ 800, غ 900, ش 1000. Quelle: G. S. Colin, „Abjad“, Encyclopaedia of Islam, 2. Aufl.
+Aucun des 99 Noms de cette liste ne vaut {n}.	Keiner der 99 Namen dieser Liste ergibt {n}.
+La note « 50 » de la recette additionne trois mots, pas un seul Nom : {a} {x} + {b} {y} + {c} {z}. الأحد n’est pas dans la liste de Tirmidhī utilisée ici.	Die Notiz „50“ des Rezepts addiert drei Wörter, nicht einen Namen: {a} {x} + {b} {y} + {c} {z}. Al-Aḥad steht nicht in der hier verwendeten Tirmidhī-Liste.
+Noms de cette valeur : {t}	Namen dieses Wertes: {t}
+Abjad, mashriqi et maghribi	Abjad, maschriqi und maghribi
+Une fois	Einmal
+Deux fois	Zweimal
+La note « 50 » additionne trois mots, pas un seul Nom.	Die Notiz „50“ addiert drei Wörter, nicht einen Namen.
+الأحد n’est pas dans la liste de Tirmidhī utilisée ici.	Al-Aḥad steht nicht in der hier verwendeten Tirmidhī-Liste.
+Ce nom n’est pas dans la liste de Tirmidhī utilisée ici.	Dieser Name steht nicht in der hier verwendeten Tirmidhī-Liste.

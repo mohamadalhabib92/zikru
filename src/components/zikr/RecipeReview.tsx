@@ -1,6 +1,7 @@
 import { useWindowDimensions, View } from 'react-native';
 import { KbInput } from '@/ui/keyboard-done';
 import { LBtn } from '@/components/zikr/parts';
+import { namesByValue, wahidAhadHayy } from '@/lib/istikhraj';
 import { L } from '@/lib/l10n';
 import type { ParsedRecipe, RecipeFormula, RecipeStage } from '@/lib/recipe-parse';
 import { Arabic, LMuted } from '@/ui/light';
@@ -65,6 +66,9 @@ function FormulaRow({ formula, index, onChange }: { formula: RecipeFormula; inde
 export function RecipeReview({ recipe, onChange }: { recipe: ParsedRecipe; onChange: (r: ParsedRecipe) => void }) {
   const { width } = useWindowDimensions();
   const wide = width >= 720;
+  const total = recipe.stages.filter((s) => s.include && s.kind === 'step').reduce((a, s) => a + s.formulas.reduce((b, f) => b + (f.count || 0), 0), 0);
+  const hits = namesByValue(total);
+  const note = wahidAhadHayy();
   const patch = (i: number, stage: RecipeStage) => onChange({ ...recipe, stages: recipe.stages.map((s, k) => (k === i ? stage : s)) });
   return (
     <View style={{ gap: 10 }}>
@@ -74,11 +78,23 @@ export function RecipeReview({ recipe, onChange }: { recipe: ParsedRecipe; onCha
       {recipe.aim ? <LMuted>{L('But : {t}', { t: recipe.aim })}</LMuted> : null}
       {recipe.variant ? <LMuted>{L('Variante : {t}', { t: recipe.variant })}</LMuted> : null}
       <LMuted>
-        {L('Total des répétitions des étapes : {n}', {
-          n: recipe.stages.filter((s) => s.include && s.kind === 'step').reduce((a, s) => a + s.formulas.reduce((b, f) => b + (f.count || 0), 0), 0),
-        })}
+        {L('Total des répétitions des étapes : {n}', { n: total })}
         {recipe.namedTotal != null ? ' · ' + L('Le texte annonce {n}.', { n: recipe.namedTotal }) : ''}
       </LMuted>
+      {hits.length ? (
+        <LMuted>{L('Noms de cette valeur : {t}', { t: hits.map((h) => h.ar).join(' · ') })}</LMuted>
+      ) : total > 0 ? (
+        <LMuted>{L('Aucun des 99 Noms de cette liste ne vaut {n}.', { n: total })}</LMuted>
+      ) : null}
+      {total === note.total ? (
+        <View style={{ gap: 2 }}>
+          <LMuted>{L('La note « 50 » additionne trois mots, pas un seul Nom.')}</LMuted>
+          {note.parts.map((p) => (
+            <Text key={p.ar} style={{ color: b.ink, fontSize: 18, textAlign: 'right', writingDirection: 'rtl' }}>{`${p.ar} · ${p.value}`}</Text>
+          ))}
+          <LMuted>{L('Ce nom n’est pas dans la liste de Tirmidhī utilisée ici.')}</LMuted>
+        </View>
+      ) : null}
       {recipe.namesNote ? <LMuted>{recipe.namesNote}</LMuted> : null}
       {recipe.signature ? <LMuted>{recipe.signature}</LMuted> : null}
       <LMuted style={{ fontSize: 12 }}>{L('Vérifiez chaque formule, son nombre et sa dédicace. Rien n’est enregistré avant votre confirmation. Cela reste privé.')}</LMuted>

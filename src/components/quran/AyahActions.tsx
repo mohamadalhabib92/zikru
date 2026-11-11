@@ -16,7 +16,7 @@ import { QBtn, QLabel, Sheet } from './Sheet';
 import { L } from '@/lib/l10n';
 
 export type AyahTarget = { s: number; a: number; ar: string; tr?: string; /** édition de la traduction (pour citer sa source) */ trId?: string };
-export type AyahAction = 'play' | 'tafsir' | 'zikr' | 'hifz' | 'ab';
+export type AyahAction = 'play' | 'tafsir' | 'zikr' | 'hifz' | 'ab' | 'istikhraj';
 
 function Act({ icon, label, onPress, pal }: { icon: IconName; label: string; onPress: () => void; pal: Pal }) {
   return (
@@ -94,6 +94,7 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
         {VERSE_IMAGE_SUPPORTED && Platform.OS === 'web' ? <Act icon="image-outline" label="Partager en image" onPress={shareImage} pal={pal} /> : null}
         <Act icon="repeat" label="Répéter A-B" onPress={() => run('ab')} pal={pal} />
         <Act icon="albums-outline" label="Ajouter à un zikr" onPress={() => run('zikr')} pal={pal} />
+        <Act icon="calculator-outline" label="Istikhraj" onPress={() => run('istikhraj')} pal={pal} />
       </View>
 
       <QLabel pal={pal}>MARQUE-PAGE</QLabel>

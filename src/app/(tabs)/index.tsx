@@ -456,7 +456,7 @@ export default function Home() {
     { icon: 'sparkles', label: '99 Noms', href: '/names', color: b.goldDeep },
     { icon: 'compass', label: tr.tab_qibla, href: '/qibla', color: b.teal },
     { icon: 'leaf', label: 'Tijaniyya', href: '/tijani', color: b.wirdGreen },
-    { icon: 'calculator', label: 'Abjad', href: '/abjad', color: b.rust },
+    { icon: 'calculator', label: 'Istikhraj', href: '/abjad', color: b.rust },
     { icon: 'people', label: tr.community, href: '/community', color: b.violet },
     { icon: 'grid', label: tr.tab_more, href: '/more', color: b.inkMuted },
   ];

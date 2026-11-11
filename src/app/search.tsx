@@ -36,7 +36,7 @@ const SECTIONS: { title: string; kw: string; href: Href; icon: IconName }[] = [
   { title: 'Horaires de prière', kw: 'priere salat horaires adhan', href: '/prayers', icon: 'time' },
   { title: 'Tasbih', kw: 'tasbih compteur chapelet misbaha', href: '/tasbih', icon: 'radio-button-on' },
   { title: 'Qibla', kw: 'qibla boussole kaaba direction', href: '/qibla', icon: 'compass' },
-  { title: 'Calculateur abjad', kw: 'abjad calcul mashriqi maghribi', href: '/abjad', icon: 'calculator' },
+  { title: 'Istikhraj', kw: 'abjad calcul mashriqi maghribi', href: '/abjad', icon: 'calculator' },
   { title: 'Tariqa Tijaniyya', kw: 'tijani tijaniyya wird wazifa haylala hailala', href: '/tijani', icon: 'leaf' },
   { title: 'Communauté', kw: 'communaute cercle famille live', href: '/community', icon: 'people' },
   { title: 'Sourate al-Kahf', kw: 'kahf vendredi jumua', href: '/kahf', icon: 'headset' },

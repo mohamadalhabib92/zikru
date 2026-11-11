@@ -119,7 +119,7 @@ function Root() {
         <Stack.Screen name="adhkar" options={{ title: L("Adhkar du jour") }} />
         <Stack.Screen name="goals" options={{ title: L("Objectifs du jour") }} />
         <Stack.Screen name="constance" options={{ title: L("Constance") }} />
-        <Stack.Screen name="abjad" options={{ title: L("Calculateur abjad") }} />
+        <Stack.Screen name="abjad" options={{ title: L("Istikhraj") }} />
         <Stack.Screen name="names" options={{ title: L("Les 99 Noms d’Allah") }} />
         <Stack.Screen name="zikrs/index" options={{ title: L("Mes zikrs") }} />
         <Stack.Screen name="zikrs/edit" options={{ title: L("Composer un zikr") }} />

@@ -443,3 +443,32 @@ Prérequis optionnel	Optional prerequisite	شرط سابق اختياري
 Invocation finale	Final invocation	الدعاء الختامي
 Inclure ce prérequis	Include this prerequisite	تضمين هذا الشرط
 Prérequis laissé de côté	Prerequisite left aside	شرط سابق متروك
+Istikhraj	Istikhraj	استخراج
+Calcul des lettres, sans promesse d’effet	A sum of letters, with no promised effect	حساب حروف، دون وعد بأثر
+Alif madda (آ)	Alif madda (آ)	ألف مد (آ)
+1 · un alif	1 · one alif	1 · ألف واحد
+2 · alif et madd	2 · alif and madd	2 · ألف ومد
+Shadda	Shadda	شدة
+Alif waslah (ٱ)	Alif waslah (ٱ)	ألف وصل (ٱ)
+1 · comme alif	1 · as alif	1 · كالألف
+0 · ignoré	0 · ignored	0 · يُتجاهل
+Les voyelles, le sukūn, l’alif suscrit et le tatwīl sont ignorés. La shadda compte une fois, sauf si vous demandez deux. آ compte 1, sauf si vous demandez 2. Un texte sans sens connu se calcule quand même : ce n’est qu’une somme de lettres.	Vowels, sukūn, the superscript alif and the tatwīl are ignored. A shadda counts once, unless you ask for twice. آ counts as 1, unless you ask for 2. A text with no known meaning is still calculated: it is only a sum of letters.	تُتجاهل الحركات والسكون والألف الخنجرية والتطويل. الشدة تُحسب مرة، إلا إذا طلبتم مرتين. آ تُحسب 1، إلا إذا طلبتم 2. والنص بلا معنى معروف يُحسب أيضًا: هو مجموع حروف فحسب.
+Réduction : {n}	Digit sum: {n}	جمع الأرقام: {n}
+Abjad saghir : {n}	Abjad saghir: {n}	الأبجد الصغير: {n}
+Créer un compteur de {n}	Create a counter of {n}	إنشاء عدّاد من {n}
+Le nombre devient l’objectif du compteur. Le texte reste celui que vous avez saisi, même s’il n’a pas de sens connu.	The number becomes the counter’s goal. The text stays what you entered, even if it has no known meaning.	يصير العدد هدف العدّاد. ويبقى النص كما أدخلتموه، حتى إن لم يكن له معنى معروف.
+NOMS DE CETTE VALEUR	NAMES OF THIS VALUE	أسماء بهذه القيمة
+Chercher un nombre	Look up a number	ابحث عن عدد
+Par exemple 66	For example 66	مثلاً 66
+Nombre à chercher parmi les 99 Noms	Number to look up among the 99 Names	عدد يُبحث عنه في الأسماء التسعة والتسعين
+Seuls les 99 Noms de la liste de l’app (Tirmidhī 3507, énumération faible) sont proposés, sans l’article. Aucun effet n’est affirmé.	Only the 99 Names in the app’s list (Tirmidhī 3507, a weak enumeration) are offered, without the article. No effect is claimed.	لا تُقترح إلا الأسماء التسعة والتسعون من قائمة التطبيق (الترمذي 3507، سرد ضعيف)، دون أداة التعريف. لا يُدّعى أي أثر.
+Ordre maghribi vérifié : ص 60, ض 90, س 300, ظ 800, غ 900, ش 1000. Source : G. S. Colin, « Abjad », Encyclopaedia of Islam, 2e éd.	Maghribi order checked: ص 60, ض 90, س 300, ظ 800, غ 900, ش 1000. Source: G. S. Colin, “Abjad”, Encyclopaedia of Islam, 2nd ed.	الترتيب المغربي المتحقق: ص 60، ض 90، س 300، ظ 800، غ 900، ش 1000. المصدر: كولين، موسوعة الإسلام، الطبعة الثانية، «أبجد».
+Aucun des 99 Noms de cette liste ne vaut {n}.	None of the 99 Names in this list equals {n}.	لا يساوي أي اسم من هذه القائمة {n}.
+La note « 50 » de la recette additionne trois mots, pas un seul Nom : {a} {x} + {b} {y} + {c} {z}. الأحد n’est pas dans la liste de Tirmidhī utilisée ici.	The recipe’s note “50” adds three words, not one Name: {a} {x} + {b} {y} + {c} {z}. Al-Aḥad is not in the Tirmidhī list used here.	ملاحظة «50» في الوصفة تجمع ثلاث كلمات، لا اسمًا واحدًا: {a} {x} + {b} {y} + {c} {z}. و«الأحد» ليس في قائمة الترمذي المستعملة هنا.
+Noms de cette valeur : {t}	Names of this value: {t}	أسماء بهذه القيمة: {t}
+Abjad, mashriqi et maghribi	Abjad, mashriqi and maghribi	أبجد، مشرقي ومغربي
+Une fois	Once	مرة واحدة
+Deux fois	Twice	مرتان
+La note « 50 » additionne trois mots, pas un seul Nom.	The note “50” adds three words, not one Name.	ملاحظة «50» تجمع ثلاث كلمات، لا اسمًا واحدًا.
+الأحد n’est pas dans la liste de Tirmidhī utilisée ici.	Al-Aḥad is not in the Tirmidhī list used here.	«الأحد» ليس في قائمة الترمذي المستعملة هنا.
+Ce nom n’est pas dans la liste de Tirmidhī utilisée ici.	This name is not in the Tirmidhī list used here.	هذا الاسم ليس في قائمة الترمذي المستعملة هنا.
