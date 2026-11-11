@@ -22,6 +22,12 @@ export type ZikrItem = {
   unverified?: boolean;
   /** Photo d’origine (fichier local de l’appareil, jamais envoyé ni partagé). */
   photo?: string;
+  /** Dédicace lue dans la recette (« لروح … »). Affichée pendant le compte, jamais mélangée au nombre. */
+  dedication?: string;
+  /** Rôle dans une recette importée. Absent pour les compositions déjà enregistrées. */
+  role?: 'prerequisite' | 'step' | 'invocation';
+  /** Prérequis que l’utilisateur peut retirer avant d’enregistrer. */
+  optional?: boolean;
 };
 /** Mention ajoutée aux textes importés non reconnus dans le Coran. */
 export const UNVERIFIED_NOTE = 'Non vérifié — source à vérifier';

@@ -21,6 +21,8 @@ import { closePdf, ocrPdfPage, openPdf, pdfSupport, renderPdfPage, type PdfDoc }
 import { pageIsScanned } from '@/lib/pdf-types';
 import { detectLanguages, LANG_LABEL, type LangCode } from '@/lib/program-lang';
 import { importTooLarge, latinDigits, MAX_IMPORT_CHARS, parseProgram, programHasArabic, sourceLinesForResplit, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
+import { parseRecipe, recipeFlat, recipeToItem, type ParsedRecipe } from '@/lib/recipe-parse';
+import { RecipeReview } from '@/components/zikr/RecipeReview';
 import { confirmLoose, matchStepText, stepToItem, type CatalogEntry, type ImportVia, type LooseTarget, type StepMatch } from '@/lib/program-match';
 import { loadQuranIndex, type QuranIndex } from '@/lib/quran-match';
 import { loadJSON, saveJSON, uid } from '@/lib/storage';
@@ -57,6 +59,9 @@ type EStep = {
   pick: string | null;
   /** Correspondance « mêmes lettres, espaces différents » confirmée par l’utilisateur (sinon : non vérifiée). */
   confirmed: boolean;
+  dedication?: string;
+  role?: 'prerequisite' | 'step' | 'invocation';
+  optional?: boolean;
 };
 
 const field = () => ({ minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper, paddingHorizontal: 12, color: b.ink }) as const;
@@ -153,9 +158,10 @@ export default function ImportProgram() {
   const [shareErr, setShareErr] = useState<string | null>(null);
   // Programmes de groupe disponibles sur le serveur pour cette destination ? (null = inconnu ; false = repli objectifs communs)
   const [progAvail, setProgAvail] = useState<Record<string, boolean>>({});
-  const { create } = useZikrs();
+  const { create, update } = useZikrs();
   const premium = usePremium();
   const [via, setVia] = useState<ImportVia>('paste');
+  const [recipe, setRecipe] = useState<ParsedRecipe | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
   const [paste, setPaste] = useState('');
   const [sel, setSel] = useState(0);
@@ -228,6 +234,7 @@ export default function ImportProgram() {
     closePdf(pdfRef.current);
     pdfRef.current = null;
     setPages([]);
+    setRecipe(null);
     setSteps(null);
     setIgnored([]);
     setSel(0);
@@ -244,6 +251,16 @@ export default function ImportProgram() {
       setNote(L('Ce texte est trop long ({n} caractères au maximum). Coupez-le en plusieurs imports.', { n: MAX_IMPORT_CHARS }));
       return;
     }
+    const rec = parseRecipe(joined);
+    if (rec.recognized) {
+      setRecipe(rec);
+      setSteps(null);
+      setIgnored([]);
+      setLangs(detectLanguages(joined));
+      setName(rec.title || L('Programme importé'));
+      return;
+    }
+    setRecipe(null);
     const r = parseProgram(texts);
     setLangs(detectLanguages(joined));
     setSteps(r.steps.map((s) => toEdit(s, ps)));
@@ -397,11 +414,12 @@ export default function ImportProgram() {
     return null;
   });
   const todo = problems.filter(Boolean).length;
-  const canCreate = !!steps?.length && todo === 0 && !busy;
+  const recipeItems = recipe ? recipeFlat(recipe).filter((x) => x.formula.count >= 1) : [];
+  const canCreate = (recipe ? recipeItems.length > 0 && recipeFlat(recipe!).every((x) => x.formula.count >= 1) : !!steps?.length && todo === 0) && !busy;
 
   const ensurePrivate = (): string | null => {
     if (savedPrivate.current) return savedPrivate.current;
-    if (!steps || !canCreate) return null;
+    if ((!recipe && !steps) || !canCreate) return null;
     if (!premium.ready) return null;
     if (!premium.canCreate) {
       router.push('/premium');
@@ -412,12 +430,15 @@ export default function ImportProgram() {
       if (!kept.has(page)) kept.set(page, pages[page]?.image && Platform.OS !== 'web' ? keepPhoto(pages[page].image!) : undefined);
       return kept.get(page);
     };
-    const items = steps.map((s, i) => {
-      const m = resolved(s, matches[i]);
-      const own = s.pick === 'own';
-      return { id: uid(), ...stepToItem({ ar: s.ar, latin: s.latin, hint: s.hint, count: parseCount(s.count)! }, m, s.official && !own, via, photoOf(s.page)) };
-    });
-    const z = create(name.trim() || L('Programme importé'), items);
+    const items = recipe
+      ? recipeFlat(recipe).map(({ stage, formula }) => ({ id: uid(), ...recipeToItem(stage, formula, via), ...(photoOf(0) ? { photo: photoOf(0) } : {}) }))
+      : steps!.map((s, i) => {
+          const m = resolved(s, matches[i]);
+          const own = s.pick === 'own';
+          return { id: uid(), ...stepToItem({ ar: s.ar, latin: s.latin, hint: s.hint, count: parseCount(s.count)!, dedication: s.dedication }, m, s.official && !own, via, photoOf(s.page)), ...(s.role ? { role: s.role, optional: s.optional } : {}) };
+        });
+    const z = create(name.trim() || recipe?.title || L('Programme importé'), items);
+    if (recipe?.aim) update(z.id, (cur) => ({ ...cur, niyya: recipe.aim }));
     savedPrivate.current = z.id;
     return z.id;
   };
@@ -428,8 +449,13 @@ export default function ImportProgram() {
 
   // Partage vers un groupe : uniquement le texte validé (jamais la photo), un objectif par étape.
   const groupItems = useMemo(
-    () => (steps && canCreate ? steps.map((s, i) => stepToItem({ ar: s.ar, latin: s.latin, hint: s.hint, count: parseCount(s.count)! }, resolved(s, matches[i]), s.official && s.pick !== 'own', via)) : []),
-    [steps, canCreate, matches, via],
+    () =>
+      recipe
+        ? recipeFlat(recipe).map(({ stage, formula }) => recipeToItem(stage, formula, via))
+        : steps && canCreate
+          ? steps.map((s, i) => stepToItem({ ar: s.ar, latin: s.latin, hint: s.hint, count: parseCount(s.count)! }, resolved(s, matches[i]), s.official && s.pick !== 'own', via))
+          : [],
+    [recipe, steps, canCreate, matches, via],
   );
   const drafts = useMemo(() => stepsToGoals(groupItems), [groupItems]);
   const program = useMemo(() => stepsToProgram(name.trim() || L('Programme importé'), groupItems), [name, groupItems]);
@@ -599,8 +625,11 @@ export default function ImportProgram() {
 
             {/* Étapes détectées */}
             <View style={{ flexGrow: 2, flexBasis: 320, minWidth: 260, gap: 10 }}>
-              {steps ? (
+              {(recipe || steps) ? (
                 <>
+                  {recipe ? <RecipeReview recipe={recipe} onChange={setRecipe} /> : null}
+                  {steps && !recipe ? (
+                  <>
                   <Text style={{ color: b.ink, fontWeight: '900', fontSize: 16 }} accessibilityRole="header">
                     {L('Étapes détectées : {n}', { n: steps.length })}
                   </Text>
@@ -726,6 +755,8 @@ export default function ImportProgram() {
                         </View>
                       ))
                     : null}
+                  </>
+                  ) : null}
                   <TextInput value={name} onChangeText={setName} placeholder={L('Programme importé')} placeholderTextColor={b.inkMuted} style={field()} accessibilityLabel={L('Nom de la composition')} />
                   {todo ? (
                     <Text style={{ color: t.warning, fontWeight: '700', fontSize: 13 }} accessibilityLiveRegion="polite">

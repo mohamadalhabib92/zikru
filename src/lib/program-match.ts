@@ -153,22 +153,22 @@ export function matchStepText(ar: string, latin: string, idx: QuranIndex | null,
 /** Élément de composition (Tasbih) issu d’une étape validée. */
 export type ImportVia = 'paste' | 'photo' | 'pdf';
 export function stepToItem(
-  step: Pick<ProgramStep, 'ar' | 'latin' | 'hint'> & { count: number },
+  step: Pick<ProgramStep, 'ar' | 'latin' | 'hint'> & { count: number; dedication?: string },
   m: StepMatch,
   useOfficial: boolean,
   via: ImportVia,
   photo?: string,
 ): Omit<ZikrItem, 'id'> {
   const reps = Math.max(1, Math.min(100000, Math.round(step.count)));
-  if (useOfficial && m.type === 'catalog') {
-    const e = m.entry;
-    return { kind: e.kind, ref: e.ref, label: e.label, ar: e.ar, abjadAr: e.abjadAr, tr: e.tr, fr: e.fr, reps, via, ...(photo ? { photo } : {}) };
-  }
-  if (useOfficial && m.type === 'quran') {
-    const ref = m.p.kind === 'partial' ? `${m.p.ref} (extrait)` : m.p.ref;
-    return { kind: 'verse', ref: 'Coran ' + ref, label: `${SURAHS[m.p.s - 1]?.[2] ?? 'Coran'} ${ref}`, ar: m.p.official, reps, via, ...(photo ? { photo } : {}) };
-  }
   const own = step.ar.trim() || step.latin.trim();
   const label = (step.hint || step.latin || own).slice(0, 60);
-  return { kind: 'free', ref: 'Texte personnel', label, ar: own, reps, via, unverified: true, ...(photo ? { photo } : {}) };
+  const dedication = step.dedication?.trim() || undefined;
+  const base: Omit<ZikrItem, 'id'> =
+    useOfficial && m.type === 'catalog'
+      ? { kind: m.entry.kind, ref: m.entry.ref, label: m.entry.label, ar: m.entry.ar, abjadAr: m.entry.abjadAr, tr: m.entry.tr, fr: m.entry.fr, reps, via, ...(photo ? { photo } : {}) }
+      : useOfficial && m.type === 'quran'
+        ? { kind: 'verse', ref: 'Coran ' + (m.p.kind === 'partial' ? `${m.p.ref} (extrait)` : m.p.ref), label: `${SURAHS[m.p.s - 1]?.[2] ?? 'Coran'} ${m.p.kind === 'partial' ? `${m.p.ref} (extrait)` : m.p.ref}`, ar: m.p.official, reps, via, ...(photo ? { photo } : {}) }
+        : { kind: 'free', ref: 'Texte personnel', label, ar: own, reps, via, unverified: true, ...(photo ? { photo } : {}) };
+  if (!dedication) return base;
+  return { ...base, dedication, fr: [base.fr, dedication].filter(Boolean).join('\n') };
 }

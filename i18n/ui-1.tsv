@@ -417,3 +417,29 @@ L’année complète	The full year	السنة الكاملة
 La série et les douze semaines restent gratuites. L’historique d’un an est dans Premium.	The streak and the twelve weeks stay free. A year of history is part of Premium.	السلسلة والاثنا عشر أسبوعًا تبقى مجانية. وسجل السنة ضمن بريميوم.
 Voir Premium	See Premium	عرض بريميوم
 Objectifs du jour	Today’s goals	أهداف اليوم
+Texte source	Source text	النص المصدر
+Passage incertain : {t}	Uncertain passage: {t}	موضع غير مؤكد: {t}
+Formule {n}	Formula {n}	الصيغة {n}
+Nombre de répétitions de la formule {n}	Repetitions of formula {n}	عدد تكرار الصيغة {n}
+À confirmer	To confirm	للتأكيد
+Recette comprise	Recipe understood	الوصفة مفهومة
+Source : {t}	Source: {t}	المصدر: {t}
+But : {t}	Aim: {t}	الغاية: {t}
+Variante : {t}	Variant: {t}	رواية: {t}
+Total des répétitions des étapes : {n}	Total repetitions of the steps: {n}	مجموع تكرار الخطوات: {n}
+Le texte annonce {n}.	The text states {n}.	النص يذكر {n}.
+Vérifiez chaque formule, son nombre et sa dédicace. Rien n’est enregistré avant votre confirmation. Cela reste privé.	Check each formula, its count and its dedication. Nothing is saved before you confirm. It stays private.	تحقّق من كل صيغة وعددها وإهدائها. لا يُحفظ شيء قبل تأكيدك. يبقى هذا خاصًا.
+Confiance {n} pour cent	Confidence {n} percent	الثقة {n} في المئة
+Confiance {n} %	Confidence {n}%	الثقة {n} ٪
+Dédicace	Dedication	الإهداء
+Aucune dédicace lue	No dedication read	لم يُقرأ إهداء
+Dédicace de l’étape {n}	Dedication of step {n}	إهداء الخطوة {n}
+Cette étape ne sera pas enregistrée.	This step will not be saved.	لن تُحفظ هذه الخطوة.
+Retirer cette étape	Remove this step	إزالة هذه الخطوة
+Dédicace : {t}	Dedication: {t}	الإهداء: {t}
+Prérequis : vous pouvez passer cette étape.	Prerequisite: you may skip this step.	شرط سابق: يمكنك تجاوز هذه الخطوة.
+Prérequis optionnel	Optional prerequisite	شرط سابق اختياري
+Étape	Step	خطوة
+Invocation finale	Final invocation	الدعاء الختامي
+Inclure ce prérequis	Include this prerequisite	تضمين هذا الشرط
+Prérequis laissé de côté	Prerequisite left aside	شرط سابق متروك

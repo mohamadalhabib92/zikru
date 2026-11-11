@@ -286,6 +286,13 @@ export default function Practice() {
                 {cur.tr}
               </Text>
             ) : null}
+            {cur.dedication ? (
+              <View style={{ marginTop: 8 }} accessibilityLabel={L('Dédicace : {t}', { t: cur.dedication })}>
+                <LMuted style={{ fontSize: 12 }}>{L('Dédicace')}</LMuted>
+                {/[\u0600-\u06FF]/.test(cur.dedication) ? <Arabic size={20}>{cur.dedication}</Arabic> : <Text style={{ color: b.ink, textAlign: 'center' }}>{cur.dedication}</Text>}
+              </View>
+            ) : null}
+            {cur.optional ? <LMuted style={{ marginTop: 4 }}>{L('Prérequis : vous pouvez passer cette étape.')}</LMuted> : null}
             {meaning ? <LMuted style={{ marginTop: 4 }}>{meaning}</LMuted> : null}
             <LMuted style={{ fontSize: 11, marginTop: 6 }}>{systems.map((s) => `abjad ${s} ${fmt(itemAbjad(cur, s, opts))}`).join(' · ')}</LMuted>
           </LCard>
@@ -360,7 +367,7 @@ export default function Practice() {
                 }}
                 numberOfLines={1}
               >
-                {it.label}
+                {it.label}{it.dedication ? ` · ${it.dedication}` : ''}
               </Text>
               <Text style={{ color: b.inkMuted, fontWeight: '700' }}>{isCur ? `${st.count}/${it.reps}` : `× ${fmt(it.reps)}`}</Text>
             </View>
