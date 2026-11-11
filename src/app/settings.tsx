@@ -249,7 +249,7 @@ export default function SettingsScreen() {
       <Card>
         <ListItem title={tr.sources_title} icon="library-outline" onPress={() => router.push('/sources')} />
         <Divider />
-        <ListItem title={tr.ring} subtitle="Tasbih électronique, anneau de dhikr, télécommande" icon="bluetooth-outline" onPress={() => router.push('/ring')} />
+        <ListItem title={tr.ring} subtitle={L('Compteur, journal des trames')} icon="bluetooth-outline" onPress={() => router.push('/ring')} />
         <Divider />
         <ListItem title="Synchronisation (Supabase)" icon="cloud-outline" right={<Badge label={backendConfigured ? 'Configuré' : tr.config_missing} tone={backendConfigured ? 'success' : 'warning'} />} onPress={() => router.push('/config')} />
         <Divider />

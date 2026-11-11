@@ -26,3 +26,7 @@ Le téléchargement automatique ne concerne que ce récitateur, en Wi-Fi, en lai
 Style : {s}	Style: {s}	الأسلوب: {s}
 Certains enregistrements sont dans l’application, les autres sont lus en ligne. Le choix reste sur cet appareil.	Some recordings are in the app, the others are played online. The choice stays on this device.	بعض التسجيلات داخل التطبيق، والبقية تُشغَّل عبر الشبكة. يبقى الاختيار على هذا الجهاز.
 Droits du récitateur — licence ouverte non vérifiée	Reciter’s rights — open licence not verified	حقوق القارئ — رخصة مفتوحة غير موثَّقة
+Journal	Log	السجل
+Trames reçues et appuis comptés. Rien n’est envoyé.	Frames received and clicks counted. Nothing is sent.	الإطارات المستلمة والضغطات المحسوبة. لا يُرسَل شيء.
+Aucune trame pour l’instant.	No frame yet.	لا إطار بعد.
+Compteur, journal des trames	Counter, frame log	العداد، سجل الإطارات

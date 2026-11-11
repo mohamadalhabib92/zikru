@@ -528,13 +528,21 @@ class BleCounterManager {
       this.set({ mapping: m, needsConfirm: true });
       this.persist();
       if (m.field) {
-        this.decoder.feed(b);
+        const n = this.decoder.feedPacket(b);
+        diag.log('frame', `${toHex(b)} → +${n}${this.decoder.lastValue != null ? ` · total bague ${this.decoder.lastValue}` : ''}`);
         this.rememberValue();
         return;
       }
     }
-    if (!sameUuid(m.characteristic, characteristic) || !sameUuid(m.service, service) || !this.decoder) return;
-    const n = this.decoder.feed(b);
+    const onMapped = sameUuid(m.characteristic, characteristic) && sameUuid(m.service, service);
+    // La bague peut notifier le total sur une autre caractéristique que celle retenue : une trame connue (BSTWSH, iQibla) est quand même comptée.
+    const foreignAbsolute = !onMapped && m.mode === 'absolute' && profile.parse(b)?.kind === 'absolute';
+    if ((!onMapped && !foreignAbsolute) || !this.decoder) {
+      diag.log('frame', `${toHex(b)} → ignoré`, 'warn');
+      return;
+    }
+    const n = this.decoder.feedPacket(b);
+    diag.log('frame', `${toHex(b)} → +${n}${this.decoder.lastValue != null ? ` · total bague ${this.decoder.lastValue}` : ''}`);
     const ev = this.decoder.lastEvent;
     if (ev) diag.log('decode', ev === 'attente' ? `valeur inattendue ${toHex(b)} : en attente de confirmation` : ev === 'confirmé' ? `valeur confirmée : +${n}` : ev === 'parasite' ? 'trame parasite ignorée' : 'double livraison ignorée', ev === 'confirmé' ? 'info' : 'warn');
     if (this.decoder.lastWasSync && n > 0) this.set({ lastSync: { added: n, at: Date.now() } });

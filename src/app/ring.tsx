@@ -4,6 +4,7 @@ import { Platform, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
+import { diag } from '@/lib/ble/diag';
 import { fieldLabel, isValidUuid, keyLabel, PROFILES, shortUuid } from '@/lib/ble/core';
 import { bleMsg } from '@/lib/ble/messages';
 import { useData } from '@/lib/data';
@@ -27,6 +28,8 @@ export default function BluetoothCounterScreen() {
   const { t: tr } = useSettings();
   const { tasbih } = useData();
   const s = useBleCounter();
+  const [journal, setJournal] = useState(() => diag.snapshot().entries.filter((e) => e.tag === 'frame').slice(-12));
+  useEffect(() => diag.subscribe(() => setJournal(diag.snapshot().entries.filter((e) => e.tag === 'frame').slice(-12))), []);
   const web = Platform.OS === 'web';
   const connected = s.status === 'connecté';
   const busy = s.status === 'connexion' || s.status === 'reconnexion';
@@ -126,6 +129,12 @@ export default function BluetoothCounterScreen() {
               Appuis reçus : {s.clicksThisConnection} · signaux : {s.notifyCount}
             </Muted>
             {s.lastHex ? <Text style={{ color: t.muted, fontFamily: mono, fontSize: 12 }}>Dernier signal : {s.lastHex}</Text> : null}
+            <Spacer h={8} />
+            <Eyebrow>{L('Journal')}</Eyebrow>
+            <Muted>{L('Trames reçues et appuis comptés. Rien n’est envoyé.')}</Muted>
+            {journal.length ? journal.map((e, i) => (
+              <Text key={`${e.t}-${i}`} style={{ color: t.muted, fontFamily: mono, fontSize: 11 }}>{e.msg}</Text>
+            )) : <Muted>{L('Aucune trame pour l’instant.')}</Muted>}
           </>
         ) : null}
         {s.error ? (

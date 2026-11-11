@@ -263,10 +263,15 @@ export function adoptAbsoluteFrame(mapping: Mapping | null, service: string, cha
 
 // ---------------------------------------------------------------- Décodage des appuis
 export const MAX_JUMP = 10;
-/** Cadence maximale plausible d'un doigt sur un compteur (≈ 16 appuis/s). */
+/** Cadence maximale plausible d'un doigt sur un compteur (≈ 16 appuis/s). Conservé pour l'historique du tasbih. */
 export const MIN_TAP_MS = 60;
-/** Plafond absolu d'un saut accepté en cours de connexion (au-delà : valeur aberrante, compté 1). */
+/** Plafond historique d'un saut « plausible » (historique du tasbih). Le décodeur BLE ne s'en sert plus pour rogner un total. */
 export const JUMP_PLAUSIBLE_MAX = 100;
+/**
+ * Écart de compteur absolu compté tout de suite, quel que soit le temps écoulé.
+ * Au-delà : une seule trame aberrante (souvent 65535) est mise en attente ; si la suivante la confirme, l'écart entier est ajouté.
+ */
+export const ABSOLUTE_ACCEPT = 2000;
 /**
  * Appuis retenus pour un saut d de la valeur absolue en cours de connexion.
  * Avant : tout saut > MAX_JUMP comptait 1 (trames perdues = appuis perdus). Maintenant le saut est accepté
@@ -282,13 +287,11 @@ export const BASELINE_GRACE_MS = 1500;
 /** Deux trames identiques d'impulsion reçues à moins de DUP_WINDOW_MS sont une double livraison (pas deux appuis). */
 export const DUP_WINDOW_MS = 25;
 /**
- * Saut immédiatement acceptable en cours de connexion (sans attendre de confirmation) :
- * ≤ MAX_JUMP, ou ≤ JUMP_PLAUSIBLE_MAX et physiquement possible vu le temps écoulé.
+ * Saut immédiatement acceptable : tout écart positif jusqu'à ABSOLUTE_ACCEPT.
+ * Le temps d'arrivée ne compte pas : une notification en retard porte déjà le total de la bague.
  */
-export function jumpAcceptable(d: number, elapsedMs: number): boolean {
-  if (d <= 0) return false;
-  if (d <= MAX_JUMP) return true;
-  return d <= JUMP_PLAUSIBLE_MAX && d <= MAX_JUMP + Math.floor(Math.max(0, elapsedMs) / MIN_TAP_MS);
+export function jumpAcceptable(d: number, _elapsedMs = 0): boolean {
+  return d > 0 && d <= ABSOLUTE_ACCEPT;
 }
 /** Plafond physique d'appuis possibles en elapsedMs (au moins MAX_JUMP). */
 export function physicalCap(elapsedMs: number): number {
@@ -379,8 +382,8 @@ export class ClickDecoder {
         const dp = v - p.v;
         if (dp >= 0 && dp <= MAX_JUMP) {
           this.lastEvent = 'confirmé';
-          // saut réel : borné par ce qu'un doigt peut faire dans le temps écoulé ; remise à zéro : 0
-          const jump = p.v > prev ? Math.min(p.v - prev, physicalCap(p.at - this.lastAt)) : 0;
+          // Écart entier jusqu'à la valeur confirmée (pas de plafond « un doigt ne peut pas » : la bague a déjà compté).
+          const jump = p.v > prev ? p.v - prev : 0;
           return this.accept(v, now, jump + dp);
         }
         const n = this.step(prev, v, now - this.lastAt);
@@ -398,11 +401,9 @@ export class ClickDecoder {
       this.lastEvent = 'attente';
       return 0;
     }
+    // Une bague « delta » renvoie la même trame à chaque appui. Chaque notification compte.
+    // (Une double inscription GATT est évitée à l'abonnement, pas en jetant des appuis.)
     const hex = toHex(b);
-    if (this.lastPulse && this.lastPulse.hex === hex && now - this.lastPulse.at < DUP_WINDOW_MS) {
-      this.lastEvent = 'doublon';
-      return 0;
-    }
     this.lastPulse = { hex, at: now };
     if (this.mapping.pressSignature) return hex === this.mapping.pressSignature ? 1 : 0;
     const per = Math.max(1, this.mapping.notifsPerClick ?? 1);
@@ -413,6 +414,90 @@ export class ClickDecoder {
     }
     return 0;
   }
+  private pendingBytes: Bytes = new Uint8Array(0);
+  /**
+   * Une notification peut contenir plusieurs trames, ou la fin d'une trame coupée en deux.
+   * Chaque trame est comptée. Le morceau incomplet attend la notification suivante (32 octets max).
+   */
+  feedPacket(chunk: Bytes, now = Date.now()): number {
+    const buf = concatBytes(this.pendingBytes, chunk);
+    const { frames, rest } = splitNotifyPayload(buf, this.mapping.mode);
+    this.pendingBytes = rest.length > 32 ? copyBytes(rest.subarray(rest.length - 32)) : rest;
+    let n = 0;
+    for (const f of frames) n += this.feed(f, now);
+    return n;
+  }
+}
+
+function concatBytes(a: Bytes, b: Bytes): Bytes {
+  if (!a.length) return b;
+  if (!b.length) return a;
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a, 0);
+  out.set(b, a.length);
+  return out;
+}
+
+/**
+ * Découpe une notification : trames BSTWSH `AA 03 xx xx`, textes iQibla « Q07,0012,… »,
+ * ou octets identiques répétés (bague delta). Un préfixe incomplet est rendu dans `rest`.
+ */
+const copyBytes = (b: Uint8Array): Bytes => new Uint8Array(b);
+
+export function splitNotifyPayload(buf: Bytes, mode: 'absolute' | 'pulse'): { frames: Bytes[]; rest: Bytes } {
+  const frames: Bytes[] = [];
+  const empty = new Uint8Array(0);
+  let i = 0;
+  let structured = false;
+  let rest: Bytes = empty;
+  while (i < buf.length) {
+    if (buf[i] === 0xaa && i + 1 < buf.length && buf[i + 1] === 0x03) {
+      if (i + 4 > buf.length) {
+        rest = copyBytes(buf.subarray(i));
+        break;
+      }
+      if (buf[i + 2] === 0xaa && i + 3 < buf.length && buf[i + 3] === 0x03) {
+        i++;
+        continue;
+      }
+      frames.push(copyBytes(buf.subarray(i, i + 4)));
+      i += 4;
+      structured = true;
+      continue;
+    }
+    if (buf[i] === 0xaa && i + 1 >= buf.length) {
+      rest = copyBytes(buf.subarray(i));
+      break;
+    }
+    if (buf[i] === 0x51) {
+      const s = ascii(buf.subarray(i));
+      if (/^Q\d{1,3},\d{1,6},/.test(s)) {
+        const nxt = s.slice(1).search(/Q\d/);
+        const len = nxt === -1 ? s.length : nxt + 1;
+        frames.push(copyBytes(buf.subarray(i, i + len)));
+        i += len;
+        structured = true;
+        continue;
+      }
+      if (/^Q[\d,]{0,8}$/.test(s)) {
+        rest = copyBytes(buf.subarray(i));
+        break;
+      }
+    }
+    if (structured) {
+      i++;
+      continue;
+    }
+    break;
+  }
+  if (!structured) {
+    if (rest.length) return { frames: [], rest };
+    if (mode === 'pulse' && buf.length > 1 && buf.every((x) => x === buf[0])) {
+      return { frames: Array.from(buf, (x) => Uint8Array.of(x)), rest: empty };
+    }
+    return { frames: buf.length ? [copyBytes(buf)] : [], rest: empty };
+  }
+  return { frames, rest };
 }
 
 /** Plafond de rattrapage (appuis hors connexion) : au-delà, on considère la valeur aberrante. */
