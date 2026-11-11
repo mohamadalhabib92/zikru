@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
@@ -184,7 +184,7 @@ export default function Onboarding() {
   return (
     <View style={{ flex: 1, backgroundColor: b.cream }}>
       <PatternBg style={{ paddingTop: insets.top + 18, paddingBottom: 26, alignItems: 'center' }}>
-        <Text style={{ color: b.gold, fontSize: 46, fontFamily: 'Amiri_700Bold', lineHeight: 80 }}>ذِكْر</Text>
+        <Image source={require('../../assets/icon.png')} accessibilityLabel="Zikru" style={{ width: 96, height: 96, borderRadius: 22 }} />
         <Text style={{ color: b.heroText, fontSize: 20, fontWeight: '800' }}>{tr.onboarding_welcome}</Text>
         <Text style={{ color: b.heroMuted, fontSize: 14, marginTop: 2, textAlign: 'center', paddingHorizontal: 24 }}>{tr.onboarding_sub}</Text>
         <View style={{ flexDirection: 'row', gap: 6, marginTop: 16 }} accessibilityLabel={L('Étape {a} sur {b}', { a: i + 1, b: steps.length })}>

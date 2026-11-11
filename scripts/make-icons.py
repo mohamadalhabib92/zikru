@@ -1,41 +1,98 @@
-"""Ancien générateur de monogramme. Ne pas l’utiliser : le logo validé est dans assets/ et public/icons/.
-Usage historique : python3 scripts/make-icons.py "<MONOGRAMME>" <fond #hex> <texte #hex> [accent #hex]"""
-import os, sys
-from PIL import Image, ImageDraw, ImageFont
+"""Dérive les icônes à partir de assets/icon.png (logo validé, ne pas redessiner l’arabe).
 
-mono, bg, fg = sys.argv[1], sys.argv[2], sys.argv[3]
-accent = sys.argv[4] if len(sys.argv) > 4 else fg
-FONTS = ["/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
+Le fichier source est le carré plein, sans transparence. iOS applique son masque arrondi.
+Android et l’icône maskable gardent le dessin entier dans la zone sûre centrale (66 %).
+"""
+import os
+from PIL import Image
 
-def font(size):
-    for f in FONTS:
-        if os.path.exists(f):
-            return ImageFont.truetype(f, size)
-    return ImageFont.load_default()
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(ROOT, "assets", "icon.png")
+BG = (24, 24, 24)  # #181818
+SAFE = 0.66
+CANVAS = 1024
 
-def icon(size, pad_ratio=0.0, rounded=False):
-    img = Image.new("RGBA", (size, size), bg)
-    d = ImageDraw.Draw(img)
-    inner = size * (1 - 2 * pad_ratio)
-    f = font(int(inner * (0.42 if len(mono) <= 2 else 0.28)))
-    box = d.textbbox((0, 0), mono, font=f)
-    w, h = box[2] - box[0], box[3] - box[1]
-    d.text(((size - w) / 2 - box[0], (size - h) / 2 - box[1] - size * 0.03), mono, font=f, fill=fg)
-    lw = int(inner * 0.18)
-    y = size / 2 + h / 2 + size * 0.04
-    d.rounded_rectangle([(size - lw) / 2, y, (size + lw) / 2, y + max(2, size * 0.012)], radius=2, fill=accent)
-    return img
 
-os.makedirs("assets", exist_ok=True)
-os.makedirs("public/icons", exist_ok=True)
-icon(1024).save("assets/icon.png")
-icon(1024, 0.18).save("assets/splash-icon.png")
-icon(1024, 0.2).save("assets/android-icon-foreground.png")
-Image.new("RGBA", (1024, 1024), bg).save("assets/android-icon-background.png")
-icon(1024, 0.2).convert("L").save("assets/android-icon-monochrome.png")
-icon(48).save("assets/favicon.png")
-icon(192).save("public/icons/icon-192.png")
-icon(512).save("public/icons/icon-512.png")
-icon(512, 0.12).save("public/icons/maskable-512.png")
-icon(180).save("public/icons/apple-touch-icon.png")
-print("icônes générées")
+def load_source():
+    im = Image.open(SRC).convert("RGB")
+    if im.size != (CANVAS, CANVAS):
+        im = im.resize((CANVAS, CANVAS), Image.Resampling.LANCZOS)
+    return im
+
+
+def content_box(im):
+    px = im.load()
+    w, h = im.size
+    minx, miny, maxx, maxy = w, h, 0, 0
+    for y in range(h):
+        for x in range(w):
+            r, g, b = px[x, y]
+            if max(abs(r - BG[0]), abs(g - BG[1]), abs(b - BG[2])) > 12:
+                minx, miny = min(minx, x), min(miny, y)
+                maxx, maxy = max(maxx, x), max(maxy, y)
+    return minx, miny, maxx + 1, maxy + 1
+
+
+def fit_safe(im):
+    """Dessin entier dans le carré central de 66 %, fond transparent autour."""
+    x0, y0, x1, y1 = content_box(im)
+    crop = im.crop((x0, y0, x1, y1))
+    # Un peu à l’intérieur du cercle de 66 % : le bout de l’alif et les perles du bas ne sont pas coupés.
+    side = int(round(CANVAS * SAFE)) - 28
+    scale = side / max(crop.size)
+    nw, nh = max(1, int(round(crop.size[0] * scale))), max(1, int(round(crop.size[1] * scale)))
+    resized = crop.resize((nw, nh), Image.Resampling.LANCZOS)
+    out = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
+    out.paste(resized, ((CANVAS - nw) // 2, (CANVAS - nh) // 2))
+    # Le fond charbon du dessin devient transparent : la couleur de fond Android le remplace.
+    px = out.load()
+    for y in range(CANVAS):
+        for x in range(CANVAS):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            if max(abs(r - BG[0]), abs(g - BG[1]), abs(b - BG[2])) <= 14:
+                px[x, y] = (0, 0, 0, 0)
+    return out
+
+
+def monochrome(foreground):
+    out = Image.new("RGBA", foreground.size, (0, 0, 0, 0))
+    src, dst = foreground.load(), out.load()
+    w, h = foreground.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = src[x, y]
+            if a:
+                dst[x, y] = (255, 255, 255, a)
+    return out
+
+
+def save_rgb(im, path):
+    im.convert("RGB").save(path, "PNG", optimize=True)
+
+
+def main():
+    src = load_source()
+    # iOS : le fichier source, sans couche alpha.
+    save_rgb(src, os.path.join(ROOT, "assets", "icon.png"))
+    save_rgb(src, os.path.join(ROOT, "assets", "splash-icon.png"))
+    fg = fit_safe(src)
+    fg.save(os.path.join(ROOT, "assets", "android-icon-foreground.png"), "PNG", optimize=True)
+    Image.new("RGB", (CANVAS, CANVAS), BG).save(os.path.join(ROOT, "assets", "android-icon-background.png"), "PNG", optimize=True)
+    monochrome(fg).save(os.path.join(ROOT, "assets", "android-icon-monochrome.png"), "PNG", optimize=True)
+    icons = os.path.join(ROOT, "public", "icons")
+    os.makedirs(icons, exist_ok=True)
+    save_rgb(src.resize((48, 48), Image.Resampling.LANCZOS), os.path.join(ROOT, "assets", "favicon.png"))
+    save_rgb(src.resize((192, 192), Image.Resampling.LANCZOS), os.path.join(icons, "icon-192.png"))
+    save_rgb(src.resize((512, 512), Image.Resampling.LANCZOS), os.path.join(icons, "icon-512.png"))
+    save_rgb(src.resize((180, 180), Image.Resampling.LANCZOS), os.path.join(icons, "apple-touch-icon.png"))
+    mask = fg.resize((512, 512), Image.Resampling.LANCZOS)
+    plate = Image.new("RGBA", (512, 512), BG + (255,))
+    plate.alpha_composite(mask)
+    save_rgb(plate, os.path.join(icons, "maskable-512.png"))
+    print("icônes dérivées de assets/icon.png")
+
+
+if __name__ == "__main__":
+    main()
