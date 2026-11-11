@@ -6,7 +6,8 @@ import { stripBasmala } from './quran';
 import { fetchQuranEncSurah } from './quran-enc';
 import { isQuranEncId, quranEncKeyOf } from './quran-licenses';
 import { cachedTranslation } from './quran-offline';
-import { OFFSETS, TOTAL_AYAHS } from './quran-nav';
+import { fromIndex, OFFSETS, TOTAL_AYAHS } from './quran-nav';
+import { loadSurahRaw, peekSurahRaw, preloadSurahRaw } from './quran-sura/load';
 import { loadJSON, saveCacheJSON } from './storage';
 import { SURAHS } from './surahs';
 
@@ -27,6 +28,38 @@ export function loadUthmani(): Promise<string[]> {
     });
   return uthP;
 }
+
+const shown = new Map<number, string[]>();
+function presentSurah(n: number, raw: readonly string[]): string[] {
+  const hit = shown.get(n);
+  if (hit) return hit;
+  const lines = raw.map((t, i) => (n !== 1 && i === 0 ? stripBasmala(t) : t));
+  shown.set(n, lines);
+  return lines;
+}
+
+/** Versets affichables de la sourate, si ce module est déjà en mémoire. */
+export function peekSurahUthmani(n: number): string[] | null {
+  const raw = peekSurahRaw(n);
+  return raw ? presentSurah(n, raw) : null;
+}
+
+/** Une sourate seulement : le fichier complet (~1,4 Mo) n’est pas chargé. */
+export function loadSurahUthmani(n: number): Promise<string[]> {
+  const ready = peekSurahUthmani(n);
+  if (ready) return Promise.resolve(ready);
+  return loadSurahRaw(n).then((raw) => presentSurah(n, raw));
+}
+
+export function preloadSurahUthmani(n: number) {
+  if (n >= 1 && n <= 114) preloadSurahRaw(n);
+}
+
+/** Verset déjà chargé (index global). */
+export function uthmaniAt(i: number): string {
+  const [s, a] = fromIndex(i);
+  return peekSurahUthmani(s)?.[a - 1] ?? '';
+}
 /** Basmala en écriture uthmani (verset 1:1 du texte Tanzil). */
 export const BASMALA_UTHMANI = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
 
@@ -36,10 +69,10 @@ export function surahEdition(n: number, ed: string): Promise<string[] | null> {
   const k = `${n}-${ed}`;
   if (!mem.has(k)) {
     const p = (async () => {
-      const full = await cachedTranslation(ed).catch(() => null);
-      if (full?.length) return full.slice(OFFSETS[n - 1], OFFSETS[n - 1] + SURAHS[n - 1][4]);
       const own = await loadJSON<string[] | null>(`qtr-${n}-${ed}`, null);
       if (own?.length) return own;
+      const full = await cachedTranslation(ed).catch(() => null);
+      if (full?.length) return full.slice(OFFSETS[n - 1], OFFSETS[n - 1] + SURAHS[n - 1][4]);
       const old = await loadJSON<{ ayahs?: { tr: string }[] } | null>(`quran3-${n}-${ed}`, null);
       if (old?.ayahs?.length) return old.ayahs.map((a) => a.tr);
       try {

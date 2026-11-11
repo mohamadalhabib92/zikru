@@ -157,7 +157,7 @@ assert.equal(R.scrollTarget('live', 6, 2), 6);
 console.log(`lecture : local p50 ${hop.p50.toFixed(2)} ms, p95 ${hop.p95.toFixed(2)} ms ; canal simulé ${delays.join('/')} ms sous ${R.SYNC_TARGET_MS} ms ; surlignage ${R.HIGHLIGHT_MS} ms, défilement ${R.SCROLL_MS} ms`);
 
 const screen = readFileSync(join(root, 'src/components/lesson/shared-reading.tsx'), 'utf8');
-assert.ok(screen.includes("import('@/lib/quran-uthmani')"), 'le texte lu est le Hafs embarqué');
+assert.ok(screen.includes('loadSurahRaw'), 'le texte lu est le Hafs embarqué, sourate par sourate');
 assert.ok(!screen.includes('stripBasmala'), 'la basmala n’est pas retirée');
 assert.ok(!screen.includes('alquran.cloud'), 'pas de texte téléchargé à la place du Tanzil');
 assert.ok(screen.includes('react-native-reanimated'), 'le surlignage est animé');

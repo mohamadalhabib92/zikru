@@ -1,5 +1,6 @@
 // Génère src/lib/quran-uthmani.ts (texte Tanzil Uthmani verbatim) et src/lib/quran-meta.ts (métadonnées Tanzil).
 // Usage : node scripts/gen-quran-uthmani.mjs /chemin/uthmani.txt /chemin/quran-data.js
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const [txt, meta] = process.argv.slice(2);
@@ -37,3 +38,5 @@ export const MANZIL_STARTS: number[] = ${JSON.stringify(manzil)};
 export const SAJDAS: [number, number][] = ${JSON.stringify(sajda)};
 `);
 console.log('ok', pages.slice(0, 5), juz.slice(0, 3), sajda.slice(0, 2));
+const split = spawnSync(process.execPath, ['scripts/split-quran-sura.mjs'], { stdio: 'inherit' });
+if (split.status) process.exit(split.status);

@@ -194,9 +194,13 @@ export function SharedReading({
   useEffect(() => {
     if (rangeSurah == null || rangeFrom == null || rangeTo == null) return;
     let on = true;
-    void import('@/lib/quran-uthmani').then(({ QURAN_UTHMANI }) => {
-      if (!on) return;
-      setLines(passageFromTanzil(QURAN_UTHMANI, rangeSurah, rangeFrom, rangeTo));
+    void import('@/lib/quran-sura/load').then(({ loadSurahRaw }) => {
+      const surah = Number(rangeSurah);
+      return loadSurahRaw(surah).then((ayahs) => {
+        if (!on) return;
+        const raw = ayahs.map((text, i) => `${surah}|${i + 1}|${text}`).join('\n');
+        setLines(passageFromTanzil(raw, rangeSurah, rangeFrom, rangeTo));
+      });
     });
     return () => {
       on = false;

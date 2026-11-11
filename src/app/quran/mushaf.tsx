@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ABSheet } from '@/components/quran/ABSheet';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { useAyahFlow } from '@/components/quran/AyahFlow';
-import { useUthmani } from '@/components/quran/data';
+import { useSurahSpan } from '@/components/quran/data';
 import { useReaderKeepAwake } from '@/components/quran/keep-awake';
 import { readerPalette, type Pal } from '@/components/quran/palette';
 import { ReaderSettings } from '@/components/quran/ReaderSettings';
@@ -14,7 +14,7 @@ import { QBtn } from '@/components/quran/Sheet';
 import { dayKey } from '@/lib/dates';
 import { khatmaStatus, markPage } from '@/lib/khatma';
 import { arNum, fromIndex, gIndex, hizbOfIndex, juzOfIndex, juzRange, pageOf, pageRange, rubStartAt, TOTAL_PAGES } from '@/lib/quran-nav';
-import { BASMALA_UTHMANI } from '@/lib/quran-reader-data';
+import { BASMALA_UTHMANI, preloadSurahUthmani, uthmaniAt } from '@/lib/quran-reader-data';
 import { keyOf, khatma as khatmaStore, logPageRead, marks, readerPrefs, recordRead, type Marks } from '@/lib/quran-store';
 import { buildQueue } from '@/lib/recitation';
 import { useShared } from '@/lib/shared-state';
@@ -28,8 +28,8 @@ import { arLang } from '@/ui/ar-lang';
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1);
 
-type PageProps = { page: number; all: string[]; width: number; height: number; pal: Pal; size: number; lineH: number; nurani?: boolean; muqattaat?: boolean; hl: Marks['hl']; playing: string; onAyah: (s: number, a: number) => void };
-const MushafPage = memo(function MushafPage({ page, all, width, height, pal, size, lineH, hl, playing, onAyah, nurani, muqattaat }: PageProps) {
+type PageProps = { page: number; width: number; height: number; pal: Pal; size: number; lineH: number; nurani?: boolean; muqattaat?: boolean; hl: Marks['hl']; playing: string; onAyah: (s: number, a: number) => void };
+const MushafPage = memo(function MushafPage({ page, width, height, pal, size, lineH, hl, playing, onAyah, nurani, muqattaat }: PageProps) {
   const [start, end] = pageRange(page);
   // segments : un bloc par sourate présente sur la page
   const blocks: { s: number; from: number; idx: number[] }[] = [];
@@ -67,7 +67,7 @@ const MushafPage = memo(function MushafPage({ page, all, width, height, pal, siz
                   return (
                     <Text key={i} onPress={() => onAyah(s, a)} accessibilityRole="button" accessibilityLabel={L('Verset {s}:{a}', { s, a })} style={on ? { backgroundColor: alpha(pal.accent, 0.22), color: pal.ink } : h ? { backgroundColor: alpha(h, pal.dark ? 0.25 : 0.35) } : undefined}>
                       {rubStartAt(i) ? <Text style={{ color: pal.gold }}>{'۞ '}</Text> : null}
-                      <NuraniText text={all[i]} surah={s} ayah={a} nurani={!!nurani} muqattaat={!!muqattaat} gold={pal.gold} ink={pal.ink} />
+                      <NuraniText text={uthmaniAt(i)} surah={s} ayah={a} nurani={!!nurani} muqattaat={!!muqattaat} gold={pal.gold} ink={pal.ink} />
                       <Text style={{ color: pal.gold }}>{` \u06DD${arNum(a)} `}</Text>
                     </Text>
                   );
@@ -95,7 +95,6 @@ export default function Mushaf() {
   const pal = readerPalette(pr.theme);
   const [m] = useShared(marks);
   const [k, setK] = useShared(khatmaStore);
-  const all = useUthmani();
   const [page, setPage] = useState(p0);
   const [h, setH] = useState(0);
   const [settings, setSettings] = useState(false);
@@ -104,6 +103,15 @@ export default function Mushaf() {
   const rec = useGlobalRecitation();
   const [ab, setAb] = useState<{ s: number; a: number } | null>(null);
   const playing = rec.step ? keyOf(rec.step.s, rec.step.a) : '';
+  const [pageStart, pageEnd] = pageRange(page);
+  const ready = useSurahSpan(fromIndex(pageStart)[0], fromIndex(pageEnd - 1)[0]);
+  useEffect(() => {
+    for (const q of [page - 1, page + 1]) {
+      if (q < 1 || q > TOTAL_PAGES) continue;
+      const [a, b] = pageRange(q);
+      for (let s = fromIndex(a)[0]; s <= fromIndex(b - 1)[0]; s++) preloadSurahUthmani(s);
+    }
+  }, [page]);
   const today = dayKey();
   const kst = k && !k.finished ? khatmaStatus(k, today) : null;
 
@@ -165,9 +173,9 @@ export default function Mushaf() {
   const [s0] = fromIndex(pageRange(page)[0]);
   const pageDoneInKhatma = kst ? page - k!.from + 1 <= k!.done : false;
   const renderItem = useCallback(
-    ({ item }: { item: number }) => (all ? <MushafPage page={item} all={all} width={width} height={h} pal={pal} size={size} lineH={pr.lineH} nurani={pr.nurani} muqattaat={pr.muqattaat} hl={m.hl} playing={playing} onAyah={(s, a) => flow.open({ s, a, ar: all[gIndex(s, a)] })} /> : null),
+    ({ item }: { item: number }) => <MushafPage page={item} width={width} height={h} pal={pal} size={size} lineH={pr.lineH} nurani={pr.nurani} muqattaat={pr.muqattaat} hl={m.hl} playing={playing} onAyah={(s, a) => flow.open({ s, a, ar: uthmaniAt(gIndex(s, a)) })} />,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [all, width, h, pal.bg, size, pr.lineH, pr.nurani, pr.muqattaat, m.hl, playing],
+    [width, h, pal.bg, size, pr.lineH, pr.nurani, pr.muqattaat, m.hl, playing],
   );
 
   return (
@@ -190,7 +198,7 @@ export default function Mushaf() {
         }}
       />
       <View style={{ flex: 1 }} onLayout={(e) => setH(e.nativeEvent.layout.height)}>
-      {!all || !h ? (
+      {!ready || !h ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={pal.accent} />
         </View>
