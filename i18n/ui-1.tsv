@@ -385,3 +385,35 @@ En attente du Wi-Fi	Waiting for Wi-Fi	في انتظار Wi-Fi
 Hors ligne : le téléchargement reprendra	Offline: the download will resume	دون اتصال: سيتابع التنزيل
 Pas assez d’espace libre (200 Mo à garder)	Not enough free space (keep 200 MB)	لا توجد مساحة كافية (يُترك 200 م.ب)
 {name} · sourate {s}	{name} · surah {s}	{name} · سورة {s}
+Calendrier de régularité	Regularity calendar	تقويم الانتظام
+{n} dhikr	{n} dhikr	{n} ذكر
+{a}/{b} jours d’objectifs	{a}/{b} goal days	{a}/{b} أيام أهداف
+Constance	Steadiness	الاستمرار
+Privé, sur cet appareil. Aucune comparaison.	Private, on this device. No comparison.	خاص، على هذا الجهاز. دون أي مقارنة.
+Série de dhikr	Dhikr streak	سلسلة الذكر
+{n} jours	{n} days	{n} أيام
+Meilleure série : {n} jours	Best streak: {n} days	أفضل سلسلة: {n} أيام
+Un jour manqué par semaine est une grâce : il ne casse pas la série. Un deuxième jour manqué la même semaine l’arrête. Un jour en dispense ne compte pas. Aujourd’hui ne casse rien tant qu’il n’est pas fini.	One missed day per week is a grace: it does not break the streak. A second missed day the same week ends it. A dispensed day does not count. Today breaks nothing until it is finished.	يوم فائت في الأسبوع رحمة: لا يقطع السلسلة. واليوم الفائت الثاني في الأسبوع نفسه يوقفها. ويوم العذر لا يُحتسب. واليوم الحالي لا يقطع شيئًا قبل انتهائه.
+Grâce restante cette semaine : {n}	Grace left this week: {n}	الرحمة المتبقية هذا الأسبوع: {n}
+Série d’objectifs	Goal streak	سلسلة الأهداف
+Ce n’est pas le nombre de dhikr : seulement les jours où chaque objectif actif a été atteint.	This is not the dhikr count: only the days when every active goal was met.	هذا ليس عدد الذكر: فقط الأيام التي تحقق فيها كل هدف نشط.
+Douze semaines	Twelve weeks	اثنا عشر أسبوعًا
+La teinte suit le volume de dhikr. Le liseré doré marque un jour d’objectifs atteints. Les deux ne s’additionnent pas.	The shade follows the dhikr volume. The gold edge marks a day when goals were met. The two are never added together.	تتبّع الدرجة حجم الذكر. والحاشية الذهبية تعلّم يوم تحقق الأهداف. ولا يُجمع الاثنان.
+Calendrier de douze semaines	Twelve-week calendar	تقويم اثني عشر أسبوعًا
+{day} : {n} dhikr, {p} pages	{day}: {n} dhikr, {p} pages	{day}: {n} ذكر، {p} صفحات
+objectifs atteints	goals met	أهداف تحققت
+Dhikr par semaine	Dhikr per week	الذكر في الأسبوع
+Jours d’objectifs par semaine	Goal days per week	أيام الأهداف في الأسبوع
+Pages terminées par jour. Un jour de lecture est noté à part : le nombre de versets n’est pas enregistré, nous ne l’inventons pas.	Finished pages per day. A reading day is noted separately: the verse count is not stored, and we do not invent it.	الصفحات المكتملة في اليوم. ويُذكر يوم القراءة على حدة: عدد الآيات غير محفوظ، ولا نخترعه.
+{n} pages	{n} pages	{n} صفحات
+Aucune lecture notée sur cette période.	No reading noted in this period.	لا قراءة مسجّلة في هذه الفترة.
+Jalons	Milestones	معالم
+Des repères discrets, pas une compétition. Al-ḥamdu li-llāh.	Quiet markers, not a contest. Al-ḥamdu li-llāh.	علامات هادئة، ليست مسابقة. الحمد لله.
+{n} jours de présence	{n} days of presence	{n} أيام حضور
+L’année	The year	السنة
+Calendrier de l’année	Year calendar	تقويم السنة
+Dhikr par mois	Dhikr per month	الذكر في الشهر
+L’année complète	The full year	السنة الكاملة
+La série et les douze semaines restent gratuites. L’historique d’un an est dans Premium.	The streak and the twelve weeks stay free. A year of history is part of Premium.	السلسلة والاثنا عشر أسبوعًا تبقى مجانية. وسجل السنة ضمن بريميوم.
+Voir Premium	See Premium	عرض بريميوم
+Objectifs du jour	Today’s goals	أهداف اليوم

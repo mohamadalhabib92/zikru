@@ -277,6 +277,9 @@ export default function Home() {
           </Text>
         </Pressable>
       </View>
+      <Pressable accessibilityRole="button" accessibilityLabel={L('Constance')} onPress={go('/constance')} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Text style={{ color: b.teal, fontWeight: '800' }}>{L('Constance')} →</Text>
+      </Pressable>
     </FadeIn>
   );
 
