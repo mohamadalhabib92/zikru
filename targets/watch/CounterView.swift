@@ -108,11 +108,8 @@ private struct PickerSheet: View {
     let copy = model.copy
     List {
       if model.catalog?.composition.isEmpty == false {
-        Picker(copy.list, selection: Binding(get: { model.listKind }, set: { model.chooseList($0) })) {
-          Text(copy.today).tag("today")
-          Text(copy.composition).tag("composition")
-        }
-        .pickerStyle(.segmented)
+        // Le sélecteur en segments d’iOS n’existe pas sur watchOS. Deux boutons gardent le même choix, visible.
+        ListKindSwitch(model: model, copy: copy)
       }
       ForEach(model.zikrs()) { z in
         Button {
@@ -140,5 +137,37 @@ private struct PickerSheet: View {
     }
     .background(Color(red: 0x18 / 255, green: 0x18 / 255, blue: 0x18 / 255))
     .navigationTitle(copy.list)
+  }
+}
+
+/// Aujourd’hui ou composition, les deux visibles. Le style segmenté est réservé à iOS.
+private struct ListKindSwitch: View {
+  @ObservedObject var model: CounterModel
+  let copy: WatchCopy
+
+  var body: some View {
+    HStack(spacing: 4) {
+      choice(copy.today, "today")
+      choice(copy.composition, "composition")
+    }
+    .listRowBackground(Color.clear)
+  }
+
+  private func choice(_ title: String, _ kind: String) -> some View {
+    let on = model.listKind == kind
+    return Button {
+      model.chooseList(kind)
+    } label: {
+      Text(title)
+        .font(.caption2)
+        .lineLimit(1)
+        .minimumScaleFactor(0.6)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 5)
+        .foregroundStyle(on ? Ink.bg : Ink.cream)
+        .background(Capsule().fill(on ? Ink.cream : Ink.cream.opacity(0.14)))
+    }
+    .buttonStyle(.plain)
+    .accessibilityAddTraits(on ? AccessibilityTraits.isSelected : [])
   }
 }
