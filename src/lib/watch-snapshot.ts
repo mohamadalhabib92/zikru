@@ -67,6 +67,7 @@ export function buildWatchSnapshot(input: {
     days.push({ start, prayers });
   }
   const last = days[days.length - 1];
+  const lastPrayerAt = last?.prayers.length ? last.prayers[last.prayers.length - 1].at : 0;
   return {
     v: WATCH_SCHEMA,
     updatedAt: input.now.getTime(),
@@ -76,7 +77,9 @@ export function buildWatchSnapshot(input: {
     days,
     dhikrs: input.dhikrs.filter((d) => d.id && d.ar).slice(0, 12),
     cues: input.cues.filter((c) => FARD_SET.has(c)),
-    staleAfter: last ? last.start + 86_400_000 : input.now.getTime(),
+    // Isha peut tomber après minuit civil (Lausanne en juin). La fenêtre
+    // couvre alors la dernière prière incluse, pas seulement le minuit suivant.
+    staleAfter: last ? Math.max(last.start + 86_400_000, lastPrayerAt + 1) : input.now.getTime(),
   };
 }
 

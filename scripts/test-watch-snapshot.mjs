@@ -44,6 +44,10 @@ assert.equal(afterIsha.at, snap.days[1].prayers[0].at);
 assert.equal(W.dayCovering(snap, snap.days[0].start + 1000).start, snap.days[0].start);
 assert.equal(W.dayCovering(snap, snap.staleAfter), null);
 assert.equal(W.nextPrayer(snap, snap.staleAfter), null);
+const lastIsha = snap.days[snap.days.length - 1].prayers[5];
+assert.ok(lastIsha.at < snap.staleAfter, 'Isha du dernier jour reste dans la fenêtre, même après minuit civil');
+assert.equal(W.dayCovering(snap, lastIsha.at - 1).start, snap.days[snap.days.length - 1].start);
+
 
 const again = W.parseSnapshot(JSON.parse(JSON.stringify(snap)));
 assert.deepEqual(again, snap);
