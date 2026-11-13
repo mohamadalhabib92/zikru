@@ -71,15 +71,15 @@ final class WatchLink: NSObject, WCSessionDelegate {
   private func deliver(_ dict: [String: Any]) {
     guard let json = Self.json(dict) else { return }
     lock.lock()
-    let callback = onPayload
-    if callback == nil {
+    // nil est un état normal : le JS n’écoute pas encore, on met le message de côté.
+    if let callback = onPayload {
+      lock.unlock()
+      DispatchQueue.main.async { callback(json) }
+    } else {
       pending.append(json)
       if pending.count > 40 { pending.removeFirst(pending.count - 40) }
       lock.unlock()
-      return
     }
-    lock.unlock()
-    DispatchQueue.main.async { callback(json) }
   }
 
   private static func dictionary(_ json: String) -> [String: Any]? {
