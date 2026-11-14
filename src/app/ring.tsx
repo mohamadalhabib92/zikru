@@ -28,8 +28,9 @@ export default function BluetoothCounterScreen() {
   const { t: tr } = useSettings();
   const { tasbih } = useData();
   const s = useBleCounter();
-  const [journal, setJournal] = useState(() => diag.snapshot().entries.filter((e) => e.tag === 'frame').slice(-12));
-  useEffect(() => diag.subscribe(() => setJournal(diag.snapshot().entries.filter((e) => e.tag === 'frame').slice(-12))), []);
+  const ringLog = () => diag.snapshot().entries.filter((e) => e.tag === 'frame' || e.tag === 'notify').slice(-24);
+  const [journal, setJournal] = useState(ringLog);
+  useEffect(() => diag.subscribe(() => setJournal(ringLog())), []);
   const web = Platform.OS === 'web';
   const connected = s.status === 'connecté';
   const busy = s.status === 'connexion' || s.status === 'reconnexion';

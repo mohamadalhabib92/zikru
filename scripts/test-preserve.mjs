@@ -17,7 +17,7 @@ function emit(rel) {
   writeFileSync(out, ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
   return out;
 }
-for (const r of ['tasbih-core', 'tasbih-log', 'durable', 'preserve', 'tasbih-store', 'community/queue']) emit(r);
+for (const r of ['tasbih-core', 'tasbih-log', 'watch-sync', 'durable', 'preserve', 'tasbih-store', 'community/queue']) emit(r);
 const P = await import(join(dir, 'preserve.mjs'));
 const Q = await import(join(dir, 'community/queue.mjs'));
 const { createDurable } = await import(join(dir, 'durable.mjs'));

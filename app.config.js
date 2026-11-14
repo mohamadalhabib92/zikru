@@ -59,5 +59,10 @@ module.exports = ({ config }) => {
     config.plugins = [...(config.plugins || []), 'expo-app-intents'];
   }
   config.plugins = [...(config.plugins || []), 'expo-iap'];
+  // Montre : cible watchOS embarquée (SwiftUI) + complication WidgetKit.
+  // L’identifiant d’équipe est celui déjà utilisé pour la soumission (eas.json).
+  config.ios = config.ios || {};
+  if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
+  config.plugins = [...(config.plugins || []), '@bacons/apple-targets', './plugins/with-watch-version.js'];
   return config;
 };

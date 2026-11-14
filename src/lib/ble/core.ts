@@ -708,6 +708,25 @@ export type ReconnectAction = 'search-now' | 'wait-system' | 'pause' | 'idle';
  * - idle : rien à faire (déjà lié, ou aucun appareil mémorisé).
  * ios-restore réveille l'app : on reprend tout de suite, y compris si iOS a déjà rouvert le lien.
  */
+/**
+ * Réarmer les notifications alors que le lien semble encore là.
+ * iOS garde souvent la connexion GATT au verrouillage ou au retour au premier plan,
+ * mais l’abonnement « notify » (react-native-ble-plx) ne délivre plus rien.
+ * Une perte d’abonnement ou une restauration iOS réarme tout de suite.
+ * Un simple retour au premier plan attend REARM_MIN_MS pour ne pas couper un abonnement tout neuf.
+ */
+export const REARM_MIN_MS = 800;
+export function shouldRearmNotify(event: 'foreground' | 'subscription-lost' | 'ios-restore', opts: { linked: boolean; armedAgoMs: number }): boolean {
+  if (!opts.linked) return false;
+  if (event === 'subscription-lost' || event === 'ios-restore') return true;
+  return opts.armedAgoMs >= REARM_MIN_MS;
+}
+
+/** Ligne du journal de la bague : chaque trame est soit appliquée au compteur, soit écartée avec la raison. */
+export function frameOutcome(char: string, hex: string, applied: number, reason: string): string {
+  return applied > 0 ? `${char} ${hex} → appliqué +${applied} (${reason})` : `${char} ${hex} → écarté (${reason})`;
+}
+
 export function reconnectDecision(event: ReconnectEvent, opts: { remembered: boolean; linked: boolean; background: boolean }): ReconnectAction {
   if (event === 'bluetooth-off') return opts.linked ? 'idle' : 'pause';
   if (!opts.remembered) return 'idle';

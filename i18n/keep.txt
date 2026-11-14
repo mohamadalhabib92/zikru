@@ -1,5 +1,6 @@
 # Chaînes identiques dans toutes les langues (noms propres, techniques)
 Zikru
+Apple Watch
 Menlo
 web · {}
 · iPad
