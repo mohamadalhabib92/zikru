@@ -25,6 +25,9 @@ export default function TasbihScreen() {
   const router = useRouter();
   const approved = approvedOnly(content);
   const current = approved.find((c) => c.id === tasbih.dhikrId) ?? approved[0];
+  const langKey = s.lang === 'de-CH' ? 'de' : s.lang;
+  const presetMeaning = current?.translations?.[langKey as 'fr' | 'en' | 'de' | 'ar'];
+  const goals = current?.targets?.length ? current.targets : [33, 99, 100];
   // Historique affiché : lignes consécutives du même dhikr et de la même source (< 5 min) regroupées.
   // Non destructif : les lignes enregistrées, le journal des appuis et le total ne changent pas.
   const history = useMemo(() => groupSessions(tasbih.sessions), [tasbih.sessions]);
@@ -63,7 +66,7 @@ export default function TasbihScreen() {
   // Les appuis du compteur Bluetooth / clavier arrivent via DataProvider (aucun double comptage ici).
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg }}>
+    <View style={{ flex: 1, backgroundColor: landscape === 'none' ? t.bg : 'transparent' }}>
       <LandscapeBackdrop id={landscape} />
       <Screen bg="transparent">
       <ReadingPlate on={plated}>
@@ -73,10 +76,11 @@ export default function TasbihScreen() {
       </Row>
       {current ? (
         <View style={{ alignItems: 'center', marginVertical: 8 }}>
-          <Arabic size={32} style={{ color: t.text, textAlign: 'center' }}>
+          <Arabic size={(current.arabic?.length ?? 0) > 80 ? 26 : 34} quran style={{ color: t.text, textAlign: 'center' }}>
             {current.arabic}
           </Arabic>
-          {current.transliteration ? <Muted>{current.transliteration}</Muted> : null}
+          {current.transliteration ? <Muted style={{ textAlign: 'center', marginTop: 6 }}>{current.transliteration}</Muted> : null}
+          {presetMeaning ? <Muted style={{ textAlign: 'center', marginTop: 4 }}>{presetMeaning}</Muted> : null}
         </View>
       ) : null}
       </ReadingPlate>
@@ -99,12 +103,21 @@ export default function TasbihScreen() {
         </Animated.View>
       </View>
       <ReadingPlate on={plated}>
-      <Segmented
-        label={tr.target}
-        options={[{ label: '33', value: 33 }, { label: '99', value: 99 }, { label: '100', value: 100 }, { label: '∞', value: 0 }]}
-        value={tasbih.target}
-        onChange={(v) => setTasbih((x) => ({ ...x, target: v }))}
-      />
+      {current?.targets?.length ? (
+        <Row wrap>
+          {goals.map((n) => (
+            <Chip key={n} label={String(n)} active={tasbih.target === n} onPress={() => setTasbih((x) => ({ ...x, target: n }))} />
+          ))}
+          <Chip label="∞" active={tasbih.target === 0} onPress={() => setTasbih((x) => ({ ...x, target: 0 }))} />
+        </Row>
+      ) : (
+        <Segmented
+          label={tr.target}
+          options={[{ label: '33', value: 33 }, { label: '99', value: 99 }, { label: '100', value: 100 }, { label: '∞', value: 0 }]}
+          value={tasbih.target}
+          onChange={(v) => setTasbih((x) => ({ ...x, target: v }))}
+        />
+      )}
       <Spacer />
       <Row wrap>
         {approved.map((c) => (

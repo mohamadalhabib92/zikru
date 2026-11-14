@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useSyncExternalStore, type ReactN
 import { AppState, Platform } from 'react-native';
 import { emitClicks } from './community/clicks';
 import { bleCounter, type BleCursor } from './ble/manager';
-import { SEED_CONTENT, type ContentItem } from './content';
+import { mergePresets, SEED_CONTENT, type ContentItem } from './content';
 import { feedback } from './feedback';
 import { tapHaptic } from '@/ui/ds';
 import { durable, flushStorage, onStorageCleared, storageKey, uid, usePersistentState } from './storage';
@@ -60,6 +60,13 @@ const saveSession = () => tasbihStore.set((t) => closeSession(t, uid('s'), new D
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [content, setContent, r1] = usePersistentState<ContentItem[]>('content', SEED_CONTENT);
+  useEffect(() => {
+    if (!r1) return;
+    const next = mergePresets(content);
+    if (next !== content) setContent(next);
+    // Une fois le stockage lu : on ajoute seulement les présets dont l’identifiant manque.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [r1]);
   const tasbih = useSyncExternalStore(tasbihStore.subscribe, tasbihStore.get, tasbihStore.get);
   const r2 = useSyncExternalStore(tasbihStore.subscribe, tasbihStore.ready, tasbihStore.ready);
 

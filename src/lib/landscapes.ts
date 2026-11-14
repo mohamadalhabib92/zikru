@@ -8,7 +8,7 @@
  */
 export const LANDSCAPE_THEMES_REQUIRE_PREMIUM = false;
 
-export const LANDSCAPE_IDS = ['lagoon', 'dunes', 'mist', 'stars', 'oasis'] as const;
+export const LANDSCAPE_IDS = ['lagoon', 'dunes', 'mist', 'stars', 'oasis', 'sunset', 'garden', 'peaks', 'cream', 'emerald'] as const;
 export type LandscapeId = (typeof LANDSCAPE_IDS)[number];
 export type LandscapeChoice = LandscapeId | 'none';
 
@@ -18,6 +18,13 @@ export type LandscapeChoice = LandscapeId | 'none';
  * et les harakât restent nets (aucun flou sous les glyphes).
  */
 export const LANDSCAPE_PLATE_ALPHA = 1;
+
+/**
+ * Voile sur le fond quand le paysage est choisi pour toute l’application.
+ * Assez opaque pour que le texte (y compris l’arabe) garde le contraste des jetons,
+ * assez clair pour que le paysage reste visible.
+ */
+export const APP_LANDSCAPE_SCRIM = 0.94;
 
 export function sanitizeLandscape(v: unknown): LandscapeChoice {
   return (LANDSCAPE_IDS as readonly string[]).includes(v as string) ? (v as LandscapeId) : 'none';

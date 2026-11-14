@@ -8,6 +8,7 @@ import { useWidgetSync } from '@/lib/widget-sync';
 import { useShortcuts } from '@/lib/use-shortcuts';
 import { useSettings } from '@/lib/settings';
 import { theme as t } from '@/ui/theme';
+import { sanitizeLandscape } from '@/lib/landscapes';
 
 export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
@@ -18,6 +19,7 @@ export default function TabsLayout() {
   const { width } = useWindowDimensions();
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
+  const landscape = sanitizeLandscape(s.landscape);
   if (!ready || !dataReady)
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
@@ -47,7 +49,7 @@ export default function TabsLayout() {
         // Les libellés d'onglets ne grossissent pas au-delà de la barre (iOS affiche la grande vignette d'accessibilité à l'appui long).
         tabBarAllowFontScaling: false,
         tabBarLabelStyle: sidebar ? { fontSize: 15, fontWeight: '600' } : { fontSize: 11, fontWeight: '700' },
-        sceneStyle: { backgroundColor: t.bg },
+        sceneStyle: { backgroundColor: landscape === 'none' ? t.bg : 'transparent' },
       }}
     >
       <Tabs.Screen name="index" options={{ headerShown: false, title: tr.tab_home, tabBarIcon: icon('home-outline', 'home') }} />

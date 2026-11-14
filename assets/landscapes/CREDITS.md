@@ -9,6 +9,11 @@ Images créées pour Zikru le 10 novembre 2026. Pas de photo tierce, pas de pers
 | mist | Forêt dans la brume | `mist.webp` | Créé pour Zikru | Génération dédiée | Créée pour l’application, libre d’usage dans Zikru |
 | stars | Désert sous les étoiles | `stars.webp` | Créé pour Zikru | Génération dédiée | Créée pour l’application, libre d’usage dans Zikru |
 | oasis | Oasis | `oasis.webp` | Créé pour Zikru | Génération dédiée | Créée pour l’application, libre d’usage dans Zikru |
+| sunset | Couché de soleil sur la mer | `sunset.webp` | Créé pour Zikru | Génération dédiée, 14 novembre 2026 | Créée pour l’application, libre d’usage dans Zikru. Pas de photo tierce. |
+| garden | Jardin andalou | `garden.webp` | Créé pour Zikru | Génération dédiée, 14 novembre 2026 | Créée pour l’application, libre d’usage dans Zikru. Pas de photo tierce. |
+| peaks | Brume sur les montagnes | `peaks.webp` | Créé pour Zikru | Génération dédiée, 14 novembre 2026 | Créée pour l’application, libre d’usage dans Zikru. Pas de photo tierce. |
+| cream | Crème et or | `cream.webp` | Créé pour Zikru | Génération dédiée, 14 novembre 2026 | Créée pour l’application, libre d’usage dans Zikru. Pas de photo tierce. |
+| emerald | Émeraude et or | `emerald.webp` | Créé pour Zikru | Génération dédiée, 14 novembre 2026 | Créée pour l’application, libre d’usage dans Zikru. Pas de photo tierce. |
 
 Format : WebP, 720×1280, une image par thème. Seul le thème choisi est affiché, donc seul celui-là est décodé. Aucune vidéo, aucune animation.
 

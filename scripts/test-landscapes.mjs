@@ -40,6 +40,8 @@ assert.match(tasbih, /LandscapeBackdrop/);
 
 const MAX = 300 * 1024;
 const alpha = L.LANDSCAPE_PLATE_ALPHA;
+const scrim = L.APP_LANDSCAPE_SCRIM;
+assert.ok(scrim >= 0.9 && scrim < 1, 'le voile de l’application laisse voir le paysage sans poser le texte dessus à nu');
 
 function decode(file) {
   const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', file], { encoding: 'utf8' });
@@ -89,6 +91,15 @@ for (const id of L.LANDSCAPE_IDS) {
     }
     for (const [k, min] of [['text', 4.5], ['muted', 4.5], ['accent', 4.5], ['primary', 4.5]]) {
       assert.ok(worst[k] >= min, `${id} ${scheme} ${k} ${worst[k].toFixed(2)} < ${min}`);
+    }
+    const wash = { text: 99, muted: 99, accent: 99, primary: 99 };
+    for (let i = 0; i < rgb.length; i += step) {
+      const pixel = [rgb[i], rgb[i + 1], rgb[i + 2]];
+      const bg = hexOf(mix(pixel, plate, scrim));
+      for (const k of Object.keys(wash)) wash[k] = Math.min(wash[k], contrast(fg[k], bg));
+    }
+    for (const [k, min] of [['text', 4.5], ['muted', 4.5], ['accent', 4.5], ['primary', 4.5]]) {
+      assert.ok(wash[k] >= min, `${id} ${scheme} voile ${k} ${wash[k].toFixed(2)} < ${min}`);
     }
     const onSurface = Math.min(contrast(pal.text, pal.surface), contrast(pal.muted, pal.surface));
     assert.ok(onSurface >= 4.5, `${scheme} compteur sur surface ${onSurface.toFixed(2)}`);

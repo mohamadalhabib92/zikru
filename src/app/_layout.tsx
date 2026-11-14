@@ -26,6 +26,8 @@ import { AudioPrefetch } from '@/components/AudioOffline';
 import { L, useUiCatalog } from '@/lib/l10n';
 import { setFontsReady } from '@/ui/fonts-ready';
 import { useWatchSync } from '@/lib/use-watch-sync';
+import { sanitizeLandscape } from '@/lib/landscapes';
+import { AppLandscape } from '@/components/landscape-backdrop';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -42,6 +44,7 @@ function Root() {
   // Messages Bluetooth (transports hors React) dans la langue de l'interface.
   setBleLang(s.lang);
   const rtl = isRTL(s.lang);
+  const landscape = sanitizeLandscape(s.landscape);
   useEffect(() => {
     // Web : dir/lang sur <html> (lecteurs d'écran, sélection, barres de défilement côté droit en arabe).
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -76,6 +79,7 @@ function Root() {
   if ((!fontsLoaded && !fontTimeout) || !catReady) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
     <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
+      <AppLandscape id={landscape} />
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -84,7 +88,7 @@ function Root() {
           headerTitleStyle: { fontWeight: '700', fontSize: 17 },
           headerShadowVisible: false,
           headerBackButtonDisplayMode: 'minimal',
-          contentStyle: { backgroundColor: t.bg },
+          contentStyle: { backgroundColor: landscape === 'none' ? t.bg : 'transparent' },
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

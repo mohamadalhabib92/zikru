@@ -70,7 +70,7 @@ export default function SettingsScreen() {
         }}
       />
       <H2>Paysages</H2>
-      <Muted>Fond calme pour le compteur, pendant le dhikr. Le choix reste enregistré sur cet appareil.</Muted>
+      <Muted>Fond calme pour toute l’application. Le choix reste enregistré sur cet appareil.</Muted>
       <Spacer h={8} />
       <Row wrap>
         <Chip label="Aucun" active={landscape === 'none'} onPress={() => pickLandscape('none')} />
@@ -79,6 +79,11 @@ export default function SettingsScreen() {
         <Chip label="Forêt dans la brume" active={landscape === 'mist'} onPress={() => pickLandscape('mist')} />
         <Chip label="Désert sous les étoiles" active={landscape === 'stars'} onPress={() => pickLandscape('stars')} />
         <Chip label="Oasis" active={landscape === 'oasis'} onPress={() => pickLandscape('oasis')} />
+        <Chip label="Couché de soleil sur la mer" active={landscape === 'sunset'} onPress={() => pickLandscape('sunset')} />
+        <Chip label="Jardin andalou" active={landscape === 'garden'} onPress={() => pickLandscape('garden')} />
+        <Chip label="Brume sur les montagnes" active={landscape === 'peaks'} onPress={() => pickLandscape('peaks')} />
+        <Chip label="Crème et or" active={landscape === 'cream'} onPress={() => pickLandscape('cream')} />
+        <Chip label="Émeraude et or" active={landscape === 'emerald'} onPress={() => pickLandscape('emerald')} />
       </Row>
       <Muted>Images créées pour Zikru, libres d’usage dans l’application. Pas de photo tierce.</Muted>
       <Spacer h={8} />

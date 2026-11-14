@@ -4,6 +4,8 @@ import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSettings } from '@/lib/settings';
+import { sanitizeLandscape } from '@/lib/landscapes';
 import { currentScheme, elevation, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
 import { KbInput } from './keyboard-done';
@@ -17,11 +19,13 @@ export { Ionicons };
 export function Screen({ children, scroll = true, padded = true, bg }: { children: ReactNode; scroll?: boolean; padded?: boolean; bg?: string }) {
   const insets = useSafeAreaInsets();
   const mini = useMiniPlayerInset();
+  const { s } = useSettings();
+  const openLandscape = !bg && sanitizeLandscape(s.landscape) !== 'none';
   const inner = (
     <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom + mini }]}>{children}</View>
   );
   return (
-    <View style={[S().screen, bg ? { backgroundColor: bg } : null]}>
+    <View style={[S().screen, bg ? { backgroundColor: bg } : openLandscape ? { backgroundColor: 'transparent' } : null]}>
       {scroll ? (
         <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
           {inner}
