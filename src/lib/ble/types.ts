@@ -23,7 +23,7 @@ export interface BleLink {
   chars: GattChar[];
   /** MTU négocié (Android ; iOS le négocie seul). */
   mtu?: number | null;
-  subscribe(service: string, characteristic: string, cb: (b: Bytes) => void): Promise<() => void>;
+  subscribe(service: string, characteristic: string, cb: (b: Bytes) => void, onLost?: (info: { service: string; characteristic: string; code: number; reason: string }) => void): Promise<() => void>;
   read(service: string, characteristic: string): Promise<Bytes | null>;
   write?(service: string, characteristic: string, data: Bytes): Promise<void>;
   onDisconnect(cb: () => void): () => void;
@@ -67,4 +67,6 @@ export interface BleTransport {
   findKnown?(match: (r: ScanResult) => boolean, ms: number): Promise<ScanResult | null>;
   /** iOS : appareils restaurés par CoreBluetooth (restauration d'état) au relancement en arrière-plan. */
   onRestore?(cb: (ids: string[]) => void): () => void;
+  /** Le lien GATT est-il encore ouvert ? (iOS peut le garder sans plus délivrer les notifications.) */
+  connected?(id: string): Promise<boolean>;
 }

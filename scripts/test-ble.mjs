@@ -482,6 +482,13 @@ test('reconnexion : lancement, premier plan, perte, Bluetooth, restauration iOS'
   assert.equal(d('background', on), 'wait-system');
   assert.equal(d('ios-restore', { ...on, background: true }), 'search-now', 'iOS réveille l’app : reprise immédiate');
   assert.equal(d('ios-restore', { ...on, linked: true }), 'idle');
+  assert.equal(c.shouldRearmNotify('foreground', { linked: false, armedAgoMs: 5000 }), false);
+  assert.equal(c.shouldRearmNotify('foreground', { linked: true, armedAgoMs: 100 }), false, 'abonnement tout neuf : on ne le coupe pas');
+  assert.equal(c.shouldRearmNotify('foreground', { linked: true, armedAgoMs: c.REARM_MIN_MS }), true, 'retour au premier plan : on réarme');
+  assert.equal(c.shouldRearmNotify('subscription-lost', { linked: true, armedAgoMs: 50 }), true);
+  assert.equal(c.shouldRearmNotify('ios-restore', { linked: true, armedAgoMs: 0 }), true);
+  assert.equal(c.frameOutcome('ae02', 'aa 03 00 0c', 1, 'compté'), 'ae02 aa 03 00 0c → appliqué +1 (compté)');
+  assert.equal(c.frameOutcome('ae02', 'aa 03 00 0c', 0, 'autre caractéristique'), 'ae02 aa 03 00 0c → écarté (autre caractéristique)');
 });
 
 test('trames collées, coupées, écart énorme confirmé, reconnexion', () => {
