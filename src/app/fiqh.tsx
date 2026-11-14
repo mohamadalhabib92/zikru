@@ -89,6 +89,24 @@ export default function Fiqh() {
             </LCard>
           );
         })}
+        {m === 'maliki' ? (
+          <>
+            <LCard onPress={() => router.push('/fiqh-akhdari')} label={L('Matn d’al-Akhdarī')}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Ionicons name="book" size={22} color={COLOR} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Matn d’al-Akhdarī')}</Text>
+                  <LMuted>{L('Abū Zayd ʿAbd al-Raḥmān al-Akhdarī')}</LMuted>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+              </View>
+            </LCard>
+            <LCard>
+              <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Mukhtaṣar Khalīl — bientôt')}</Text>
+              <LMuted>{L('Aucun texte de Khalīl n’est inclus.')}</LMuted>
+            </LCard>
+          </>
+        ) : null}
         <LCard onPress={() => router.push('/sahw')} label="Sujud as-sahw">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Ionicons name="construct" size={22} color={COLOR} />

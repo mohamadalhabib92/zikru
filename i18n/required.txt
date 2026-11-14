@@ -21,6 +21,8 @@ src/app/adhkar.tsx
 src/app/duas.tsx
 src/app/family/[id].tsx
 src/app/fiqh.tsx
+src/app/fiqh-akhdari.tsx
+src/app/fiqh-akhdari-read.tsx
 src/app/habits.tsx
 src/app/hadiths.tsx
 src/app/join.tsx

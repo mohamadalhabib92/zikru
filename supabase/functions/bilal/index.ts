@@ -11,6 +11,16 @@ const cors = {
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
+const FIQH_SYSTEM = `Tu es « El Ghaly Bilal ». Tu expliques un passage du Mukhtaṣar d’Abū Zayd ʿAbd al-Raḥmān al-Akhdarī, école malikite.
+Règles strictes :
+- Le passage entre les balises est cité tel quel. Ne le réécris pas et n’en change pas les harakāt.
+- Nomme l’auteur : al-Akhdarī.
+- Reste dans l’école malikite et dans la compréhension des commentaires classiques de ce matn.
+- N’émets aucune règle nouvelle et aucune fatwa.
+- Si tu n’es pas sûr, écris exactement : « à vérifier auprès d’un savant ».
+- N’invente pas de hadith ni de verset.
+- Réponds dans la langue demandée, clairement, en moins de 220 mots.`;
+
 const SYSTEM = `Tu es « El Ghaly Bilal », compagnon bienveillant de l'application Zikru (dhikr, prière, tariqa tijaniyya).
 Rôle : coach comportemental islamique — régularité, habitudes, motivation, gestion des émotions, gratitude, patience, adab.
 Règles :
@@ -37,14 +47,14 @@ function aiKey(): string | undefined {
   return k && !k.startsWith('YOUR_') ? k : undefined;
 }
 
-async function callModel(messages: Msg[], maxTokens: number): Promise<string> {
+async function callModel(messages: Msg[], maxTokens: number, system = SYSTEM): Promise<string> {
   const key = aiKey()!;
   const provider = (Deno.env.get('AI_PROVIDER') ?? 'anthropic').toLowerCase();
   if (provider === 'openai') {
     const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: Deno.env.get('AI_MODEL') ?? 'gpt-4o-mini', max_tokens: maxTokens, messages: [{ role: 'system', content: SYSTEM }, ...messages] }),
+      body: JSON.stringify({ model: Deno.env.get('AI_MODEL') ?? 'gpt-4o-mini', max_tokens: maxTokens, messages: [{ role: 'system', content: system }, ...messages] }),
     });
     if (!r.ok) throw new Error(`openai ${r.status} ${await r.text()}`);
     const j = await r.json();
@@ -53,7 +63,7 @@ async function callModel(messages: Msg[], maxTokens: number): Promise<string> {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: Deno.env.get('AI_MODEL') ?? 'claude-sonnet-4-5', max_tokens: maxTokens, system: SYSTEM, messages }),
+    body: JSON.stringify({ model: Deno.env.get('AI_MODEL') ?? 'claude-sonnet-4-5', max_tokens: maxTokens, system, messages }),
   });
   if (!r.ok) throw new Error(`anthropic ${r.status} ${await r.text()}`);
   const j = await r.json();
@@ -72,7 +82,7 @@ Deno.serve(async (req) => {
 
   if (!aiKey()) return json({ error: 'not_configured' }, 503);
 
-  let body: { mode?: string; messages?: Msg[]; period?: string };
+  let body: { mode?: string; messages?: Msg[]; period?: string; passage?: string; lang?: string };
   try {
     body = await req.json();
   } catch {
@@ -81,7 +91,14 @@ Deno.serve(async (req) => {
 
   let messages: Msg[];
   let maxTokens = 600;
-  if (body.mode === 'reflection') {
+  let system = SYSTEM;
+  if (body.mode === 'fiqh' && typeof body.passage === 'string' && body.passage.trim()) {
+    const lang = typeof body.lang === 'string' && body.lang.trim() ? body.lang.slice(0, 16) : 'fr';
+    const passage = body.passage.slice(0, 8000);
+    system = FIQH_SYSTEM;
+    messages = [{ role: 'user', content: `Langue de la réponse : ${lang}\nPassage exact :\n${passage}\nExplique ce passage selon les règles.` }];
+    maxTokens = 900;
+  } else if (body.mode === 'reflection') {
     const p = PERIOD[body.period ?? ''] ?? 'ce moment de la journée';
     messages = [{ role: 'user', content: `Écris une courte réflexion spirituelle (3 à 4 phrases, en français) pour ${p} : un rappel doux sur le dhikr, la gratitude ou la présence du cœur, et une petite action concrète. Pas de citation de hadith. Pas de titre.` }];
     maxTokens = 250;
@@ -99,7 +116,7 @@ Deno.serve(async (req) => {
   if (typeof left === 'number' && left < 0) return json({ error: 'quota' }, 429);
 
   try {
-    const text = (await callModel(messages, maxTokens)).trim();
+    const text = (await callModel(messages, maxTokens, system)).trim();
     return json({ text, left });
   } catch (e) {
     console.error(String(e).slice(0, 500));
