@@ -391,3 +391,12 @@ export function buildCatalog(src: CatalogSource): WatchCatalog {
 export function sessionsPayload(sessions: WatchSession[]): string {
   return JSON.stringify({ v: WATCH_PROTOCOL, kind: 'sessions', sessions });
 }
+
+/**
+ * Canal du compte en direct. La montre joignable reçoit le message tout de suite ;
+ * sinon le même total part en file (il sera relu à la reconnexion, sans être compté deux fois).
+ * L’iPhone reste l’hôte de la bague : la montre n’ouvre pas de lien Bluetooth en parallèle.
+ */
+export function liveChannel(reachable: boolean): 'message' | 'queued' {
+  return reachable ? 'message' : 'queued';
+}

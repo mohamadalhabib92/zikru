@@ -52,6 +52,23 @@ final class WatchLink: NSObject, WCSessionDelegate {
     WCSession.default.transferUserInfo(dict)
   }
 
+  /// Compte en direct : message si la montre est joignable, sinon la file durable.
+  func sendLive(_ json: String) {
+    guard let dict = Self.dictionary(json) else { return }
+    guard WCSession.isSupported(), WCSession.default.activationState == .activated else {
+      transfers.append(dict)
+      return
+    }
+    let session = WCSession.default
+    if session.isReachable {
+      session.sendMessage(dict, replyHandler: nil) { _ in
+        session.transferUserInfo(dict)
+      }
+      return
+    }
+    session.transferUserInfo(dict)
+  }
+
   private func flushQueued() {
     guard WCSession.default.activationState == .activated else { return }
     if let dict = context {
@@ -113,6 +130,10 @@ final class WatchLink: NSObject, WCSessionDelegate {
   func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
     deliver(applicationContext)
   }
+
+  func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    deliver(message)
+  }
 }
 
 public class ZikruWatchAppDelegate: ExpoAppDelegateSubscriber {
@@ -155,6 +176,10 @@ public class ZikruWatchModule: Module {
 
     Function("transferSessions") { (json: String) in
       WatchLink.shared.transfer(json)
+    }
+
+    Function("pushLive") { (json: String) in
+      WatchLink.shared.sendLive(json)
     }
   }
 }

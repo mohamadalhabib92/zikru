@@ -83,6 +83,12 @@ Même fiche, même achat Premium, même identifiant. Dans la version, onglet App
 
 Le prix Premium ne change pas. Le compteur de la montre n’est pas un achat.
 
+## Bague et montre
+
+L’iPhone est le seul hôte Bluetooth de la bague. Une Apple Watch ne peut pas, en pratique, garder le même lien BLE pendant que l’iPhone le possède : CoreBluetooth ne partage pas une connexion entre les deux. La montre ne scanne donc pas la bague. Un clic de bague entre dans le compteur de l’iPhone (le même chemin qu’un doigt), puis le total de la séance part tout de suite vers la montre si elle est joignable (`sendMessage`), sinon dans la file (`transferUserInfo` / `updateApplicationContext`). Un appui sur la montre revient de la même façon. Le total d’une séance est absolu : le relire ne l’ajoute pas une deuxième fois.
+
+La bague déjà appairée est reconnue par son identifiant (`retrievePeripherals`), puis reconnectée sans geste au lancement, au retour au premier plan et dès qu’elle revient à portée (connexion en attente CoreBluetooth, restauration d’état déjà configurée). Les modèles déjà pris en charge (BSTWSH, iQibla, générique) ne changent pas.
+
 ## Ce qui a été regardé ici, et ce qui ne l’a pas été
 
 Sur cette machine (Linux, pas de Xcode) :

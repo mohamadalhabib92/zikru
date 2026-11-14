@@ -231,6 +231,13 @@ export const transport: BleTransport = {
     if (!m) return false;
     return m.isDeviceConnected(id).catch(() => false);
   },
+  async retrieve(id) {
+    const m = getManager();
+    if (!m) return false;
+    const list = await m.devices([id]).catch(() => []);
+    if (list.length) diag.log('connect', `bague reconnue ${list[0].name ?? list[0].localName ?? id}`);
+    return list.length > 0;
+  },
   async connect(id, opts) {
     const m = getManager();
     if (!m) throw new Error(loadError ?? 'BLE indisponible');

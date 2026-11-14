@@ -929,6 +929,7 @@ class BleCounterManager {
       usable.sort((a, b) => Number(this.restored.has(b.id)) - Number(this.restored.has(a.id)));
       for (const c of usable) {
         if (stale()) return;
+        await transport.retrieve?.(c.id).catch(() => false);
         if (await this.connectTo(c.id, true, { timeoutMs: 8000 })) return;
       }
       if (stale()) return;

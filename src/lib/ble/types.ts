@@ -69,4 +69,6 @@ export interface BleTransport {
   onRestore?(cb: (ids: string[]) => void): () => void;
   /** Le lien GATT est-il encore ouvert ? (iOS peut le garder sans plus délivrer les notifications.) */
   connected?(id: string): Promise<boolean>;
+  /** Périphérique déjà appairé, retrouvé par son identifiant (CoreBluetooth), avant toute recherche radio. */
+  retrieve?(id: string): Promise<boolean>;
 }

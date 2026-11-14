@@ -6,6 +6,8 @@ export type WatchNative = {
   supported(): boolean;
   pushContext(json: string): void;
   transferSessions(json: string): void;
+  /** Compte tout de suite si la montre est joignable, sinon la même file que transferSessions. */
+  pushLive?(json: string): void;
   subscribe(onJson: (json: string) => void): () => void;
 };
 

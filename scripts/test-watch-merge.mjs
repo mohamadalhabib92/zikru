@@ -79,6 +79,26 @@ test('ordre inversé : on garde le plus grand total de la séance', () => {
   assert.equal(lateFirst.doc.t.count, earlyFirst.doc.t.count);
 });
 
+test('canal direct : message si la montre est joignable, file sinon', () => {
+  assert.equal(W.liveChannel(true), 'message');
+  assert.equal(W.liveChannel(false), 'queued');
+});
+
+test('clic de bague : le total renvoyé à la montre n’est pas recompté, un second passage montre non plus', () => {
+  let doc = L.recordClicks(L.newDoc('phone'), 1, 'bluetooth', 1).doc;
+  const sent = W.syncPhoneSession(doc, 10, () => 'p-ring');
+  assert.equal(sent.session.origin, 'phone');
+  assert.equal(sent.session.count, 1);
+  const echo = W.mergeWatchSessions(sent.doc, [sent.session], () => 'p-ring');
+  assert.equal(echo.added, 0);
+  assert.equal(echo.doc.t.count, 1);
+  const watch = W.mergeWatchSessions(echo.doc, [session({ count: 2 })], () => 'p');
+  assert.equal(watch.doc.t.count, 3);
+  const replay = W.mergeWatchSessions(watch.doc, [session({ count: 2 })], () => 'p');
+  assert.equal(replay.added, 0);
+  assert.equal(replay.doc.t.count, 3);
+});
+
 test('une séance téléphone n’est pas recomptée', () => {
   const phone = session({ id: 'phone-1', origin: 'phone', count: 40 });
   const doc = W.mergeWatchSessions(L.newDoc('phone'), [phone], () => 'p');

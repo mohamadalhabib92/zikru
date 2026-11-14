@@ -245,7 +245,7 @@ final class CounterModel: ObservableObject {
     sendItem?.cancel()
     let item = DispatchWorkItem { [weak self] in self?.flushSend() }
     sendItem = item
-    DispatchQueue.main.asyncAfter(deadline: .now() + (soon ? 0.25 : 2), execute: item)
+    DispatchQueue.main.asyncAfter(deadline: .now() + (soon ? 0.05 : 2), execute: item)
   }
 
   private func scheduleWidget(now: Bool) {
@@ -431,8 +431,15 @@ final class PhoneLink: NSObject, WCSessionDelegate {
       queued = payload
       return
     }
-    WCSession.default.transferUserInfo(payload)
-    try? WCSession.default.updateApplicationContext(payload)
+    let session = WCSession.default
+    if session.isReachable {
+      session.sendMessage(payload, replyHandler: nil) { _ in
+        session.transferUserInfo(payload)
+      }
+    } else {
+      session.transferUserInfo(payload)
+    }
+    try? session.updateApplicationContext(payload)
     queued = nil
   }
 
@@ -447,5 +454,9 @@ final class PhoneLink: NSObject, WCSessionDelegate {
 
   func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
     DispatchQueue.main.async { self.model?.ingest(userInfo) }
+  }
+
+  func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    DispatchQueue.main.async { self.model?.ingest(message) }
   }
 }

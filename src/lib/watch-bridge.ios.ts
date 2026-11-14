@@ -5,6 +5,7 @@ type Native = {
   supported(): boolean;
   pushContext(json: string): void;
   transferSessions(json: string): void;
+  pushLive(json: string): void;
   takePending(): string[];
   addListener(event: 'onPayload', fn: (e: { json?: string }) => void): { remove(): void };
 };
@@ -25,6 +26,7 @@ export const watchNative: WatchNative | null = native
       supported: () => safe(() => native.supported(), false),
       pushContext: (json) => safe(() => native.pushContext(json), undefined),
       transferSessions: (json) => safe(() => native.transferSessions(json), undefined),
+      pushLive: (json) => safe(() => native.pushLive(json), undefined),
       subscribe(onJson) {
         const sub = native.addListener('onPayload', (e) => {
           if (typeof e?.json === 'string' && e.json) onJson(e.json);
