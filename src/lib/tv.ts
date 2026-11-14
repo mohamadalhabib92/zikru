@@ -5,6 +5,12 @@
 import { PREMIUM_PRODUCT_ID, isPremiumActive, type PremiumRecord } from './premium-logic';
 
 export const TV_BUNDLE_ID = 'com.vibecode.zikru-76mpdv';
+/**
+ * Même achat que l’iPhone. La source est `PREMIUM_PRODUCT_ID` (PR 10) :
+ * `ch.mohamadba.zikru.premium.lifetime`. Le bundle `com.vibecode.zikru-76mpdv`
+ * contient un trait d’union, qu’App Store Connect refuse dans un identifiant
+ * d’achat, donc ce n’est pas le product id.
+ */
 export const TV_PRODUCT_ID = PREMIUM_PRODUCT_ID;
 
 /** Taille minimale de l’arabe à dix pieds (lisibilité salon). */

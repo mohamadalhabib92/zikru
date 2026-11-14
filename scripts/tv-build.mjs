@@ -32,6 +32,11 @@ export function tvBuildRequested(env = process.env) {
   return env.EXPO_TV === '1';
 }
 
+/** Le hook cloud ne réécrit package.json que sur un build EAS du profil TV. */
+export function shouldSwapReactNativeOnEas(env = process.env) {
+  return env.EXPO_TV === '1' && env.EAS_BUILD === 'true';
+}
+
 export function patchPackageForTv(pkg) {
   const next = structuredClone(pkg);
   next.dependencies = { ...next.dependencies, 'react-native': TV_REACT_NATIVE };

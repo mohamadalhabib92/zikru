@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { loadLib } from './load-lib.mjs';
-import { TV_AUTOLINK_EXCLUDE, TV_REACT_NATIVE, patchPackageForTv } from './tv-build.mjs';
+import { TV_AUTOLINK_EXCLUDE, TV_REACT_NATIVE, patchPackageForTv, shouldSwapReactNativeOnEas } from './tv-build.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { tv } = await loadLib(['tv'], 'tv');
@@ -27,7 +27,13 @@ assert.equal(tv.tvFeatureAllowed('quran', true), true);
 assert.equal(tv.tvPremiumActive(empty), false);
 assert.equal(tv.tvPremiumActive({ ...empty, grandfather: true }), true);
 assert.equal(tv.TV_BUNDLE_ID, 'com.vibecode.zikru-76mpdv');
-assert.equal(tv.TV_PRODUCT_ID, 'ch.mohamadba.zikru.premium.lifetime');
+const { 'premium-logic': premiumLogic } = await loadLib(['premium-logic'], 'tv-premium');
+assert.equal(premiumLogic.PREMIUM_PRODUCT_ID, 'ch.mohamadba.zikru.premium.lifetime');
+assert.equal(tv.TV_PRODUCT_ID, premiumLogic.PREMIUM_PRODUCT_ID);
+assert.notEqual(tv.TV_PRODUCT_ID, 'com.vibecode.zikru-76mpdv.premium.lifetime');
+const src = readFileSync(new URL('../src/lib/premium-logic.ts', import.meta.url), 'utf8');
+assert.match(src, /PREMIUM_PRODUCT_ID = 'ch\.mohamadba\.zikru\.premium\.lifetime'/);
+assert.equal(src.includes('com.vibecode.zikru-76mpdv.premium.lifetime'), false);
 
 const short = tv.tvAyahType('الله');
 const long = tv.tvAyahType('ا'.repeat(200));
@@ -98,9 +104,15 @@ const eas = JSON.parse(readFileSync(new URL('../eas.json', import.meta.url), 'ut
 assert.equal(eas.build.production.env, undefined);
 assert.equal(eas.build.production.autoIncrement, true);
 assert.equal(eas.build['production-tv'].env.EXPO_TV, '1');
+assert.equal(eas.build['production-tv'].env.EXPO_NO_CAPABILITY_SYNC, '1');
 assert.equal(eas.build['production-tv'].autoIncrement, false);
-assert.equal(eas.build['production-tv'].ios.credentialsSource, 'local');
+assert.equal(eas.build['production-tv'].ios.credentialsSource, 'remote');
+assert.equal(eas.build.production.ios, undefined);
 assert.equal(eas.submit['production-tv'], undefined);
+assert.equal(shouldSwapReactNativeOnEas({ EXPO_TV: '1', EAS_BUILD: 'true' }), true);
+assert.equal(shouldSwapReactNativeOnEas({ EXPO_TV: '1' }), false);
+assert.equal(shouldSwapReactNativeOnEas({ EAS_BUILD: 'true' }), false);
+assert.equal(pkg.scripts['eas-build-pre-install'], 'node scripts/eas-tv-preinstall.mjs');
 
 function expoConfig(expoTv) {
   const env = { ...process.env };
