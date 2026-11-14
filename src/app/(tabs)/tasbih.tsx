@@ -10,7 +10,7 @@ import { useSettings } from '@/lib/settings';
 import { sanitizeLandscape } from '@/lib/landscapes';
 import { LandscapeBackdrop, ReadingPlate } from '@/components/landscape-backdrop';
 import { Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
-import { ProgressRing, tapHaptic, useLayout, useReduceMotion } from '@/ui/ds';
+import { ProgressRing, useLayout, useReduceMotion } from '@/ui/ds';
 import { Arabic } from '@/ui/light';
 import { brand as b, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
@@ -50,15 +50,9 @@ export default function TasbihScreen() {
   const { width } = useLayout({ inTabs: true });
   const ring = Math.min(300, Math.max(220, width - 80));
   const progress = tasbih.target > 0 ? (tasbih.count % tasbih.target === 0 && tasbih.count > 0 ? 1 : (tasbih.count % tasbih.target) / tasbih.target) : 0;
-  const prev = useRef(tasbih.count);
-  useEffect(() => {
-    // Vibration de réussite à chaque cycle complété (appui écran, Bluetooth ou clavier)
-    if (tasbih.count > prev.current && done) tapHaptic('success');
-    prev.current = tasbih.count;
-  }, [tasbih.count, done]);
 
   const tap = () => {
-    tapHaptic('light');
+    // Le retour haptique et le cycle sont dans addClicks, le même chemin que la bague.
     increment();
     if (reduceMotion) return; // passe 6 : pas d'effet de pression si « Réduire les animations »
     Animated.sequence([

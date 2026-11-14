@@ -4,6 +4,7 @@ import { emitClicks } from './community/clicks';
 import { bleCounter, type BleCursor } from './ble/manager';
 import { SEED_CONTENT, type ContentItem } from './content';
 import { feedback } from './feedback';
+import { tapHaptic } from '@/ui/ds';
 import { durable, flushStorage, onStorageCleared, storageKey, uid, usePersistentState } from './storage';
 import { closeSession, type ClickSource, type Tasbih } from './tasbih-core';
 import { createTasbihStore } from './tasbih-store';
@@ -45,6 +46,9 @@ const addClicks = (n: number, source: ClickSource, cursor?: BleCursor) => {
   const r = tasbihStore.addClicks(n, source, cursor);
   if (!r.added) return; // rafale Bluetooth déjà comptée
   const p = bleCounter.state.prefs;
+  // Même retour que le doigt : impact léger, puis réussite si l’objectif vient d’être atteint.
+  tapHaptic('light');
+  if (r.cycleCompleted) tapHaptic('success');
   feedback(r.cycleCompleted ? 'cycle' : 'tap', { sound: p.sound, haptics: p.haptics });
   if (r.cycleCompleted && source !== 'manuel') void bleCounter.vibrate();
   emitClicks(r.added, source);
@@ -63,6 +67,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     void tasbihStore.load();
     // Curseurs Bluetooth enregistrés avec le compte (aucun double comptage après un arrêt brutal).
     bleCounter.setCursorStore({ get: tasbihStore.cursor, set: (c) => tasbihStore.setCursor(c), drop: (id) => tasbihStore.dropCursor(id) });
+    bleCounter.setCounterSnap(() => {
+      const t = tasbihStore.get();
+      return { zikrId: t.dhikrId, count: t.count, session: t.firstAt != null ? `ouverte:${t.dhikrId}:${t.firstAt}` : `ouverte:${t.dhikrId}` };
+    });
     // Pont compteur Bluetooth / clavier → compteur de session (actif sur tous les écrans).
     const off = bleCounter.onClicks((n, src, cursor) => addClicks(n, src === 'clavier' ? 'clavier' : src === 'simulation' ? 'manuel' : 'bluetooth', src === 'bluetooth' ? cursor : undefined));
     // Écriture forcée au passage en arrière-plan (iOS/Android) et à la fermeture/masquage de l'onglet (web).
@@ -80,6 +88,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       off();
       sub.remove();
       bleCounter.setCursorStore(null);
+      bleCounter.setCounterSnap(null);
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.removeEventListener('pagehide', hide);
         document.removeEventListener('visibilitychange', hide);

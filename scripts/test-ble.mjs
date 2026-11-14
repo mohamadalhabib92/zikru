@@ -93,6 +93,28 @@ test('ClickDecoder absolu : base, deltas, perte, remise à zéro', () => {
   const late = new c.ClickDecoder(m, c.parseBstwsh, 0);
   assert.equal(late.feed(B(0xaa, 3, 0, 7), 5000), 1, 'premier appui après la période de base');
 });
+test('valeur figée ou trame sans total : chaque notification est un appui, y compris en rafale', () => {
+  const m = { service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: -1 };
+  const stuck = new c.ClickDecoder(m, c.parseBstwsh, 0);
+  const fr = (n) => B(0xaa, 3, 0, n);
+  assert.equal(stuck.feed(fr(1), 100), 0, 'lecture de connexion : référence, pas un appui');
+  assert.equal(stuck.feed(fr(1), 400), 0, 'même total pendant la fenêtre de référence');
+  assert.equal(stuck.feed(fr(1), c.BASELINE_GRACE_MS + 50), 1, 'la valeur ne bouge jamais : l’appui compte');
+  assert.equal(stuck.lastEvent, 'impulsion');
+  let n = 0;
+  for (let i = 0; i < 20; i++) n += stuck.feed(fr(1), c.BASELINE_GRACE_MS + 60 + i * 10);
+  assert.equal(n, 20, 'rafale : +1 par notification, même octet');
+  assert.equal(c.clickCursor('absolute', stuck.lastEvent, 'ring-1', stuck.lastValue), undefined, 'pas de curseur : il rejetterait l’appui');
+  const at = c.BASELINE_GRACE_MS + 5000;
+  assert.equal(stuck.feed(fr(2), at), 1, 'le compteur se met à avancer : +1');
+  assert.equal(stuck.feed(fr(2), at + 30), 0, 'répétition d’un vrai total : doublon');
+  const blind = new c.ClickDecoder(m, c.parseIqibla, 0);
+  assert.equal(blind.feed(B(1), 50), 1, 'profil absolu, trame sans total : un appui');
+  assert.equal(blind.feed(B(1), 60), 1, 'rafale sans total');
+  assert.equal(blind.lastEvent, 'impulsion');
+  assert.equal(c.clickCursor('absolute', 'impulsion', 'ring-1', 1), undefined);
+  assert.deepEqual(c.clickCursor('absolute', null, 'ring-1', 12), { id: 'ring-1', value: 12 });
+});
 test('ClickDecoder octet compteur + débordement', () => {
   const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: 1 }, c.parseGeneric, 0);
   assert.equal(d.feed(B(9, 254), 10_000), 1);
@@ -489,6 +511,10 @@ test('reconnexion : lancement, premier plan, perte, Bluetooth, restauration iOS'
   assert.equal(c.shouldRearmNotify('ios-restore', { linked: true, armedAgoMs: 0 }), true);
   assert.equal(c.frameOutcome('ae02', 'aa 03 00 0c', 1, 'compté'), 'ae02 aa 03 00 0c → appliqué +1 (compté)');
   assert.equal(c.frameOutcome('ae02', 'aa 03 00 0c', 0, 'autre caractéristique'), 'ae02 aa 03 00 0c → écarté (autre caractéristique)');
+  assert.equal(
+    c.frameOutcome('fff1', '01', 1, 'valeur fixe, comptée comme un appui', { zikrId: 'subhanallah', session: 'ouverte:subhanallah', before: 4, after: 5 }),
+    'fff1 01 → appliqué +1 (valeur fixe, comptée comme un appui) · zikr subhanallah · séance ouverte:subhanallah · 4 → 5',
+  );
 });
 
 test('trames collées, coupées, écart énorme confirmé, reconnexion', () => {

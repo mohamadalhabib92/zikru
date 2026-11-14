@@ -27,11 +27,13 @@ import {
   isDeviceVisible,
   connectRetryDelay,
   adoptAbsoluteFrame,
+  clickCursor,
   keeperDelay,
   keeperPlan,
   matchKnown,
   reconnectDecision,
   frameOutcome,
+  type FrameDest,
   normUuid,
   profileById,
   sameUuid,
@@ -217,14 +219,17 @@ class BleCounterManager {
   setCursorStore(c: CursorStore | null) {
     this.cursors = c;
   }
+  /**
+   * Compteur affiché à l’écran (le même objet que le doigt). Sert au journal :
+   * zikr ouvert, identifiant de la séance en cours, valeur avant / après.
+   */
+  private counterSnap: (() => { zikrId: string; count: number; session: string }) | null = null;
+  setCounterSnap(fn: (() => { zikrId: string; count: number; session: string }) | null) {
+    this.counterSnap = fn;
+  }
   /** Dernière valeur comptée pour un appareil : celle du magasin durable d'abord, sinon l'ancienne mémoire locale. */
   private storedValue(id: string): number | null {
     return this.cursors?.get(id) ?? this.lastValues[id] ?? null;
-  }
-  private currentCursor(): BleCursor | undefined {
-    const id = this.s.device?.id;
-    const v = this.decoder?.lastValue;
-    return id && v != null && this.s.mapping?.mode === 'absolute' ? { id, value: v } : undefined;
   }
   private emitClicks(n: number, source: ClickSourceBle, cursor?: BleCursor) {
     if (n <= 0) return;
@@ -576,8 +581,8 @@ class BleCounterManager {
       }
     }
   }
-  private noteFrame(characteristic: string, b: Bytes, applied: number, reason: string) {
-    diag.log('frame', frameOutcome(shortUuid(characteristic), toHex(b), applied, reason), applied > 0 ? 'info' : 'warn');
+  private noteFrame(characteristic: string, b: Bytes, applied: number, reason: string, dest?: FrameDest | null) {
+    diag.log('frame', frameOutcome(shortUuid(characteristic), toHex(b), applied, reason, dest), applied > 0 ? 'info' : 'warn');
   }
   private onNotify(service: string, characteristic: string, b: Bytes, profile: DeviceProfile) {
     this.set({ notifyCount: this.s.notifyCount + 1, lastHex: `${characteristic.slice(4, 8)} · ${toHex(b)}`, lastAt: Date.now() });
@@ -646,11 +651,35 @@ class BleCounterManager {
     }
     const n = this.decoder.feedPacket(b);
     const ev = this.decoder.lastEvent;
-    const reason = n > 0 ? (this.decoder.lastWasSync ? 'rattrapage hors connexion' : ev === 'confirmé' ? 'valeur confirmée' : 'compté') : ev === 'attente' ? 'en attente de confirmation' : ev === 'parasite' ? 'trame parasite' : ev === 'doublon' ? 'double livraison' : 'valeur inchangée';
-    this.noteFrame(characteristic, b, n, reason);
-    if (ev) diag.log('decode', ev === 'attente' ? `valeur inattendue ${toHex(b)} : en attente de confirmation` : ev === 'confirmé' ? `valeur confirmée : +${n}` : ev === 'parasite' ? 'trame parasite ignorée' : 'double livraison ignorée', ev === 'confirmé' ? 'info' : 'warn');
+    const reason = n > 0
+      ? ev === 'impulsion'
+        ? this.decoder.lastValue == null
+          ? 'trame sans compteur, comptée comme un appui'
+          : 'valeur fixe, comptée comme un appui'
+        : this.decoder.lastWasSync
+          ? 'rattrapage hors connexion'
+          : ev === 'confirmé'
+            ? 'valeur confirmée'
+            : 'compté'
+      : ev === 'attente'
+        ? 'en attente de confirmation'
+        : ev === 'parasite'
+          ? 'trame parasite'
+          : ev === 'doublon'
+            ? 'double livraison'
+            : 'valeur inchangée';
+    if (ev && ev !== 'impulsion') diag.log('decode', ev === 'attente' ? `valeur inattendue ${toHex(b)} : en attente de confirmation` : ev === 'confirmé' ? `valeur confirmée : +${n}` : ev === 'parasite' ? 'trame parasite ignorée' : 'double livraison ignorée', ev === 'confirmé' ? 'info' : 'warn');
     if (this.decoder.lastWasSync && n > 0) this.set({ lastSync: { added: n, at: Date.now() } });
-    this.emitClicks(n, 'bluetooth', this.currentCursor());
+    const before = this.counterSnap?.() ?? null;
+    // Même chemin que le doigt (addClicks → magasin du tasbih), sans curseur quand
+    // la trame est une impulsion : le curseur de la valeur figée jetterait l’appui.
+    const cursor = clickCursor(this.s.mapping?.mode, ev, this.s.device?.id, this.decoder.lastValue);
+    this.emitClicks(n, 'bluetooth', cursor);
+    const after = this.counterSnap?.() ?? null;
+    const landed = before && after ? Math.max(0, after.count - before.count) : n;
+    const why = n > 0 && before && after && landed === 0 ? `${reason}, non écrit sur le compteur affiché` : reason;
+    const dest: FrameDest | null = before && after && n > 0 ? { zikrId: after.zikrId, session: after.session, before: before.count, after: after.count } : null;
+    this.noteFrame(characteristic, b, landed, why, dest);
     this.rememberValue();
   }
   private handleDisconnect(link: BleLink) {

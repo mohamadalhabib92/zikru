@@ -315,8 +315,13 @@ export class ClickDecoder {
   private lastPulse: { hex: string; at: number } | null = null;
   /** true si le dernier appel à feed() a rattrapé des appuis faits hors connexion. */
   lastWasSync = false;
+  /**
+   * Vrai dès qu’un total absolu a vraiment changé (pas la simple référence de connexion).
+   * Tant que la valeur ne bouge jamais, chaque notification est un appui, comme un doigt.
+   */
+  private sawDelta = false;
   /** Diagnostic : dernière décision du décodeur pour une valeur inattendue. */
-  lastEvent: 'attente' | 'confirmé' | 'parasite' | 'doublon' | null = null;
+  lastEvent: 'attente' | 'confirmé' | 'parasite' | 'doublon' | 'impulsion' | null = null;
   constructor(
     private mapping: Mapping,
     private parse: (b: Bytes) => Parsed,
@@ -364,7 +369,14 @@ export class ClickDecoder {
     this.lastEvent = null;
     if (this.mapping.mode === 'absolute') {
       const v = this.absoluteValue(b);
-      if (v == null) return 0;
+      if (v == null) {
+        // Caractéristique du compteur, mais aucun total dans la trame (bague à impulsions
+        // classée à tort comme compteur absolu, souvent parce que son nom contient « zikr »).
+        // Une trame illisible au milieu d’un vrai compteur reste ignorée.
+        if (this.last != null) return 0;
+        this.lastEvent = 'impulsion';
+        return 1;
+      }
       const prev = this.last;
       if (prev == null) {
         // Première valeur de la connexion : synchronisation avec le total mémorisé (sans double comptage).
@@ -372,9 +384,19 @@ export class ClickDecoder {
           const d = syncDelta(this.stored, v);
           this.stored = null;
           this.lastWasSync = d > 0;
+          if (d > 0) this.sawDelta = true;
           return this.accept(v, now, d);
         }
         return this.accept(v, now, now - this.subscribedAt < BASELINE_GRACE_MS ? 0 : v === 0 ? 0 : 1);
+      }
+      // Valeur figée depuis la connexion : la bague notifie à chaque appui sans faire avancer
+      // un compteur. Après la référence (lecture GATT à la connexion), chaque notification
+      // est un appui. Dès que le total a bougé une fois, une répétition redevient un doublon.
+      if (v === prev && !this.sawDelta && this.pending == null) {
+        if (now - this.subscribedAt < BASELINE_GRACE_MS) return 0;
+        this.lastEvent = 'impulsion';
+        this.lastAt = now;
+        return 1;
       }
       const p = this.pending;
       if (p) {
@@ -384,11 +406,13 @@ export class ClickDecoder {
           this.lastEvent = 'confirmé';
           // Écart entier jusqu'à la valeur confirmée (pas de plafond « un doigt ne peut pas » : la bague a déjà compté).
           const jump = p.v > prev ? p.v - prev : 0;
+          if (jump + dp > 0) this.sawDelta = true;
           return this.accept(v, now, jump + dp);
         }
         const n = this.step(prev, v, now - this.lastAt);
         if (n != null) {
           this.lastEvent = 'parasite';
+          if (n > 0) this.sawDelta = true;
           return this.accept(v, now, n);
         }
         this.pending = { v, at: now };
@@ -396,7 +420,10 @@ export class ClickDecoder {
         return 0;
       }
       const n = this.step(prev, v, now - this.lastAt);
-      if (n != null) return this.accept(v, now, n);
+      if (n != null) {
+        if (n > 0) this.sawDelta = true;
+        return this.accept(v, now, n);
+      }
       this.pending = { v, at: now };
       this.lastEvent = 'attente';
       return 0;
@@ -722,9 +749,30 @@ export function shouldRearmNotify(event: 'foreground' | 'subscription-lost' | 'i
   return opts.armedAgoMs >= REARM_MIN_MS;
 }
 
+/**
+ * Curseur absolu à enregistrer avec l’appui, ou rien.
+ * Une impulsion (valeur fixe ou trame sans total) ne doit pas porter la valeur déjà mémorisée :
+ * le journal la rejetterait comme doublon, et le chiffre affiché ne bougerait pas.
+ */
+export function clickCursor(
+  mode: 'absolute' | 'pulse' | undefined,
+  lastEvent: 'attente' | 'confirmé' | 'parasite' | 'doublon' | 'impulsion' | null,
+  deviceId: string | null | undefined,
+  lastValue: number | null,
+): { id: string; value: number } | undefined {
+  if (lastEvent === 'impulsion') return undefined;
+  if (mode !== 'absolute' || lastValue == null || !deviceId) return undefined;
+  return { id: deviceId, value: lastValue };
+}
+
+/** Où un appui a été écrit : le zikr ouvert à l’écran, et le compte avant / après. */
+export type FrameDest = { zikrId: string; session: string; before: number; after: number };
+
 /** Ligne du journal de la bague : chaque trame est soit appliquée au compteur, soit écartée avec la raison. */
-export function frameOutcome(char: string, hex: string, applied: number, reason: string): string {
-  return applied > 0 ? `${char} ${hex} → appliqué +${applied} (${reason})` : `${char} ${hex} → écarté (${reason})`;
+export function frameOutcome(char: string, hex: string, applied: number, reason: string, dest?: FrameDest | null): string {
+  const base = applied > 0 ? `${char} ${hex} → appliqué +${applied} (${reason})` : `${char} ${hex} → écarté (${reason})`;
+  if (!dest) return base;
+  return `${base} · zikr ${dest.zikrId} · séance ${dest.session} · ${dest.before} → ${dest.after}`;
 }
 
 export function reconnectDecision(event: ReconnectEvent, opts: { remembered: boolean; linked: boolean; background: boolean }): ReconnectAction {
