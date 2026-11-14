@@ -59,7 +59,9 @@ assert.ok(w.length > 4 && bare(w[0]) === 'بسم', 'la basmala d’ouverture est
 const screen = await import('node:fs').then((fs) => fs.readFileSync(path.join(root, 'src/app/quran/[n].tsx'), 'utf8'));
 assert.ok(screen.includes('useSurahUthmani'), 'le lecteur charge une sourate, pas les 6236 versets');
 assert.ok(!screen.includes('initialNumToRender={Math.max(12, startA + 4)}'), 'ouvrir un verset loin ne rend plus toute la sourate');
-assert.ok(screen.includes('initialNumToRender={8}'));
+assert.ok(screen.includes('initialNumToRender={6}'));
+assert.ok(screen.includes('getItemLayout={getItemLayout}'));
+assert.ok(screen.includes('removeClippedSubviews'));
 
 console.log(
   `ouverture Coran : fichier entier ${whole.toFixed(1)} ms (${Math.round(fullBytes / 1024)} Ko) → ` +
