@@ -25,6 +25,19 @@
       "android": {
         "buildType": "app-bundle"
       }
+    },
+    "production-tv": {
+      "autoIncrement": false,
+      "channel": "production-tv",
+      "env": {
+        "EXPO_TV": "1",
+        "ZIKRU_NO_WIDGETS": "1",
+        "ZIKRU_NO_SIRI": "1"
+      },
+      "ios": {
+        "credentialsSource": "local",
+        "simulator": false
+      }
     }
   },
   "submit": {

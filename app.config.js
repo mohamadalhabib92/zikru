@@ -31,6 +31,8 @@ const WIDGETS = [
 ];
 
 module.exports = ({ config }) => {
+  // Apple TV uniquement. Sans EXPO_TV=1, le projet iPhone / Watch ci-dessous n’est pas modifié.
+  if (process.env.EXPO_TV === '1') return withAppleTv(config);
   if (process.env.EAS_BUILD && config.experiments) {
     const { baseUrl, ...rest } = config.experiments;
     config.experiments = rest;
@@ -66,3 +68,39 @@ module.exports = ({ config }) => {
   config.plugins = [...(config.plugins || []), '@bacons/apple-targets', './plugins/with-watch-version.js'];
   return config;
 };
+
+const TV_DROP_INFO = [
+  'NSBluetoothAlwaysUsageDescription',
+  'NSCameraUsageDescription',
+  'NSPhotoLibraryUsageDescription',
+  'NSMicrophoneUsageDescription',
+  'NSMotionUsageDescription',
+  'NSLocationWhenInUseUsageDescription',
+  'NSLocationTemporaryUsageDescriptionDictionary',
+];
+
+/**
+ * Projet tvOS séparé : même identifiant de bundle (achat universel), sans widgets,
+ * sans montre, sans Bluetooth, sans appareil photo. Le plugin config-tv ne s’exécute qu’ici.
+ */
+function withAppleTv(config) {
+  if (process.env.EAS_BUILD && config.experiments) {
+    const { baseUrl, ...rest } = config.experiments;
+    config.experiments = rest;
+  }
+  const keep = new Set(['expo-router', 'expo-audio', 'expo-iap']);
+  const plugins = (config.plugins || []).filter((p) => keep.has(Array.isArray(p) ? p[0] : p));
+  const audio = ['expo-audio', { microphonePermission: false, enableBackgroundPlayback: true, recordAudioAndroid: false }];
+  const next = plugins.map((p) => (Array.isArray(p) && p[0] === 'expo-audio' ? audio : p));
+  if (!next.some((p) => (Array.isArray(p) ? p[0] : p) === 'expo-iap')) next.push('expo-iap');
+  next.push(['@react-native-tvos/config-tv', { isTV: true, tvosDeploymentTarget: '15.1' }]);
+  next.push('./plugins/with-tv-pods.js');
+  config.plugins = next;
+  config.orientation = 'landscape';
+  config.ios = config.ios || {};
+  if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
+  const info = { ...(config.ios.infoPlist || {}) };
+  for (const key of TV_DROP_INFO) delete info[key];
+  config.ios.infoPlist = info;
+  return config;
+}
