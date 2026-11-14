@@ -18,6 +18,8 @@ export type AdhanVoice = {
   title: string;
   /** Origine affichée (français source). */
   origin: string;
+  /** Style ou lieu, quand la source le dit. Français source. */
+  style: string;
   /** Nom publié du mu’adhdhin, de l’auteur ou de l’enregistreur. Vide si inconnu. */
   reciter: string;
   source: AdhanSource | null;
@@ -26,6 +28,22 @@ export type AdhanVoice = {
   licenseUrl: string | null;
   kind: 'published' | 'local' | 'custom';
 };
+
+/**
+ * Licence refusée pour une application payante, ou null si elle peut être proposée.
+ * NC, ND, droits réservés, licence absente ou inconnue. CC0, domaine public, CC BY et CC BY-SA passent.
+ * ND est refusé même sans coupure : une extraction ou un transcodage est déjà une modification.
+ */
+export function licenseBlockReason(license: string | null | undefined): string | null {
+  const s = (license ?? '').trim();
+  if (!s) return 'licence absente';
+  const l = s.toLowerCase();
+  if (/\bnc\b|non[-\s]?commercial|noncommercial/.test(l)) return 'NC';
+  if (/by-?nd|\bnd\b|no derivatives|pas de modification/.test(l)) return 'ND';
+  if (/tous droits|all rights reserved|inconnue|unknown|synthèse|text-to-speech|\btts\b/.test(l)) return 'licence refusée';
+  if (!/cc0|cc by|by-sa|public domain|domaine public/.test(l)) return 'licence non reconnue';
+  return null;
+}
 
 export const DEFAULT_ADHAN_VOICE_ID = 'commons-adam-synagda';
 
@@ -54,6 +72,7 @@ const PUBLISHED: Omit<AdhanVoice, 'source'>[] = [
     id: 'commons-adam-synagda',
     title: 'Beautiful adhan — Adam-synagda',
     origin: 'Travail personnel publié sur Wikimedia Commons',
+    style: 'Non rattaché à une ville',
     reciter: 'Adam-synagda',
     pageUrl: 'https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg',
     license: CC0,
@@ -64,6 +83,7 @@ const PUBLISHED: Omit<AdhanVoice, 'source'>[] = [
     id: 'commons-andrewler',
     title: 'Azan — Andrewler',
     origin: 'Travail personnel publié sur Wikimedia Commons',
+    style: 'Non rattaché à une ville',
     reciter: 'Andrewler',
     pageUrl: 'https://commons.wikimedia.org/wiki/File:Azan.ogg',
     license: BY_SA_4,
@@ -74,6 +94,7 @@ const PUBLISHED: Omit<AdhanVoice, 'source'>[] = [
     id: 'commons-aishatu98',
     title: 'Adhan — Aishatu98',
     origin: 'Annonce d’adhan, travail personnel publié sur Wikimedia Commons',
+    style: 'Non rattaché à une ville',
     reciter: 'Aishatu98',
     pageUrl: 'https://commons.wikimedia.org/wiki/File:Adhan.ogg',
     license: CC0,
@@ -84,6 +105,7 @@ const PUBLISHED: Omit<AdhanVoice, 'source'>[] = [
     id: 'commons-jarih',
     title: 'Adhan — Jarih',
     origin: 'Lecture simple de l’adhan (version sunnite), travail personnel',
+    style: 'Non rattaché à une ville',
     reciter: 'Jarih',
     pageUrl: 'https://commons.wikimedia.org/wiki/File:Adhan_wiki.oga',
     license: BY_SA_3,
@@ -94,8 +116,31 @@ const PUBLISHED: Omit<AdhanVoice, 'source'>[] = [
     id: 'commons-hassan-ii',
     title: 'Adhan, mosquée Hassan II',
     origin: 'Enregistrement de terrain à Casablanca, par Fraguando (mer, vent et voix alentour)',
+    style: 'Maghreb',
     reciter: 'Fraguando',
     pageUrl: 'https://commons.wikimedia.org/wiki/File:Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav',
+    license: BY_SA_4,
+    licenseUrl: BY_SA_4_URL,
+    kind: 'published',
+  },
+  {
+    id: 'commons-ghana-ramadan',
+    title: 'Adhan du Ramadan, Ghana',
+    origin: 'Enregistrement de terrain au Ghana (Wiki Loves Ramadan 2026), par daSupremo',
+    style: 'Afrique de l’Ouest',
+    reciter: 'daSupremo',
+    pageUrl: 'https://commons.wikimedia.org/wiki/File:Athan_in_Ramadan.wav',
+    license: BY_SA_4,
+    licenseUrl: BY_SA_4_URL,
+    kind: 'published',
+  },
+  {
+    id: 'commons-aaqib',
+    title: 'Adhan — Aaqib Azeez',
+    origin: 'Travail personnel publié par Atcovi sur Wikimedia Commons ; le titre du fichier nomme Aaqib Azeez',
+    style: 'Non rattaché à une ville',
+    reciter: 'Aaqib Azeez',
+    pageUrl: 'https://commons.wikimedia.org/wiki/File:The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3',
     license: BY_SA_4,
     licenseUrl: BY_SA_4_URL,
     kind: 'published',
@@ -108,6 +153,8 @@ const PUBLISHED_URI: Record<string, string> = {
   'commons-aishatu98': 'https://upload.wikimedia.org/wikipedia/commons/transcoded/e/e7/Adhan.ogg/Adhan.ogg.mp3',
   'commons-jarih': 'https://upload.wikimedia.org/wikipedia/commons/transcoded/1/16/Adhan_wiki.oga/Adhan_wiki.oga.mp3',
   'commons-hassan-ii': 'https://upload.wikimedia.org/wikipedia/commons/transcoded/9/9c/Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav/Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav.mp3',
+  'commons-ghana-ramadan': 'https://upload.wikimedia.org/wikipedia/commons/transcoded/6/64/Athan_in_Ramadan.wav/Athan_in_Ramadan.wav.mp3',
+  'commons-aaqib': 'https://upload.wikimedia.org/wikipedia/commons/7/7d/The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3',
 };
 
 /**
@@ -117,10 +164,31 @@ const PUBLISHED_URI: Record<string, string> = {
  *   adhan-makkah.mp3
  *   adhan-madinah.mp3
  */
-export const LOCAL_ADHAN_SLOTS: { id: string; filename: string; title: string; origin: string }[] = [
-  { id: 'local-bilal', filename: 'bilal.mp3', title: 'Bilal (fichier local)', origin: 'Fichier assets/audio/bilal.mp3' },
-  { id: 'local-makkah', filename: 'adhan-makkah.mp3', title: 'Adhan de La Mecque (fichier local)', origin: 'Fichier assets/audio/adhan-makkah.mp3' },
-  { id: 'local-madinah', filename: 'adhan-madinah.mp3', title: 'Adhan de Médine (fichier local)', origin: 'Fichier assets/audio/adhan-madinah.mp3' },
+export const LOCAL_ADHAN_SLOTS: { id: string; filename: string; title: string; origin: string; style: string; reciter: string; pageUrl: string | null; license: string | null; licenseUrl: string | null }[] = [
+  { id: 'local-bilal', filename: 'bilal.mp3', title: 'Bilal (fichier local)', origin: 'Fichier assets/audio/bilal.mp3', style: 'Non rattaché à une ville', reciter: '', pageUrl: null, license: null, licenseUrl: null },
+  {
+    id: 'local-makkah',
+    filename: 'adhan-makkah.mp3',
+    title: 'Adhan de La Mecque',
+    origin: 'Piste audio extraite de la vidéo, sans autre traitement : Seyfula Islam, Grande Mosquée de La Mecque, 21 janvier 2013',
+    style: 'La Mecque',
+    reciter: 'Seyfula Islam',
+    pageUrl: 'https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm',
+    license: 'CC BY 3.0',
+    licenseUrl: 'https://creativecommons.org/licenses/by/3.0/',
+  },
+  { id: 'local-madinah', filename: 'adhan-madinah.mp3', title: 'Adhan de Médine (fichier local)', origin: 'Fichier assets/audio/adhan-madinah.mp3', style: 'Médine', reciter: '', pageUrl: null, license: null, licenseUrl: null },
+  {
+    id: 'local-konya',
+    filename: 'adhan-konya.mp3',
+    title: 'Adhan de Konya',
+    origin: 'Piste audio extraite de la vidéo, sans autre traitement : Frans van der Vaart, Konya',
+    style: 'Turquie',
+    reciter: 'Frans van der Vaart',
+    pageUrl: 'https://commons.wikimedia.org/wiki/File:Hminsec150_Konya.webm',
+    license: 'CC BY 3.0',
+    licenseUrl: 'https://creativecommons.org/licenses/by/3.0/',
+  },
 ];
 
 function publishedVoices(): AdhanVoice[] {
@@ -140,11 +208,12 @@ export function assembleAdhanVoices(local: Record<string, number | null>, custom
       id: slot.id,
       title: slot.title,
       origin: slot.origin,
-      reciter: '',
+      style: slot.style,
+      reciter: slot.reciter,
       source: file,
-      pageUrl: null,
-      license: null,
-      licenseUrl: null,
+      pageUrl: slot.pageUrl,
+      license: slot.license,
+      licenseUrl: slot.licenseUrl,
       kind: 'local',
     });
   }
@@ -155,6 +224,7 @@ export function assembleAdhanVoices(local: Record<string, number | null>, custom
       id: 'custom-url',
       title: 'Lien audio personnel',
       origin: 'Adresse indiquée par EXPO_PUBLIC_ADHAN_AUDIO_URL (droits à votre charge)',
+      style: 'Non rattaché à une ville',
       reciter: '',
       source: { uri: url },
       pageUrl: null,
@@ -175,6 +245,7 @@ export function resolveAdhanVoice(id: string | undefined, voices: AdhanVoice[]):
     id: 'none',
     title: 'Voix de l’adhan',
     origin: '',
+    style: '',
     reciter: '',
     source: null,
     pageUrl: null,
@@ -190,7 +261,7 @@ export function adhanUiStrings(): string[] {
     Object.fromEntries(LOCAL_ADHAN_SLOTS.map((s) => [s.id, 1])),
     'https://example.com/adhan.mp3',
   );
-  return [...new Set(voices.flatMap((v) => [v.title, v.origin]))];
+  return [...new Set(voices.flatMap((v) => [v.title, v.origin, v.style].filter((s) => s)))];
 }
 
 export function payloadPlaysAdhan(data: unknown): boolean {

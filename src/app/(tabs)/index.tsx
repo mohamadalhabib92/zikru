@@ -54,10 +54,8 @@ export default function Home() {
   const { neutral } = useDispense();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { tablet, wide, width } = useLayout({ inTabs: true });
+  const { tablet, wide } = useLayout({ inTabs: true });
   const [now, setNow] = useState(() => new Date());
-  const [weather, setWeather] = useState<Weather | null>(null);
-  const [wErr, setWErr] = useState(false);
   const [unit] = usePersistentState<'C' | 'F'>('temp-unit', 'C');
   const [kahfReminder] = usePersistentState('kahf-reminder', true);
   const [quranLast] = useShared(lastRead);
@@ -77,28 +75,30 @@ export default function Home() {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+  const weatherKey = weatherOk ? `${s.place.lat},${s.place.lng},${s.place.label}` : '';
+  const [weatherSlot, setWeatherSlot] = useState<{ key: string; w: Weather | null; err: boolean } | null>(null);
+  const weather = weatherKey && weatherSlot?.key === weatherKey ? weatherSlot.w : null;
+  const wErr = weatherKey !== '' && weatherSlot?.key === weatherKey && weatherSlot.err;
   useEffect(() => {
-    let alive = true;
-    setWErr(false);
-    // Météo seulement après consentement explicite ; la position envoyée est arrondie (~10 km).
     if (!weatherOk) {
-      setWeather(null);
       return;
     }
+    let alive = true;
+    const key = weatherKey;
+    // Météo seulement après consentement explicite ; la position envoyée est arrondie (~10 km).
     getWeather(s.place.lat, s.place.lng, s.place.label)
-      .then((w) => alive && setWeather(w))
-      .catch(() => alive && setWErr(true));
+      .then((w) => alive && setWeatherSlot({ key, w, err: false }))
+      .catch(() => alive && setWeatherSlot({ key, w: null, err: true }));
     return () => {
       alive = false;
     };
-  }, [s.place.lat, s.place.lng, s.place.label, weatherOk]);
+  }, [weatherOk, weatherKey, s.place.lat, s.place.lng, s.place.label]);
 
   const { next, list, maghrib } = useMemo(() => {
     const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
     const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { next: withStates(today, now, tomorrow[0].time).next, list: today, maghrib: today.find((x) => x.key === 'maghrib')?.time };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab, s.prayer]);
+  }, [now, s.place, s.method, s.madhab, s.prayer]);
 
   const period = periodFor(now);
   const pool = REFLECTIONS[period];
@@ -121,9 +121,19 @@ export default function Home() {
     }
   };
   useEffect(() => {
-    if (aiOk && aiText?.key !== aiKey && !aiUnavailable) void refresh(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiKey, aiOk]);
+    if (!(aiOk && aiText?.key !== aiKey && !aiUnavailable)) return;
+    let alive = true;
+    void askBilal({ mode: 'reflection', period })
+      .then((text) => {
+        if (alive) setAiText({ key: aiKey, text });
+      })
+      .catch((e) => {
+        if (e instanceof BilalError && (e.code === 'not_configured' || e.code === 'auth' || e.code === 'unavailable' || e.code === 'quota')) aiUnavailable = true;
+      });
+    return () => {
+      alive = false;
+    };
+  }, [aiKey, aiOk, aiText?.key, period, setAiText]);
 
   let greg = now.toDateString();
   try {
@@ -267,6 +277,9 @@ export default function Home() {
           </Text>
         </Pressable>
       </View>
+      <Pressable accessibilityRole="button" accessibilityLabel={L('Constance')} onPress={go('/constance')} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Text style={{ color: b.teal, fontWeight: '800' }}>{L('Constance')} →</Text>
+      </Pressable>
     </FadeIn>
   );
 
@@ -443,7 +456,7 @@ export default function Home() {
     { icon: 'sparkles', label: '99 Noms', href: '/names', color: b.goldDeep },
     { icon: 'compass', label: tr.tab_qibla, href: '/qibla', color: b.teal },
     { icon: 'leaf', label: 'Tijaniyya', href: '/tijani', color: b.wirdGreen },
-    { icon: 'calculator', label: 'Abjad', href: '/abjad', color: b.rust },
+    { icon: 'calculator', label: 'Istikhraj', href: '/abjad', color: b.rust },
     { icon: 'people', label: tr.community, href: '/community', color: b.violet },
     { icon: 'grid', label: tr.tab_more, href: '/more', color: b.inkMuted },
   ];

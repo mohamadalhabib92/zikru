@@ -1,0 +1,4 @@
+// GÉNÉRÉ par scripts/split-pickthall.mjs — ne pas modifier.
+// Marmaduke Pickthall, The Meaning of the Glorious Koran (1930), domaine public.
+// Texte recopié tel quel depuis l’édition en.pickthall d’api.alquran.cloud. Aucune réécriture.
+export const AYAHS: readonly string[] = ["When Earth is shaken with her (final) earthquake","And Earth yieldeth up her burdens,","And man saith: What aileth her?","That day she will relate her chronicles,","Because thy Lord inspireth her.","That day mankind will issue forth in scattered groups to be shown their deeds.","And whoso doeth good an atom's weight will see it then,","And whoso doeth ill an atom's weight will see it then."];

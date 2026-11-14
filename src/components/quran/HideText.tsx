@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { type TextStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import type { HideMode } from '@/lib/quran-store';
@@ -23,8 +23,13 @@ export function hiddenAt(mode: HideMode, k: number) {
  * Toucher un mot le révèle ; `revealAll` révèle tout le verset.
  */
 export function HideText({ text, mode, revealAll, size, lineH, color, suffix, style, onRevealWord }: { text: string; mode: HideMode; revealAll?: boolean; size: number; lineH: number; color: string; suffix?: string; style?: TextStyle; onRevealWord?: () => void }) {
+  const sig = `${mode}\n${text}`;
+  const [shownFor, setShownFor] = useState(sig);
   const [shown, setShown] = useState<Set<number>>(new Set());
-  useEffect(() => setShown(new Set()), [text, mode]);
+  if (shownFor !== sig) {
+    setShownFor(sig);
+    setShown(new Set());
+  }
   const words = text.split(/\s+/).filter(Boolean);
   let k = -1;
   const base: TextStyle = { fontFamily: fonts.quran, fontSize: size, lineHeight: Math.round(size * lineH), color, textAlign: 'right', writingDirection: 'rtl', ...style };

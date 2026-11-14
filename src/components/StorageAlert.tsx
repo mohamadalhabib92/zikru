@@ -16,9 +16,9 @@ export function StorageAlert() {
   if (!issues.length) return null;
   const write = issues.some((i) => i.op === 'write');
   const corrupt = issues.find((i) => i.op === 'read');
-  const title = write ? 'Enregistrement impossible pour le moment' : 'Lecture des données locales impossible';
+  const title = write ? L('Enregistrement impossible pour le moment') : L('Lecture des données locales impossible');
   const text = write
-    ? 'Vos appuis sont gardés en mémoire et seront enregistrés dès que possible (nouvel essai automatique). Si le stockage du téléphone est plein, libérez de la place. Ne fermez pas l’app tant que ce message est affiché.'
+    ? L('Vos appuis sont gardés en mémoire et seront enregistrés dès que possible (nouvel essai automatique). Si le stockage du téléphone est plein, libérez de la place. Ne fermez pas l’app tant que ce message est affiché.')
     : L('Rien n’a été écrasé : si des données sont illisibles, une copie est conservée (et le compteur reprend sa dernière sauvegarde). Détail : {d}', { d: corrupt?.message ?? '' });
   return (
     <View
@@ -37,13 +37,13 @@ export function StorageAlert() {
               setBusy(true);
               void storageIssues.retry().finally(() => setBusy(false));
             }}
-            style={{ backgroundColor: '#fff', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12 }}
+            style={{ backgroundColor: '#fff', borderRadius: 10, minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }}
           >
-            <Text style={{ color: '#7a2e12', fontWeight: '800' }}>{busy ? 'Essai…' : 'Réessayer'}</Text>
+            <Text style={{ color: '#7a2e12', fontWeight: '800' }}>{busy ? L('Essai…') : L('Réessayer')}</Text>
           </Pressable>
         ) : (
-          <Pressable accessibilityRole="button" onPress={() => issues.filter((i) => i.op === 'read').forEach((i) => storageIssues.dismissFull(i.key))} style={{ backgroundColor: '#fff', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12 }}>
-            <Text style={{ color: '#7a2e12', fontWeight: '800' }}>Compris</Text>
+          <Pressable accessibilityRole="button" onPress={() => issues.filter((i) => i.op === 'read').forEach((i) => storageIssues.dismissFull(i.key))} style={{ backgroundColor: '#fff', borderRadius: 10, minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }}>
+            <Text style={{ color: '#7a2e12', fontWeight: '800' }}>{L('Compris')}</Text>
           </Pressable>
         )}
       </View>

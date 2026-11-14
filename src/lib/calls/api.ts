@@ -39,6 +39,7 @@ async function invoke<T>(body: Record<string, unknown>): Promise<T> {
   if (ctx && typeof ctx.json === 'function') {
     const out = await ctx.json().catch(() => ({}) as { error?: string });
     if (ctx.status === 404) throw new CallError('soon'); // fonction pas encore déployée
+    if (out.error === 'premium_required') throw new CallError('premium_required');
     throw new CallError(out.error || 'livekit');
   }
   const name = (error as { name?: string }).name;
@@ -50,6 +51,8 @@ export type JoinInfo = { token: string; url: string; room: string; identity: str
 export const joinCall = (scope: CallScope, id: string, video: boolean) => invoke<JoinInfo>({ action: 'join', scope, id, video });
 export const callStatus = (scope: CallScope, id: string) => invoke<{ active: boolean; count: number }>({ action: 'status', scope, id });
 export const moderateCall = (scope: CallScope, id: string, action: 'mute' | 'remove', target: string) => invoke<{ ok: true }>({ action, scope, id, target });
+/** L’hôte termine l’appel pour tout le monde. Le jeton est signé côté serveur. */
+export const endCall = (scope: CallScope, id: string) => invoke<{ ok: true }>({ action: 'end', scope, id });
 
 /** Consentements vidéo par enfant (parents seulement, RLS). Colonne absente → null (appels pas encore ouverts). */
 export async function videoConsents(familyId: string): Promise<Record<string, boolean> | null> {

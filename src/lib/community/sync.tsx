@@ -5,7 +5,7 @@
  * file d'attente persistante (hors-ligne) et envoyées avec un identifiant client
  * unique : aucun double comptage, aucune perte.
  */
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { flushStorage, uid, usePersistentState } from '../storage';
 import type { ClickSource } from '../tasbih-core';
@@ -32,8 +32,6 @@ type Ctx = {
 };
 const C = createContext<Ctx | null>(null);
 const FLUSH_MS = 6000;
-/** Délai avant de ranger les appuis dans la file persistante (un arrêt brutal ne perd au plus que ce délai). */
-const STASH_MS = 400;
 /** Au-delà, les lignes en attente sont regroupées par objectif (avant : les plus anciennes étaient supprimées). */
 const QUEUE_SOFT_MAX = 1000;
 
@@ -53,14 +51,15 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const queueRef = useRef(queue);
   const busy = useRef(false);
   const inflight = useRef<Set<string>>(new Set());
-  const stashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const qReadyRef = useRef(qReady);
   useEffect(() => {
     qReadyRef.current = qReady;
   }, [qReady]);
-  linksRef.current = links;
-  modesRef.current = modes;
-  queueRef.current = queue;
+  useLayoutEffect(() => {
+    linksRef.current = links;
+    modesRef.current = modes;
+    queueRef.current = queue;
+  });
 
   const refreshModes = useCallback(async () => {
     modesLoaded.current = false;
@@ -76,15 +75,26 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     }
   }, [userId]);
   useEffect(() => {
-    void refreshModes();
-  }, [refreshModes]);
+    if (!userId) return;
+    let alive = true;
+    void allSharingModes(userId)
+      .then((rows) => {
+        if (!alive) return;
+        const m: Record<string, SharingMode> = {};
+        for (const r of rows) m[(r.family_id ?? r.circle_id) as string] = r.mode;
+        modesLoaded.current = true;
+        setModes(m);
+      })
+      .catch(() => {
+        modesLoaded.current = false;
+      });
+    return () => {
+      alive = false;
+    };
+  }, [userId]);
 
   /** Transfère l'accumulateur dans la file persistante (une ligne par objectif). */
   const stash = useCallback(() => {
-    if (stashTimer.current) {
-      clearTimeout(stashTimer.current);
-      stashTimer.current = null;
-    }
     // avant le chargement de la file, les appuis restent dans l'accumulateur (sinon la file chargée serait écrasée)
     if (!qReadyRef.current || !acc.current.size) return;
     {
@@ -151,13 +161,16 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     }
   }, [userId, setQueue, stash]);
   const flushRef = useRef(flush);
-  flushRef.current = flush;
+  useLayoutEffect(() => {
+    flushRef.current = flush;
+  });
 
   const add = (goalId: string, n: number, source: Src, memberId: string | null | undefined, owner: string) => {
     const key = `${owner}|${memberId ? `${goalId}|${memberId}` : goalId}`;
     const cur = acc.current.get(key);
     acc.current.set(key, { goalId, n: (cur?.n ?? 0) + n, source: cur && cur.source !== source ? 'manuel' : source, memberId, owner });
-    if (!stashTimer.current) stashTimer.current = setTimeout(() => stashRef.current(), STASH_MS);
+    // Tout de suite : un arrêt dans les 400 ms ne doit pas perdre la contribution.
+    stashRef.current();
   };
 
   // Appuis du tasbih → objectifs reliés (respect du choix de partage par lieu).
@@ -170,6 +183,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
           add(l.goalId, n, source, l.memberId, userId);
         }
       }),
+    // add lit des refs et le userId de cet effet : le relister redémarrait l’abonnement à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [userId],
   );
 

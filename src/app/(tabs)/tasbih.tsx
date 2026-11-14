@@ -7,6 +7,8 @@ import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
 import { useBleCounter } from '@/lib/ble/manager';
 import { useSettings } from '@/lib/settings';
+import { sanitizeLandscape } from '@/lib/landscapes';
+import { LandscapeBackdrop, ReadingPlate } from '@/components/landscape-backdrop';
 import { Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { ProgressRing, tapHaptic, useLayout, useReduceMotion } from '@/ui/ds';
 import { Arabic } from '@/ui/light';
@@ -16,7 +18,9 @@ import { uid } from '@/lib/storage';
 import { closeSession, groupSessions, resetCount, switchDhikr } from '@/lib/tasbih-core';
 
 export default function TasbihScreen() {
-  const { t: tr } = useSettings();
+  const { s, t: tr } = useSettings();
+  const landscape = sanitizeLandscape(s.landscape);
+  const plated = landscape !== 'none';
   const { tasbih, setTasbih, increment, saveSession, content, ready } = useData();
   const router = useRouter();
   const approved = approvedOnly(content);
@@ -65,7 +69,10 @@ export default function TasbihScreen() {
   // Les appuis du compteur Bluetooth / clavier arrivent via DataProvider (aucun double comptage ici).
 
   return (
-    <Screen>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <LandscapeBackdrop id={landscape} />
+      <Screen bg="transparent">
+      <ReadingPlate on={plated}>
       <Row style={{ justifyContent: 'space-between' }}>
         <Eyebrow>{tr.tasbih_title}</Eyebrow>
         <BleStatusChip showIdle />
@@ -78,6 +85,7 @@ export default function TasbihScreen() {
           {current.transliteration ? <Muted>{current.transliteration}</Muted> : null}
         </View>
       ) : null}
+      </ReadingPlate>
       <View style={{ alignItems: 'center', marginVertical: 12 }}>
         <Animated.View style={{ transform: [{ scale }] }}>
           <Pressable
@@ -88,7 +96,7 @@ export default function TasbihScreen() {
           >
             <ProgressRing size={ring} stroke={10} progress={progress} color={done ? b.gold : t.primary}>
               <View style={{ width: ring - 36, height: ring - 36, borderRadius: (ring - 36) / 2, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}>
-                <Text style={{ color: t.text, fontSize: ring / 3.6, fontWeight: '200', fontVariant: ['tabular-nums'] }}>{tasbih.count}</Text>
+                <Text maxFontSizeMultiplier={1.2} numberOfLines={1} adjustsFontSizeToFit style={{ color: t.text, fontSize: ring / 3.6, fontWeight: '200', fontVariant: ['tabular-nums'], maxWidth: ring - 72 }}>{tasbih.count}</Text>
                 <Muted>{tasbih.target ? `/ ${tasbih.target}` : '∞'}</Muted>
                 <Muted style={{ marginTop: 6, color: done ? t.accent : t.muted, fontWeight: done ? '700' : '400' }}>{done ? tr.cycle_done : tr.tap_to_count}</Muted>
               </View>
@@ -96,6 +104,7 @@ export default function TasbihScreen() {
           </Pressable>
         </Animated.View>
       </View>
+      <ReadingPlate on={plated}>
       <Segmented
         label={tr.target}
         options={[{ label: '33', value: 33 }, { label: '99', value: 99 }, { label: '100', value: 100 }, { label: '∞', value: 0 }]}
@@ -115,13 +124,14 @@ export default function TasbihScreen() {
         <Button title={tr.save_session} icon="bookmark-outline" onPress={saveSession} disabled={tasbih.count === 0} style={{ flex: 1 }} />
         <Button title={tr.reset} icon="refresh" variant="ghost" onPress={() => setTasbih(resetCount)} disabled={tasbih.count === 0} />
       </Row>
-      <Spacer h={20} />
+      </ReadingPlate>
+      <Spacer h={12} />
+      <ReadingPlate on={plated}>
       <H2>{tr.history}</H2>
       <Muted>Total : {tasbih.total}</Muted>
-      <Spacer h={8} />
-      {history.length === 0 ? (
-        <Muted>{tr.no_history}</Muted>
-      ) : (
+      {history.length === 0 ? <Muted>{tr.no_history}</Muted> : null}
+      </ReadingPlate>
+      {history.length === 0 ? null : (
         history.slice(0, 20).map((s) => {
           const c = content.find((x) => x.id === s.dhikrId);
           const end = new Date(s.at).toLocaleString('fr-CH');
@@ -143,7 +153,10 @@ export default function TasbihScreen() {
         })
       )}
       <Spacer />
+      <ReadingPlate on={plated}>
       <Button title={bleOn ? `${tr.ring} : ${L('connecté')}` : tr.ring} variant="ghost" icon="bluetooth-outline" onPress={() => router.push('/ring')} />
+      </ReadingPlate>
     </Screen>
+    </View>
   );
 }

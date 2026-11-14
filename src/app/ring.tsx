@@ -4,6 +4,7 @@ import { Platform, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
+import { diag } from '@/lib/ble/diag';
 import { fieldLabel, isValidUuid, keyLabel, PROFILES, shortUuid } from '@/lib/ble/core';
 import { bleMsg } from '@/lib/ble/messages';
 import { useData } from '@/lib/data';
@@ -27,12 +28,19 @@ export default function BluetoothCounterScreen() {
   const { t: tr } = useSettings();
   const { tasbih } = useData();
   const s = useBleCounter();
+  const [journal, setJournal] = useState(() => diag.snapshot().entries.filter((e) => e.tag === 'frame').slice(-12));
+  useEffect(() => diag.subscribe(() => setJournal(diag.snapshot().entries.filter((e) => e.tag === 'frame').slice(-12))), []);
   const web = Platform.OS === 'web';
   const connected = s.status === 'connecté';
   const busy = s.status === 'connexion' || s.status === 'reconnexion';
   const av = s.availability;
   const custom = s.prefs.customService.trim();
   const [capture, setCapture] = useState('');
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
   // Ouverture de l'écran : état du Bluetooth (et autorisations Android, demandées ici seulement).
   useEffect(() => {
     void bleCounter.refreshAvailability();
@@ -50,7 +58,7 @@ export default function BluetoothCounterScreen() {
       <Spacer h={8} />
       <BleStatusChip />
       <Spacer />
-      {s.lastSync && Date.now() - s.lastSync.at < 10 * 60 * 1000 ? (
+      {s.lastSync && nowMs - s.lastSync.at < 10 * 60 * 1000 ? (
         <>
           <Notice tone="success" icon="sync-outline" title={L('Synchronisé : +{n}', { n: s.lastSync.added })} text="Appuis faits pendant que l’appareil était déconnecté, ajoutés une seule fois à la session et à l’historique." />
           <Spacer />
@@ -121,6 +129,12 @@ export default function BluetoothCounterScreen() {
               Appuis reçus : {s.clicksThisConnection} · signaux : {s.notifyCount}
             </Muted>
             {s.lastHex ? <Text style={{ color: t.muted, fontFamily: mono, fontSize: 12 }}>Dernier signal : {s.lastHex}</Text> : null}
+            <Spacer h={8} />
+            <Eyebrow>{L('Journal')}</Eyebrow>
+            <Muted>{L('Trames reçues et appuis comptés. Rien n’est envoyé.')}</Muted>
+            {journal.length ? journal.map((e, i) => (
+              <Text key={`${e.t}-${i}`} style={{ color: t.muted, fontFamily: mono, fontSize: 11 }}>{e.msg}</Text>
+            )) : <Muted>{L('Aucune trame pour l’instant.')}</Muted>}
           </>
         ) : null}
         {s.error ? (

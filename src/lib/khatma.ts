@@ -54,7 +54,7 @@ export type KhatmaStatus = {
 };
 
 export function khatmaStatus(k: Khatma, today: string): KhatmaStatus {
-  const total = khatmaTotal(k), ppd = pagesPerDay(k);
+  const total = khatmaTotal(k);
   const done = Math.min(total, Math.max(0, k.done));
   const since = daysBetween(k.start, today);
   const notStarted = since < 0;

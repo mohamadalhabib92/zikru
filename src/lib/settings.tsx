@@ -7,6 +7,7 @@ import { setUiLang, UiLangContext } from './l10n';
 import { DEFAULT_ADHAN_VOICE_ID } from './adhan-voices';
 import { DEFAULT_NOTIF, DEFAULT_QUIET, type NotifPrefs } from './notify-plan';
 import { setHijriCalendar, type HijriCalendar } from './hijri';
+import { sanitizeLandscape, type LandscapeChoice } from './landscapes';
 
 export type Settings = {
   lang: Lang;
@@ -22,6 +23,10 @@ export type Settings = {
   onboarded: boolean;
   /** Apparence : suit le système par défaut. */
   appearance: 'system' | 'light' | 'dark';
+  /** Fond du compteur. Absent des anciens réglages : « aucun ». */
+  landscape?: LandscapeChoice;
+  /** true : la récitation peut se télécharger en réseau mobile. Absent = Wi-Fi seulement. */
+  audioCellular?: boolean;
   /** Rappels de prière (notifications web / préférence). */
   reminders: boolean;
   /** Détail des rappels (prières, avant l’adhan, vendredi, adhkar, wird). */
@@ -33,7 +38,7 @@ export type Settings = {
   /** Règle hautes latitudes, ajustements ±min et « Horaires de ma mosquée ». */
   prayer?: PrayerOpts;
 };
-const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: resolveDefaultMethod(), madhab: 'shafi', hijriOffset: 0, onboarded: false, appearance: 'system', reminders: false, notif: DEFAULT_NOTIF, fatihaFirst: true, adhanVoice: DEFAULT_ADHAN_VOICE_ID, prayer: DEFAULT_PRAYER_OPTS };
+const DEFAULTS: Settings = { lang: 'fr', place: DEFAULT_PLACE, method: resolveDefaultMethod(), madhab: 'shafi', hijriOffset: 0, onboarded: false, appearance: 'system', landscape: 'none', reminders: false, notif: DEFAULT_NOTIF, fatihaFirst: true, adhanVoice: DEFAULT_ADHAN_VOICE_ID, prayer: DEFAULT_PRAYER_OPTS };
 
 function mergePrayer(p: PrayerOpts | undefined): PrayerOpts {
   return { ...DEFAULT_PRAYER_OPTS, ...p, adjust: { ...p?.adjust }, mosque: { enabled: false, ...p?.mosque, times: { ...p?.mosque?.times } } };
@@ -46,7 +51,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [s, setS, ready] = usePersistentState<Settings>('settings', DEFAULTS);
   const prayerKey = JSON.stringify(s.prayer ?? null);
   const prayer = useMemo(() => mergePrayer(s.prayer), [prayerKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const merged = { ...DEFAULTS, ...s, notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers }, quiet: { ...DEFAULT_QUIET, ...s.notif?.quiet } }, prayer };
+  const merged = { ...DEFAULTS, ...s, landscape: sanitizeLandscape(s.landscape), notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers }, quiet: { ...DEFAULT_QUIET, ...s.notif?.quiet } }, prayer };
   setUiLang(merged.lang);
   setHijriCalendar(merged.hijriCalendar);
   return (

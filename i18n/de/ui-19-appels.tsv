@@ -29,7 +29,6 @@ Appel terminé	Anruf beendet
 Retour au groupe	Zurück zur Gruppe
 Appel indisponible	Anruf nicht verfügbar
 Rejoindre l’appel	Anruf beitreten
-Aucun enregistrement. Le son et l’image passent par notre prestataire d’appels (LiveKit), sans être conservés.	Keine Aufzeichnung. Ton und Bild laufen über unseren Anrufdienstleister (LiveKit) und werden nicht gespeichert.
 Jusqu’à {n} personnes.	Bis zu {n} Personen.
 Avec la vidéo	Mit Video
 Vous pourrez allumer ou éteindre la caméra pendant l’appel.	Sie können die Kamera während des Anrufs ein- oder ausschalten.
@@ -50,3 +49,24 @@ Couper le micro	Mikrofon stummschalten
 Ouvrir le micro	Mikrofon einschalten
 Éteindre la caméra	Kamera ausschalten
 Allumer la caméra	Kamera einschalten
+Aucun enregistrement. Le son et l’image passent par notre serveur d’appels (LiveKit), sans être conservés.	Keine Aufzeichnung. Ton und Bild laufen über unseren Anrufserver (LiveKit) und werden nicht gespeichert.
+Le micro et la caméra restent éteints tant que vous ne les ouvrez pas.	Mikrofon und Kamera bleiben aus, bis Sie sie einschalten.
+Ouvrir mon micro	Mein Mikrofon einschalten
+Le micro reste coupé tant que vous ne l’ouvrez pas.	Das Mikrofon bleibt aus, bis Sie es einschalten.
+La caméra reste éteinte, sauf si vous la cochez ici ou si vous l’allumez pendant l’appel.	Die Kamera bleibt aus, ausser Sie wählen sie hier oder schalten sie im Anruf ein.
+Rejoindre en silence	Still beitreten
+Terminer l’appel	Anruf beenden
+Terminer l’appel pour tout le monde ?	Den Anruf für alle beenden?
+Tout le monde sera déconnecté. Rien n’est enregistré.	Alle werden getrennt. Nichts wird aufgezeichnet.
+Terminer	Beenden
+Économie de données	Datensparen
+Moins d’image, le son d’abord. Utile en 4G ou si la batterie est basse.	Weniger Bild, Ton zuerst. Nützlich im Mobilfunk oder bei schwacher Batterie.
+Haut-parleur	Lautsprecher
+Écouteur	Hörmuschel
+Le haut-parleur n’a pas pu être changé.	Der Lautsprecher konnte nicht gewechselt werden.
+Ouvrir l’appel demande Zikru Premium.	Einen Anruf öffnen braucht Zikru Premium.
+Les personnes invitées rejoignent sans Premium. Cette répartition reste une décision ouverte.	Eingeladene Personen kommen ohne Premium dazu. Diese Aufteilung ist noch offen.
+L’hôte Premium ouvre l’appel. Vous pouvez le rejoindre sans Premium.	Ein Premium-Gastgeber öffnet den Anruf. Sie können ohne Premium beitreten.
+L’appel n’est pas encore ouvert par un hôte Premium.	Der Anruf ist noch nicht von einem Premium-Gastgeber geöffnet.
+Cet appel demande Zikru Premium.	Dieser Anruf braucht Zikru Premium.
+Tout le monde dans l’appel doit avoir Zikru Premium, y compris les personnes invitées.	Alle im Anruf müssen Zikru Premium haben, auch eingeladene Personen.

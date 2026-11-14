@@ -22,7 +22,9 @@ import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
 import { MiniPlayer } from '@/components/quran/MiniPlayer';
 import { RecitationProvider } from '@/lib/recitation-context';
+import { AudioPrefetch } from '@/components/AudioOffline';
 import { L, useUiCatalog } from '@/lib/l10n';
+import { setFontsReady } from '@/ui/fonts-ready';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -47,7 +49,10 @@ function Root() {
   const [fontsLoaded] = useFonts({ Amiri_400Regular, Amiri_700Bold, AmiriQuran_400Regular });
   const [fontTimeout, setFontTimeout] = useState(false);
   useEffect(() => {
-    const id = setTimeout(() => setFontTimeout(true), 2500);
+    setFontsReady(fontsLoaded);
+  }, [fontsLoaded]);
+  useEffect(() => {
+    const id = setTimeout(() => setFontTimeout(true), 8000);
     return () => clearTimeout(id);
   }, []);
   // Lien de connexion refusé (expiré, déjà utilisé) arrivé sur n'importe quelle page : écran de connexion avec « Renvoyer un lien ».
@@ -83,6 +88,7 @@ function Root() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="sources" options={{ title: tr.sources_title }} />
+        <Stack.Screen name="sound-credits" options={{ title: L('Crédits et licences des sons') }} />
         <Stack.Screen name="privacy" options={{ title: L("Confidentialité") }} />
         <Stack.Screen name="premium" options={{ title: L("Zikru Premium") }} />
         <Stack.Screen name="terms" options={{ title: L("Conditions d’utilisation") }} />
@@ -113,7 +119,8 @@ function Root() {
         <Stack.Screen name="duas" options={{ title: L("Du‘as prophétiques") }} />
         <Stack.Screen name="adhkar" options={{ title: L("Adhkar du jour") }} />
         <Stack.Screen name="goals" options={{ title: L("Objectifs du jour") }} />
-        <Stack.Screen name="abjad" options={{ title: L("Calculateur abjad") }} />
+        <Stack.Screen name="constance" options={{ title: L("Constance") }} />
+        <Stack.Screen name="abjad" options={{ title: L("Istikhraj") }} />
         <Stack.Screen name="names" options={{ title: L("Les 99 Noms d’Allah") }} />
         <Stack.Screen name="zikrs/index" options={{ title: L("Mes zikrs") }} />
         <Stack.Screen name="zikrs/edit" options={{ title: L("Composer un zikr") }} />
@@ -132,6 +139,7 @@ function Root() {
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
         <Stack.Screen name="program/[id]" options={{ title: L("Programme de groupe") }} />
         <Stack.Screen name="discussion" options={{ title: L("Discussion") }} />
+        <Stack.Screen name="lesson/[id]" options={{ title: L("Lecture partagée") }} />
       </Stack>
       <MiniPlayer path={path} />
       <StorageAlert />
@@ -152,6 +160,7 @@ export default function Layout() {
                 <CommunityProvider>
                   <GrowthProvider>
                     <RecitationProvider>
+                      <AudioPrefetch />
                       <Root />
                     </RecitationProvider>
                   </GrowthProvider>

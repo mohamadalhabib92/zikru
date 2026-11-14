@@ -21,7 +21,6 @@ Appel terminé	Call ended	انتهت المكالمة
 Retour au groupe	Back to the group	العودة إلى المجموعة
 Appel indisponible	Call unavailable	المكالمة غير متاحة
 Rejoindre l’appel	Join the call	الانضمام إلى المكالمة
-Aucun enregistrement. Le son et l’image passent par notre prestataire d’appels (LiveKit), sans être conservés.	No recording. Sound and video go through our call provider (LiveKit) and are not stored.	لا يوجد تسجيل. يمر الصوت والصورة عبر مزوّد المكالمات لدينا (LiveKit) دون حفظهما.
 Jusqu’à {n} personnes.	Up to {n} people.	حتى {n} أشخاص.
 Avec la vidéo	With video	مع الفيديو
 Vous pourrez allumer ou éteindre la caméra pendant l’appel.	You can turn the camera on or off during the call.	يمكنك تشغيل الكاميرا أو إيقافها أثناء المكالمة.
@@ -44,3 +43,24 @@ Ouvrir le micro	Unmute microphone	فتح الميكروفون
 Éteindre la caméra	Turn off camera	إيقاف الكاميرا
 Allumer la caméra	Turn on camera	تشغيل الكاميرا
 Quitter	Leave	مغادرة
+Aucun enregistrement. Le son et l’image passent par notre serveur d’appels (LiveKit), sans être conservés.	No recording. Sound and video go through our call server (LiveKit) and are not stored.	لا يوجد تسجيل. يمر الصوت والصورة عبر خادم المكالمات لدينا (LiveKit) دون حفظهما.
+Le micro et la caméra restent éteints tant que vous ne les ouvrez pas.	The microphone and camera stay off until you turn them on.	يبقى الميكروفون والكاميرا مغلقين حتى تفتحهما.
+Ouvrir mon micro	Turn on my microphone	فتح ميكروفوني
+Le micro reste coupé tant que vous ne l’ouvrez pas.	The microphone stays off until you turn it on.	يبقى الميكروفون مكتومًا حتى تفتحه.
+La caméra reste éteinte, sauf si vous la cochez ici ou si vous l’allumez pendant l’appel.	The camera stays off, unless you tick it here or turn it on during the call.	تبقى الكاميرا مطفأة، إلا إذا حددتها هنا أو شغّلتها أثناء المكالمة.
+Rejoindre en silence	Join in silence	الانضمام بصمت
+Terminer l’appel	End the call	إنهاء المكالمة
+Terminer l’appel pour tout le monde ?	End the call for everyone?	إنهاء المكالمة للجميع؟
+Tout le monde sera déconnecté. Rien n’est enregistré.	Everyone will be disconnected. Nothing is recorded.	سيتم فصل الجميع. لا يُسجَّل شيء.
+Terminer	End	إنهاء
+Économie de données	Data saver	توفير البيانات
+Moins d’image, le son d’abord. Utile en 4G ou si la batterie est basse.	Less picture, sound first. Useful on 4G or when the battery is low.	صورة أقل والصوت أولاً. مفيد على الجيل الرابع أو عندما تكون البطارية ضعيفة.
+Haut-parleur	Speaker	مكبر الصوت
+Écouteur	Earpiece	سماعة الأذن
+Le haut-parleur n’a pas pu être changé.	The speaker could not be changed.	تعذر تغيير مكبر الصوت.
+Ouvrir l’appel demande Zikru Premium.	Opening a call requires Zikru Premium.	فتح المكالمة يتطلب Zikru Premium.
+Les personnes invitées rejoignent sans Premium. Cette répartition reste une décision ouverte.	Invited people join without Premium. This split is still an open decision.	المنضمّون المدعوّون يدخلون دون Premium. هذا التقسيم قرار لم يُحسم بعد.
+L’hôte Premium ouvre l’appel. Vous pouvez le rejoindre sans Premium.	A Premium host opens the call. You can join it without Premium.	يفتح المضيف ذو Premium المكالمة. يمكنك الانضمام دون Premium.
+L’appel n’est pas encore ouvert par un hôte Premium.	The call has not been opened by a Premium host yet.	لم يفتح المكالمة بعد مضيف ذو Premium.
+Cet appel demande Zikru Premium.	This call requires Zikru Premium.	هذه المكالمة تتطلب Zikru Premium.
+Tout le monde dans l’appel doit avoir Zikru Premium, y compris les personnes invitées.	Everyone in the call must have Zikru Premium, including invited people.	يجب أن يملك كل من في المكالمة Zikru Premium، بمن فيهم المدعوون.

@@ -3,7 +3,7 @@
  * Pas une traduction religieuse et pas une validation savante.
  */
 const tr = {
-  tab_home: 'Ana sayfa', prayer_times: 'Namaz vakitleri', sec_growth: 'İLERLEME', sec_knowledge: 'İSLAMİ BİLGİ', sec_prayer: 'NAMAZ VE ZİKİR', sec_songs: 'TASAVVUF İLAHİLERİ', sec_community: 'TAKVİM VE TOPLULUK', tijani: 'Ticânî yolu', wird: 'Günlük wird', sahw: 'Namaz düzeltmesi', adilla: 'Adilla (deliller)', kahf: 'Kehf suresi', songs: 'Tasavvuf ilahileri', community: 'Topluluk', weather: 'Hava', qibla_aligned: 'Kıbleye dönük', qibla_turn: 'Şu kadar dönün', qibla_right: 'sağa', qibla_left: 'sola', reflection: 'Tefekkür',
+  tab_home: 'Ana sayfa', prayer_times: 'Namaz vakitleri', sec_growth: 'İLERLEME', sec_knowledge: 'İSLAMİ BİLGİ', sec_prayer: 'NAMAZ VE ZİKİR', sec_songs: 'MANEVİ MÜZİK', sec_community: 'TAKVİM VE TOPLULUK', tijani: 'Ticânî yolu', wird: 'Günlük wird', sahw: 'Namaz düzeltmesi', adilla: 'Adilla (deliller)', kahf: 'Kehf suresi', songs: 'Manevi müzik', community: 'Topluluk', weather: 'Hava', qibla_aligned: 'Kıbleye dönük', qibla_turn: 'Şu kadar dönün', qibla_right: 'sağa', qibla_left: 'sola', reflection: 'Tefekkür',
   tab_prayers: 'Namazlar', tab_qibla: 'Kıble', tab_tasbih: 'Tesbih', tab_dhikr: 'Zikir', tab_settings: 'Ayarlar',
   tab_read: 'Oku', tab_more: 'Daha fazla', search: 'Ara', search_ph: 'İsimler, dualar, ayetler, zikirler…', no_results: 'Sonuç yok', see_all: 'Tümünü gör', skip: 'Atla', back: 'Geri', done: 'Bitti',
   appearance: 'Görünüm', app_system: 'Sistem', app_light: 'Açık', app_dark: 'Koyu', display: 'Görüntü', tools: 'Araçlar', spiritual_path: 'Manevi yol', about: 'Hakkında',
@@ -24,7 +24,7 @@ const tr = {
 };
 
 const es = {
-  tab_home: 'Inicio', prayer_times: 'Horarios de salat', sec_growth: 'PROGRESO', sec_knowledge: 'SABER ISLÁMICO', sec_prayer: 'SALAT Y DHIKR', sec_songs: 'CANTOS SUFÍES', sec_community: 'CALENDARIO Y COMUNIDAD', tijani: 'Vía tijani', wird: 'Wird diario', sahw: 'Corrección de la salat', adilla: 'Adilla (pruebas)', kahf: 'Sura al-Kahf', songs: 'Cantos sufíes', community: 'Comunidad', weather: 'Tiempo', qibla_aligned: 'De cara a la qibla', qibla_turn: 'Gire', qibla_right: 'a la derecha', qibla_left: 'a la izquierda', reflection: 'Reflexión',
+  tab_home: 'Inicio', prayer_times: 'Horarios de salat', sec_growth: 'PROGRESO', sec_knowledge: 'SABER ISLÁMICO', sec_prayer: 'SALAT Y DHIKR', sec_songs: 'MÚSICA ESPIRITUAL', sec_community: 'CALENDARIO Y COMUNIDAD', tijani: 'Vía tijani', wird: 'Wird diario', sahw: 'Corrección de la salat', adilla: 'Adilla (pruebas)', kahf: 'Sura al-Kahf', songs: 'Música espiritual', community: 'Comunidad', weather: 'Tiempo', qibla_aligned: 'De cara a la qibla', qibla_turn: 'Gire', qibla_right: 'a la derecha', qibla_left: 'a la izquierda', reflection: 'Reflexión',
   tab_prayers: 'Salat', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Ajustes',
   tab_read: 'Leer', tab_more: 'Más', search: 'Buscar', search_ph: 'Nombres, du‘as, aleyas, dhikr…', no_results: 'Sin resultados', see_all: 'Ver todo', skip: 'Omitir', back: 'Volver', done: 'Listo',
   appearance: 'Apariencia', app_system: 'Sistema', app_light: 'Claro', app_dark: 'Oscuro', display: 'Pantalla', tools: 'Herramientas', spiritual_path: 'Camino espiritual', about: 'Acerca de',
@@ -45,7 +45,7 @@ const es = {
 };
 
 const it = {
-  tab_home: 'Home', prayer_times: 'Orari della salat', sec_growth: 'PERCORSO', sec_knowledge: 'SAPERE ISLAMICO', sec_prayer: 'SALAT E DHIKR', sec_songs: 'CANTI SUFI', sec_community: 'CALENDARIO E COMUNITÀ', tijani: 'Via tijani', wird: 'Wird quotidiano', sahw: 'Correzione della salat', adilla: 'Adilla (prove)', kahf: 'Sura al-Kahf', songs: 'Canti sufi', community: 'Comunità', weather: 'Meteo', qibla_aligned: 'Rivolti alla qibla', qibla_turn: 'Girare di', qibla_right: 'a destra', qibla_left: 'a sinistra', reflection: 'Riflessione',
+  tab_home: 'Home', prayer_times: 'Orari della salat', sec_growth: 'PERCORSO', sec_knowledge: 'SAPERE ISLAMICO', sec_prayer: 'SALAT E DHIKR', sec_songs: 'MUSICA SPIRITUALE', sec_community: 'CALENDARIO E COMUNITÀ', tijani: 'Via tijani', wird: 'Wird quotidiano', sahw: 'Correzione della salat', adilla: 'Adilla (prove)', kahf: 'Sura al-Kahf', songs: 'Musica spirituale', community: 'Comunità', weather: 'Meteo', qibla_aligned: 'Rivolti alla qibla', qibla_turn: 'Girare di', qibla_right: 'a destra', qibla_left: 'a sinistra', reflection: 'Riflessione',
   tab_prayers: 'Salat', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Impostazioni',
   tab_read: 'Leggi', tab_more: 'Altro', search: 'Cerca', search_ph: 'Nomi, du‘a, versetti, dhikr…', no_results: 'Nessun risultato', see_all: 'Vedi tutto', skip: 'Salta', back: 'Indietro', done: 'Fatto',
   appearance: 'Aspetto', app_system: 'Sistema', app_light: 'Chiaro', app_dark: 'Scuro', display: 'Schermo', tools: 'Strumenti', spiritual_path: 'Cammino spirituale', about: 'Informazioni',
@@ -66,7 +66,7 @@ const it = {
 };
 
 const pt = {
-  tab_home: 'Início', prayer_times: 'Horários da salat', sec_growth: 'PROGRESSO', sec_knowledge: 'SABER ISLÂMICO', sec_prayer: 'SALAT E DHIKR', sec_songs: 'CANTOS SUFIS', sec_community: 'CALENDÁRIO E COMUNIDADE', tijani: 'Via tijani', wird: 'Wird diário', sahw: 'Correção da salat', adilla: 'Adilla (provas)', kahf: 'Surata al-Kahf', songs: 'Cantos sufis', community: 'Comunidade', weather: 'Meteorologia', qibla_aligned: 'Virado para a qibla', qibla_turn: 'Rode', qibla_right: 'para a direita', qibla_left: 'para a esquerda', reflection: 'Reflexão',
+  tab_home: 'Início', prayer_times: 'Horários da salat', sec_growth: 'PROGRESSO', sec_knowledge: 'SABER ISLÂMICO', sec_prayer: 'SALAT E DHIKR', sec_songs: 'MÚSICA ESPIRITUAL', sec_community: 'CALENDÁRIO E COMUNIDADE', tijani: 'Via tijani', wird: 'Wird diário', sahw: 'Correção da salat', adilla: 'Adilla (provas)', kahf: 'Surata al-Kahf', songs: 'Música espiritual', community: 'Comunidade', weather: 'Meteorologia', qibla_aligned: 'Virado para a qibla', qibla_turn: 'Rode', qibla_right: 'para a direita', qibla_left: 'para a esquerda', reflection: 'Reflexão',
   tab_prayers: 'Salat', tab_qibla: 'Qibla', tab_tasbih: 'Tasbih', tab_dhikr: 'Dhikr', tab_settings: 'Definições',
   tab_read: 'Ler', tab_more: 'Mais', search: 'Pesquisar', search_ph: 'Nomes, du‘as, versículos, dhikr…', no_results: 'Sem resultados', see_all: 'Ver tudo', skip: 'Saltar', back: 'Voltar', done: 'Concluído',
   appearance: 'Aparência', app_system: 'Sistema', app_light: 'Claro', app_dark: 'Escuro', display: 'Ecrã', tools: 'Ferramentas', spiritual_path: 'Caminho espiritual', about: 'Acerca de',
@@ -87,7 +87,7 @@ const pt = {
 };
 
 const id = {
-  tab_home: 'Beranda', prayer_times: 'Waktu salat', sec_growth: 'KEMAJUAN', sec_knowledge: 'ILMU ISLAM', sec_prayer: 'SALAT & ZIKIR', sec_songs: 'LAGU SUFI', sec_community: 'KALENDER & KOMUNITAS', tijani: 'Jalan Tijani', wird: 'Wird harian', sahw: 'Koreksi salat', adilla: 'Adilla (dalil)', kahf: 'Surah al-Kahf', songs: 'Lagu sufi', community: 'Komunitas', weather: 'Cuaca', qibla_aligned: 'Menghadap kiblat', qibla_turn: 'Putar sebesar', qibla_right: 'ke kanan', qibla_left: 'ke kiri', reflection: 'Renungan',
+  tab_home: 'Beranda', prayer_times: 'Waktu salat', sec_growth: 'KEMAJUAN', sec_knowledge: 'ILMU ISLAM', sec_prayer: 'SALAT & ZIKIR', sec_songs: 'MUSIK SPIRITUAL', sec_community: 'KALENDER & KOMUNITAS', tijani: 'Jalan Tijani', wird: 'Wird harian', sahw: 'Koreksi salat', adilla: 'Adilla (dalil)', kahf: 'Surah al-Kahf', songs: 'Musik spiritual', community: 'Komunitas', weather: 'Cuaca', qibla_aligned: 'Menghadap kiblat', qibla_turn: 'Putar sebesar', qibla_right: 'ke kanan', qibla_left: 'ke kiri', reflection: 'Renungan',
   tab_prayers: 'Salat', tab_qibla: 'Kiblat', tab_tasbih: 'Tasbih', tab_dhikr: 'Zikir', tab_settings: 'Pengaturan',
   tab_read: 'Baca', tab_more: 'Lainnya', search: 'Cari', search_ph: 'Nama, doa, ayat, zikir…', no_results: 'Tidak ada hasil', see_all: 'Lihat semua', skip: 'Lewati', back: 'Kembali', done: 'Selesai',
   appearance: 'Tampilan', app_system: 'Sistem', app_light: 'Terang', app_dark: 'Gelap', display: 'Layar', tools: 'Alat', spiritual_path: 'Jalan ruhani', about: 'Tentang',
@@ -108,7 +108,7 @@ const id = {
 };
 
 const ha = {
-  tab_home: 'Gida', prayer_times: 'Lokutan salla', sec_growth: 'CIGABA', sec_knowledge: 'ILIMIN MUSULUNCI', sec_prayer: 'SALLA DA ZIKIRI', sec_songs: 'WAKOKIN SUFI', sec_community: 'KALANDA DA AL’UMMA', tijani: 'Hanyar Tijani', wird: 'Wird na yau', sahw: 'Gyaran salla', adilla: 'Adilla (hujjoji)', kahf: 'Suratul Kahf', songs: 'Wakokin sufi', community: 'Al’umma', weather: 'Yanayi', qibla_aligned: 'Fuskantar qibla', qibla_turn: 'Juya da', qibla_right: 'zuwa dama', qibla_left: 'zuwa hagu', reflection: 'Tunani',
+  tab_home: 'Gida', prayer_times: 'Lokutan salla', sec_growth: 'CIGABA', sec_knowledge: 'ILIMIN MUSULUNCI', sec_prayer: 'SALLA DA ZIKIRI', sec_songs: 'WAKAR RUHANIYA', sec_community: 'KALANDA DA AL’UMMA', tijani: 'Hanyar Tijani', wird: 'Wird na yau', sahw: 'Gyaran salla', adilla: 'Adilla (hujjoji)', kahf: 'Suratul Kahf', songs: 'Waƙar ruhaniya', community: 'Al’umma', weather: 'Yanayi', qibla_aligned: 'Fuskantar qibla', qibla_turn: 'Juya da', qibla_right: 'zuwa dama', qibla_left: 'zuwa hagu', reflection: 'Tunani',
   tab_prayers: 'Salloli', tab_qibla: 'Qibla', tab_tasbih: 'Tasbihi', tab_dhikr: 'Zikiri', tab_settings: 'Saituna',
   tab_read: 'Karanta', tab_more: 'Ƙari', search: 'Bincika', search_ph: 'Sunaye, addu’o’i, ayoyi, zikiri…', no_results: 'Babu sakamako', see_all: 'Duba duka', skip: 'Tsallake', back: 'Komawa', done: 'An gama',
   appearance: 'Kamanni', app_system: 'Na’ura', app_light: 'Haske', app_dark: 'Duhu', display: 'Nuni', tools: 'Kayan aiki', spiritual_path: 'Hanya ta ruhaniya', about: 'Game da',
@@ -129,7 +129,7 @@ const ha = {
 };
 
 const sw = {
-  tab_home: 'Nyumbani', prayer_times: 'Nyakati za swala', sec_growth: 'MAENDELEO', sec_knowledge: 'ELIMU YA KIISLAMU', sec_prayer: 'SWALA NA DHIKRI', sec_songs: 'NYIMBO ZA TASAUFI', sec_community: 'KALENDA NA JAMII', tijani: 'Njia ya Tijani', wird: 'Wird ya kila siku', sahw: 'Kurekebisha swala', adilla: 'Adilla (dalili)', kahf: 'Sura al-Kahf', songs: 'Nyimbo za tasaufi', community: 'Jamii', weather: 'Hali ya hewa', qibla_aligned: 'Umeelekea qibla', qibla_turn: 'Geuka kwa', qibla_right: 'kulia', qibla_left: 'kushoto', reflection: 'Tafakuri',
+  tab_home: 'Nyumbani', prayer_times: 'Nyakati za swala', sec_growth: 'MAENDELEO', sec_knowledge: 'ELIMU YA KIISLAMU', sec_prayer: 'SWALA NA DHIKRI', sec_songs: 'MUZIKI WA KIROHO', sec_community: 'KALENDA NA JAMII', tijani: 'Njia ya Tijani', wird: 'Wird ya kila siku', sahw: 'Kurekebisha swala', adilla: 'Adilla (dalili)', kahf: 'Sura al-Kahf', songs: 'Muziki wa kiroho', community: 'Jamii', weather: 'Hali ya hewa', qibla_aligned: 'Umeelekea qibla', qibla_turn: 'Geuka kwa', qibla_right: 'kulia', qibla_left: 'kushoto', reflection: 'Tafakuri',
   tab_prayers: 'Swala', tab_qibla: 'Qibla', tab_tasbih: 'Tasbihi', tab_dhikr: 'Dhikri', tab_settings: 'Mipangilio',
   tab_read: 'Soma', tab_more: 'Zaidi', search: 'Tafuta', search_ph: 'Majina, dua, aya, dhikri…', no_results: 'Hakuna matokeo', see_all: 'Ona yote', skip: 'Ruka', back: 'Rudi', done: 'Imekamilika',
   appearance: 'Mwonekano', app_system: 'Mfumo', app_light: 'Mwanga', app_dark: 'Giza', display: 'Onyesho', tools: 'Zana', spiritual_path: 'Njia ya kiroho', about: 'Kuhusu',
@@ -150,7 +150,7 @@ const sw = {
 };
 
 const ur = {
-  tab_home: 'ہوم', prayer_times: 'نماز کے اوقات', sec_growth: 'ترقی', sec_knowledge: 'اسلامی علم', sec_prayer: 'نماز اور ذکر', sec_songs: 'صوفی نغمے', sec_community: 'کیلنڈر اور جماعت', tijani: 'تجانی طریقہ', wird: 'روزانہ ورد', sahw: 'نماز کی درستگی', adilla: 'ادلہ', kahf: 'سورۃ الکہف', songs: 'صوفی نغمے', community: 'جماعت', weather: 'موسم', qibla_aligned: 'قبلہ رخ', qibla_turn: 'اتنا مڑیں', qibla_right: 'دائیں', qibla_left: 'بائیں', reflection: 'غور',
+  tab_home: 'ہوم', prayer_times: 'نماز کے اوقات', sec_growth: 'ترقی', sec_knowledge: 'اسلامی علم', sec_prayer: 'نماز اور ذکر', sec_songs: 'روحانی موسیقی', sec_community: 'کیلنڈر اور جماعت', tijani: 'تجانی طریقہ', wird: 'روزانہ ورد', sahw: 'نماز کی درستگی', adilla: 'ادلہ', kahf: 'سورۃ الکہف', songs: 'روحانی موسیقی', community: 'جماعت', weather: 'موسم', qibla_aligned: 'قبلہ رخ', qibla_turn: 'اتنا مڑیں', qibla_right: 'دائیں', qibla_left: 'بائیں', reflection: 'غور',
   tab_prayers: 'نمازیں', tab_qibla: 'قبلہ', tab_tasbih: 'تسبیح', tab_dhikr: 'ذکر', tab_settings: 'ترتیبات',
   tab_read: 'پڑھیں', tab_more: 'مزید', search: 'تلاش', search_ph: 'نام، دعائیں، آیات، اذکار…', no_results: 'کوئی نتیجہ نہیں', see_all: 'سب دیکھیں', skip: 'چھوڑیں', back: 'واپس', done: 'ہو گیا',
   appearance: 'ظاہری شکل', app_system: 'نظام', app_light: 'روشن', app_dark: 'گہرا', display: 'ڈسپلے', tools: 'اوزار', spiritual_path: 'روحانی راستہ', about: 'تعارف',
@@ -171,7 +171,7 @@ const ur = {
 };
 
 const fa = {
-  tab_home: 'خانه', prayer_times: 'اوقات نماز', sec_growth: 'پیشرفت', sec_knowledge: 'دانش اسلامی', sec_prayer: 'نماز و ذکر', sec_songs: 'آوازهای صوفی', sec_community: 'تقویم و جمع', tijani: 'طریقت تجانی', wird: 'ورد روزانه', sahw: 'اصلاح نماز', adilla: 'ادله', kahf: 'سوره کهف', songs: 'آوازهای صوفی', community: 'جمع', weather: 'هوا', qibla_aligned: 'رو به قبله', qibla_turn: 'به این اندازه بچرخید', qibla_right: 'به راست', qibla_left: 'به چپ', reflection: 'تأمل',
+  tab_home: 'خانه', prayer_times: 'اوقات نماز', sec_growth: 'پیشرفت', sec_knowledge: 'دانش اسلامی', sec_prayer: 'نماز و ذکر', sec_songs: 'موسیقی معنوی', sec_community: 'تقویم و جمع', tijani: 'طریقت تجانی', wird: 'ورد روزانه', sahw: 'اصلاح نماز', adilla: 'ادله', kahf: 'سوره کهف', songs: 'موسیقی معنوی', community: 'جمع', weather: 'هوا', qibla_aligned: 'رو به قبله', qibla_turn: 'به این اندازه بچرخید', qibla_right: 'به راست', qibla_left: 'به چپ', reflection: 'تأمل',
   tab_prayers: 'نمازها', tab_qibla: 'قبله', tab_tasbih: 'تسبیح', tab_dhikr: 'ذکر', tab_settings: 'تنظیمات',
   tab_read: 'خواندن', tab_more: 'بیشتر', search: 'جستجو', search_ph: 'نام‌ها، دعاها، آیات، ذکرها…', no_results: 'نتیجه‌ای نیست', see_all: 'همه', skip: 'رد کردن', back: 'بازگشت', done: 'تمام',
   appearance: 'ظاهر', app_system: 'سامانه', app_light: 'روشن', app_dark: 'تیره', display: 'نمایش', tools: 'ابزارها', spiritual_path: 'راه معنوی', about: 'درباره',
@@ -192,7 +192,7 @@ const fa = {
 };
 
 const ff = {
-  tab_home: 'Jaɓɓorgal', prayer_times: 'Waktuuji juulde', sec_growth: 'YOLTUGOL', sec_knowledge: 'GANNDAL LISLAAM', sec_prayer: 'JUULDE E ZIKRI', sec_songs: 'GIMƊI SUUFU', sec_community: 'KALANDIYE E RENDO', tijani: 'Laawol Tijani', wird: 'Wird nyalde', sahw: 'Njuɓɓudi juulde', adilla: 'Adilla (seedeeji)', kahf: 'Suura Kahf', songs: 'Gimɗi suufu', community: 'Rendo', weather: 'Ngonka weeyo', qibla_aligned: 'A yeeso kibla', qibla_turn: 'Yiiltu no', qibla_right: 'ñaamo', qibla_left: 'nano', reflection: 'Miijto',
+  tab_home: 'Jaɓɓorgal', prayer_times: 'Waktuuji juulde', sec_growth: 'YOLTUGOL', sec_knowledge: 'GANNDAL LISLAAM', sec_prayer: 'JUULDE E ZIKRI', sec_songs: 'GIMƊI RUUHI', sec_community: 'KALANDIYE E RENDO', tijani: 'Laawol Tijani', wird: 'Wird nyalde', sahw: 'Njuɓɓudi juulde', adilla: 'Adilla (seedeeji)', kahf: 'Suura Kahf', songs: 'Gimɗi ruuhi', community: 'Rendo', weather: 'Ngonka weeyo', qibla_aligned: 'A yeeso kibla', qibla_turn: 'Yiiltu no', qibla_right: 'ñaamo', qibla_left: 'nano', reflection: 'Miijto',
   tab_prayers: 'Juulde', tab_qibla: 'Kibla', tab_tasbih: 'Tasbihi', tab_dhikr: 'Zikri', tab_settings: 'Teelte',
   tab_read: 'Tar', tab_more: 'Goɗɗum', search: 'Yiylo', search_ph: 'Inɗe, duwaawu, aayaaji, zikri…', no_results: 'Alaa njaltudi', see_all: 'Yiy fof', skip: 'Diw', back: 'Rutto', done: 'Gasii',
   appearance: 'Mbaadi', app_system: 'Yuɓɓo', app_light: 'Ñaybu', app_dark: 'Niɓɓi', display: 'Hollirde', tools: 'Kuutorɗe', spiritual_path: 'Laawol ruuhu', about: 'Baɗte',
@@ -213,7 +213,7 @@ const ff = {
 };
 
 const wo = {
-  tab_home: 'Xët bu njëkk', prayer_times: 'Waxtu julli', sec_growth: 'YOKKUTE', sec_knowledge: 'XAM-XAMU ISLAAM', sec_prayer: 'JULLI AK DHIKR', sec_songs: 'WOYU SUUFI', sec_community: 'ARMINAAT AK MBIRUM ASKAN', tijani: 'Yoonu Tijani', wird: 'Wirdu bés bi', sahw: 'Yoonal julli', adilla: 'Adilla (ay firnde)', kahf: 'Suuratu Kahf', songs: 'Woyu suufi', community: 'Mbooloo', weather: 'Njeexital', qibla_aligned: 'Yaa ngi jàkkaarloo ak qibla', qibla_turn: 'Wëlbati ci', qibla_right: 'ndijoor', qibla_left: 'càmmoñ', reflection: 'Xalaat',
+  tab_home: 'Xët bu njëkk', prayer_times: 'Waxtu julli', sec_growth: 'YOKKUTE', sec_knowledge: 'XAM-XAMU ISLAAM', sec_prayer: 'JULLI AK DHIKR', sec_songs: 'WOYU RUUX', sec_community: 'ARMINAAT AK MBIRUM ASKAN', tijani: 'Yoonu Tijani', wird: 'Wirdu bés bi', sahw: 'Yoonal julli', adilla: 'Adilla (ay firnde)', kahf: 'Suuratu Kahf', songs: 'Woyu ruux', community: 'Mbooloo', weather: 'Njeexital', qibla_aligned: 'Yaa ngi jàkkaarloo ak qibla', qibla_turn: 'Wëlbati ci', qibla_right: 'ndijoor', qibla_left: 'càmmoñ', reflection: 'Xalaat',
   tab_prayers: 'Julli', tab_qibla: 'Qibla', tab_tasbih: 'Tasbiix', tab_dhikr: 'Dhikr', tab_settings: 'Parameetar',
   tab_read: 'Jàng', tab_more: 'Yeneen', search: 'Seet', search_ph: 'Tur, duwaa, aaya, dhikr…', no_results: 'Amul njuréef', see_all: 'Gis lépp', skip: 'Jàll', back: 'Dellu', done: 'Jeex na',
   appearance: 'Melokaan', app_system: 'Sistem', app_light: 'Leer', app_dark: 'Lëndëm', display: 'Won', tools: 'Jumtukaay', spiritual_path: 'Yoonu xel', about: 'Ci mbir',

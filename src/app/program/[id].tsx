@@ -9,6 +9,7 @@ import { bleCounter } from '@/lib/ble/manager';
 import { feedback } from '@/lib/feedback';
 import { currentStep, mergeCounts, programDone, tapStep } from '@/lib/program-group';
 import { loadJSON, saveJSON } from '@/lib/storage';
+import { readProgramProgress, saveProgramProgress } from '@/lib/preserve';
 import { Badge, Button, Card, Eyebrow, Field, H1, H2, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { Arabic } from '@/ui/light';
 import { theme as t } from '@/ui/theme';
@@ -43,6 +44,7 @@ export default function GroupProgramScreen() {
 
   const [local, setLocal] = useState<Cache>({ counts: {}, dirty: [] });
   const localRef = useRef(local);
+  const rawRef = useRef<unknown>(null);
   useEffect(() => {
     localRef.current = local;
   }, [local]);
@@ -58,9 +60,11 @@ export default function GroupProgramScreen() {
   useEffect(() => {
     if (!key) return;
     let live = true;
-    void loadJSON<Cache>(key, { counts: {}, dirty: [] }).then((c) => {
+    void loadJSON<unknown>(key, null).then((raw) => {
       if (!live) return;
-      setLocal({ counts: c.counts ?? {}, dirty: (c.dirty ?? []).filter((d) => chain.some((s) => s.id === d)) });
+      rawRef.current = raw;
+      const p = readProgramProgress(raw);
+      setLocal({ counts: p.counts, dirty: p.dirty.filter((d) => chain.some((s) => s.id === d)) });
       setLoadedKey(key);
     });
     return () => {
@@ -71,9 +75,12 @@ export default function GroupProgramScreen() {
   const counts = useMemo(() => mergeCounts(server, local.counts, local.dirty), [server, local]);
   const cur = sel ?? currentStep(chain, counts);
   const step = steps[cur];
-  useEffect(() => {
-    if (step) setTargetTxt(String(step.target));
-  }, [step?.id, step?.target]);
+  const stepSig = step ? `${step.id}:${step.target}` : '';
+  const [seenStep, setSeenStep] = useState('');
+  if (step && seenStep !== stepSig) {
+    setSeenStep(stepSig);
+    setTargetTxt(String(step.target));
+  }
   const done = programDone(chain, counts);
   const active = v?.status === 'active';
 
@@ -103,7 +110,9 @@ export default function GroupProgramScreen() {
   // Sauvegarde locale + envoi groupé (anti-rebond) après les appuis.
   useEffect(() => {
     if (!key || loadedKey !== key) return;
-    void saveJSON(key, local);
+    const next = saveProgramProgress(rawRef.current, local.counts, local.dirty);
+    rawRef.current = next;
+    void saveJSON(key, next);
     if (!local.dirty.length) return;
     const h = setTimeout(() => void flush(), SYNC_MS);
     return () => clearTimeout(h);

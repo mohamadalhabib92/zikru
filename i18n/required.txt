@@ -27,6 +27,7 @@ src/app/join.tsx
 src/app/journey.tsx
 src/app/kahf.tsx
 src/app/live/[id].tsx
+src/app/lesson/[id].tsx
 src/app/names.tsx
 src/app/onboarding.tsx
 src/app/planner.tsx
@@ -34,6 +35,9 @@ src/app/privacy.tsx
 src/app/premium.tsx
 src/app/terms.tsx
 src/components/community/admin.tsx
+src/components/community/classes.tsx
+src/components/lesson/shared-reading.tsx
+src/components/premium/paywall.tsx
 src/app/qibla.tsx
 src/app/quran/[n].tsx
 src/app/quran/bookmarks.tsx
@@ -47,6 +51,7 @@ src/app/sahw.tsx
 src/app/search.tsx
 src/app/settings.tsx
 src/app/songs.tsx
+src/app/sound-credits.tsx
 src/app/sources.tsx
 src/app/tijani.tsx
 src/app/validation.tsx
@@ -87,6 +92,7 @@ src/components/zikr/ImportText.tsx
 src/components/PrayerOptions.tsx
 src/components/DispenseSettings.tsx
 src/app/goals.tsx
+src/app/constance.tsx
 src/components/GoalsLink.tsx
 src/components/WidgetSettings.tsx
 src/app/zikrs/import.tsx
@@ -118,8 +124,11 @@ src/app/discussion.tsx
 src/app/moderation.tsx
 src/components/AccountExtras.tsx
 src/components/call/call-screen.tsx
+src/components/call/teach-panel.tsx
 src/components/call/module.ts
 src/app/call.tsx
 src/ui/keyboard-done.tsx
 src/app/program/[id].tsx
 src/components/community/programs.tsx
+
+src/components/zikr/RecipeReview.tsx

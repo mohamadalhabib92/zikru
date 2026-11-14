@@ -2,18 +2,28 @@ import { Directory, File, Paths } from 'expo-file-system';
 import { verseFile } from './audio-dl-core';
 
 /**
- * Stockage hors ligne de la récitation (iOS/Android) : Documents/audio/<récitateur>/SSSAAA.mp3.
- * Les fichiers restent sur l’appareil (jamais envoyés) et sont supprimables depuis « Téléchargements ».
+ * Récitation hors ligne : Cache/quran-audio/<récitateur>/SSSAAA.mp3.
+ * Le dossier Cache n’entre pas dans la sauvegarde iCloud ni iTunes (fichiers re-téléchargeables, règle Apple).
+ * Une copie déjà enregistrée dans Documents/audio (ancienne version) reste lisible, jamais déplacée.
  */
-const root = () => new Directory(Paths.document, 'audio');
-const dirOf = (rid: string, make = false) => {
-  const r = root();
-  if (make && !r.exists) r.create();
-  const d = new Directory(r, rid.replace(/[^\w-]/g, '_'));
+const cacheRoot = () => new Directory(Paths.cache, 'quran-audio');
+const legacyRoot = () => new Directory(Paths.document, 'audio');
+const child = (root: Directory, rid: string, make: boolean) => {
+  if (make && !root.exists) root.create();
+  const d = new Directory(root, rid.replace(/[^\w-]/g, '_'));
   if (make && !d.exists) d.create();
   return d;
 };
-const fileOf = (rid: string, s: number, a: number, make = false) => new File(dirOf(rid, make), verseFile(s, a));
+const fileOf = (rid: string, s: number, a: number, make = false) => {
+  const name = verseFile(s, a);
+  const fresh = new File(child(cacheRoot(), rid, make), name);
+  if (make || fresh.exists) return fresh;
+  try {
+    const old = new File(child(legacyRoot(), rid, false), name);
+    if (old.exists) return old;
+  } catch {}
+  return fresh;
+};
 
 export const AUDIO_STORE = 'files' as const;
 
@@ -42,18 +52,23 @@ export function localUri(rid: string, s: number, a: number): string | null {
 
 export async function deleteSurah(rid: string, s: number, total: number, _folder?: string): Promise<void> {
   for (let a = 1; a <= total; a++) {
-    try {
-      const f = fileOf(rid, s, a);
-      if (f.exists) f.delete();
-    } catch {}
+    const name = verseFile(s, a);
+    for (const root of [cacheRoot, legacyRoot]) {
+      try {
+        const f = new File(child(root(), rid, false), name);
+        if (f.exists) f.delete();
+      } catch {}
+    }
   }
 }
 
 export async function deleteReciter(rid: string, _folder?: string): Promise<void> {
-  try {
-    const d = dirOf(rid);
-    if (d.exists) d.delete();
-  } catch {}
+  for (const root of [cacheRoot, legacyRoot]) {
+    try {
+      const d = child(root(), rid, false);
+      if (d.exists) d.delete();
+    } catch {}
+  }
 }
 
 /** Espace libre sur l’appareil (octets), ou null. */

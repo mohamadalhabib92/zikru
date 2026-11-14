@@ -375,5 +375,100 @@ Lecture des données locales impossible	Unable to read local data	تعذّرت �
 Vos appuis sont gardés en mémoire et seront enregistrés dès que possible (nouvel essai automatique). Si le stockage du téléphone est plein, libérez de la place. Ne fermez pas l’app tant que ce message est affiché.	Your presses are kept in memory and will be saved as soon as possible (automatic retry). If the phone’s storage is full, free up some space. Don’t close the app while this message is shown.	ضغطاتك محفوظة في الذاكرة وستُسجَّل في أقرب وقت (إعادة محاولة تلقائية). إن كانت ذاكرة الهاتف ممتلئة فأفرغ بعض المساحة. لا تغلق التطبيق ما دامت هذه الرسالة ظاهرة.
 Compris	Got it	حسنًا
 Zikru a rencontré une erreur	Zikru ran into an error	واجه ذِكرو خطأً
-Vos données restent sur l'appareil. Touchez « Réessayer » ; si l'erreur persiste, faites une capture de cet écran.	Your data stays on the device. Tap “Retry”; if the error persists, take a screenshot of this screen.	بياناتك باقية على الجهاز. المس «إعادة المحاولة»؛ وإن استمر الخطأ فالتقط صورة لهذه الشاشة.
+Vos données restent sur l’appareil. Touchez « Réessayer » ; si l’erreur persiste, faites une capture de cet écran.	Your data stays on the device. Tap “Retry”; if the error persists, take a screenshot of this screen.	بياناتك باقية على الجهاز. المس «إعادة المحاولة»؛ وإن استمر الخطأ فالتقط صورة لهذه الشاشة.
 Chargement	Loading	جارٍ التحميل
+Récitation hors ligne	Offline recitation	تلاوة دون اتصال
+Le récitateur choisi se télécharge tout seul, en Wi-Fi. La sourate ouverte passe en premier. Les fichiers ne vont pas dans iCloud.	The chosen reciter downloads by itself, on Wi-Fi. The open surah goes first. The files are not copied to iCloud.	يُنزَّل القارئ المختار وحده عبر Wi-Fi. السورة المفتوحة أولًا. الملفات لا تُنسخ إلى iCloud.
+{c}/114 sourates · {name}	{c}/114 surahs · {name}	{c}/114 سورة · {name}
+Autoriser le réseau mobile	Allow mobile data	السماح بشبكة الجوال
+En attente du Wi-Fi	Waiting for Wi-Fi	في انتظار Wi-Fi
+Hors ligne : le téléchargement reprendra	Offline: the download will resume	دون اتصال: سيتابع التنزيل
+Pas assez d’espace libre (200 Mo à garder)	Not enough free space (keep 200 MB)	لا توجد مساحة كافية (يُترك 200 م.ب)
+{name} · sourate {s}	{name} · surah {s}	{name} · سورة {s}
+Calendrier de régularité	Regularity calendar	تقويم الانتظام
+{n} dhikr	{n} dhikr	{n} ذكر
+{a}/{b} jours d’objectifs	{a}/{b} goal days	{a}/{b} أيام أهداف
+Constance	Steadiness	الاستمرار
+Privé, sur cet appareil. Aucune comparaison.	Private, on this device. No comparison.	خاص، على هذا الجهاز. دون أي مقارنة.
+Série de dhikr	Dhikr streak	سلسلة الذكر
+{n} jours	{n} days	{n} أيام
+Meilleure série : {n} jours	Best streak: {n} days	أفضل سلسلة: {n} أيام
+Un jour manqué par semaine est une grâce : il ne casse pas la série. Un deuxième jour manqué la même semaine l’arrête. Un jour en dispense ne compte pas. Aujourd’hui ne casse rien tant qu’il n’est pas fini.	One missed day per week is a grace: it does not break the streak. A second missed day the same week ends it. A dispensed day does not count. Today breaks nothing until it is finished.	يوم فائت في الأسبوع رحمة: لا يقطع السلسلة. واليوم الفائت الثاني في الأسبوع نفسه يوقفها. ويوم العذر لا يُحتسب. واليوم الحالي لا يقطع شيئًا قبل انتهائه.
+Grâce restante cette semaine : {n}	Grace left this week: {n}	الرحمة المتبقية هذا الأسبوع: {n}
+Série d’objectifs	Goal streak	سلسلة الأهداف
+Ce n’est pas le nombre de dhikr : seulement les jours où chaque objectif actif a été atteint.	This is not the dhikr count: only the days when every active goal was met.	هذا ليس عدد الذكر: فقط الأيام التي تحقق فيها كل هدف نشط.
+Douze semaines	Twelve weeks	اثنا عشر أسبوعًا
+La teinte suit le volume de dhikr. Le liseré doré marque un jour d’objectifs atteints. Les deux ne s’additionnent pas.	The shade follows the dhikr volume. The gold edge marks a day when goals were met. The two are never added together.	تتبّع الدرجة حجم الذكر. والحاشية الذهبية تعلّم يوم تحقق الأهداف. ولا يُجمع الاثنان.
+Calendrier de douze semaines	Twelve-week calendar	تقويم اثني عشر أسبوعًا
+{day} : {n} dhikr, {p} pages	{day}: {n} dhikr, {p} pages	{day}: {n} ذكر، {p} صفحات
+objectifs atteints	goals met	أهداف تحققت
+Dhikr par semaine	Dhikr per week	الذكر في الأسبوع
+Jours d’objectifs par semaine	Goal days per week	أيام الأهداف في الأسبوع
+Pages terminées par jour. Un jour de lecture est noté à part : le nombre de versets n’est pas enregistré, nous ne l’inventons pas.	Finished pages per day. A reading day is noted separately: the verse count is not stored, and we do not invent it.	الصفحات المكتملة في اليوم. ويُذكر يوم القراءة على حدة: عدد الآيات غير محفوظ، ولا نخترعه.
+{n} pages	{n} pages	{n} صفحات
+Aucune lecture notée sur cette période.	No reading noted in this period.	لا قراءة مسجّلة في هذه الفترة.
+Jalons	Milestones	معالم
+Des repères discrets, pas une compétition. Al-ḥamdu li-llāh.	Quiet markers, not a contest. Al-ḥamdu li-llāh.	علامات هادئة، ليست مسابقة. الحمد لله.
+{n} jours de présence	{n} days of presence	{n} أيام حضور
+L’année	The year	السنة
+Calendrier de l’année	Year calendar	تقويم السنة
+Dhikr par mois	Dhikr per month	الذكر في الشهر
+L’année complète	The full year	السنة الكاملة
+La série et les douze semaines restent gratuites. L’historique d’un an est dans Premium.	The streak and the twelve weeks stay free. A year of history is part of Premium.	السلسلة والاثنا عشر أسبوعًا تبقى مجانية. وسجل السنة ضمن بريميوم.
+Voir Premium	See Premium	عرض بريميوم
+Objectifs du jour	Today’s goals	أهداف اليوم
+Texte source	Source text	النص المصدر
+Passage incertain : {t}	Uncertain passage: {t}	موضع غير مؤكد: {t}
+Formule {n}	Formula {n}	الصيغة {n}
+Nombre de répétitions de la formule {n}	Repetitions of formula {n}	عدد تكرار الصيغة {n}
+À confirmer	To confirm	للتأكيد
+Recette comprise	Recipe understood	الوصفة مفهومة
+Source : {t}	Source: {t}	المصدر: {t}
+But : {t}	Aim: {t}	الغاية: {t}
+Variante : {t}	Variant: {t}	رواية: {t}
+Total des répétitions des étapes : {n}	Total repetitions of the steps: {n}	مجموع تكرار الخطوات: {n}
+Le texte annonce {n}.	The text states {n}.	النص يذكر {n}.
+Vérifiez chaque formule, son nombre et sa dédicace. Rien n’est enregistré avant votre confirmation. Cela reste privé.	Check each formula, its count and its dedication. Nothing is saved before you confirm. It stays private.	تحقّق من كل صيغة وعددها وإهدائها. لا يُحفظ شيء قبل تأكيدك. يبقى هذا خاصًا.
+Confiance {n} pour cent	Confidence {n} percent	الثقة {n} في المئة
+Confiance {n} %	Confidence {n}%	الثقة {n} ٪
+Dédicace	Dedication	الإهداء
+Aucune dédicace lue	No dedication read	لم يُقرأ إهداء
+Dédicace de l’étape {n}	Dedication of step {n}	إهداء الخطوة {n}
+Cette étape ne sera pas enregistrée.	This step will not be saved.	لن تُحفظ هذه الخطوة.
+Retirer cette étape	Remove this step	إزالة هذه الخطوة
+Dédicace : {t}	Dedication: {t}	الإهداء: {t}
+Prérequis : vous pouvez passer cette étape.	Prerequisite: you may skip this step.	شرط سابق: يمكنك تجاوز هذه الخطوة.
+Prérequis optionnel	Optional prerequisite	شرط سابق اختياري
+Étape	Step	خطوة
+Invocation finale	Final invocation	الدعاء الختامي
+Inclure ce prérequis	Include this prerequisite	تضمين هذا الشرط
+Prérequis laissé de côté	Prerequisite left aside	شرط سابق متروك
+Istikhraj	Istikhraj	استخراج
+Calcul des lettres, sans promesse d’effet	A sum of letters, with no promised effect	حساب حروف، دون وعد بأثر
+Alif madda (آ)	Alif madda (آ)	ألف مد (آ)
+1 · un alif	1 · one alif	1 · ألف واحد
+2 · alif et madd	2 · alif and madd	2 · ألف ومد
+Shadda	Shadda	شدة
+Alif waslah (ٱ)	Alif waslah (ٱ)	ألف وصل (ٱ)
+1 · comme alif	1 · as alif	1 · كالألف
+0 · ignoré	0 · ignored	0 · يُتجاهل
+Les voyelles, le sukūn, l’alif suscrit et le tatwīl sont ignorés. La shadda compte une fois, sauf si vous demandez deux. آ compte 1, sauf si vous demandez 2. Un texte sans sens connu se calcule quand même : ce n’est qu’une somme de lettres.	Vowels, sukūn, the superscript alif and the tatwīl are ignored. A shadda counts once, unless you ask for twice. آ counts as 1, unless you ask for 2. A text with no known meaning is still calculated: it is only a sum of letters.	تُتجاهل الحركات والسكون والألف الخنجرية والتطويل. الشدة تُحسب مرة، إلا إذا طلبتم مرتين. آ تُحسب 1، إلا إذا طلبتم 2. والنص بلا معنى معروف يُحسب أيضًا: هو مجموع حروف فحسب.
+Réduction : {n}	Digit sum: {n}	جمع الأرقام: {n}
+Abjad saghir : {n}	Abjad saghir: {n}	الأبجد الصغير: {n}
+Créer un compteur de {n}	Create a counter of {n}	إنشاء عدّاد من {n}
+Le nombre devient l’objectif du compteur. Le texte reste celui que vous avez saisi, même s’il n’a pas de sens connu.	The number becomes the counter’s goal. The text stays what you entered, even if it has no known meaning.	يصير العدد هدف العدّاد. ويبقى النص كما أدخلتموه، حتى إن لم يكن له معنى معروف.
+NOMS DE CETTE VALEUR	NAMES OF THIS VALUE	أسماء بهذه القيمة
+Chercher un nombre	Look up a number	ابحث عن عدد
+Par exemple 66	For example 66	مثلاً 66
+Nombre à chercher parmi les 99 Noms	Number to look up among the 99 Names	عدد يُبحث عنه في الأسماء التسعة والتسعين
+Seuls les 99 Noms de la liste de l’app (Tirmidhī 3507, énumération faible) sont proposés, sans l’article. Aucun effet n’est affirmé.	Only the 99 Names in the app’s list (Tirmidhī 3507, a weak enumeration) are offered, without the article. No effect is claimed.	لا تُقترح إلا الأسماء التسعة والتسعون من قائمة التطبيق (الترمذي 3507، سرد ضعيف)، دون أداة التعريف. لا يُدّعى أي أثر.
+Ordre maghribi vérifié : ص 60, ض 90, س 300, ظ 800, غ 900, ش 1000. Source : G. S. Colin, « Abjad », Encyclopaedia of Islam, 2e éd.	Maghribi order checked: ص 60, ض 90, س 300, ظ 800, غ 900, ش 1000. Source: G. S. Colin, “Abjad”, Encyclopaedia of Islam, 2nd ed.	الترتيب المغربي المتحقق: ص 60، ض 90، س 300، ظ 800، غ 900، ش 1000. المصدر: كولين، موسوعة الإسلام، الطبعة الثانية، «أبجد».
+Aucun des 99 Noms de cette liste ne vaut {n}.	None of the 99 Names in this list equals {n}.	لا يساوي أي اسم من هذه القائمة {n}.
+La note « 50 » de la recette additionne trois mots, pas un seul Nom : {a} {x} + {b} {y} + {c} {z}. الأحد n’est pas dans la liste de Tirmidhī utilisée ici.	The recipe’s note “50” adds three words, not one Name: {a} {x} + {b} {y} + {c} {z}. Al-Aḥad is not in the Tirmidhī list used here.	ملاحظة «50» في الوصفة تجمع ثلاث كلمات، لا اسمًا واحدًا: {a} {x} + {b} {y} + {c} {z}. و«الأحد» ليس في قائمة الترمذي المستعملة هنا.
+Noms de cette valeur : {t}	Names of this value: {t}	أسماء بهذه القيمة: {t}
+Abjad, mashriqi et maghribi	Abjad, mashriqi and maghribi	أبجد، مشرقي ومغربي
+Une fois	Once	مرة واحدة
+Deux fois	Twice	مرتان
+La note « 50 » additionne trois mots, pas un seul Nom.	The note “50” adds three words, not one Name.	ملاحظة «50» تجمع ثلاث كلمات، لا اسمًا واحدًا.
+الأحد n’est pas dans la liste de Tirmidhī utilisée ici.	Al-Aḥad is not in the Tirmidhī list used here.	«الأحد» ليس في قائمة الترمذي المستعملة هنا.
+Ce nom n’est pas dans la liste de Tirmidhī utilisée ici.	This name is not in the Tirmidhī list used here.	هذا الاسم ليس في قائمة الترمذي المستعملة هنا.

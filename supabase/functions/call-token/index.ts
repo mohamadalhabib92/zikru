@@ -6,9 +6,9 @@
 // plafond de participants, débit) sont dans public.call_join / call_rights / call_moderate.
 //
 // Secrets (à définir dans Supabase → Edge Functions → Secrets, jamais dans le dépôt) :
-//   LIVEKIT_URL         ex. YOUR_LIVEKIT_URL (wss://…livekit.cloud)
+//   LIVEKIT_URL         ex. wss://appels.exemple.ch  (serveur LiveKit auto-hébergé, pas un nuage payant)
 //   LIVEKIT_API_KEY     YOUR_LIVEKIT_API_KEY
-//   LIVEKIT_API_SECRET  YOUR_LIVEKIT_API_SECRET
+//   LIVEKIT_API_SECRET  YOUR_LIVEKIT_API_SECRET  (lu ici seulement, jamais dans l’application)
 //   EXPO_ACCESS_TOKEN   (optionnel) pour la notification « appel en cours » si calls.push = true.
 // Tant qu'un secret manque ou vaut YOUR_*, la fonction répond 503 not_configured et l'app affiche « Bientôt disponible ».
 //
@@ -16,6 +16,7 @@
 //   { action: 'join',   scope, id, video }         → { token, url, room, identity, name, video, admin }
 //   { action: 'status', scope, id }                → { active, count }
 //   { action: 'mute' | 'remove', scope, id, target } (hôte seulement ; journalisé en base)
+//   { action: 'end', scope, id }                    (hôte : termine l’appel pour tout le monde)
 // Jamais d'enregistrement, jamais de partage d'écran, pas de données dans l'appel.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { audioTracksToMute, participantClaims, readConfig, roomService, signJwt, UUID_RE, type JoinOk } from './livekit.ts';
@@ -77,7 +78,10 @@ Deno.serve(async (req) => {
         if (error.code === '42501') return json({ error: 'forbidden' }, 403);
         return json({ error: 'join' }, 500);
       }
-      if (!j?.ok) return json({ error: j?.reason ?? 'join' }, j?.reason === 'disabled' ? 503 : 403);
+      if (!j?.ok) {
+        if (j?.reason === 'premium_required' || j?.reason === 'premium_host') return json({ error: 'premium_required', product: 'ch.mohamadba.zikru.premium.lifetime' }, 402);
+        return json({ error: j?.reason ?? 'join' }, j?.reason === 'disabled' ? 503 : 403);
+      }
       const ok = j as JoinOk;
       await lk.createRoom(ok.room, ok.max_participants);
       const token = await signJwt(cfg, participantClaims(ok), ok.token_ttl_s);
@@ -97,6 +101,13 @@ Deno.serve(async (req) => {
         const p = (await lk.participants(room)).find((x) => x.identity === target);
         for (const sid of audioTracksToMute(p?.tracks ?? [])) await lk.muteTrack(room, target, sid);
       }
+      return json({ ok: true });
+    }
+
+    if (b.action === 'end') {
+      const { error } = await db.rpc('end_group_call', { p_scope: scope, p_scope_id: id });
+      if (error) return json({ error: 'forbidden' }, 403);
+      await lk.deleteRoom(room);
       return json({ ok: true });
     }
     return json({ error: 'bad_action' }, 400);

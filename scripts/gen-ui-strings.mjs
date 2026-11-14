@@ -65,7 +65,8 @@ for (const [li, lang] of ['en', 'ar', 'de'].entries()) {
     `// GÉNÉRÉ par scripts/gen-ui-strings.mjs depuis i18n/${lang === 'de' ? 'de/' : ''}*.tsv — ne pas modifier à la main.\n` +
       `// Catalogue principal « ${lang} » (clé : texte français exact), chargé à la demande selon la langue choisie.\n` +
       (lang === 'de' ? '// Traduction allemande NON RELUE par un humain : à faire relire avant toute mention « relu ».\n' : '') +
-      `export const CAT: Record<string, string> = {\n${rows.map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join('\n')}\n};\n`,
+      `export const CAT: Record<string, string> = {\n${rows.map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join('\n')}\n};\n` +
+      (lang === 'de' ? '/** Même catalogue, nom attendu par `ui-cat/index.ts` (repli des langues `review`). */\nexport const cat = CAT;\n' : ''),
   );
 }
 let deLazy = 0, lazyTot = 0;

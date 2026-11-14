@@ -14,6 +14,8 @@ import { editionFor } from '../quran-licenses';
 import { DUAS_I18N } from './duas';
 import { QURAN_DUAS_I18N } from './quran-duas';
 import { QURAN_DUA_ENC } from './quran-dua-enc';
+import type { FiqhRuling } from '../fiqh-rulings';
+import { FIQH_AR, FIQH_EN, FIQH_TOPICS_I18N } from './fiqh';
 
 export type ContentLang = 'fr' | 'en' | 'ar';
 export const contentLang = (l: Lang): ContentLang => (l === 'en' ? 'en' : l === 'ar' ? 'ar' : 'fr');
@@ -62,9 +64,6 @@ export function quranDuaView(q: QuranDua, l: Lang): ContentView {
   if (!enc) return base;
   return { ...base, meaning: enc, translation: editionFor(l).citation, toReview: false };
 }
-
-import type { FiqhRuling } from '../fiqh-rulings';
-import { FIQH_AR, FIQH_EN, FIQH_TOPICS_I18N } from './fiqh';
 
 export type RulingView = {
   title: string;

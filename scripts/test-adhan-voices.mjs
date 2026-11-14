@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadLib } from './load-lib.mjs';
 
-const { 'adhan-voices': V, 'ui-strings': U } = await loadLib(['adhan-voices', 'ui-strings'], 'adhan');
+const { 'adhan-voices': V, 'ui-strings': U, recitation: R, 'audio-auto': A } = await loadLib(['adhan-voices', 'ui-strings', 'recitation', 'audio-auto'], 'adhan');
 
 const published = V.assembleAdhanVoices({}, null);
-assert.equal(published.length, 5);
+assert.equal(published.length, 7);
 const ids = new Set();
 for (const v of published) {
   assert.equal(v.kind, 'published');
@@ -16,6 +16,7 @@ for (const v of published) {
   assert.ok(v.source.uri.startsWith('https://upload.wikimedia.org/wikipedia/commons/'), v.id);
   assert.ok(v.pageUrl.startsWith('https://commons.wikimedia.org/wiki/File:'), v.id);
   assert.ok(v.license && v.licenseUrl.startsWith('https://creativecommons.org/'), v.id);
+  assert.equal(V.licenseBlockReason(v.license), null, v.id);
   assert.ok(v.reciter, v.id);
   assert.equal(v.source.uri.includes('YOUR_'), false);
 }
@@ -71,6 +72,36 @@ while (o + 8 <= wav.length) {
 }
 const seconds = data / (rate * ch * (bits / 8));
 assert.ok(seconds > 20 && seconds < 30, 'durée du son de notification : ' + seconds);
+assert.equal(V.licenseBlockReason('CC BY-NC-SA 4.0'), 'NC');
+assert.equal(V.licenseBlockReason('CC BY-ND 4.0'), 'ND');
+assert.equal(V.licenseBlockReason(''), 'licence absente');
+assert.equal(V.licenseBlockReason('All rights reserved'), 'licence refusée');
+assert.equal(V.licenseBlockReason('CC0 1.0'), null);
+assert.equal(V.licenseBlockReason('CC BY 3.0'), null);
+assert.equal(published.find((v) => v.id === 'commons-ghana-ramadan').style, 'Afrique de l’Ouest');
+assert.equal(published.find((v) => v.id === 'commons-aaqib').reciter, 'Aaqib Azeez');
+const wired = V.assembleAdhanVoices({ 'local-makkah': 1, 'local-konya': 2 }, null);
+for (const id of ['local-makkah', 'local-konya']) {
+  const v = wired.find((x) => x.id === id);
+  assert.equal(V.licenseBlockReason(v.license), null, id);
+  assert.ok(v.pageUrl.startsWith('https://commons.wikimedia.org/'), id);
+}
+assert.equal(wired.some((v) => v.id === 'local-bilal'), false);
+assert.equal(wired.some((v) => v.id === 'local-madinah'), false);
+for (const r of R.RECITERS) {
+  assert.equal(r.licenseStatus, 'doubt', r.id);
+  assert.ok(r.license && V.licenseBlockReason(r.license) !== 'NC', r.id);
+}
+const manifest = { alafasy: { '1': { v: 7 } }, husary: { '2': { v: 3 } } };
+const changed = R.applyReciterChoice(manifest, 'alafasy', 'husary');
+assert.equal(changed.selected, 'husary');
+assert.equal(changed.manifest, manifest);
+assert.equal(manifest.alafasy['1'].v, 7);
+assert.equal(R.applyReciterChoice(manifest, 'alafasy', 'inconnu').selected, 'alafasy');
+const plan = A.reciterDownloadPlan('husary', (s) => s === 1, 2);
+assert.equal(plan.rid, 'husary');
+assert.equal(plan.surahs[0], 2);
+assert.equal(plan.surahs.includes(1), false);
 assert.equal(V.ADHAN_CUE.sound, 'adhan_cue.wav');
 const lic = readFileSync(new URL('../assets/audio/adhan_cue.LICENSE.txt', import.meta.url), 'utf8');
 assert.ok(lic.includes('Jarih') && lic.includes('CC BY-SA 3.0') && lic.includes('https://commons.wikimedia.org/wiki/File:Adhan_wiki.oga'));

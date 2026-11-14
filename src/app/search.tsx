@@ -36,7 +36,7 @@ const SECTIONS: { title: string; kw: string; href: Href; icon: IconName }[] = [
   { title: 'Horaires de prière', kw: 'priere salat horaires adhan', href: '/prayers', icon: 'time' },
   { title: 'Tasbih', kw: 'tasbih compteur chapelet misbaha', href: '/tasbih', icon: 'radio-button-on' },
   { title: 'Qibla', kw: 'qibla boussole kaaba direction', href: '/qibla', icon: 'compass' },
-  { title: 'Calculateur abjad', kw: 'abjad calcul mashriqi maghribi', href: '/abjad', icon: 'calculator' },
+  { title: 'Istikhraj', kw: 'abjad calcul mashriqi maghribi', href: '/abjad', icon: 'calculator' },
   { title: 'Tariqa Tijaniyya', kw: 'tijani tijaniyya wird wazifa haylala hailala', href: '/tijani', icon: 'leaf' },
   { title: 'Communauté', kw: 'communaute cercle famille live', href: '/community', icon: 'people' },
   { title: 'Sourate al-Kahf', kw: 'kahf vendredi jumua', href: '/kahf', icon: 'headset' },
@@ -57,6 +57,7 @@ export default function Search() {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
   const [online, setOnline] = useState<{ ref: string; text: string; n: number }[] | null>(null);
+  const [onlineFor, setOnlineFor] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const nq = norm(q.trim());
@@ -102,7 +103,7 @@ export default function Search() {
   }, [ed.id]);
   useEffect(() => {
     const qq = q.trim();
-    if (qq.length < 2) return setVr(null);
+    if (qq.length < 2) return;
     let alive = true;
     const h = setTimeout(() => {
       searchVerses(qq, ed.id, 30)
@@ -125,16 +126,18 @@ export default function Search() {
     }
   };
   const latin = !hasArabic(q) && !/^\d/.test(q.trim());
-
-  useEffect(() => setOnline(null), [nq]);
+  const verseView = q.trim().length >= 2 && vr?.q === q.trim() ? vr : null;
+  const onlineView = onlineFor === nq ? online : null;
   const searchOnline = async () => {
     setBusy(true);
     try {
       const r = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q.trim())}/all/${ed.id}`);
       const j = await r.json();
       const m = (j?.data?.matches ?? []) as { text: string; surah: { number: number; englishName: string }; numberInSurah: number }[];
+      setOnlineFor(nq);
       setOnline(m.slice(0, 30).map((x) => ({ n: x.surah.number, ref: `${x.surah.englishName} ${x.surah.number}:${x.numberInSurah}`, text: x.text })));
     } catch {
+      setOnlineFor(nq);
       setOnline([]);
     } finally {
       setBusy(false);
@@ -180,7 +183,7 @@ export default function Search() {
             </View>
           ) : (
             <>
-              {total === 0 && !vr?.total ? (
+              {total === 0 && !verseView?.total ? (
                 <View style={{ alignItems: 'center', paddingVertical: 28, gap: 8 }}>
                   <Ionicons name="search-outline" size={34} color={b.inkMuted} />
                   <Text style={{ color: b.ink, fontWeight: '700' }}>{tr.no_results}</Text>
@@ -227,11 +230,11 @@ export default function Search() {
                   </View>
                 </View>
               ))}
-              {vr?.hits.length ? (
+              {verseView?.hits.length ? (
                 <View>
-                  <SectionHeader title={`${tr.verses} · ${vr.total > vr.hits.length ? `${vr.hits.length} / ${vr.total}` : vr.total}`} />
+                  <SectionHeader title={`${tr.verses} · ${verseView.total > verseView.hits.length ? `${verseView.hits.length} / ${verseView.total}` : verseView.total}`} />
                   <View style={{ backgroundColor: b.paper, borderRadius: 16, borderWidth: 1, borderColor: b.line, overflow: 'hidden' }}>
-                    {vr.hits.map((v, i) => (
+                    {verseView.hits.map((v, i) => (
                       <Pressable
                         key={`${v.s}:${v.a}`}
                         accessibilityRole="button"
@@ -284,7 +287,7 @@ export default function Search() {
                 </View>
               ) : null}
               {latin && hasTr === false && ed.channel === 'alquran' ? <SectionHeader title="Versets du Coran (en ligne)" /> : null}
-              {!(latin && hasTr === false && ed.channel === 'alquran') ? null : online === null ? (
+              {!(latin && hasTr === false && ed.channel === 'alquran') ? null : onlineView === null ? (
                 <Pressable
                   accessibilityRole="button"
                   onPress={searchOnline}
@@ -294,11 +297,11 @@ export default function Search() {
                   {busy ? <ActivityIndicator color={b.green} /> : <Ionicons name="globe-outline" size={18} color={b.green} />}
                   <Text style={{ color: b.green, fontWeight: '700' }}>Chercher « {q.trim()} » en ligne · {ed.label}</Text>
                 </Pressable>
-              ) : online.length === 0 ? (
+              ) : onlineView.length === 0 ? (
                 <LMuted>{tr.no_results} (ou hors ligne).</LMuted>
               ) : (
                 <View style={{ backgroundColor: b.paper, borderRadius: 16, borderWidth: 1, borderColor: b.line }}>
-                  {online.map((v, i) => (
+                  {onlineView.map((v, i) => (
                     <Pressable key={v.ref + i} accessibilityRole="button" onPress={() => router.push(`/quran/${v.n}`)} style={{ padding: 12, borderTopWidth: i ? 1 : 0, borderTopColor: b.line }}>
                       <Text style={{ color: b.goldDeep, fontWeight: '800', fontSize: 12 }}>{v.ref}</Text>
                       <Text style={{ color: b.ink, lineHeight: 21 }} numberOfLines={4}>

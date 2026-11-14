@@ -10,11 +10,13 @@ import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { NotifSettings } from '@/components/NotifSettings';
+import { AudioOfflineCard } from '@/components/AudioOffline';
 import { DataExportItem, GroupPushToggle, ModerationLink } from '@/components/AccountExtras';
 import { WidgetSettings } from '@/components/WidgetSettings';
 import { DispenseSettings } from '@/components/DispenseSettings';
 import { PrayerOptions } from '@/components/PrayerOptions';
 import { useSettings } from '@/lib/settings';
+import { LANDSCAPE_THEMES_REQUIRE_PREMIUM, sanitizeLandscape, type LandscapeChoice } from '@/lib/landscapes';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
@@ -23,6 +25,9 @@ import { privacyText } from '@/lib/privacy-text';
 import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { L } from '@/lib/l10n';
 import { usePremium } from '@/lib/premium';
+import { readerPrefs } from '@/lib/quran-store';
+import { RECITERS, applyReciterChoice } from '@/lib/recitation';
+import { useShared } from '@/lib/shared-state';
 
 export default function SettingsScreen() {
   const { s, set, t: tr } = useSettings();
@@ -37,6 +42,15 @@ export default function SettingsScreen() {
   const [consent, choose] = useConsent();
   const pt = privacyText(s.lang);
   const premium = usePremium();
+  const [rp, setRp] = useShared(readerPrefs);
+  const landscape = sanitizeLandscape(s.landscape);
+  const pickLandscape = (id: LandscapeChoice) => {
+    if (id !== 'none' && LANDSCAPE_THEMES_REQUIRE_PREMIUM) {
+      if (!premium.ready) return;
+      if (!premium.canCreate) return router.push('/premium');
+    }
+    set({ landscape: id });
+  };
   return (
     <Screen>
       <Eyebrow>{tr.settings_title}</Eyebrow>
@@ -55,6 +69,19 @@ export default function SettingsScreen() {
           setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
         }}
       />
+      <H2>Paysages</H2>
+      <Muted>Fond calme pour le compteur, pendant le dhikr. Le choix reste enregistré sur cet appareil.</Muted>
+      <Spacer h={8} />
+      <Row wrap>
+        <Chip label="Aucun" active={landscape === 'none'} onPress={() => pickLandscape('none')} />
+        <Chip label="Lagon clair" active={landscape === 'lagoon'} onPress={() => pickLandscape('lagoon')} />
+        <Chip label="Dunes à l’aube" active={landscape === 'dunes'} onPress={() => pickLandscape('dunes')} />
+        <Chip label="Forêt dans la brume" active={landscape === 'mist'} onPress={() => pickLandscape('mist')} />
+        <Chip label="Désert sous les étoiles" active={landscape === 'stars'} onPress={() => pickLandscape('stars')} />
+        <Chip label="Oasis" active={landscape === 'oasis'} onPress={() => pickLandscape('oasis')} />
+      </Row>
+      <Muted>Images créées pour Zikru, libres d’usage dans l’application. Pas de photo tierce.</Muted>
+      <Spacer h={8} />
       <H2>{tr.language}</H2>
       <Row wrap>
         {pickableLangs(s.lang).map((l) => (
@@ -67,6 +94,7 @@ export default function SettingsScreen() {
       <Spacer h={20} />
 
       <NotifSettings />
+      <AudioOfflineCard />
       <GroupPushToggle lang={s.lang} />
       <WidgetSettings />
       <DispenseSettings />
@@ -144,6 +172,18 @@ export default function SettingsScreen() {
       <ListItem title={L('Mode Ramadan')} subtitle={L('Suhur et iftar, jeûne, tarawih, dix dernières nuits')} icon="moon-outline" onPress={() => router.push('/ramadan')} />
       <Spacer h={20} />
 
+      <H2>{L('Récitateur du Coran')}</H2>
+      <Muted>{L('Le téléchargement automatique ne concerne que ce récitateur, en Wi-Fi, en laissant au moins 200 Mo libres. Les fichiers déjà téléchargés restent.')}</Muted>
+      <Spacer h={8} />
+      <Row wrap>
+        {RECITERS.map((r) => (
+          <Chip key={r.id} label={r.name} active={rp.reciter === r.id} onPress={() => setRp((p) => ({ ...p, reciter: applyReciterChoice(null, p.reciter, r.id).selected }))} />
+        ))}
+      </Row>
+      <Spacer h={8} />
+      <ListItem title={L('Crédits et licences des sons')} icon="document-text-outline" onPress={() => router.push('/sound-credits')} />
+      <Spacer h={20} />
+
       <H2>{L('Zikru Premium')}</H2>
       <Card>
         <ListItem
@@ -209,7 +249,7 @@ export default function SettingsScreen() {
       <Card>
         <ListItem title={tr.sources_title} icon="library-outline" onPress={() => router.push('/sources')} />
         <Divider />
-        <ListItem title={tr.ring} subtitle="Tasbih électronique, anneau de dhikr, télécommande" icon="bluetooth-outline" onPress={() => router.push('/ring')} />
+        <ListItem title={tr.ring} subtitle={L('Compteur, journal des trames')} icon="bluetooth-outline" onPress={() => router.push('/ring')} />
         <Divider />
         <ListItem title="Synchronisation (Supabase)" icon="cloud-outline" right={<Badge label={backendConfigured ? 'Configuré' : tr.config_missing} tone={backendConfigured ? 'success' : 'warning'} />} onPress={() => router.push('/config')} />
         <Divider />

@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform, Pressable, Share, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { arNum } from '@/lib/quran-nav';
@@ -16,7 +16,7 @@ import { QBtn, QLabel, Sheet } from './Sheet';
 import { L } from '@/lib/l10n';
 
 export type AyahTarget = { s: number; a: number; ar: string; tr?: string; /** édition de la traduction (pour citer sa source) */ trId?: string };
-export type AyahAction = 'play' | 'tafsir' | 'zikr' | 'hifz' | 'ab';
+export type AyahAction = 'play' | 'tafsir' | 'zikr' | 'hifz' | 'ab' | 'istikhraj';
 
 function Act({ icon, label, onPress, pal }: { icon: IconName; label: string; onPress: () => void; pal: Pal }) {
   return (
@@ -35,12 +35,13 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
   const [copied, setCopied] = useState(false);
   const k = target ? keyOf(target.s, target.a) : '';
   const bm = target ? m.bookmarks.find((x) => x.s === target.s && x.a === target.a) : undefined;
-  useEffect(() => {
+  const [seenK, setSeenK] = useState(k);
+  if (seenK !== k) {
+    setSeenK(k);
     setName(bm?.name ?? '');
     setNoteTxt(target ? (m.notes[k]?.text ?? '') : '');
     setCopied(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [k]);
+  }
   if (!target) return null;
   const meta = SURAHS[target.s - 1];
   const title = `${meta[2]} · ${target.s}:${target.a}`;
@@ -93,6 +94,7 @@ export function AyahActions({ target, onClose, onAction, pal }: { target: AyahTa
         {VERSE_IMAGE_SUPPORTED && Platform.OS === 'web' ? <Act icon="image-outline" label="Partager en image" onPress={shareImage} pal={pal} /> : null}
         <Act icon="repeat" label="Répéter A-B" onPress={() => run('ab')} pal={pal} />
         <Act icon="albums-outline" label="Ajouter à un zikr" onPress={() => run('zikr')} pal={pal} />
+        <Act icon="calculator-outline" label="Istikhraj" onPress={() => run('istikhraj')} pal={pal} />
       </View>
 
       <QLabel pal={pal}>MARQUE-PAGE</QLabel>

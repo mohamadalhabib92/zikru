@@ -114,4 +114,10 @@ t('dates invalides (latitude extrême) : ignorées sans planter', () => {
   const p = P.buildPlan(now, bad, D, L);
   assert.ok(p.every((e) => Number.isFinite(e.date.getTime())));
 });
+t('rappels : les couper est enregistré même sans permission ; les allumer exige la permission', () => {
+  assert.equal(P.remindersStored(false, false), false);
+  assert.equal(P.remindersStored(false, true), false);
+  assert.equal(P.remindersStored(true, false), false);
+  assert.equal(P.remindersStored(true, true), true);
+});
 console.log(`Notifications : ${ok} tests passent.`);

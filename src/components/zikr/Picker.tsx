@@ -85,21 +85,21 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   const [n, setN] = useState<number | null>(null);
   const [from, setFrom] = useState('1');
   const [to, setTo] = useState('');
-  const [data, setData] = useState<SurahText | null>(null);
-  const [err, setErr] = useState(false);
+  const [slot, setSlot] = useState<{ n: number; data: SurahText | null; err: boolean } | null>(null);
+  const data = slot && slot.n === n ? slot.data : null;
+  const err = !!(slot && slot.n === n && slot.err);
   const fr = translationFor('fr');
   useEffect(() => {
     if (!n) return;
     let alive = true;
-    setData(null);
-    setErr(false);
-    getSurah(n, fr.id)
-      .then((d) => alive && setData(d))
-      .catch(() => alive && setErr(true));
+    const id = n;
+    getSurah(id, fr.id)
+      .then((d) => alive && setSlot({ n: id, data: d, err: false }))
+      .catch(() => alive && setSlot({ n: id, data: null, err: true }));
     return () => {
       alive = false;
     };
-  }, [n]);
+  }, [n, fr.id]);
   const surahs = useMemo(() => {
     const q = norm(sq.trim());
     if (!q) return SURAHS;
@@ -108,16 +108,18 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   }, [sq]);
   // Recherche de versets hors-ligne (arabe sans diacritiques, « 2:255 », ou traduction si téléchargée).
   const [vh, setVh] = useState<VerseHit[]>([]);
+  const qTrim = sq.trim();
+  const verseHits = qTrim.length < 3 || /^\d+$/.test(qTrim) ? [] : vh;
   useEffect(() => {
     const q = sq.trim();
-    if (q.length < 3 || /^\d+$/.test(q)) return setVh([]);
+    if (q.length < 3 || /^\d+$/.test(q)) return;
     let alive = true;
     const h = setTimeout(() => searchVerses(q, fr.id, 12).then((r) => alive && setVh(r.hits)).catch(() => {}), 200);
     return () => {
       alive = false;
       clearTimeout(h);
     };
-  }, [sq]);
+  }, [sq, fr.id]);
   const pick = (v: VerseHit) => {
     setN(v.s);
     setFrom(String(v.a));
@@ -127,10 +129,10 @@ function VersePicker({ onAdd }: { onAdd: (d: DraftItem) => void }) {
     return (
       <View>
         <TextInput value={sq} onChangeText={setSq} placeholder={L("Sourate, verset (2:255) ou mots en arabe")} placeholderTextColor={b.inkMuted} style={input} accessibilityLabel={L("Rechercher une sourate ou un verset")} autoCorrect={false} />
-        {vh.length ? (
+        {verseHits.length ? (
           <View style={{ marginTop: 8 }}>
             <LMuted style={{ fontSize: 12, fontWeight: '700' }}>Versets (hors-ligne)</LMuted>
-            {vh.map((v) => (
+            {verseHits.map((v) => (
               <Pressable
                 key={`${v.s}:${v.a}`}
                 accessibilityRole="button"

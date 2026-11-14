@@ -6,17 +6,45 @@
 import { OFFSETS } from './quran-nav';
 import { SURAHS } from './surahs';
 
-export type Reciter = { id: string; name: string; style: string; folder: string; riwaya: 'Hafs' | 'Warsh'; fallback?: string };
+export type ReciterLicense = 'open' | 'doubt';
+export type Reciter = {
+  id: string;
+  name: string;
+  style: string;
+  folder: string;
+  riwaya: 'Hafs' | 'Warsh';
+  fallback?: string;
+  /** open = redistribution vérifiée pour une app payante. doubt = déjà proposé, licence non vérifiée : on ne l’ajoute pas comme source libre. */
+  licenseStatus: ReciterLicense;
+  license: string;
+  licenseUrl: string;
+  pageUrl: string;
+};
+const DOUBT = {
+  licenseStatus: 'doubt' as const,
+  license: 'Droits du récitateur — licence ouverte non vérifiée',
+  licenseUrl: 'https://alquran.cloud/terms-and-conditions',
+  pageUrl: 'https://everyayah.com',
+};
 export const RECITERS: Reciter[] = [
-  { id: 'alafasy', name: 'Mishary Rashid Alafasy', style: 'Murattal', folder: 'Alafasy_128kbps', riwaya: 'Hafs', fallback: '128/ar.alafasy' },
-  { id: 'husary', name: 'Mahmoud Khalil al-Husary', style: 'Murattal', folder: 'Husary_128kbps', riwaya: 'Hafs', fallback: '128/ar.husary' },
-  { id: 'husary-muallim', name: 'Al-Husary (Mu‘allim)', style: 'Enseignement · idéal pour mémoriser', folder: 'Husary_Muallim_128kbps', riwaya: 'Hafs' },
-  { id: 'minshawi', name: 'Muhammad Siddiq al-Minshawi', style: 'Murattal', folder: 'Minshawy_Murattal_128kbps', riwaya: 'Hafs', fallback: '128/ar.minshawi' },
-  { id: 'abdulbasit', name: 'Abdul Basit Abdus-Samad', style: 'Murattal', folder: 'Abdul_Basit_Murattal_192kbps', riwaya: 'Hafs', fallback: '192/ar.abdulbasitmurattal' },
-  { id: 'warsh-dosary', name: 'Ibrahim al-Dosary', style: 'Warsh ‘an Nafi‘', folder: 'warsh/warsh_ibrahim_aldosary_128kbps', riwaya: 'Warsh' },
-  { id: 'warsh-jazaery', name: 'Yassin al-Jaza’iri', style: 'Warsh ‘an Nafi‘', folder: 'warsh/warsh_yassin_al_jazaery_64kbps', riwaya: 'Warsh' },
+  { id: 'alafasy', name: 'Mishary Rashid Alafasy', style: 'Murattal', folder: 'Alafasy_128kbps', riwaya: 'Hafs', fallback: '128/ar.alafasy', ...DOUBT },
+  { id: 'husary', name: 'Mahmoud Khalil al-Husary', style: 'Murattal', folder: 'Husary_128kbps', riwaya: 'Hafs', fallback: '128/ar.husary', ...DOUBT },
+  { id: 'husary-muallim', name: 'Al-Husary (Mu‘allim)', style: 'Enseignement · idéal pour mémoriser', folder: 'Husary_Muallim_128kbps', riwaya: 'Hafs', ...DOUBT },
+  { id: 'minshawi', name: 'Muhammad Siddiq al-Minshawi', style: 'Murattal', folder: 'Minshawy_Murattal_128kbps', riwaya: 'Hafs', fallback: '128/ar.minshawi', ...DOUBT },
+  { id: 'abdulbasit', name: 'Abdul Basit Abdus-Samad', style: 'Murattal', folder: 'Abdul_Basit_Murattal_192kbps', riwaya: 'Hafs', fallback: '192/ar.abdulbasitmurattal', ...DOUBT },
+  { id: 'warsh-dosary', name: 'Ibrahim al-Dosary', style: 'Warsh ‘an Nafi‘', folder: 'warsh/warsh_ibrahim_aldosary_128kbps', riwaya: 'Warsh', ...DOUBT },
+  { id: 'warsh-jazaery', name: 'Yassin al-Jaza’iri', style: 'Warsh ‘an Nafi‘', folder: 'warsh/warsh_yassin_al_jazaery_64kbps', riwaya: 'Warsh', ...DOUBT },
 ];
 export const reciterById = (id: string) => RECITERS.find((r) => r.id === id) ?? RECITERS[0];
+
+/**
+ * Change le récitateur choisi. Un identifiant inconnu ne change rien.
+ * Le manifeste des fichiers déjà téléchargés est renvoyé tel quel : aucun récitateur n’est effacé.
+ */
+export function applyReciterChoice<T>(manifest: T, current: string, next: string): { selected: string; manifest: T } {
+  const known = RECITERS.some((r) => r.id === next);
+  return { selected: known ? next : current, manifest };
+}
 
 const p3 = (n: number) => String(n).padStart(3, '0');
 /** URL du verset (s, a) pour un récitateur. */

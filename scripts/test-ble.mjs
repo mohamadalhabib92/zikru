@@ -83,12 +83,12 @@ test('ClickDecoder absolu : base, deltas, perte, remise à zéro', () => {
   const f = (n, now = 10_000) => d.feed(B(0xaa, 3, 0, n), now);
   assert.equal(d.feed(B(0xaa, 3, 0, 40), 1200), 0, 'valeur initiale = base');
   assert.equal(f(41), 1);
-  assert.equal(f(41), 0, 'doublon');
+  assert.equal(f(41), 0, 'même total : pas un nouvel appui');
   assert.equal(f(44), 3, 'notifications perdues rattrapées');
-  assert.equal(f(200), 0, 'saut aberrant : en attente, rien compté');
+  assert.equal(f(200), 156, 'écart entier, pas +1');
   assert.equal(f(0), 0, 'remise à zéro : en attente');
   assert.equal(f(1), 1, 'remise à zéro confirmée par la trame suivante : +1');
-  assert.equal(f(0xff, 10_000) + 0, 0, 'saut impossible : en attente');
+  assert.equal(f(0xff), 254, '1 → 255 : écart entier');
   assert.equal(d.feed(B(1, 2), 10_000), 0, 'trame non reconnue ignorée');
   const late = new c.ClickDecoder(m, c.parseBstwsh, 0);
   assert.equal(late.feed(B(0xaa, 3, 0, 7), 5000), 1, 'premier appui après la période de base');
@@ -182,6 +182,7 @@ test('apprentissage : échecs explicites', () => {
   assert.equal(c.analyzeLearn([], 1).ok, false);
 });
 test('touches HID', () => {
+  assert.equal(c.HID_ON_BY_DEFAULT, false, 'le clavier ne compte pas tout seul : Espace ne doit pas bloquer la page');
   const k = c.DEFAULT_HID_KEYS;
   assert.ok(c.isCounterKey({ key: 'Enter' }, k));
   assert.ok(c.isCounterKey({ key: 'AudioVolumeUp' }, k));
@@ -235,19 +236,16 @@ test('P4 trame parasite (ex. 65535) : ignorée, la référence est conservée (p
   assert.equal(d.hasPending, false);
   assert.equal(d.feed(fr(43), 10_400), 1);
 });
-test('P4 saut > 10 confirmé par la trame suivante : rattrapé dans la limite physique', () => {
+test('P4 écart de total : ajouté en entier, y compris s’il dépasse 10', () => {
   const d = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
   d.feed(fr(100), 0);
-  // notifications bloquées 20 s (iOS en arrière-plan) puis 150 appuis d'un coup : > 100 → à confirmer
-  assert.equal(d.feed(fr(250), 20_000), 0);
-  assert.equal(d.feed(fr(251), 20_500), 151, '150 confirmés + 1');
-  assert.equal(d.lastEvent, 'confirmé');
+  assert.equal(d.feed(fr(250), 20_000), 150, '150 appuis manqués : le total entier');
+  assert.equal(d.feed(fr(251), 20_500), 1);
   assert.equal(d.lastValue, 251);
-  // saut impossible physiquement (500 en 1 s) même confirmé : plafonné à ce qu'un doigt peut faire
   const e = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
   e.feed(fr(10), 0);
-  assert.equal(e.feed(fr(510), 1000), 0);
-  assert.equal(e.feed(fr(511), 1100), c.physicalCap(1000) + 1);
+  assert.equal(e.feed(fr(510), 1000), 500, '500 d’un coup : pas plafonné à +1');
+  assert.equal(e.feed(fr(511), 1100), 1);
 });
 test('P4 sauts plausibles comptés tout de suite ; deux parasites de suite : aucun compte', () => {
   const d = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
@@ -256,20 +254,21 @@ test('P4 sauts plausibles comptés tout de suite ; deux parasites de suite : auc
   assert.equal(d.feed(fr(9000), 5100), 0);
   assert.equal(d.feed(fr(3000), 5200), 0, 'autre parasite : remplace l’attente');
   assert.equal(d.feed(fr(31), 5300), 1, 'retour à la normale : +1');
-  assert.ok(c.jumpAcceptable(10, 0) && !c.jumpAcceptable(11, 0) && c.jumpAcceptable(40, 3000) && !c.jumpAcceptable(150, 1e6));
+  assert.ok(c.jumpAcceptable(10, 0) && c.jumpAcceptable(11, 0) && c.jumpAcceptable(150, 0) && !c.jumpAcceptable(c.ABSOLUTE_ACCEPT + 1, 0));
 });
 test('P4 débordement du champ toujours immédiat', () => {
   const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: 1 }, c.parseGeneric, 0);
   d.feed(B(0, 254), 10_000);
   assert.equal(d.feed(B(0, 1), 10_100), 3);
 });
-test('P4 impulsions : double livraison (< 25 ms) ignorée, appuis rapides réels comptés', () => {
+test('P4 impulsions : trames identiques comptées (bague delta), 20 appuis en 1 s', () => {
   const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'pulse' }, c.parseGeneric, 0);
-  assert.equal(d.feed(B(1), 1000), 1);
-  assert.equal(d.feed(B(1), 1005), 0, 'même trame 5 ms après : doublon');
-  assert.equal(d.lastEvent, 'doublon');
-  assert.equal(d.feed(B(1), 1070), 1, 'appui 70 ms après : compté');
-  assert.equal(d.feed(B(2), 1075), 1, 'trame différente : comptée');
+  let n = 0;
+  for (let i = 0; i < 20; i++) n += d.feed(B(1), 1000 + i * 50);
+  assert.equal(n, 20, '20 trames identiques en 1 s');
+  assert.equal(d.feed(B(1), 3000), 1);
+  assert.equal(d.feed(B(1), 3010), 1, 'même octet 10 ms après : un autre appui, pas un doublon jeté');
+  assert.equal(d.feedPacket(B(1, 1, 1), 4000), 3, 'trois octets identiques dans une notification');
 });
 test('P4 appairage par nom (H8) : jamais de connexion automatique sans identifiant', () => {
   const known = [{ id: 'AA', name: 'BW-Ring' }];
@@ -422,6 +421,91 @@ test('P4 annonce brute : apparence, services 16 bits, fabricant', () => {
   // trame tronquée / vide : pas d'exception
   assert.equal(c.parseAdvertising(new Uint8Array([9, 0x19, 0x41])).appearance, null);
   assert.equal(c.parseAdvertising(new Uint8Array(0)).manufacturer, null);
+});
+
+test('profils documentés : iQibla par écriture 0xD004, UART publiée, noms arabes', () => {
+  const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
+  assert.equal(k('سبحة ذكية'), 'counter');
+  assert.equal(k('تسبيح'), 'counter');
+  assert.equal(k('Noor N01'), 'counter');
+  assert.equal(k(null, [c.HM10_SERVICE]), 'other', 'HM-10 sans nom de compteur : hors liste');
+  assert.equal(k(null, [], { manufacturerId: 0x1234, manufacturerData: new Uint8Array([1, 2]) }), 'other', 'aucun identifiant fabricant de bague n’est publié');
+  const d004 = [{ service: c.normUuid('fff0'), uuid: c.IQIBLA_WRITE, notify: false, read: false }];
+  assert.equal(c.detectProfile('Noor', d004).id, 'iqibla');
+  assert.equal(c.detectProfile('Noor', []).id, 'generic', 'Noor sans 0xD004 : pas le parseur iQibla');
+  const one = [{ service: c.normUuid('fff0'), uuid: c.normUuid('fff1'), notify: true, read: false }];
+  assert.equal(c.defaultMapping(c.profileById('iqibla'), one).mode, 'absolute');
+  const uart = [
+    { service: c.HM10_SERVICE, uuid: c.HM10_SERIAL, notify: true, read: false },
+    { service: c.normUuid('fff0'), uuid: c.normUuid('fff2'), notify: true, read: false },
+  ];
+  const g = c.defaultMapping(c.profileById('generic'), uart);
+  assert.equal(g.characteristic, c.HM10_SERIAL);
+  assert.equal(g.mode, 'pulse', 'format HM-10 non publié : impulsion, puis apprentissage');
+  const nus = [{ service: c.NUS_SERVICE, uuid: c.NUS_TX, notify: true, read: false }, uart[1]];
+  assert.equal(c.defaultMapping(c.profileById('generic'), nus).characteristic, c.NUS_TX);
+  assert.equal(c.defaultMapping(c.profileById('iqibla'), uart), null, 'deux canaux et le profil iQibla n’utilise pas FFE1 : apprentissage');
+});
+
+test('simulation iQibla : hors connexion rattrapé, même total ignoré, impulsion sans rattrapage', () => {
+  const frame = (n) => A(`Q07,${String(n).padStart(4, '0')},0,0,0`);
+  const abs = { service: 's', characteristic: 'c', mode: 'absolute', byteIndex: -1 };
+  const live = new c.ClickDecoder(abs, c.parseIqibla, 0, null);
+  assert.equal(live.feed(frame(12), 200), 0, 'première trame = référence');
+  assert.equal(live.feed(frame(13), 400), 1);
+  const back = new c.ClickDecoder(abs, c.parseIqibla, 0, live.lastValue);
+  assert.equal(back.feed(frame(16), 100), 3, '13 → 16 pendant la coupure');
+  assert.equal(back.lastWasSync, true);
+  assert.equal(back.feed(frame(16), 200), 0, 'même total : pas de doublon');
+  assert.equal(back.feed(frame(17), 400), 1);
+  const pulse = { ...abs, mode: 'pulse' };
+  assert.equal(c.adoptAbsoluteFrame(pulse, 'fff0', 'fff1', frame(16), c.parseGeneric, 0).mode, 'absolute');
+  assert.equal(c.adoptAbsoluteFrame(pulse, 'fff0', 'fff1', frame(16), c.parseGeneric, 2), null, 'déjà des appuis comptés : on ne recommence pas');
+  assert.equal(c.adoptAbsoluteFrame({ ...pulse, learnedAt: 'x' }, 'fff0', 'fff1', frame(16), c.parseGeneric, 0), null);
+  const blind = new c.ClickDecoder(pulse, c.parseGeneric, 0, 10);
+  assert.equal(blind.feed(new Uint8Array([1]), 100), 1, 'trame sans total : un appui, rien à rattraper');
+});
+
+test('reconnexion : lancement, premier plan, perte, Bluetooth, restauration iOS', () => {
+  const d = (event, opts) => c.reconnectDecision(event, opts);
+  const on = { remembered: true, linked: false, background: false };
+  assert.equal(d('launch', on), 'search-now');
+  assert.equal(d('foreground', on), 'search-now');
+  assert.equal(d('link-loss', on), 'search-now');
+  assert.equal(d('bluetooth-on', on), 'search-now');
+  assert.equal(d('foreground', { ...on, linked: true }), 'idle');
+  assert.equal(d('launch', { ...on, remembered: false }), 'idle');
+  assert.equal(d('bluetooth-off', on), 'pause');
+  assert.equal(d('bluetooth-off', { ...on, linked: true }), 'idle');
+  assert.equal(d('link-loss', { ...on, background: true }), 'wait-system');
+  assert.equal(d('bluetooth-on', { ...on, background: true }), 'wait-system', 'radio revenue en arrière-plan : pas de scan');
+  assert.equal(d('background', on), 'wait-system');
+  assert.equal(d('ios-restore', { ...on, background: true }), 'search-now', 'iOS réveille l’app : reprise immédiate');
+  assert.equal(d('ios-restore', { ...on, linked: true }), 'idle');
+});
+
+test('trames collées, coupées, écart énorme confirmé, reconnexion', () => {
+  const m = { service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: -1 };
+  const d = new c.ClickDecoder(m, c.parseBstwsh, 0);
+  const packet = new Uint8Array([0xaa, 3, 0, 1, 0xaa, 3, 0, 2, 0xaa, 3, 0, 4]);
+  assert.equal(d.feedPacket(packet, 5000), 4, 'trois trames dans une notification : 0→1→2→4');
+  assert.equal(d.lastValue, 4);
+  const split = new c.ClickDecoder(m, c.parseBstwsh, 0);
+  assert.equal(split.feedPacket(new Uint8Array([0xaa, 3]), 5000), 0, 'moitié de trame : rien encore');
+  assert.equal(split.feedPacket(new Uint8Array([0, 9]), 5100), 1, 'l’autre moitié complète le premier total');
+  assert.equal(split.lastValue, 9);
+  const iq = new Uint8Array([...A('Q07,0012,0,0,0'), ...A('Q07,0015,0,0,0')]);
+  const iqD = new c.ClickDecoder(m, c.parseIqibla, 0);
+  assert.equal(iqD.feedPacket(iq, 100), 3, 'deux textes iQibla : base 12 puis +3');
+  assert.equal(iqD.lastValue, 15);
+  const huge = new c.ClickDecoder({ ...m, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
+  const fr = (n) => B(0xaa, 3, n >> 8, n & 255);
+  huge.feed(fr(10), 0);
+  assert.equal(huge.feed(fr(20000), 100), 0, 'écart au-delà du seuil : en attente');
+  assert.equal(huge.feed(fr(20001), 200), 19991, 'confirmé : écart entier, pas +1');
+  const back = new c.ClickDecoder(m, c.parseBstwsh, 0, 4);
+  assert.equal(back.feed(B(0xaa, 3, 0, 9), 100), 5, 'reconnexion : 4 → 9');
+  assert.equal(back.feed(B(0xaa, 3, 0, 9), 120), 0, 'même total relu : pas de doublon');
 });
 
 if (fail) {

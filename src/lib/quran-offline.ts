@@ -65,13 +65,17 @@ const trKey = (ed: string) => `quran-tr-${ed}`;
 /** Traduction en cache local (null si jamais téléchargée). */
 export function cachedTranslation(edition: string): Promise<string[] | null> {
   if (!trMem[edition])
-    trMem[edition] = readText(trKey(edition)).then((t) => {
+    trMem[edition] = readText(trKey(edition)).then(async (t) => {
       const lines = t ? t.split('\n') : null;
-      if (!lines || lines.length < 6236) {
-        trMem[edition] = undefined;
-        return null;
+      if (lines && lines.length >= 6236) return lines;
+      if (edition === 'en.pickthall') {
+        const { loadPickthallSurah } = await import('./quran-tr/pickthall/load');
+        const all: string[] = [];
+        for (let s = 1; s <= 114; s++) all.push(...(await loadPickthallSurah(s)));
+        return all.length === 6236 ? all : null;
       }
-      return lines;
+      trMem[edition] = undefined;
+      return null;
     });
   return trMem[edition]!;
 }

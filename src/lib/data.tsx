@@ -39,6 +39,7 @@ type Ctx = {
   ready: boolean;
 };
 const C = createContext<Ctx | null>(null);
+const ReadyC = createContext(false);
 
 const addClicks = (n: number, source: ClickSource, cursor?: BleCursor) => {
   const r = tasbihStore.addClicks(n, source, cursor);
@@ -90,11 +91,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (r2) void bleCounter.init();
   }, [r2]);
 
-  return <C.Provider value={{ content, setContent, tasbih, setTasbih, addClicks, increment, saveSession, ready: r1 && r2 }}>{children}</C.Provider>;
+  const ready = r1 && r2;
+  return (
+    <ReadyC.Provider value={ready}>
+      <C.Provider value={{ content, setContent, tasbih, setTasbih, addClicks, increment, saveSession, ready }}>{children}</C.Provider>
+    </ReadyC.Provider>
+  );
 }
 
 export function useData() {
   const v = useContext(C);
   if (!v) throw new Error('DataProvider manquant');
   return v;
+}
+/** Prêt ou non, sans se redessiner à chaque appui du compteur. */
+export function useDataReady() {
+  return useContext(ReadyC);
 }

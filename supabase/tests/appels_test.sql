@@ -52,20 +52,49 @@ do $$ declare r jsonb; begin
 end $$;
 reset role;
 update public.app_config set value = 'true' where key = 'calls.enabled';
+set role authenticated;
+do $$ declare r jsonb; begin
+  perform tests.as_user('X');
+  r := public.call_rights('circle', tests.get('circle')::uuid);
+  assert not (r ->> 'enabled')::boolean and r ->> 'reason' = 'disabled', 'calls.enabled sans adresse de serveur : toujours fermé';
+end $$;
+reset role;
+update public.app_config set value = '"wss://appels.test.invalid"' where key = 'calls.server_url';
 update public.app_config set value = 'true' where key = 'calls.push';
+insert into public.user_entitlements (user_id, plan_id, source, external_ref, note) values
+  ('30000000-0000-4000-8000-000000000001', 'lifetime', 'manual', 'test:call-F', 'hôte Premium'),
+  ('30000000-0000-4000-8000-000000000007', 'lifetime', 'manual', 'test:call-P', 'hôte Premium');
 set role authenticated;
 
 -- ============================================================ Cercle : membres, hôte, blocage, capacité
 do $$ declare r jsonb; j jsonb; begin
   perform tests.as_user('X');
   r := public.call_rights('circle', tests.get('circle')::uuid);
-  assert (r ->> 'can_join')::boolean and (r ->> 'video')::boolean and not (r ->> 'admin')::boolean, 'membre : audio + vidéo, pas hôte : ' || r::text;
+  assert not (r ->> 'can_join')::boolean and r ->> 'reason' = 'premium_required' and not (r ->> 'admin')::boolean, 'membre sans Premium : ne rejoint pas : ' || r::text;
   assert (r ->> 'max_participants')::int = 4, 'capacité = taille du groupe (4)';
   j := public.call_join('circle', tests.get('circle')::uuid, true, '{}');
-  assert (j ->> 'ok')::boolean and j ->> 'room' = 'circle_' || tests.get('circle') and j ->> 'identity' = tests.get('u_X'), 'entrée : ' || j::text;
-  assert j ->> 'name' = 'Xavier' and (j ->> 'video')::boolean and (j ->> 'ring')::boolean, 'nom posé par le serveur, première personne : notification';
+  assert j ->> 'reason' = 'premium_required', 'membre sans Premium : salle vide refusée';
+  perform tests.as_user('M');
+  r := public.call_rights('circle', tests.get('circle')::uuid);
+  assert not (r ->> 'can_join')::boolean and r ->> 'reason' = 'premium_required', 'modérateur sans Premium : ne rejoint pas';
+  assert public.call_join('circle', tests.get('circle')::uuid, true, '{}') ->> 'reason' = 'premium_required', 'modérateur sans Premium refusé';
+  perform tests.as_user('F');
+  assert (public.call_rights('circle', tests.get('circle')::uuid) ->> 'can_start')::boolean, 'fondatrice Premium : peut ouvrir';
+  j := public.call_join('circle', tests.get('circle')::uuid, true, '{}');
+  assert (j ->> 'ok')::boolean and j ->> 'room' = 'circle_' || tests.get('circle') and j ->> 'identity' = tests.get('u_F'), 'l’hôte Premium ouvre : ' || j::text;
+  assert j ->> 'name' = 'Fatou' and (j ->> 'video')::boolean and (j ->> 'ring')::boolean, 'nom posé par le serveur, première personne : notification';
   j := public.call_join('circle', tests.get('circle')::uuid, false, '{}');
   assert not (j ->> 'video')::boolean and not (j ->> 'ring')::boolean, 'audio seul demandé ; pas de 2e notification dans le délai';
+  perform tests.as_user('X');
+  assert public.call_join('circle', tests.get('circle')::uuid, true, array[tests.get('u_F')]::uuid[]) ->> 'reason' = 'premium_required', 'membre sans Premium : salle déjà ouverte refusée';
+end $$;
+reset role;
+insert into public.user_entitlements (user_id, plan_id, source, external_ref, note) values
+  ('30000000-0000-4000-8000-000000000002', 'lifetime', 'manual', 'test:call-M', 'modérateur'),
+  ('30000000-0000-4000-8000-000000000003', 'lifetime', 'manual', 'test:call-X', 'membre'),
+  ('30000000-0000-4000-8000-000000000004', 'lifetime', 'manual', 'test:call-Y', 'membre');
+set role authenticated;
+do $$ declare r jsonb; j jsonb; begin
   perform tests.as_user('F');
   assert (public.call_rights('circle', tests.get('circle')::uuid) ->> 'admin')::boolean, 'fondatrice = hôte';
   perform tests.as_user('M');
@@ -96,10 +125,15 @@ do $$ begin
   perform tests.as_user('F');
   assert public.call_moderate('circle', tests.get('circle')::uuid, 'call_remove', tests.get('u_M')::uuid), 'fondatrice retire le modérateur';
   assert tests.state(format($q$select public.call_moderate('circle', %L, 'call_mute', %L)$q$, tests.get('circle'), tests.get('u_F'))) = '42501', 'pas soi-même';
+  perform tests.as_user('X');
+  assert tests.state(format($q$select public.end_group_call('circle', %L)$q$, tests.get('circle'))) = '42501', 'un membre ne termine pas l’appel';
+  perform tests.as_user('F');
+  assert public.end_group_call('circle', tests.get('circle')::uuid), 'l’hôte termine l’appel';
 end $$;
 reset role;
 do $$ begin
   assert (select count(*) from private.moderation_actions where action in ('call_mute', 'call_remove')) = 2, 'actions journalisées';
+  assert (select count(*) from private.moderation_actions where action = 'call_end') = 1, 'fin d’appel journalisée';
   assert (select count(*) from private.call_joins) = 3, 'journal des entrées (refus non journalisés)';
 end $$;
 set role authenticated;
@@ -108,9 +142,26 @@ set role authenticated;
 do $$ declare r jsonb; j jsonb; begin
   perform tests.as_user('K');
   r := public.call_rights('family', tests.get('fam')::uuid);
-  assert (r ->> 'can_join')::boolean and not (r ->> 'video')::boolean and (r ->> 'video_needs_consent')::boolean, 'enfant : audio, vidéo sans consentement non : ' || r::text;
+  assert not (r ->> 'can_join')::boolean and r ->> 'reason' = 'premium_required', 'enfant sans Premium : ne rejoint pas : ' || r::text;
   j := public.call_join('family', tests.get('fam')::uuid, true, '{}');
-  assert (j ->> 'ok')::boolean and not (j ->> 'video')::boolean, 'vidéo demandée mais refusée par le serveur';
+  assert j ->> 'reason' = 'premium_required', 'enfant sans Premium : salle vide refusée';
+  perform tests.as_user('P');
+  j := public.call_join('family', tests.get('fam')::uuid, true, '{}');
+  assert (j ->> 'ok')::boolean and (j ->> 'video')::boolean, 'parent Premium ouvre';
+  perform tests.as_user('K');
+  assert public.call_join('family', tests.get('fam')::uuid, true, array[tests.get('u_P')]::uuid[]) ->> 'reason' = 'premium_required', 'enfant sans Premium : salle ouverte refusée';
+end $$;
+reset role;
+insert into public.user_entitlements (user_id, plan_id, source, external_ref, note) values
+  ('30000000-0000-4000-8000-000000000008', 'lifetime', 'manual', 'test:call-K', 'enfant'),
+  ('30000000-0000-4000-8000-000000000009', 'lifetime', 'manual', 'test:call-G', 'invité');
+set role authenticated;
+do $$ declare r jsonb; j jsonb; begin
+  perform tests.as_user('K');
+  r := public.call_rights('family', tests.get('fam')::uuid);
+  assert (r ->> 'can_join')::boolean and not (r ->> 'video')::boolean and (r ->> 'video_needs_consent')::boolean, 'enfant Premium : audio, vidéo sans consentement non : ' || r::text;
+  j := public.call_join('family', tests.get('fam')::uuid, true, array[tests.get('u_P')]::uuid[]);
+  assert (j ->> 'ok')::boolean and not (j ->> 'video')::boolean, 'enfant Premium rejoint ; vidéo refusée par le serveur';
   assert public.call_join('family', tests.get('fam')::uuid, false, array[tests.get('u_G')]::uuid[]) ->> 'reason' = 'pair', 'enfant : jamais avec un invité';
   assert (public.call_join('family', tests.get('fam')::uuid, false, array[tests.get('u_P')]::uuid[]) ->> 'ok')::boolean, 'enfant avec son parent : ok';
   perform tests.as_user('G');

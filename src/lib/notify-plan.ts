@@ -250,3 +250,13 @@ export function buildPlan(now: Date, compute: ComputeDay, prefs: NotifPrefs, L: 
 
 /** Empreinte du plan : évite de tout reprogrammer si rien n’a changé. */
 export const planHash = (p: PlannedNotif[]) => p.map((e) => `${e.id}@${Math.round(e.date.getTime() / MIN)}:${e.title}${e.playsAdhan ? '#adhan' : ''}`).join('|');
+
+/**
+ * Ce que l’on enregistre pour l’interrupteur des rappels.
+ * Le couper est toujours enregistré, même si le système a refusé la permission
+ * (sinon l’interrupteur a l’air éteint alors que les rappels repartent dès que la permission revient).
+ * Les allumer n’est enregistré que si la permission est accordée.
+ */
+export function remindersStored(turnOn: boolean, permissionGranted: boolean): boolean {
+  return turnOn && permissionGranted;
+}

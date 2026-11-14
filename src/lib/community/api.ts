@@ -16,7 +16,19 @@ export type SharingMode = 'nothing' | 'participation' | 'counter';
 
 export type Family = { id: string; name: string; wird: string | null; created_at: string };
 export type FamilyMember = { id: string; family_id: string; user_id: string | null; display_name: string; role: FamilyRole; managed_by: string | null };
-export type Circle = { id: string; name: string; description: string | null; rules: string | null; max_members: number | null; created_at: string };
+export type Circle = {
+  id: string;
+  name: string;
+  description: string | null;
+  rules: string | null;
+  max_members: number | null;
+  created_at: string;
+  kind?: 'circle' | 'class';
+  allow_minors?: boolean;
+  allow_mixed_video?: boolean;
+};
+export type ClassLesson = { id: string; circle_id: string; title: string; starts_at: string; surah: number; ayah_from: number; ayah_to: number; cancelled_at: string | null };
+export type ClassAssignment = { id: string; circle_id: string; surah: number; ayah_from: number; ayah_to: number; note: string | null; created_at: string };
 export type CircleMember = { circle_id: string; user_id: string; display_name: string; role: CircleRole; rules_accepted_at: string | null };
 export type Goal = {
   id: string;
@@ -90,6 +102,10 @@ export function frError(e: unknown): string {
       return L('Vous avez atteint la limite de {n} groupes créés.', { n: Number(d.limit) || 0 });
     case 'ZKP01':
       return L('Créer un groupe est réservé à Zikru Premium.');
+    case 'ZKT01':
+      return L('Le rôle d’enseignant est accordé par Bissabi, pas dans l’application.');
+    case 'ZKL01':
+      return L('La lecture partagée n’est pas ouverte.');
     case 'ZKR01':
       return L('Trop de tentatives. Réessayez dans {t}.', { t: waitText(Number(d.retry_after_s) || 60) });
     case 'ZKF01':
@@ -111,12 +127,41 @@ async function q<T>(p: PromiseLike<{ data: T | null; error: PgError | null }>): 
 }
 
 const scopeCol = (s: ScopeType) => (s === 'family' ? 'family_id' : 'circle_id');
+const CIRCLE_COLS = 'id,name,description,rules,max_members,created_at';
+const CIRCLE_FULL = `${CIRCLE_COLS},kind,allow_minors,allow_mixed_video`;
+const isMissing = (e: unknown) => {
+  const code = e instanceof CommunityError ? e.code : undefined;
+  return code === '42703' || code === '42883' || code === 'PGRST202' || code === 'PGRST204' || code === 'PGRST205';
+};
 
 // ---------- Lieux ----------
 export const listFamilies = () => q<Family[]>(sb().then((c) => c.from('families').select('id,name,wird,created_at').order('created_at')));
-export const listCircles = () => q<Circle[]>(sb().then((c) => c.from('circles').select('id,name,description,rules,max_members,created_at').order('created_at')));
+export async function listCircles(): Promise<Circle[]> {
+  try {
+    const rows = await q<Circle[]>(sb().then((c) => c.from('circles').select(CIRCLE_FULL).order('created_at')));
+    return rows.filter((c) => (c.kind ?? 'circle') === 'circle');
+  } catch (e) {
+    if (!isMissing(e)) throw e;
+    return q<Circle[]>(sb().then((c) => c.from('circles').select(CIRCLE_COLS).order('created_at')));
+  }
+}
+export async function listClasses(): Promise<Circle[]> {
+  try {
+    return await q<Circle[]>(sb().then((c) => c.from('circles').select(CIRCLE_FULL).eq('kind', 'class').order('created_at')));
+  } catch (e) {
+    if (isMissing(e)) return [];
+    throw e;
+  }
+}
 export const getFamily = (id: string) => q<Family>(sb().then((c) => c.from('families').select('id,name,wird,created_at').eq('id', id).single()));
-export const getCircle = (id: string) => q<Circle>(sb().then((c) => c.from('circles').select('id,name,description,rules,max_members,created_at').eq('id', id).single()));
+export async function getCircle(id: string): Promise<Circle> {
+  try {
+    return await q<Circle>(sb().then((c) => c.from('circles').select(CIRCLE_FULL).eq('id', id).single()));
+  } catch (e) {
+    if (!isMissing(e)) throw e;
+    return q<Circle>(sb().then((c) => c.from('circles').select(CIRCLE_COLS).eq('id', id).single()));
+  }
+}
 export const familyMembers = (id: string) =>
   q<FamilyMember[]>(sb().then((c) => c.from('family_members').select('id,family_id,user_id,display_name,role,managed_by').eq('family_id', id).order('joined_at')));
 export const circleMembers = (id: string) =>
@@ -125,6 +170,42 @@ export const circleMembers = (id: string) =>
 export const createFamily = (name: string, displayName: string) => q<string>(sb().then((c) => c.rpc('create_family', { p_name: name, p_display_name: displayName })));
 export const createCircle = (name: string, description: string, rules: string, displayName: string) =>
   q<string>(sb().then((c) => c.rpc('create_circle', { p_name: name, p_description: description || null, p_rules: rules || null, p_display_name: displayName })));
+
+/** null = la migration classes n’est pas sur ce serveur. */
+export async function amITeacher(): Promise<boolean | null> {
+  try {
+    return await q<boolean>(sb().then((c) => c.rpc('am_i_teacher')));
+  } catch (e) {
+    if (isMissing(e)) return null;
+    throw e;
+  }
+}
+export const createClass = (name: string, description: string, displayName: string) =>
+  q<string>(sb().then((c) => c.rpc('create_class', { p_name: name, p_description: description || null, p_display_name: displayName })));
+export const setClassOptions = (id: string, allowMinors: boolean, allowMixedVideo: boolean) =>
+  q(sb().then((c) => c.rpc('set_class_options', { p_id: id, p_allow_minors: allowMinors, p_allow_mixed_video: allowMixedVideo })));
+export const listClassLessons = (id: string) =>
+  q<ClassLesson[]>(sb().then((c) => c.from('class_lessons').select('id,circle_id,title,starts_at,surah,ayah_from,ayah_to,cancelled_at').eq('circle_id', id).order('starts_at')));
+export const listClassAssignments = (id: string) =>
+  q<ClassAssignment[]>(sb().then((c) => c.from('class_assignments').select('id,circle_id,surah,ayah_from,ayah_to,note,created_at').eq('circle_id', id).order('created_at', { ascending: false })));
+export const scheduleClassLesson = (id: string, title: string, startsAt: string, surah: number, from: number, to: number) =>
+  q<string>(sb().then((c) => c.rpc('schedule_class_lesson', { p_class: id, p_title: title, p_starts_at: startsAt, p_surah: surah, p_from: from, p_to: to })));
+export const assignRecitation = (id: string, surah: number, from: number, to: number, note: string) =>
+  q<string>(sb().then((c) => c.rpc('assign_recitation', { p_class: id, p_surah: surah, p_from: from, p_to: to, p_note: note || null })));
+export const markRecitationDone = (assignmentId: string) => q(sb().then((c) => c.rpc('mark_recitation_done', { p_assignment: assignmentId })));
+export async function classConsents(familyId: string): Promise<Record<string, boolean> | null> {
+  try {
+    const rows = await q<{ child_member_id: string; allow_classes: boolean }[]>(
+      sb().then((c) => c.from('parental_controls').select('child_member_id,allow_classes').eq('family_id', familyId)),
+    );
+    return Object.fromEntries(rows.map((r) => [r.child_member_id, !!r.allow_classes]));
+  } catch (e) {
+    if (isMissing(e)) return null;
+    throw e;
+  }
+}
+export const setClassConsent = (familyId: string, childMemberId: string, allow: boolean) =>
+  q(sb().then((c) => c.from('parental_controls').upsert({ child_member_id: childMemberId, family_id: familyId, allow_classes: allow }, { onConflict: 'child_member_id' })));
 export const updateFamily = (id: string, patch: { name?: string; wird?: string | null }) => q(sb().then((c) => c.from('families').update(patch).eq('id', id)));
 export const updateCircle = (id: string, patch: { name?: string; description?: string | null; rules?: string | null }) => q(sb().then((c) => c.from('circles').update(patch).eq('id', id)));
 export const leaveFamily = (familyId: string, userId: string) => q(sb().then((c) => c.from('family_members').delete().eq('family_id', familyId).eq('user_id', userId)));

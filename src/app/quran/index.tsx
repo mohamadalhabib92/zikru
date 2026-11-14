@@ -42,23 +42,21 @@ export default function QuranHub() {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<{ q: string; list: VerseHit[]; total: number; translated: boolean; phonetic?: boolean } | null>(null);
   const [tlState, setTlState] = useState<'idle' | 'busy' | 'err' | 'ok'>('idle');
-  const [busy, setBusy] = useState(false);
 
   const ref = parseRef(q);
   const nq = normLat(q);
-  const surahHits = q.trim() && !ref ? SURAHS.filter((s) => normLat(s[2] + ' ' + s[3]).replace(/\s/g, '').includes(nq.replace(/\s/g, '')) || s[1].includes(q.trim())) : [];
+  const qTrim = q.trim();
+  const surahHits = qTrim && !ref ? SURAHS.filter((s) => normLat(s[2] + ' ' + s[3]).replace(/\s/g, '').includes(nq.replace(/\s/g, '')) || s[1].includes(qTrim)) : [];
+  const verseHits = qTrim.length >= 3 && !ref && hits?.q === qTrim ? hits : null;
+  const busy = qTrim.length >= 3 && !ref && hits?.q !== qTrim;
   useEffect(() => {
     const t = q.trim();
-    if (t.length < 3 || ref) {
-      setHits(null);
-      return;
-    }
+    if (t.length < 3 || ref) return;
     let alive = true;
-    setBusy(true);
     const h = setTimeout(() => {
       searchVerses(t, tr.id, 30)
         .then((r) => alive && setHits({ q: t, list: r.hits, total: r.total, translated: r.translated, phonetic: r.phonetic }))
-        .finally(() => alive && setBusy(false));
+        .catch(() => alive && setHits({ q: t, list: [], total: 0, translated: false }));
     }, 300);
     return () => {
       alive = false;
@@ -178,7 +176,7 @@ export default function QuranHub() {
               <Text {...arLang} style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18 }}>{s[1].replace(/^سُورَةُ\s*/, '')}</Text>
             </Pressable>
           ))}
-          {hits?.list.slice(0, 8).map((h) => (
+          {verseHits?.list.slice(0, 8).map((h) => (
             <Pressable key={`${h.s}:${h.a}`} accessibilityRole="button" onPress={() => go({ pathname: '/quran/[n]', params: { n: String(h.s), a: String(h.a) } })} style={{ backgroundColor: b.paper, borderRadius: 14, borderWidth: 1, borderColor: b.line, padding: 12, gap: 4 }}>
               <Text style={{ color: b.green, fontWeight: '800', fontSize: 12 }}>{`${SURAHS[h.s - 1][2]} ${h.s}:${h.a}`}</Text>
               <Text {...arLang} style={{ color: b.ink, fontFamily: fonts.quran, fontSize: 18, lineHeight: 38, textAlign: 'right', writingDirection: 'rtl' }} numberOfLines={2}>
@@ -188,7 +186,7 @@ export default function QuranHub() {
               {h.tr ? <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={2}>{h.tr}</Text> : null}
             </Pressable>
           ))}
-          {hits && hits.phonetic === false && !/[\u0600-\u06FF]/.test(q) ? (
+          {verseHits && verseHits.phonetic === false && !/[\u0600-\u06FF]/.test(q) ? (
             <Pressable accessibilityRole="button" disabled={tlState === 'busy'} onPress={getTranslit} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper }}>
               {tlState === 'busy' ? <ActivityIndicator color={b.green} /> : <Ionicons name="mic-outline" size={18} color={b.green} />}
               <Text style={{ color: b.ink, fontSize: 13, flex: 1 }}>
@@ -196,8 +194,8 @@ export default function QuranHub() {
               </Text>
             </Pressable>
           ) : null}
-          {hits && hits.total > 8 ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('{n} versets — affinez, ou ouvrez la recherche complète.', { n: hits.total })}</Text> : null}
-          {hits && !hits.translated && !/[\u0600-\u06FF]/.test(q) && !surahHits.length ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>La recherche par mot (traduction) nécessite la traduction hors-ligne : Recherche → Télécharger. L’arabe fonctionne toujours.</Text> : null}
+          {verseHits && verseHits.total > 8 ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('{n} versets — affinez, ou ouvrez la recherche complète.', { n: verseHits.total })}</Text> : null}
+          {verseHits && !verseHits.translated && !/[\u0600-\u06FF]/.test(q) && !surahHits.length ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>La recherche par mot (traduction) nécessite la traduction hors-ligne : Recherche → Télécharger. L’arabe fonctionne toujours.</Text> : null}
         </View>
       ) : null}
 

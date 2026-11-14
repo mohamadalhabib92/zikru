@@ -18,6 +18,7 @@ function Attribution({ voice }: { voice: AdhanVoice }) {
   if (!voice.reciter && !voice.license && !voice.pageUrl) return null;
   return (
     <View style={{ marginTop: 8 }}>
+      {voice.style ? <Muted>{L('Style : {s}', { s: L(voice.style) })}</Muted> : null}
       {voice.reciter ? <Muted>{L('Auteur : {name}', { name: voice.reciter })}</Muted> : null}
       {voice.license ? <Muted>{L('Licence : {license}', { license: voice.license })}</Muted> : null}
       {voice.pageUrl ? (
@@ -52,7 +53,7 @@ export function AdhanVoicePicker() {
   return (
     <View>
       <H2>Voix de l’adhan</H2>
-      <Muted>Enregistrements publiés, lus en ligne et non copiés dans l’application. Le choix reste sur cet appareil.</Muted>
+      <Muted>{L('Certains enregistrements sont dans l’application, les autres sont lus en ligne. Le choix reste sur cet appareil.')}</Muted>
       <Spacer h={8} />
       <Card>
         {voices.map((v) => (

@@ -78,10 +78,12 @@ function clientNeededAtStart(): boolean {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileFor, setProfileFor] = useState<string | null>(null);
   const [ready, setReady] = useState(!supabaseConfigured);
   const [linkError, setLinkError] = useState<string | null>(() => (Platform.OS === 'web' ? takeWebLinkError() : null));
   const [lastEmail, setLastEmail] = useState('');
   const userId = session?.user.id ?? null;
+  const shownProfile = userId && profileFor === userId ? profile : null;
   // Client chargé à la demande : on s'abonne aux changements de session dès qu'il est disponible (une seule fois).
   const attached = useRef<SupabaseClient | null>(null);
   const unsub = useRef<(() => void) | null>(null);
@@ -126,16 +128,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [client]);
 
   const refreshProfile = useCallback(async () => {
-    if (!userId) return setProfile(null);
+    if (!userId) return;
     try {
-      setProfile(await getProfile(userId));
+      const next = await getProfile(userId);
+      setProfileFor(userId);
+      setProfile(next);
     } catch {
       // hors-ligne : on garde le dernier profil connu
     }
   }, [userId]);
   useEffect(() => {
-    void refreshProfile();
-  }, [refreshProfile]);
+    if (!userId) return;
+    let alive = true;
+    void getProfile(userId)
+      .then((next) => {
+        if (!alive) return;
+        setProfileFor(userId);
+        setProfile(next);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [userId]);
   // Passe 6 : notifications de groupe (natif, derrière EXPO_PUBLIC_GROUP_PUSH ; sans effet ailleurs).
   useEffect(() => {
     if (userId) void refreshGroupPush();
@@ -147,8 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     userId,
     email: session?.user.email ?? null,
-    profile,
-    displayName: profile?.display_name || (session?.user.email ?? '').split('@')[0] || 'Moi',
+    profile: shownProfile,
+    displayName: shownProfile?.display_name || (session?.user.email ?? '').split('@')[0] || 'Moi',
     linkError,
     lastEmail,
     clearLinkError: () => setLinkError(null),
@@ -179,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await (await client())?.auth.signOut();
       void AsyncStorage.removeItem(LAST_EMAIL).catch(() => {});
       setLastEmail('');
+      setProfileFor(null);
       setProfile(null);
     },
     deleteAccount: async () => {
@@ -187,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await (await client())?.auth.signOut();
       void AsyncStorage.removeItem(LAST_EMAIL).catch(() => {});
       setLastEmail('');
+      setProfileFor(null);
       setProfile(null);
     },
   };

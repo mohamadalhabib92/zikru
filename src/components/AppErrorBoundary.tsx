@@ -13,7 +13,7 @@ export function ErrorScreen({ error, retry }: { error: Error; retry: () => void 
         Zikru a rencontré une erreur
       </Text>
       <Text style={{ color: '#B8C4BE', fontSize: 15, marginBottom: 16 }}>
-        Vos données restent sur l'appareil. Touchez « Réessayer » ; si l'erreur persiste, faites une capture de cet écran.
+        Vos données restent sur l’appareil. Touchez « Réessayer » ; si l’erreur persiste, faites une capture de cet écran.
       </Text>
       <ScrollView style={{ flex: 1, backgroundColor: '#15241F', borderRadius: 12, padding: 12, marginBottom: 16 }}>
         <Text selectable style={{ color: '#E8B36B', fontFamily: 'Menlo', fontSize: 12 }}>

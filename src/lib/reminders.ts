@@ -47,12 +47,14 @@ export function usePrayerReminders() {
   useBindAdhanPlayback();
   const { pause } = useDispense();
   const { fast } = useRamadan();
+  const { reminders, place, method, madhab, prayer, notif } = s;
   useEffect(() => {
-    if (!ready || !s.reminders || !remindersSupported() || Notification.permission !== 'granted') return;
+    if (!ready || !reminders || !remindersSupported() || Notification.permission !== 'granted') return;
+    const planSettings = { place, method, madhab, prayer, notif };
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
       const now = new Date();
-      const next = planFor(now, s, tr, pause, fast).find((e) => e.kind !== 'paused' && e.date.getTime() > now.getTime() + 1000);
+      const next = planFor(now, planSettings, tr, pause, fast).find((e) => e.kind !== 'paused' && e.date.getTime() > now.getTime() + 1000);
       if (!next) return;
       const delay = Math.min(next.date.getTime() - now.getTime(), 2 ** 31 - 1);
       timer = setTimeout(() => {
@@ -65,5 +67,5 @@ export function usePrayerReminders() {
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [ready, s.reminders, s.place, s.method, s.madhab, s.prayer, s.notif, tr, pause, fast]);
+  }, [ready, reminders, place, method, madhab, prayer, notif, tr, pause, fast]);
 }

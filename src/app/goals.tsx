@@ -195,6 +195,7 @@ export default function Goals() {
           {[
             { t: 'Planificateur', h: '/planner' as Href, i: 'calendar' as IconName },
             { t: 'Mon parcours', h: '/journey' as Href, i: 'trending-up' as IconName },
+            { t: 'Constance', h: '/constance' as Href, i: 'grid' as IconName },
           ].map((x) => (
             <Pressable
               key={x.t}
