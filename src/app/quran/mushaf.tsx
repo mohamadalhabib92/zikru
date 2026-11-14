@@ -214,8 +214,10 @@ export default function Mushaf() {
           getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
           initialScrollIndex={p0 - 1}
           initialNumToRender={1}
-          maxToRenderPerBatch={2}
+          maxToRenderPerBatch={1}
           windowSize={3}
+          removeClippedSubviews
+          updateCellsBatchingPeriod={50}
           viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
           onViewableItemsChanged={onViewable}
           renderItem={renderItem}

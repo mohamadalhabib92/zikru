@@ -11,6 +11,7 @@ import { useReaderKeepAwake } from '@/components/quran/keep-awake';
 import { readerPalette } from '@/components/quran/palette';
 import { ReaderSettings } from '@/components/quran/ReaderSettings';
 import { QBtn } from '@/components/quran/Sheet';
+import { layoutAyahs } from '@/lib/quran-layout';
 import { arNum, gIndex, hizbOfIndex, juzOfIndex, pageOf, pageOfIndex, rubLabel, rubStartAt, sajdaAt } from '@/lib/quran-nav';
 import { BASMALA_UTHMANI, surahEdition } from '@/lib/quran-reader-data';
 import { preferSurah } from '@/lib/audio-dl';
@@ -238,8 +239,65 @@ export default function SurahReader() {
   useEffect(() => () => void (saveT.current && clearTimeout(saveT.current)), []);
 
   const rowH = Math.round(p.arSize * p.lineH + 52 + (p.showTr ? p.trSize * 1.55 + 16 : 0) + (p.showTl ? 28 : 0));
+  const metrics = useMemo(
+    () => ({ arSize: p.arSize, lineH: p.lineH, trSize: p.trSize, showTr: p.showTr, showTl: p.showTl }),
+    [p.arSize, p.lineH, p.trSize, p.showTr, p.showTl],
+  );
+  const ayahLayout = useMemo(() => (ar ? layoutAyahs(ar, metrics) : null), [ar, metrics]);
+  const getItemLayout = useCallback(
+    (_: ArrayLike<number> | null | undefined, index: number) => ({
+      length: ayahLayout?.heights[index] ?? rowH,
+      offset: ayahLayout?.offsets[index] ?? rowH * index,
+      index,
+    }),
+    [ayahLayout, rowH],
+  );
+  const bookmarkAt = useMemo(() => {
+    const map = new Map<number, { name: string; color: string }>();
+    for (const b of m.bookmarks) if (b.s === n) map.set(b.a, { name: b.name, color: b.color });
+    return map;
+  }, [m.bookmarks, n]);
+  const renderAyah = useCallback(
+    ({ item: a }: { item: number }) => {
+      const k = keyOf(n, a);
+      const bm = bookmarkAt.get(a);
+      return (
+        <AyahRow
+          n={n}
+          a={a}
+          text={ar?.[a - 1] ?? ''}
+          trLine={tr.lines?.[a - 1]}
+          tlLine={tl.lines?.[a - 1]}
+          showTr={p.showTr}
+          showTl={p.showTl}
+          trFailed={tr.failed}
+          onRetry={tr.retry}
+          pal={pal}
+          arSize={p.arSize}
+          lineH={p.lineH}
+          trSize={p.trSize}
+          nurani={p.nurani}
+          muqattaat={p.muqattaat}
+          hl={m.hl[k]}
+          note={m.notes[k]?.text}
+          bookmark={bm}
+          playing={playingA === a}
+          playingNow={playingA === a && rec.playing}
+          onOpen={onOpen}
+          onPlay={onPlay}
+        />
+      );
+    },
+    [n, ar, tr.lines, tr.failed, tr.retry, tl.lines, p.showTr, p.showTl, p.arSize, p.lineH, p.trSize, p.nurani, p.muqattaat, pal, m.hl, m.notes, bookmarkAt, playingA, rec.playing, onOpen, onPlay],
+  );
+  const keyAyah = useCallback((a: number) => `${n}-${a}`, [n]);
+  const audioOpen = rec.pos >= 0;
+  const listPad = useMemo(
+    () => ({ maxWidth: 820, width: '100%' as const, alignSelf: 'center' as const, paddingHorizontal: 14, paddingBottom: audioOpen ? 180 : 40 }),
+    [audioOpen],
+  );
   const gi0 = gIndex(n, top);
-  const header = (
+  const header = useMemo(() => (
     <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 14 }}>
       <View style={{ alignSelf: 'stretch', borderRadius: 20, borderWidth: 1, borderColor: alpha(pal.gold, 0.5), backgroundColor: pal.card, paddingVertical: 16, paddingHorizontal: 14, alignItems: 'center' }}>
         <Text style={{ color: pal.gold, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 }}>{L('SOURATE {n} · {k} · {v} VERSETS', { n, k: L(meta[5] === 'M' ? 'MECQUOISE' : 'MÉDINOISE'), v: meta[4] })}</Text>
@@ -249,12 +307,12 @@ export default function SurahReader() {
         {n === 9 ? <Text style={{ color: pal.muted, fontSize: 12, marginTop: 6 }}>Sourate sans basmala d’ouverture</Text> : null}
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, justifyContent: 'center' }}>
-        <QBtn solid icon="play" label="Écouter" onPress={() => play(1)} pal={pal} />
+        <QBtn solid icon="play" label="Écouter" onPress={() => playRef.current(1)} pal={pal} />
         <QBtn icon="school-outline" label="Mémoriser" onPress={() => router.push({ pathname: '/quran/hifz-session', params: { s: String(n), from: '1', to: String(Math.min(meta[4], 5)) } })} pal={pal} />
         <QBtn icon="book-outline" label="Mode page" onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(pageOf(n, top)) } })} pal={pal} />
       </View>
     </View>
-  );
+  ), [n, meta, pal, quranFont, router, top]);
 
   return (
     <View style={{ flex: 1, backgroundColor: pal.bg }}>
@@ -289,12 +347,14 @@ export default function SurahReader() {
         <FlatList
           ref={list}
           data={data}
-          keyExtractor={(a) => String(n) + '-' + String(a)}
+          keyExtractor={keyAyah}
           initialScrollIndex={startA > 1 ? startA - 1 : undefined}
-          getItemLayout={(_, index) => ({ length: rowH, offset: rowH * index, index })}
-          initialNumToRender={8}
-          maxToRenderPerBatch={6}
-          windowSize={7}
+          getItemLayout={getItemLayout}
+          initialNumToRender={6}
+          maxToRenderPerBatch={8}
+          updateCellsBatchingPeriod={50}
+          windowSize={5}
+          removeClippedSubviews
           viewabilityConfig={{ itemVisiblePercentThreshold: 40 }}
           onViewableItemsChanged={onViewable}
           onScrollToIndexFailed={(e) => {
@@ -305,38 +365,10 @@ export default function SurahReader() {
               } catch {}
             }, 250);
           }}
-          contentContainerStyle={{ maxWidth: 820, width: '100%', alignSelf: 'center', paddingHorizontal: 14, paddingBottom: rec.pos >= 0 ? 180 : 40 }}
+          contentContainerStyle={listPad}
           ListHeaderComponent={header}
-          renderItem={({ item: a }) => {
-            const k = keyOf(n, a);
-            const bm = m.bookmarks.find((x) => x.s === n && x.a === a);
-            return (
-              <AyahRow
-                n={n}
-                a={a}
-                text={ar[a - 1]}
-                trLine={tr.lines?.[a - 1]}
-                tlLine={tl.lines?.[a - 1]}
-                showTr={p.showTr}
-                showTl={p.showTl}
-                trFailed={tr.failed}
-                onRetry={tr.retry}
-                pal={pal}
-                arSize={p.arSize}
-                lineH={p.lineH}
-                trSize={p.trSize}
-                nurani={p.nurani}
-                muqattaat={p.muqattaat}
-                hl={m.hl[k]}
-                note={m.notes[k]?.text}
-                bookmark={bm ? { name: bm.name, color: bm.color } : undefined}
-                playing={playingA === a}
-                playingNow={playingA === a && rec.playing}
-                onOpen={onOpen}
-                onPlay={onPlay}
-              />
-            );
-          }}
+          renderItem={renderAyah}
+          extraData={playingA}
           ListFooterComponent={
             <View style={{ gap: 12, marginTop: 6 }}>
               <View style={{ flexDirection: 'row', gap: 10 }}>
