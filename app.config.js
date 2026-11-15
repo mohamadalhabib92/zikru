@@ -31,6 +31,8 @@ const WIDGETS = [
 ];
 
 module.exports = ({ config }) => {
+  // Apple TV uniquement. Sans EXPO_TV=1, le projet iPhone / Watch ci-dessous n’est pas modifié.
+  if (process.env.EXPO_TV === '1') return withAppleTv(config);
   if (process.env.EAS_BUILD && config.experiments) {
     const { baseUrl, ...rest } = config.experiments;
     config.experiments = rest;
@@ -66,3 +68,53 @@ module.exports = ({ config }) => {
   config.plugins = [...(config.plugins || []), '@bacons/apple-targets', './plugins/with-watch-version.js'];
   return config;
 };
+
+const TV_DROP_INFO = [
+  'NSBluetoothAlwaysUsageDescription',
+  'NSCameraUsageDescription',
+  'NSPhotoLibraryUsageDescription',
+  'NSMicrophoneUsageDescription',
+  'NSMotionUsageDescription',
+  'NSLocationWhenInUseUsageDescription',
+  'NSLocationTemporaryUsageDescriptionDictionary',
+];
+
+/**
+ * Projet tvOS séparé : même identifiant de bundle (achat universel), sans widgets,
+ * sans montre, sans Bluetooth, sans appareil photo. Le plugin config-tv ne s’exécute qu’ici.
+ */
+function withAppleTv(config) {
+  if (process.env.EAS_BUILD && config.experiments) {
+    const { baseUrl, ...rest } = config.experiments;
+    config.experiments = rest;
+  }
+  const keep = new Set(['expo-router', 'expo-audio', 'expo-iap']);
+  const plugins = (config.plugins || []).filter((p) => keep.has(Array.isArray(p) ? p[0] : p));
+  const audio = ['expo-audio', { microphonePermission: false, enableBackgroundPlayback: true, recordAudioAndroid: false }];
+  const next = plugins.map((p) => (Array.isArray(p) && p[0] === 'expo-audio' ? audio : p));
+  if (!next.some((p) => (Array.isArray(p) ? p[0] : p) === 'expo-iap')) next.push('expo-iap');
+  next.push(['@react-native-tvos/config-tv', { isTV: true, tvosDeploymentTarget: '15.1' }]);
+  next.push('./plugins/with-tv-pods.js');
+  config.plugins = next;
+  config.orientation = 'landscape';
+  // Projet Expo distinct : les profils tvOS ne partagent pas le créneau
+  // de provisionnement iPhone / Watch du projet « zikru ».
+  config.slug = 'zikru-tv';
+  config.owner = 'habib548';
+  config.version = '1.0.30';
+  config.ios = config.ios || {};
+  config.ios.bundleIdentifier = 'com.vibecode.zikru-76mpdv';
+  config.ios.buildNumber = '1';
+  if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
+  // Pas de groupe d’apps, pas de montre, pas de widget : le profil tvOS
+  // de cet App ID ne porte pas ces capacités.
+  config.ios.entitlements = {};
+  const info = { ...(config.ios.infoPlist || {}) };
+  for (const key of TV_DROP_INFO) delete info[key];
+  config.ios.infoPlist = info;
+  config.extra = config.extra || {};
+  config.extra.eas = { ...(config.extra.eas || {}), projectId: '0093f2e3-7828-41e7-9e62-c3e06d9bee77' };
+  if (config.extra.eas.build) delete config.extra.eas.build;
+  // expo-updates n’est pas configuré dans ce dépôt : pas d’URL u.expo.dev.
+  return config;
+}

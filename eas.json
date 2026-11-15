@@ -25,10 +25,36 @@
       "android": {
         "buildType": "app-bundle"
       }
+    },
+    "production-tv": {
+      "autoIncrement": false,
+      "channel": "production-tv",
+      "env": {
+        "EXPO_TV": "1",
+        "ZIKRU_NO_WIDGETS": "1",
+        "ZIKRU_NO_SIRI": "1",
+        "EXPO_NO_CAPABILITY_SYNC": "1",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "RCT_USE_PREBUILT_RNCORE": "0",
+        "EXPO_USE_PRECOMPILED_MODULES": "0"
+      },
+      "ios": {
+        "credentialsSource": "remote",
+        "simulator": false
+      }
     }
   },
   "submit": {
     "production": {
+      "ios": {
+        "ascAppId": "6773032754",
+        "appleTeamId": "Y9XF9RY2BU",
+        "ascApiKeyPath": "$EXPO_ASC_API_KEY_PATH",
+        "ascApiKeyId": "$EXPO_ASC_KEY_ID",
+        "ascApiKeyIssuerId": "$EXPO_ASC_ISSUER_ID"
+      }
+    },
+    "production-tv": {
       "ios": {
         "ascAppId": "6773032754",
         "appleTeamId": "Y9XF9RY2BU",
