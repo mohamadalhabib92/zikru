@@ -35,3 +35,31 @@ export function patchPackageForTv(pkg) {
   next.expo.autolinking.exclude = [...new Set([...(next.expo.autolinking.exclude || []), ...TV_AUTOLINK_EXCLUDE])];
   return next;
 }
+
+/**
+ * `npm install --package-lock-only` recopies the specifier into the lock root
+ * and then says "up to date", leaving node_modules/react-native resolved to
+ * the previous tarball. Dropping that entry forces a real resolve.
+ */
+export function omitReactNativeFromLock(lock) {
+  const next = structuredClone(lock);
+  if (next.packages) {
+    for (const key of Object.keys(next.packages)) {
+      if (key === 'node_modules/react-native' || key.startsWith('node_modules/react-native/')) {
+        delete next.packages[key];
+      }
+    }
+    if (next.packages['']?.dependencies) delete next.packages[''].dependencies['react-native'];
+  }
+  if (next.dependencies) delete next.dependencies['react-native'];
+  return next;
+}
+
+export function lockedReactNative(lock) {
+  const installed = lock?.packages?.['node_modules/react-native'] ?? {};
+  return {
+    version: String(installed.version ?? ''),
+    resolved: String(installed.resolved ?? ''),
+    specifier: String(lock?.packages?.['']?.dependencies?.['react-native'] ?? ''),
+  };
+}

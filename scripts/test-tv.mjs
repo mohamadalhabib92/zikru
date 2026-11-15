@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { loadLib } from './load-lib.mjs';
-import { TV_AUTOLINK_EXCLUDE, TV_REACT_NATIVE, patchPackageForTv, shouldSwapReactNativeOnEas } from './tv-build.mjs';
+import { TV_AUTOLINK_EXCLUDE, TV_REACT_NATIVE, lockedReactNative, omitReactNativeFromLock, patchPackageForTv, shouldSwapReactNativeOnEas } from './tv-build.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { tv } = await loadLib(['tv'], 'tv');
@@ -127,6 +127,24 @@ assert.equal(shouldSwapReactNativeOnEas({ EXPO_TV: '1', EAS_BUILD: 'true' }), tr
 assert.equal(shouldSwapReactNativeOnEas({ EXPO_TV: '1' }), false);
 assert.equal(shouldSwapReactNativeOnEas({ EAS_BUILD: 'true' }), false);
 assert.equal(pkg.scripts['eas-build-pre-install'], 'node scripts/eas-tv-preinstall.mjs');
+assert.equal(pkg.scripts['eas-build-post-install'], 'node scripts/eas-tv-preinstall.mjs --check-installed');
+const sampleLock = {
+  packages: {
+    '': { dependencies: { 'react-native': '0.88.0', react: '19.0.0' } },
+    'node_modules/react-native': { version: '0.88.0', resolved: 'https://registry.npmjs.org/react-native/-/react-native-0.88.0.tgz' },
+    'node_modules/react-native/node_modules/example': { version: '1.0.0' },
+    'node_modules/react': { version: '19.0.0' },
+  },
+  dependencies: { 'react-native': { version: '0.88.0' } },
+};
+const stripped = omitReactNativeFromLock(sampleLock);
+assert.equal(lockedReactNative(stripped).version, '');
+assert.equal(stripped.packages['node_modules/react-native/node_modules/example'], undefined);
+assert.equal(stripped.packages[''].dependencies['react-native'], undefined);
+assert.equal(stripped.packages[''].dependencies.react, '19.0.0');
+assert.equal(stripped.packages['node_modules/react'].version, '19.0.0');
+assert.equal(stripped.dependencies['react-native'], undefined);
+assert.equal(sampleLock.packages['node_modules/react-native'].version, '0.88.0');
 
 function expoConfig(expoTv) {
   const env = { ...process.env };

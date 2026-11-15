@@ -61,6 +61,7 @@
   "scripts": {
     "start": "expo start",
     "eas-build-pre-install": "node scripts/eas-tv-preinstall.mjs",
+    "eas-build-post-install": "node scripts/eas-tv-preinstall.mjs --check-installed",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
