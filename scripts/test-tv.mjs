@@ -1,7 +1,7 @@
 // Apple TV : droits, compteur, et preuve que le profil iPhone ne change pas.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -171,6 +171,7 @@ for (const rel of [
   'node_modules/expo-router/ios/ExpoHeadModule.swift',
   'node_modules/expo-router/ios/ExpoHeadAppDelegateSubscriber.swift',
   'node_modules/expo-router/ios/ExpoRouter.podspec',
+  'node_modules/expo-router/expo-module.config.json',
   'node_modules/expo-router/package.json',
   'node_modules/expo-file-system/ios/Legacy/FileSystemHelpers.swift',
   'node_modules/expo-file-system/ios/Legacy/FileSystemLegacyModule.swift',
@@ -189,9 +190,17 @@ for (const rel of [
   mkdirSync(path.dirname(to), { recursive: true });
   cpSync(from, to);
 }
+mkdirSync(path.join(tvRoot, 'node_modules/expo-router/ios/LinkPreview'), { recursive: true });
+mkdirSync(path.join(tvRoot, 'node_modules/expo-router/ios/Toolbar'), { recursive: true });
+writeFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeModule.swift'), 'public class LinkPreviewNativeModule: Module {}\n');
+writeFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/Toolbar/RouterToolbarModule.swift'), 'public class RouterToolbarModule: Module {}\n');
 const native = patchTvNativeSources(tvRoot);
 assert.ok(native.patched.some((file) => file.endsWith('ExpoHeadModule.swift')));
+assert.ok(native.patched.some((file) => file.endsWith('expo-module.config.json')));
 assert.deepEqual(native.remaining, []);
+const routerModules = JSON.parse(readFileSync(path.join(tvRoot, 'node_modules/expo-router/expo-module.config.json'), 'utf8'));
+assert.deepEqual(routerModules.apple.modules, ['ExpoHeadModule']);
+assert.deepEqual(routerModules.apple.appDelegateSubscribers, ['ExpoHeadAppDelegateSubscriber']);
 const banned = /\bCSSearchable\w*|\bCSQueryContinuationActionType\b|\bCSSearchQueryString\b|\.persistentIdentifier\b|\.isEligibleForPrediction\b|\.contentAttributeSet\b|\.domainIdentifier\b|\bimport CoreSpotlight\b|\bimport Photos\b|\bPHPhotoLibrary\b|\bPHAssetResource\b|#import <Photos\//;
 const headTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadModule.swift'), 'utf8'), 'tvos');
 const headIos = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadModule.swift'), 'utf8'), 'ios');

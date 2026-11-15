@@ -306,8 +306,102 @@ function patchTvNativeSources(root) {
     const next = fn(fs.readFileSync(file, 'utf8'));
     if (writeIfChanged(file, next)) patched.push(rel);
   }
+  patched.push(...patchTvModuleConfigs(root));
   const remaining = scanTvNativeSources(root);
   return { patched, remaining };
+}
+
+const PROVIDER_FIELDS = ['modules', 'appDelegateSubscribers', 'reactDelegateHandlers'];
+
+function classNameOf(entry) {
+  return typeof entry === 'string' ? entry : entry?.class;
+}
+
+/** The generated provider lists every class in expo-module.config.json. A class whose Swift is excluded or inside `#if os(iOS)` is not in the tvOS module. */
+function classCompiledForTv(pkgDir, className, extraGlobs = []) {
+  const globs = [...tvosExcludeGlobsFromDir(pkgDir), ...extraGlobs].map(globToRegExp);
+  const re = new RegExp(`\\b(?:class|@interface|@implementation)\\s+${className}\\b`);
+  let sawExcluded = false;
+  const walk = (current) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (['node_modules', 'android', 'tests', 'Tests', 'example', 'templates'].includes(entry.name)) continue;
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        const found = walk(full);
+        if (found) return true;
+        continue;
+      }
+      if (!/\.(swift|m|mm|h)$/.test(entry.name)) continue;
+      const rel = path.relative(pkgDir, full);
+      if (globs.some((pattern) => pattern.test(rel) || pattern.test(entry.name))) {
+        sawExcluded = true;
+        continue;
+      }
+      const raw = fs.readFileSync(full, 'utf8');
+      if (!re.test(raw)) {
+        re.lastIndex = 0;
+        continue;
+      }
+      re.lastIndex = 0;
+      if (re.test(compiledFor(raw, 'tvos'))) return true;
+      re.lastIndex = 0;
+    }
+    return false;
+  };
+  return walk(pkgDir) === true;
+}
+
+function tvosExcludeGlobsFromDir(pkgDir) {
+  const globs = [];
+  const walk = (current) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name === 'android') continue;
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.podspec') && /tvos/i.test(fs.readFileSync(full, 'utf8'))) {
+        globs.push(...tvosExcludeGlobs(fs.readFileSync(full, 'utf8')));
+      }
+    }
+  };
+  if (fs.existsSync(pkgDir)) walk(pkgDir);
+  return globs;
+}
+
+function patchAppleModuleConfig(config, missing) {
+  const key = config.apple ? 'apple' : config.ios ? 'ios' : null;
+  if (!key) return config;
+  const next = structuredClone(config);
+  const section = next[key];
+  let changed = false;
+  for (const field of PROVIDER_FIELDS) {
+    if (!Array.isArray(section[field])) continue;
+    const filtered = section[field].filter((entry) => !missing.has(classNameOf(entry)));
+    if (filtered.length !== section[field].length) {
+      section[field] = filtered;
+      changed = true;
+    }
+  }
+  return changed ? next : config;
+}
+
+function patchTvModuleConfigs(root) {
+  const patched = [];
+  for (const pkg of listPackageDirs(root)) {
+    if (TV_AUTOLINK_EXCLUDE.includes(pkg.name)) continue;
+    const configPath = path.join(pkg.dir, 'expo-module.config.json');
+    if (!fs.existsSync(configPath)) continue;
+    if (!packageDeclaresTvOS(pkg.dir)) continue;
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const section = config.apple || config.ios;
+    if (!section) continue;
+    const names = PROVIDER_FIELDS.flatMap((field) => (section[field] || []).map(classNameOf)).filter(Boolean);
+    const missing = new Set(names.filter((name) => !classCompiledForTv(pkg.dir, name)));
+    if (missing.size === 0) continue;
+    const next = patchAppleModuleConfig(config, missing);
+    const text = `${JSON.stringify(next, null, 2)}\n`;
+    if (writeIfChanged(configPath, text)) patched.push(path.relative(root, configPath));
+  }
+  return patched;
 }
 
 function conditionIncludes(cond, os) {
