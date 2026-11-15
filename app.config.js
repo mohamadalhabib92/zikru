@@ -93,7 +93,21 @@ function withAppleTv(config) {
   const audio = ['expo-audio', { microphonePermission: false, enableBackgroundPlayback: true, recordAudioAndroid: false }];
   const next = plugins.map((p) => (Array.isArray(p) && p[0] === 'expo-audio' ? audio : p));
   if (!next.some((p) => (Array.isArray(p) ? p[0] : p) === 'expo-iap')) next.push('expo-iap');
-  next.push(['@react-native-tvos/config-tv', { isTV: true, tvosDeploymentTarget: '16.4' }]);
+  // config-tv écrit TVAppIcon.brandassets et ASSETCATALOG_COMPILER_APPICON_NAME.
+  // actool en déduit CFBundleIcons.CFBundlePrimaryIcon et TVTopShelfImage.
+  next.push(['@react-native-tvos/config-tv', {
+    isTV: true,
+    tvosDeploymentTarget: '16.4',
+    appleTVImages: {
+      iconSmallLayers: { front: './assets/tv/icon-home-front.png', back: './assets/tv/icon-home-back.png' },
+      iconSmall2xLayers: { front: './assets/tv/icon-home-front@2x.png', back: './assets/tv/icon-home-back@2x.png' },
+      iconLayers: { front: './assets/tv/icon-store-front.png', back: './assets/tv/icon-store-back.png' },
+      topShelf: './assets/tv/top-shelf.png',
+      topShelf2x: './assets/tv/top-shelf@2x.png',
+      topShelfWide: './assets/tv/top-shelf-wide.png',
+      topShelfWide2x: './assets/tv/top-shelf-wide@2x.png',
+    },
+  }]);
   next.push('./plugins/with-tv-pods.js');
   config.plugins = next;
   config.orientation = 'landscape';
@@ -104,7 +118,8 @@ function withAppleTv(config) {
   config.version = '1.0.30';
   config.ios = config.ios || {};
   config.ios.bundleIdentifier = 'com.vibecode.zikru-76mpdv';
-  config.ios.buildNumber = '1';
+  // L’envoi 1 a été refusé par App Store Connect. Le suivant doit être plus haut.
+  config.ios.buildNumber = '2';
   if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
   // Pas de groupe d’apps, pas de montre, pas de widget : le profil tvOS
   // de cet App ID ne porte pas ces capacités.

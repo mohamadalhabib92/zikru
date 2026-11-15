@@ -150,6 +150,8 @@ function setTargetTvosDeploymentTarget(pbxproj, targetName) {
     const config = configurations[id];
     if (!config?.buildSettings) continue;
     config.buildSettings.TVOS_DEPLOYMENT_TARGET = TVOS_DEPLOYMENT_TARGET;
+    config.buildSettings.ASSETCATALOG_COMPILER_APPICON_NAME = 'TVAppIcon';
+    config.buildSettings.ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = 'YES';
     updated += 1;
   }
   if (updated === 0) throw new Error(`tvOS deployment: target ${targetName} has no build configurations`);

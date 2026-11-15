@@ -86,7 +86,7 @@ assert.equal(tvConfig.slug, 'zikru-tv');
 assert.equal(tvConfig.owner, 'habib548');
 assert.equal(tvConfig.version, '1.0.30');
 assert.equal(tvConfig.extra.eas.projectId, '0093f2e3-7828-41e7-9e62-c3e06d9bee77');
-assert.equal(tvConfig.ios.buildNumber, '1');
+assert.equal(tvConfig.ios.buildNumber, '2');
 assert.equal(tvConfig.ios.bundleIdentifier, phoneA.ios.bundleIdentifier);
 assert.equal(tvConfig.ios.appleTeamId, phoneA.ios.appleTeamId);
 assert.equal(tvConfig.orientation, 'landscape');
@@ -95,6 +95,10 @@ assert.ok(tvPlugins.includes('@react-native-tvos/config-tv'));
 assert.ok(tvPlugins.includes('./plugins/with-tv-pods.js'));
 const tvosPlugin = tvConfig.plugins.find((p) => Array.isArray(p) && p[0] === '@react-native-tvos/config-tv');
 assert.equal(tvosPlugin[1].tvosDeploymentTarget, '16.4');
+assert.equal(tvosPlugin[1].appleTVImages.iconLayers.front, './assets/tv/icon-store-front.png');
+assert.equal(tvosPlugin[1].appleTVImages.iconSmall2xLayers.back, './assets/tv/icon-home-back@2x.png');
+assert.equal(tvosPlugin[1].appleTVImages.topShelfWide2x, './assets/tv/top-shelf-wide@2x.png');
+assert.equal(phoneA.plugins.some((p) => Array.isArray(p) && p[1] && p[1].appleTVImages), false);
 assert.equal(phoneA.ios.deploymentTarget, undefined);
 assert.equal(tvConfig.ios.deploymentTarget, undefined);
 for (const gone of ['expo-widgets', 'expo-app-intents', '@bacons/apple-targets', './plugins/with-watch-version.js', 'react-native-ble-plx', 'expo-image-picker', 'expo-location', 'expo-notifications']) {
@@ -373,7 +377,37 @@ const sampleProject = `// !$*UTF8*$!
 `;
 const raised = setTargetTvosDeploymentTarget(sampleProject, 'Zikru');
 assert.equal((raised.match(/TVOS_DEPLOYMENT_TARGET = 16\.4;/g) || []).length, 2);
+assert.equal((raised.match(/ASSETCATALOG_COMPILER_APPICON_NAME = TVAppIcon;/g) || []).length, 2);
 assert.match(raised, /TVOS_DEPLOYMENT_TARGET = 15\.1;/);
+assert.equal(raised.includes('PRODUCT_NAME = Other'), true);
+
+const { createBrandAssetsAsync } = require('@react-native-tvos/config-tv/build/utils/appleBrandAssets.js');
+const { appleTVSourceBrandAssets } = require('@react-native-tvos/config-tv/build/withTVAppleIconImages.js');
+const brandRoot = path.join(root, '.tmp-tv-brand');
+rmSync(brandRoot, { recursive: true, force: true });
+mkdirSync(brandRoot);
+const absoluteImages = structuredClone(tvosPlugin[1].appleTVImages);
+const toAbsolute = (value) => {
+  if (typeof value === 'string') return path.join(root, value);
+  for (const key of Object.keys(value)) value[key] = toAbsolute(value[key]);
+  return value;
+};
+toAbsolute(absoluteImages);
+const brand = appleTVSourceBrandAssets(absoluteImages);
+assert.equal(brand.name, 'TVAppIcon');
+await createBrandAssetsAsync(brandRoot, brand);
+const catalog = JSON.parse(readFileSync(path.join(brandRoot, 'TVAppIcon.brandassets/Contents.json'), 'utf8'));
+assert.deepEqual(
+  catalog.assets.map((asset) => `${asset.role} ${asset.size}`).sort(),
+  ['primary-app-icon 1280x768', 'primary-app-icon 400x240', 'top-shelf-image 1920x720', 'top-shelf-image-wide 2320x720'].sort(),
+);
+const homeLayers = JSON.parse(readFileSync(path.join(brandRoot, 'TVAppIcon.brandassets/App Icon - Small.imagestack/Contents.json'), 'utf8'));
+assert.deepEqual(homeLayers.layers.map((layer) => layer.filename).sort(), ['Back.imagestacklayer', 'Front.imagestacklayer']);
+const storeLayers = JSON.parse(readFileSync(path.join(brandRoot, 'TVAppIcon.brandassets/App Icon - Large.imagestack/Contents.json'), 'utf8'));
+assert.deepEqual(storeLayers.layers.map((layer) => layer.filename).sort(), ['Back.imagestacklayer', 'Front.imagestacklayer']);
+const wideShelf = JSON.parse(readFileSync(path.join(brandRoot, 'TVAppIcon.brandassets/Top Shelf Image Wide.imageset/Contents.json'), 'utf8'));
+assert.deepEqual(wideShelf.images.map((image) => `${image.idiom} ${image.scale}`).sort(), ['tv 1x', 'tv 2x']);
+rmSync(brandRoot, { recursive: true, force: true });
 
 function expoConfig(expoTv) {
   const env = { ...process.env };
@@ -394,7 +428,7 @@ assert.equal(liveTv.slug, 'zikru-tv');
 assert.equal(liveTv.owner, 'habib548');
 assert.equal(liveTv.version, '1.0.30');
 assert.equal(liveTv.extra.eas.projectId, '0093f2e3-7828-41e7-9e62-c3e06d9bee77');
-assert.equal(liveTv.ios.buildNumber, '1');
+assert.equal(liveTv.ios.buildNumber, '2');
 assert.equal(liveTv.ios.bundleIdentifier, livePhone.ios.bundleIdentifier);
 assert.equal(liveTv.updates, undefined);
 assert.deepEqual(liveTv.ios.entitlements, {});
