@@ -193,11 +193,20 @@ const headIos = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-ro
 assert.equal(banned.test(headTv), false, headTv.match(banned)?.[0]);
 assert.match(headIos, /CSSearchableIndex\.default/);
 assert.equal(headIos.includes('activities: [String: NSUserActivity]'), false);
-const subTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadAppDelegateSubscriber.swift'), 'utf8'), 'tvos');
-const subIos = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadAppDelegateSubscriber.swift'), 'utf8'), 'ios');
+const subRaw = readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadAppDelegateSubscriber.swift'), 'utf8');
+const subTv = compiledFor(subRaw, 'tvos');
+const subIos = compiledFor(subRaw, 'ios');
 assert.equal(subTv.includes('CSSearchQueryString'), false);
 assert.match(subIos, /CSSearchQueryString/);
 assert.match(subTv, /wellKnownHref/);
+assert.match(subRaw, /#if !os\(tvOS\)\n    if let wellKnownHref/);
+assert.match(subIos, /\} else if userActivity\.activityType == CSQueryContinuationActionType/);
+const subLines = subRaw.split('\n');
+subLines.forEach((line, index) => {
+  if (!line.trim().startsWith('#if') && !line.trim().startsWith('#else')) return;
+  const next = subLines.slice(index + 1).find((item) => item.trim() && !item.trim().startsWith('//'));
+  assert.equal(/^else\b/.test((next || '').trim()), false, `branche #if vide ou else orphelin: ${next}`);
+});
 const helperTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-file-system/ios/Legacy/FileSystemHelpers.swift'), 'utf8'), 'tvos');
 const helperIos = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-file-system/ios/Legacy/FileSystemHelpers.swift'), 'utf8'), 'ios');
 assert.equal(helperTv.includes('import Photos'), false);

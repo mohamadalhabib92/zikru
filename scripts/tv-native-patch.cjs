@@ -122,30 +122,71 @@ function patchExpoHeadModuleSource(src) {
     `#if !os(tvOS)\nimport CoreSpotlight\nimport MobileCoreServices\n#endif\nimport ExpoModulesCore\n// ${MARK_SPOTLIGHT}\n`,
   );
   const classAt = next.indexOf(anchor);
-  return `${next.slice(0, classAt)}#if !os(tvOS)\n${next.slice(classAt).replace(/\s*$/, '\n')}#else\n${TV_HEAD_STUB}#endif\n`;
+  const patched = `${next.slice(0, classAt)}#if !os(tvOS)\n${next.slice(classAt).replace(/\s*$/, '\n')}#else\n${TV_HEAD_STUB}#endif\n`;
+  assertSwiftConditionals(patched, 'ExpoHeadModule.swift');
+  return patched;
+}
+
+/**
+ * Swift parses `#if` as syntax, not as a C preprocessor. An `else` that is the
+ * first token of a branch is not a statement, so `} \n #if \n else if` is
+ * "Expected expression" on every platform, including the inactive tvOS branch.
+ * Each branch must be a finished statement.
+ */
+function assertSwiftConditionals(src, label) {
+  const lines = src.split('\n');
+  let depth = 0;
+  for (let i = 0; i < lines.length; i += 1) {
+    const trimmed = lines[i].trim();
+    if (trimmed.startsWith('#if')) depth += 1;
+    if (trimmed.startsWith('#endif')) {
+      depth -= 1;
+      if (depth < 0) throw new Error(`${label}:${i + 1} extra #endif`);
+    }
+    if (!trimmed.startsWith('#if') && !trimmed.startsWith('#elseif') && !trimmed.startsWith('#else')) continue;
+    let next = '';
+    for (let j = i + 1; j < lines.length; j += 1) {
+      const candidate = lines[j].trim();
+      if (!candidate || candidate.startsWith('//')) continue;
+      next = candidate;
+      break;
+    }
+    if (/^else\b/.test(next)) {
+      throw new Error(`${label}:${i + 1} #if branch starts with "${next}", which is not a statement`);
+    }
+  }
+  if (depth !== 0) throw new Error(`${label}: unbalanced #if (${depth})`);
 }
 
 function patchExpoHeadSubscriberSource(src) {
-  if (src.includes(MARK_SPOTLIGHT)) return src;
+  if (src.includes(MARK_SPOTLIGHT)) {
+    assertSwiftConditionals(src, 'ExpoHeadAppDelegateSubscriber.swift');
+    return src;
+  }
   const imports = 'import CoreSpotlight\nimport ExpoModulesCore\n';
   if (!src.includes(imports)) {
     throw new Error('tv-native-patch: ExpoHeadAppDelegateSubscriber.swift import block changed; refusing to guess');
   }
-  const needle = '    } else if userActivity.activityType == CSQueryContinuationActionType {';
-  const at = src.indexOf(needle);
-  if (at < 0) throw new Error('tv-native-patch: Spotlight continuation branch missing');
-  const ret = src.indexOf('\n    return false', at);
-  if (ret < 0) throw new Error('tv-native-patch: subscriber return anchor missing');
   let next = src.replace(
     imports,
     `#if !os(tvOS)\nimport CoreSpotlight\n#endif\nimport ExpoModulesCore\n// ${MARK_SPOTLIGHT}\n`,
   );
-  const needleAt = next.indexOf(needle);
-  const returnAt = next.indexOf('\n    return false', needleAt);
-  next = `${next.slice(0, needleAt)}    }\n#if !os(tvOS)\n    else if userActivity.activityType == CSQueryContinuationActionType {${next.slice(needleAt + needle.length, returnAt)}\n#endif${next.slice(returnAt)}`;
-  if (next.includes('CSSearchQueryString') && !next.includes('#if !os(tvOS)')) {
-    throw new Error('tv-native-patch: subscriber Spotlight symbols stayed outside the tvOS guard');
+  const startNeedle = '    if let wellKnownHref = userActivity.userInfo?["href"] as? String {';
+  const start = next.indexOf(startNeedle);
+  const end = next.indexOf('\n    return false', start);
+  if (start < 0 || end < 0) throw new Error('tv-native-patch: subscriber if/return anchors missing');
+  const originalIf = next.slice(start, end).replace(/\s+$/, '\n');
+  if (!originalIf.includes('} else if userActivity.activityType == CSQueryContinuationActionType {')) {
+    throw new Error('tv-native-patch: Spotlight continuation branch missing');
   }
+  const tvIf = `    if let wellKnownHref = userActivity.userInfo?["href"] as? String {
+      // From a stored NSUserActivity, e.g. Quick Note or Siri Reminder
+      // From other native device to app
+      sendFakeDeepLinkEventToReactNative(obj: self, url: prefixDeepLink(fragment: wellKnownHref))
+    }
+`;
+  next = `${next.slice(0, start)}#if !os(tvOS)\n${originalIf}#else\n${tvIf}#endif\n${next.slice(end + 1)}`;
+  assertSwiftConditionals(next, 'ExpoHeadAppDelegateSubscriber.swift');
   return next;
 }
 
@@ -158,7 +199,9 @@ function patchFileSystemHelpersSource(src) {
   if (start < 0) throw new Error('tv-native-patch: copyPHAsset anchor missing');
   const head = src.slice(0, start).replace('import Photos\n', `#if !os(tvOS)\nimport Photos\n#endif\n// ${MARK_PHOTOS}\n`);
   const body = src.slice(start).replace(/\s*$/, '\n');
-  return `${head}#if !os(tvOS)\n${body}#else\ninternal func copyPHAsset(fromUrl: URL, toUrl: URL, promise: Promise) {\n  promise.reject(FailedToCopyAssetException(fromUrl.absoluteString))\n}\n#endif\n`;
+  const patched = `${head}#if !os(tvOS)\n${body}#else\ninternal func copyPHAsset(fromUrl: URL, toUrl: URL, promise: Promise) {\n  promise.reject(FailedToCopyAssetException(fromUrl.absoluteString))\n}\n#endif\n`;
+  assertSwiftConditionals(patched, 'FileSystemHelpers.swift');
+  return patched;
 }
 
 function patchFileSystemLegacySource(src) {
@@ -186,7 +229,9 @@ function patchFileSystemLegacySource(src) {
     `${indent}copyPHAsset(fromUrl: fromUrl, toUrl: toUrl, promise: promise)`,
     '#endif',
   );
-  return lines.join('\n');
+  const patched = lines.join('\n');
+  assertSwiftConditionals(patched, 'FileSystemLegacyModule.swift');
+  return patched;
 }
 
 function patchAssetLibrarySource(src) {
