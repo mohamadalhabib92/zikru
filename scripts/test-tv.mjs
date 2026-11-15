@@ -1,8 +1,9 @@
 // Apple TV : droits, compteur, et preuve que le profil iPhone ne change pas.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadLib } from './load-lib.mjs';
 import { TV_AUTOLINK_EXCLUDE, TV_REACT_NATIVE, lockedReactNative, omitReactNativeFromLock, patchPackageForTv, shouldSwapReactNativeOnEas } from './tv-build.mjs';
@@ -10,6 +11,7 @@ import { TV_AUTOLINK_EXCLUDE, TV_REACT_NATIVE, lockedReactNative, omitReactNativ
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { tv } = await loadLib(['tv'], 'tv');
 const require = createRequire(import.meta.url);
+const { compiledFor, patchTvNativeSources, scanTvNativeSources } = require('../scripts/tv-native-patch.cjs');
 const configure = require('../app.config.js');
 const app = require('../app.json').expo;
 
@@ -96,6 +98,7 @@ for (const gone of ['expo-widgets', 'expo-app-intents', '@bacons/apple-targets',
 assert.equal(tvConfig.ios.infoPlist.NSCameraUsageDescription, undefined);
 assert.equal(tvConfig.ios.infoPlist.NSBluetoothAlwaysUsageDescription, undefined);
 assert.equal(phoneA.ios.infoPlist.NSCameraUsageDescription.includes('appareil photo'), true);
+assert.equal(app.splash, undefined, 'SDK 58 retire splash du schéma app.json');
 
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 assert.equal(pkg.dependencies['react-native'], '0.88.0');
@@ -145,6 +148,96 @@ assert.equal(stripped.packages[''].dependencies.react, '19.0.0');
 assert.equal(stripped.packages['node_modules/react'].version, '19.0.0');
 assert.equal(stripped.dependencies['react-native'], undefined);
 assert.equal(sampleLock.packages['node_modules/react-native'].version, '0.88.0');
+
+const lockBefore = readFileSync(new URL('../package-lock.json', import.meta.url));
+const pkgBefore = readFileSync(new URL('../package.json', import.meta.url), 'utf8');
+const knownBeforePatch = [
+  'expo-file-system/ios/Legacy/EXFileSystemAssetLibraryHandler.m',
+  'expo-file-system/ios/Legacy/FileSystemHelpers.swift',
+  'expo-file-system/ios/Legacy/FileSystemLegacyModule.swift',
+];
+for (const hit of scanTvNativeSources(root)) {
+  assert.ok(knownBeforePatch.some((file) => hit.includes(file)), hit);
+}
+const tvRoot = path.join(root, '.tmp-tv-native');
+rmSync(tvRoot, { recursive: true, force: true });
+mkdirSync(tvRoot);
+for (const rel of [
+  'node_modules/expo-router/ios/ExpoHeadModule.swift',
+  'node_modules/expo-router/ios/ExpoHeadAppDelegateSubscriber.swift',
+  'node_modules/expo-router/ios/ExpoRouter.podspec',
+  'node_modules/expo-router/package.json',
+  'node_modules/expo-file-system/ios/Legacy/FileSystemHelpers.swift',
+  'node_modules/expo-file-system/ios/Legacy/FileSystemLegacyModule.swift',
+  'node_modules/expo-file-system/ios/Legacy/EXFileSystemAssetLibraryHandler.m',
+  'node_modules/expo-file-system/ios/ExpoFileSystem.podspec',
+  'node_modules/expo-file-system/package.json',
+  'node_modules/expo-audio/ios/AudioRecordingRequester.swift',
+  'node_modules/expo-audio/ios/ExpoAudio.podspec',
+  'node_modules/expo-audio/package.json',
+  'node_modules/expo-haptics/ios/HapticsModule.swift',
+  'node_modules/expo-haptics/ios/ExpoHaptics.podspec',
+  'node_modules/expo-haptics/package.json',
+]) {
+  const from = path.join(root, rel);
+  const to = path.join(tvRoot, rel);
+  mkdirSync(path.dirname(to), { recursive: true });
+  cpSync(from, to);
+}
+const native = patchTvNativeSources(tvRoot);
+assert.ok(native.patched.some((file) => file.endsWith('ExpoHeadModule.swift')));
+assert.deepEqual(native.remaining, []);
+const banned = /\bCSSearchable\w*|\bCSQueryContinuationActionType\b|\bCSSearchQueryString\b|\.persistentIdentifier\b|\.isEligibleForPrediction\b|\.contentAttributeSet\b|\.domainIdentifier\b|\bimport CoreSpotlight\b|\bimport Photos\b|\bPHPhotoLibrary\b|\bPHAssetResource\b|#import <Photos\//;
+const headTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadModule.swift'), 'utf8'), 'tvos');
+const headIos = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadModule.swift'), 'utf8'), 'ios');
+assert.equal(banned.test(headTv), false, headTv.match(banned)?.[0]);
+assert.match(headIos, /CSSearchableIndex\.default/);
+assert.equal(headIos.includes('activities: [String: NSUserActivity]'), false);
+const subTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadAppDelegateSubscriber.swift'), 'utf8'), 'tvos');
+const subIos = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-router/ios/ExpoHeadAppDelegateSubscriber.swift'), 'utf8'), 'ios');
+assert.equal(subTv.includes('CSSearchQueryString'), false);
+assert.match(subIos, /CSSearchQueryString/);
+assert.match(subTv, /wellKnownHref/);
+const helperTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-file-system/ios/Legacy/FileSystemHelpers.swift'), 'utf8'), 'tvos');
+const helperIos = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-file-system/ios/Legacy/FileSystemHelpers.swift'), 'utf8'), 'ios');
+assert.equal(helperTv.includes('import Photos'), false);
+assert.match(helperTv, /copyPHAsset\(fromUrl:/);
+assert.match(helperIos, /import Photos/);
+assert.match(helperIos, /PHAssetResourceManager/);
+const legacyTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-file-system/ios/Legacy/FileSystemLegacyModule.swift'), 'utf8'), 'tvos');
+assert.equal(legacyTv.includes('PHAssetResourceManager'), false);
+assert.match(legacyTv, /copyPHAsset\(fromUrl: fromUrl, toUrl: toUrl, promise: promise\)/);
+const libraryTv = compiledFor(readFileSync(path.join(tvRoot, 'node_modules/expo-file-system/ios/Legacy/EXFileSystemAssetLibraryHandler.m'), 'utf8'), 'tvos');
+assert.equal(libraryTv.includes('PHAsset'), false);
+assert.match(libraryTv, /not available on tvOS/);
+const again = patchTvNativeSources(tvRoot);
+assert.deepEqual(again.patched, []);
+assert.deepEqual(again.remaining, []);
+assert.equal(scanTvNativeSources(tvRoot).some((hit) => hit.includes('AudioRecordingRequester')), false);
+assert.equal(scanTvNativeSources(tvRoot).some((hit) => hit.includes('HapticsModule')), false);
+assert.equal(readFileSync(new URL('../package.json', import.meta.url), 'utf8'), pkgBefore);
+assert.equal(readFileSync(new URL('../package-lock.json', import.meta.url)).equals(lockBefore), true);
+rmSync(tvRoot, { recursive: true, force: true });
+const headInstalled = path.join(root, 'node_modules/expo-router/ios/ExpoHeadModule.swift');
+const phoneEnv = { ...process.env };
+delete phoneEnv.EXPO_TV;
+delete phoneEnv.EAS_BUILD;
+execFileSync('node', ['scripts/eas-tv-preinstall.mjs'], { cwd: root, env: phoneEnv, stdio: 'pipe' });
+execFileSync('node', ['scripts/eas-tv-preinstall.mjs', '--check-installed'], { cwd: root, env: phoneEnv, stdio: 'pipe' });
+assert.equal(readFileSync(headInstalled, 'utf8').includes('tv-native-patch.cjs'), false);
+let tvHookFailed = false;
+try {
+  execFileSync('node', ['scripts/eas-tv-preinstall.mjs', '--check-installed'], {
+    cwd: root,
+    env: { ...phoneEnv, EXPO_TV: '1', EAS_BUILD: 'true' },
+    stdio: 'pipe',
+  });
+} catch (error) {
+  tvHookFailed = true;
+  assert.equal(error.status, 1);
+}
+assert.equal(tvHookFailed, true, 'le hook TV refuse react-native 0.88 avant de toucher aux sources');
+assert.equal(readFileSync(headInstalled, 'utf8').includes('tv-native-patch.cjs'), false);
 
 function expoConfig(expoTv) {
   const env = { ...process.env };

@@ -4,21 +4,18 @@ const path = require('path');
 
 /**
  * Expo Router est le routeur de l’app, y compris sur Apple TV (exemple with-router-tv).
- * Son podspec ne déclare que l’iOS. On ajoute tvOS et on écarte les fichiers qui
- * utilisent UIContextMenu / la barre d’outils iPhone, absents de tvOS.
+ * Son podspec ne déclare que l’iOS. On ajoute tvOS, on écarte Link Preview et la
+ * barre d’outils, et on neutralise CoreSpotlight / Photos, absents de tvOS.
  * Ce plugin n’est branché que lorsque EXPO_TV=1.
  */
 function patchExpoRouterPodspec(projectRoot) {
-  const file = path.join(projectRoot, 'node_modules/expo-router/ios/ExpoRouter.podspec');
-  if (!fs.existsSync(file)) return;
-  let src = fs.readFileSync(file, 'utf8');
-  if (!src.includes(":tvos => '16.4'")) {
-    src = src.replace("s.platforms      = {\n    :ios => '16.4'\n  }", "s.platforms      = {\n    :ios => '16.4',\n    :tvos => '16.4'\n  }");
+  // Le hook post-install fait le même travail. On le refait ici : prebuild
+  // peut tourner sans ce hook, et le second passage ne change plus les fichiers.
+  const { patchTvNativeSources } = require('../scripts/tv-native-patch.cjs');
+  const report = patchTvNativeSources(projectRoot);
+  if (report.remaining.length) {
+    throw new Error(`tvOS native APIs still compiled:\n${report.remaining.join('\n')}`);
   }
-  if (!src.includes('s.tvos.exclude_files')) {
-    src = src.replace("s.exclude_files = 'Tests/**/*'", "s.exclude_files = 'Tests/**/*'\n  s.tvos.exclude_files = 'LinkPreview/**/*', 'Toolbar/**/*'");
-  }
-  fs.writeFileSync(file, src);
 }
 
 const DROP = [

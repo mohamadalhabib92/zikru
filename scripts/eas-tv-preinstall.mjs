@@ -8,7 +8,10 @@
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { lockedReactNative, omitReactNativeFromLock, patchPackageForTv, shouldSwapReactNativeOnEas } from './tv-build.mjs';
+
+const { patchTvNativeSources } = createRequire(import.meta.url)('./tv-native-patch.cjs');
 
 const checkInstalled = process.argv.includes('--check-installed');
 
@@ -34,6 +37,13 @@ if (checkInstalled) {
   console.log(
     `eas-tv-preinstall: installed ${name}@${version}; RCT_USE_PREBUILT_RNCORE=0 (rncore.rb only downloads the Maven tarball when that value is 1)`,
   );
+  const native = patchTvNativeSources(process.cwd());
+  for (const file of native.patched) console.log(`eas-tv-preinstall: patched ${file}`);
+  if (native.remaining.length) {
+    for (const hit of native.remaining) console.error(`eas-tv-preinstall: tvOS still compiles ${hit}`);
+    process.exit(1);
+  }
+  console.log('eas-tv-preinstall: tvOS native scan found no unguarded iOS-only APIs in linked modules');
   process.exit(0);
 }
 

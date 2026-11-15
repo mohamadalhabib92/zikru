@@ -8,11 +8,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "description": "Zikru — prière, qibla, tasbih et dhikr, hors-ligne.",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#181818"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vibecode.zikru-76mpdv",
