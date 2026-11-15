@@ -93,7 +93,7 @@ function withAppleTv(config) {
   const audio = ['expo-audio', { microphonePermission: false, enableBackgroundPlayback: true, recordAudioAndroid: false }];
   const next = plugins.map((p) => (Array.isArray(p) && p[0] === 'expo-audio' ? audio : p));
   if (!next.some((p) => (Array.isArray(p) ? p[0] : p) === 'expo-iap')) next.push('expo-iap');
-  next.push(['@react-native-tvos/config-tv', { isTV: true, tvosDeploymentTarget: '15.1' }]);
+  next.push(['@react-native-tvos/config-tv', { isTV: true, tvosDeploymentTarget: '16.4' }]);
   next.push('./plugins/with-tv-pods.js');
   config.plugins = next;
   config.orientation = 'landscape';

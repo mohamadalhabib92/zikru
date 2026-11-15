@@ -12,6 +12,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const { tv } = await loadLib(['tv'], 'tv');
 const require = createRequire(import.meta.url);
 const { compiledFor, patchTvNativeSources, scanTvNativeSources } = require('../scripts/tv-native-patch.cjs');
+const { TVOS_DEPLOYMENT_TARGET, patchPodfileSource, setTargetTvosDeploymentTarget } = require('../plugins/with-tv-pods.js');
 const configure = require('../app.config.js');
 const app = require('../app.json').expo;
 
@@ -92,6 +93,10 @@ assert.equal(tvConfig.orientation, 'landscape');
 const tvPlugins = names(tvConfig.plugins);
 assert.ok(tvPlugins.includes('@react-native-tvos/config-tv'));
 assert.ok(tvPlugins.includes('./plugins/with-tv-pods.js'));
+const tvosPlugin = tvConfig.plugins.find((p) => Array.isArray(p) && p[0] === '@react-native-tvos/config-tv');
+assert.equal(tvosPlugin[1].tvosDeploymentTarget, '16.4');
+assert.equal(phoneA.ios.deploymentTarget, undefined);
+assert.equal(tvConfig.ios.deploymentTarget, undefined);
 for (const gone of ['expo-widgets', 'expo-app-intents', '@bacons/apple-targets', './plugins/with-watch-version.js', 'react-native-ble-plx', 'expo-image-picker', 'expo-location', 'expo-notifications']) {
   assert.equal(tvPlugins.includes(gone), false, gone);
 }
@@ -247,6 +252,119 @@ try {
 }
 assert.equal(tvHookFailed, true, 'le hook TV refuse react-native 0.88 avant de toucher aux sources');
 assert.equal(readFileSync(headInstalled, 'utf8').includes('tv-native-patch.cjs'), false);
+
+assert.equal(TVOS_DEPLOYMENT_TARGET, '16.4');
+const samplePodfile = `platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+
+target 'Zikru' do
+  use_expo_modules!
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+    )
+  end
+end
+`;
+const tvPodfile = patchPodfileSource(samplePodfile);
+assert.match(tvPodfile, /platform :tvos, '16\.4'/);
+assert.equal(tvPodfile.includes("podfile_properties['ios.deploymentTarget']"), false);
+assert.equal(tvPodfile.includes('15.1'), false);
+assert.match(tvPodfile, /installer\.pods_project\.targets\.each/);
+assert.match(tvPodfile, /Gem::Version\.new\('16\.4'\)/);
+const twice = patchPodfileSource(tvPodfile);
+assert.equal(twice, tvPodfile);
+const sampleProject = `// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXNativeTarget section */
+		111111111111111111111101 /* Zikru */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 111111111111111111111201 /* Build configuration list for PBXNativeTarget "Zikru" */;
+			buildPhases = (
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Zikru;
+			productName = Zikru;
+			productType = "com.apple.product-type.application";
+		};
+		111111111111111111111102 /* Other */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 111111111111111111111202 /* Build configuration list for PBXNativeTarget "Other" */;
+			buildPhases = (
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Other;
+			productName = Other;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin XCBuildConfiguration section */
+		111111111111111111111301 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Zikru;
+				TVOS_DEPLOYMENT_TARGET = 15.1;
+			};
+			name = Debug;
+		};
+		111111111111111111111302 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Zikru;
+				TVOS_DEPLOYMENT_TARGET = 15.1;
+			};
+			name = Release;
+		};
+		111111111111111111111303 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Other;
+				TVOS_DEPLOYMENT_TARGET = 15.1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		111111111111111111111201 /* Build configuration list for PBXNativeTarget "Zikru" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				111111111111111111111301 /* Debug */,
+				111111111111111111111302 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		111111111111111111111202 /* Build configuration list for PBXNativeTarget "Other" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				111111111111111111111303 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 111111111111111111111401 /* Project object */;
+}
+`;
+const raised = setTargetTvosDeploymentTarget(sampleProject, 'Zikru');
+assert.equal((raised.match(/TVOS_DEPLOYMENT_TARGET = 16\.4;/g) || []).length, 2);
+assert.match(raised, /TVOS_DEPLOYMENT_TARGET = 15\.1;/);
 
 function expoConfig(expoTv) {
   const env = { ...process.env };
