@@ -17,6 +17,36 @@ export function advance(queue: Step[], pos: number, loop: boolean): { next: numb
   return { next, same: sameVerse(queue[next], queue[pos]) };
 }
 
+/** Nombre de versets distincts à tenir prêts pendant que le verset courant joue. */
+export const PREFETCH_AHEAD = 3;
+
+/**
+ * Indices des prochains versets distincts (les répétitions du verset courant sont sautées :
+ * elles rejouent le fichier déjà chargé). Au plus `ahead` versets, sans dépasser la file hors boucle.
+ */
+export function prefetchWindow(queue: Step[], pos: number, loop: boolean, ahead = PREFETCH_AHEAD): number[] {
+  const out: number[] = [];
+  const n = queue.length;
+  if (!n || pos < 0 || pos >= n || ahead <= 0) return out;
+  for (let k = 1; k < n && out.length < ahead; k++) {
+    const i = pos + k;
+    if (i >= n && !loop) break;
+    const j = i % n;
+    if (sameVerse(queue[j], queue[pos])) continue;
+    if (out.some((x) => sameVerse(queue[x], queue[j]))) continue;
+    out.push(j);
+  }
+  return out;
+}
+
+/**
+ * Le second lecteur a déjà le fichier du verset suivant : on le démarre.
+ * Sinon il faut charger (blanc le temps du réseau).
+ */
+export function handoff(readyUrl: string | null, nextUrl: string): 'swap' | 'load' {
+  return readyUrl != null && readyUrl === nextUrl ? 'swap' : 'load';
+}
+
 /** Prochain verset *différent* à précharger (−1 si aucun). */
 export function nextDistinct(queue: Step[], pos: number, loop: boolean): number {
   const n = queue.length;

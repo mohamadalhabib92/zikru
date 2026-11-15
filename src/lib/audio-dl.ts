@@ -15,13 +15,31 @@ import { shared } from './shared-state';
 export const dlManifest = shared<DlManifest>('quran-audio-dl', {});
 export const dlSizes = shared<SizeTable>('quran-audio-sizes', {});
 
-/** URL à lire : fichier local s’il est téléchargé (iOS/Android), sinon l’URL d’origine (servie par le cache sur la PWA). */
+/** URL à lire : fichier déjà sur l’appareil (même hors manifeste), sinon l’URL d’origine. */
 export function playableUrl(rid: string, s: number, a: number): string {
-  if (isLocal(dlManifest.get(), rid, s, a)) {
-    const u = localUri(rid, s, a);
-    if (u) return u;
-  }
+  const u = localUri(rid, s, a);
+  if (u) return u;
   return ayahUrl(reciterById(rid), s, a);
+}
+
+const warming = new Set<string>();
+/**
+ * Enregistre sur disque les quelques versets qui vont suivre, sans attendre la file
+ * de téléchargement de toute la sourate. N’empêche pas la lecture en cours.
+ */
+export function prefetchPlayback(rid: string, verses: { s: number; a: number }[]) {
+  const m = dlManifest.get();
+  for (const v of verses) {
+    const key = `${rid}:${v.s}:${v.a}`;
+    if (isLocal(m, rid, v.s, v.a) || localUri(rid, v.s, v.a) || warming.has(key)) continue;
+    warming.add(key);
+    void fetchVerse(rid, v.s, v.a)
+      .then((size) => {
+        dlManifest.set((cur) => addVerse(cur, rid, v.s, v.a, ayahCount(v.s), size, Date.now()));
+      })
+      .catch(() => {})
+      .finally(() => warming.delete(key));
+  }
 }
 
 // ——— File d’attente des téléchargements (en mémoire) ———
