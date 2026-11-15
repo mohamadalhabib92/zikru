@@ -6,27 +6,15 @@
  * Expo SDK 58 : React Native téléphone 0.88, React Native TV 0.87-stable
  * (table de compatibilité https://docs.expo.dev/versions/v58.0.0/).
  */
-export const TV_REACT_NATIVE = 'npm:react-native-tvos@0.87-stable';
+import { createRequire } from 'node:module';
 
-/** Modules dont le podspec est iOS seulement, ou qui n’ont pas de sens sur le téléviseur. */
-export const TV_AUTOLINK_EXCLUDE = [
-  'react-native-ble-plx',
-  'expo-location',
-  'expo-notifications',
-  'expo-haptics',
-  'expo-image-picker',
-  'expo-clipboard',
-  'expo-speech',
-  'expo-document-picker',
-  'expo-widgets',
-  '@livekit/react-native',
-  '@livekit/react-native-webrtc',
-  '@expo/dom-webview',
-  '@bacons/apple-targets',
-  'zikru-ocr',
-  'zikru-watch',
-  'zikru-quick-actions',
-];
+const require = createRequire(import.meta.url);
+export const TV_REACT_NATIVE = 'npm:react-native-tvos@0.87-stable';
+const native = require('./tv-native.cjs');
+
+/** Voir scripts/tv-native.cjs — une seule liste pour le hook, le Podfile et l’autolinking. */
+export const TV_AUTOLINK_EXCLUDE = native.TV_AUTOLINK_EXCLUDE;
+export const TV_RN_CORE_FROM_SOURCE = native.TV_RN_CORE_FROM_SOURCE;
 
 export function tvBuildRequested(env = process.env) {
   return env.EXPO_TV === '1';

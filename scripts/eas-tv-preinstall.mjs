@@ -23,4 +23,15 @@ const r = spawnSync(
   ['install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund', '--legacy-peer-deps'],
   { stdio: 'inherit' },
 );
-process.exit(r.status ?? 1);
+if ((r.status ?? 1) !== 0) process.exit(r.status ?? 1);
+
+const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
+const installed = lock.packages?.['node_modules/react-native'];
+const resolved = String(installed?.resolved ?? '');
+const version = String(installed?.version ?? '');
+if (!resolved.includes('react-native-tvos') || !version.startsWith('0.87')) {
+  console.error(`eas-tv-preinstall: lockfile react-native is ${version} (${resolved}), expected react-native-tvos 0.87.x`);
+  process.exit(1);
+}
+console.log(`eas-tv-preinstall: lockfile react-native is ${version} from react-native-tvos`);
+process.exit(0);

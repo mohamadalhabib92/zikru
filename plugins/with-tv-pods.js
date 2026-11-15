@@ -52,6 +52,27 @@ function stripPhonePermissions(platformProjectRoot, projectName) {
   fs.writeFileSync(plistPath, xml);
 }
 
+const { TV_AUTOLINK_EXCLUDE } = require('../scripts/tv-native.cjs');
+
+function patchPodfile(platformProjectRoot) {
+  const file = path.join(platformProjectRoot, 'Podfile');
+  if (!fs.existsSync(file)) return;
+  let src = fs.readFileSync(file, 'utf8');
+  const banner = [
+    "# Apple TV: the Maven React-core tarballs are the upstream iOS xcframework (0.88),",
+    "# not react-native-tvos. Build that fork from source.",
+    "ENV['RCT_USE_PREBUILT_RNCORE'] = '0'",
+    "ENV['EXPO_USE_PRECOMPILED_MODULES'] = '0'",
+    '',
+  ].join('\n');
+  if (!src.includes("ENV['RCT_USE_PREBUILT_RNCORE'] = '0'")) src = banner + src;
+  const list = TV_AUTOLINK_EXCLUDE.map((name) => `'${name}'`).join(', ');
+  if (!src.includes('use_expo_modules!(exclude:')) {
+    src = src.replace('use_expo_modules!', `use_expo_modules!(exclude: [${list}])`);
+  }
+  fs.writeFileSync(file, src);
+}
+
 function stripEntitlementsFile(platformProjectRoot, projectName) {
   const name = projectName || 'Zikru';
   const file = path.join(platformProjectRoot, name, `${name}.entitlements`);
@@ -81,6 +102,7 @@ module.exports = function withTvPods(config) {
     (cfg) => {
       stripPhonePermissions(cfg.modRequest.platformProjectRoot, cfg.modRequest.projectName);
       stripEntitlementsFile(cfg.modRequest.platformProjectRoot, cfg.modRequest.projectName);
+      patchPodfile(cfg.modRequest.platformProjectRoot);
       return cfg;
     },
   ]);

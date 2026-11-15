@@ -1,5 +1,3 @@
-import * as Notifications from 'expo-notifications';
-import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useLatest } from '@/ui/use-latest';
@@ -24,10 +22,15 @@ import { loadJSON, saveJSON } from './storage';
  * (`adhan_cue.wav`, CC BY-SA 3.0). La voix choisie démarre si l’app est ouverte, ou à l’ouverture
  * de la notification. Un démarrage ordinaire ne relance pas un ancien adhan.
  */
-export const remindersSupported = () => true;
-export const remindersNative = true;
+type Notes = typeof import('expo-notifications');
+// iPhone : chargé à l’évaluation. Apple TV : le pod est iOS seulement.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Notifications: Notes | null = Platform.isTV ? null : (require('expo-notifications') as Notes);
 
-Notifications.setNotificationHandler({
+export const remindersSupported = () => !Platform.isTV;
+export const remindersNative = !Platform.isTV;
+
+if (Notifications) Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
     const adhan = payloadPlaysAdhan(notification.request.content.data);
     // Android : shouldPlaySound false masque aussi la bannière. iOS : on coupe le son court
@@ -45,8 +48,8 @@ const CHANNEL = 'prayers';
 /** Android : canal séparé pour les rappels secondaires (adhkar, wird, Coran, bilal…), réglable à part dans le système. */
 const CHANNEL_OTHER = 'reminders';
 async function ensureChannel() {
-  if (Platform.OS !== 'android') return;
-  const imp = AndroidImportance;
+  if (!Notifications || Platform.OS !== 'android') return;
+  const imp = Notifications.AndroidImportance;
   await Notifications.setNotificationChannelAsync(CHANNEL, { name: 'Prières', importance: imp.HIGH, sound: 'default' });
   await Notifications.setNotificationChannelAsync(CHANNEL_OTHER, { name: 'Rappels (adhkar, wird, Coran, bilan)', importance: imp.DEFAULT, sound: 'default' });
   // Le son court n’est dans le binaire qu’après un prebuild. S’il manque, on garde le canal par défaut.
@@ -54,9 +57,10 @@ async function ensureChannel() {
 }
 
 export async function reminderPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
+  if (!Notifications) return 'undetermined';
   try {
     const p = await Notifications.getPermissionsAsync();
-    if (p.granted || p.ios?.status === IosAuthorizationStatus.PROVISIONAL) return 'granted';
+    if (p.granted || p.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) return 'granted';
     return p.canAskAgain ? 'undetermined' : 'denied';
   } catch {
     return 'denied';
@@ -64,18 +68,20 @@ export async function reminderPermission(): Promise<'granted' | 'denied' | 'unde
 }
 
 export async function requestReminderPermission(): Promise<boolean> {
+  if (!Notifications) return false;
   try {
     const cur = await Notifications.getPermissionsAsync();
     if (cur.granted) return true;
     if (!cur.canAskAgain) return false;
     const r = await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } });
-    return r.granted || r.ios?.status === IosAuthorizationStatus.PROVISIONAL;
+    return r.granted || r.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
   } catch {
     return false;
   }
 }
 
 export async function scheduledCount(): Promise<number> {
+  if (!Notifications) return 0;
   try {
     return (await Notifications.getAllScheduledNotificationsAsync()).length;
   } catch {
@@ -84,6 +90,7 @@ export async function scheduledCount(): Promise<number> {
 }
 
 export async function sendTestNotification(title: string, body: string) {
+  if (!Notifications) return;
   if (!(await requestReminderPermission())) return;
   await ensureChannel();
   await Notifications.scheduleNotificationAsync({
@@ -97,6 +104,7 @@ let running: Promise<void> | null = null;
 
 /** (Re)programme le plan si nécessaire. Sans permission ou rappels désactivés : tout est annulé. */
 async function sync(enabled: boolean, build: () => ReturnType<typeof planFor>) {
+  if (!Notifications) return;
   if (!enabled || (await reminderPermission()) !== 'granted') {
     await Notifications.cancelAllScheduledNotificationsAsync().catch(() => {});
     await saveJSON(HASH_KEY, '');
@@ -147,7 +155,8 @@ export function usePrayerReminders() {
 
   // Ouverture depuis une notification → écran concerné, et adhan si c’est l’heure d’une prière.
   useEffect(() => {
-    const go = (r: Notifications.NotificationResponse | null, cold: boolean) => {
+    if (!Notifications) return;
+    const go = (r: import('expo-notifications').NotificationResponse | null, cold: boolean) => {
       const url = r?.notification.request.content.data?.url;
       if (typeof url === 'string' && url.startsWith('/')) setTimeout(() => router.push(url as never), 300);
       if (!r) return;

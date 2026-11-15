@@ -13,6 +13,7 @@ const has = (name: string) => {
 };
 
 export function callsSupported(): boolean {
+  if (Platform.isTV) return false;
   if (Platform.OS === 'web') return typeof (globalThis as { RTCPeerConnection?: unknown }).RTCPeerConnection === 'function';
   return has('WebRTCModule') && has('LivekitReactNativeModule');
 }
