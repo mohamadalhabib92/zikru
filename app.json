@@ -29,7 +29,7 @@
         "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
         "NSMicrophoneUsageDescription": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
       },
-      "buildNumber": "69",
+      "buildNumber": "70",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -154,7 +154,7 @@
         "android.permission.INTERNET",
         "android.permission.WAKE_LOCK"
       ],
-      "versionCode": 69,
+      "versionCode": 70,
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW"
       ]

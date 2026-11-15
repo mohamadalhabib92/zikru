@@ -146,7 +146,8 @@ export const transport: BleTransport = {
     if (st === 'PoweredOn') return { ok: true };
     if (st === 'Unauthorized') return { ok: false, kind: 'denied', reason: Platform.OS === 'android' ? bleMsg('deniedAndroid') : bleMsg('deniedIos') };
     if (st === 'Unsupported') return { ok: false, kind: 'unsupported', reason: bleMsg('unsupported') };
-    if (st === 'Unknown' || st === 'Resetting') return { ok: false, kind: 'disabled', reason: bleMsg('notReady') };
+    if (st === 'Resetting') return { ok: false, kind: 'disabled', reason: bleMsg('resetting') };
+    if (st === 'Unknown') return { ok: false, kind: 'disabled', reason: bleMsg('notReady') };
     return { ok: false, kind: 'disabled', reason: bleMsg('off') };
   },
   async scan(onResult, onError, opts) {
@@ -183,7 +184,7 @@ export const transport: BleTransport = {
     if (!m) return () => {};
     const sub = m.onStateChange((st) => {
       diag.log('state', `adaptateur : ${st}`);
-      cb(st === 'PoweredOn');
+      cb(st === 'PoweredOn' ? 'on' : st === 'Unauthorized' ? 'denied' : st === 'Resetting' || st === 'Unknown' ? 'resetting' : 'off');
     }, false);
     return () => sub.remove();
   },
@@ -230,6 +231,34 @@ export const transport: BleTransport = {
     const m = getManager();
     if (!m) return false;
     return m.isDeviceConnected(id).catch(() => false);
+  },
+  async recall(services, ids) {
+    const m = getManager();
+    if (!m) return [];
+    const out = new Map<string, ScanResult>();
+    const put = (d: PlxDevice, via: 'system' | 'saved') => {
+      const r = toScanResult(d);
+      const prev = out.get(r.id);
+      out.set(r.id, { ...prev, ...r, name: r.name ?? prev?.name ?? null, services: [...new Set([...(prev?.services ?? []), ...(r.services ?? [])])], via: prev?.via ?? via });
+    };
+    if (services.length) {
+      const connected = await m.connectedDevices(services).catch((e: unknown) => {
+        diag.error('recall', e);
+        return [];
+      });
+      for (const d of connected) put(d, 'system');
+    }
+    const missing = ids.filter((id) => id && !out.has(id));
+    if (missing.length) {
+      const saved = await m.devices(missing).catch((e: unknown) => {
+        diag.error('recall', e);
+        return [];
+      });
+      for (const d of saved) put(d, 'saved');
+    }
+    if (out.size) diag.log('recall', `${out.size} appareil(s) hors scan (${[...out.values()].map((d) => `${d.via} ${d.name ?? d.id}`).join(', ')})`);
+    for (const r of out.values()) diag.seen(r);
+    return [...out.values()];
   },
   async retrieve(id) {
     const m = getManager();

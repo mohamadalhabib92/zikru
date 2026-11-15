@@ -88,7 +88,7 @@ export const transport: BleTransport = {
   onStateChange(cb) {
     const b = bt();
     if (!b?.addEventListener) return () => {};
-    const h = (e: Event) => cb(!!(e as Event & { value?: boolean }).value);
+    const h = (e: Event) => cb((e as Event & { value?: boolean }).value ? 'on' : 'off');
     b.addEventListener('availabilitychanged', h);
     return () => b.removeEventListener('availabilitychanged', h);
   },

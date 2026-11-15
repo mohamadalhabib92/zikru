@@ -896,35 +896,71 @@ export function parseAdvertising(raw: Bytes): AdvInfo {
   return out;
 }
 
-export type DeviceKind = 'counter' | 'audio' | 'other';
+export type DeviceKind = 'counter' | 'maybe' | 'audio' | 'other';
 export type AdvLike = { name: string | null; services?: string[]; appearance?: number | null; manufacturerId?: number | null; manufacturerData?: Bytes | null };
 /**
- * Classe un appareil vu en scan. Liste autorisée stricte : seuls « counter » (compteur de dhikr / bague ZKR-R1)
- * et « audio » (écouteurs, casque, appareil auditif) sont affichés par défaut ; tout le reste est ignoré.
- * Le compteur l'emporte sur l'audio (une bague peut annoncer la batterie, jamais un service audio).
+ * Noms trop vagues pour affirmer « compteur », mais trop fréquents sur une bague pour la cacher :
+ * pas de nom, « BLE », « Ring », « iRing », « Smart », un code modèle.
  */
-export function classifyDevice(a: AdvLike): { kind: DeviceKind; reason: string | null } {
+export const GENERIC_RING_RE = /^(ble|ring|iring|smart|smart ring|ble ring)$/i;
+export const MODEL_CODE_RE = /^[A-Za-z]{1,4}[-_ ]?\d{1,4}[A-Za-z]?$/;
+/** Montre, bande, enceinte, téléphone : ne pas les proposer comme bague. */
+export const NON_RING_RE = /iphone|ipad|macbook|apple ?watch|\bgalaxy\b(?! buds)|\bpixel\b(?! buds)|android|television|\btv\b|speaker|printer|fitbit|garmin|laptop|\bpc\b|windows|xbox|playstation|nintendo|carplay|mi band|smart band|flip \d|jbl /i;
+/** Services à demander à iOS pour les périphériques déjà connectés au système (absents du scan). */
+export const RECALL_SERVICES = [STD.hid, STD.battery, normUuid('ffe0'), normUuid('fff0'), normUuid('ae30'), ZKR_R1_SERVICE];
+
+/**
+ * Classe un appareil vu en scan.
+ * « counter » : compteur de dhikr reconnu. « maybe » : bague possible, montrée pour un essai, jamais connectée toute seule.
+ * « audio » : écouteurs. « other » : masqué, avec la raison dans `reason` (journal).
+ * Le compteur l'emporte sur l'audio.
+ */
+export function classifyDevice(a: AdvLike): { kind: DeviceKind; reason: string } {
   const name = (a.name ?? '').trim();
   const svc = (a.services ?? []).map((u) => normUuid(u));
+  const has = (u: string) => svc.includes(normUuid(u));
   if (svc.includes(ZKR_R1_SERVICE)) return { kind: 'counter', reason: 'bague ZKR-R1 (service Zikru)' };
-  if (svc.includes(normUuid('ae30'))) return { kind: 'counter', reason: 'service BSTWSH (0xAE30)' };
+  if (has('ae30')) return { kind: 'counter', reason: 'service BSTWSH (0xAE30)' };
   if (name && COUNTER_NAME_RE.test(name) && !AUDIO_NAME_RE.test(name)) return { kind: 'counter', reason: 'nom de compteur de dhikr' };
   if (a.appearance != null && AUDIO_APPEARANCE_CATEGORIES.includes(a.appearance >> 6)) return { kind: 'audio', reason: `apparence audio 0x${a.appearance.toString(16).padStart(4, '0')}` };
   if (svc.some((u) => AUDIO_SERVICES.includes(u))) return { kind: 'audio', reason: 'service audio Bluetooth LE' };
   // AirPods / Beats : annonce Apple « proximity pairing » (type 0x07) dans les données fabricant
   if (a.manufacturerId === APPLE_COMPANY_ID && a.manufacturerData && a.manufacturerData[0] === 0x07) return { kind: 'audio', reason: 'écouteurs Apple (AirPods / Beats)' };
   if (name && AUDIO_NAME_RE.test(name)) return { kind: 'audio', reason: 'nom d’écouteurs' };
-  return { kind: 'other', reason: null };
+  if (a.manufacturerId === APPLE_COMPANY_ID) return { kind: 'other', reason: 'écarté : annonce Apple (pas une bague)' };
+  if (name && NON_RING_RE.test(name)) return { kind: 'other', reason: 'écarté : nom d’un autre appareil' };
+  if (has('1812') || (a.appearance != null && (a.appearance >> 6) === 0x0f)) return { kind: 'maybe', reason: 'peut-être une bague : HID (0x1812) ou clavier' };
+  if (has('ffe0') || has('fff0')) return { kind: 'maybe', reason: 'peut-être une bague : service fabricant FFE0/FFF0' };
+  if (name && (GENERIC_RING_RE.test(name) || /\bring\b/i.test(name) || MODEL_CODE_RE.test(name))) return { kind: 'maybe', reason: 'peut-être une bague : nom générique' };
+  if (a.appearance != null && (a.appearance >> 6) === 0x03) return { kind: 'other', reason: 'écarté : apparence montre' };
+  if (!name) return { kind: 'maybe', reason: has('180f') || a.manufacturerId != null ? 'peut-être une bague : sans nom, batterie ou données fabricant' : 'peut-être une bague : sans nom' };
+  return { kind: 'other', reason: 'écarté : aucune marque de compteur' };
 }
 /**
- * Visible dans la liste de l'écran Bluetooth ? Compteurs et écouteurs, plus les appareils déjà associés par l'utilisateur.
+ * Visible dans la liste ? Compteurs, bagues possibles et écouteurs, plus les appareils déjà associés.
  * showAll : uniquement depuis l'écran Diagnostic (dépannage).
  */
 export function isDeviceVisible(kind: DeviceKind, opts: { known?: boolean; showAll?: boolean } = {}): boolean {
   return !!opts.showAll || !!opts.known || kind !== 'other';
 }
-/** Connexion de comptage possible ? Jamais pour des écouteurs (gérés par le système) ni un appareil hors liste (sauf associé / mode diagnostic). */
+/** Connexion de comptage possible ? Jamais pour des écouteurs. Une bague « possible » s’essaie à la main, pas toute seule. */
 export function isCounterConnectable(kind: DeviceKind, opts: { known?: boolean; showAll?: boolean } = {}): boolean {
   if (kind === 'audio') return false;
-  return kind === 'counter' || !!opts.known || !!opts.showAll;
+  return kind === 'counter' || kind === 'maybe' || !!opts.known || !!opts.showAll;
+}
+
+/** GATT sans notification utilisable, mais avec le service HID : clavier système, pas un compteur lisible. */
+export function gattIsHidOnly(chars: { service: string; uuid: string; notify?: boolean }[]): boolean {
+  const useful = chars.filter((c) => c.notify && !isIgnoredChar(c.uuid) && normUuid(c.service) !== STD.hid);
+  if (useful.length) return false;
+  return chars.some((c) => normUuid(c.service) === STD.hid);
+}
+
+/** Une ligne de journal : tout appareil vu, y compris ceux qui restent masqués, avec la raison. */
+export function discoveryLine(a: { id: string; name: string | null; rssi: number | null; services?: string[]; manufacturerId?: number | null; manufacturerData?: Bytes | null }, cl: { kind: DeviceKind; reason: string }): string {
+  const svc = (a.services ?? []).map((u) => shortUuid(u)).join(',') || '—';
+  const mfr = a.manufacturerId != null ? ` mfr 0x${a.manufacturerId.toString(16).padStart(4, '0')}` : '';
+  const bytes = a.manufacturerData && a.manufacturerData.length ? ` [${[...a.manufacturerData].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join(' ')}]` : '';
+  const shown = cl.kind === 'other' ? 'masqué' : 'affiché';
+  return `${a.name ?? '(sans nom)'} · ${a.id} · RSSI ${a.rssi ?? '?'} · services ${svc}${mfr}${bytes} · ${cl.kind} · ${shown} · ${cl.reason}`;
 }

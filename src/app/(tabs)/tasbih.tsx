@@ -1,11 +1,11 @@
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Platform, Pressable, View } from 'react-native';
+import { Animated, Platform, Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
-import { useBleCounter } from '@/lib/ble/manager';
+import { bleCounter, useBleCounter } from '@/lib/ble/manager';
 import { useSettings } from '@/lib/settings';
 import { sanitizeLandscape } from '@/lib/landscapes';
 import { LandscapeBackdrop, ReadingPlate } from '@/components/landscape-backdrop';
@@ -16,6 +16,38 @@ import { brand as b, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 import { uid } from '@/lib/storage';
 import { closeSession, groupSessions, resetCount, switchDhikr } from '@/lib/tasbih-core';
+
+/** Bague clavier : les touches comptent tant que l’écran du compteur est ouvert. */
+function RingKeys() {
+  const s = useBleCounter();
+  const [v, setV] = useState('');
+  const on = s.prefs.hidEnabled;
+  if (!on) return null;
+  return (
+    <View>
+      <Muted>{L('Mode clavier actif : les touches de la bague comptent ici.')}</Muted>
+      <TextInput
+        autoFocus
+        value={v}
+        onChangeText={(x) => {
+          const ch = x.slice(-1);
+          if (ch) bleCounter.nativeKey(ch === ' ' ? ' ' : ch);
+          setV('');
+        }}
+        onKeyPress={(e) => {
+          const k = e.nativeEvent.key;
+          if (k && k.length > 1 && k !== 'Backspace' && k !== 'Enter') bleCounter.nativeKey(k);
+        }}
+        onSubmitEditing={() => bleCounter.nativeKey('Enter')}
+        submitBehavior="submit"
+        showSoftInputOnFocus={false}
+        autoCorrect={false}
+        autoCapitalize="none"
+        style={{ height: 1, opacity: 0 }}
+      />
+    </View>
+  );
+}
 
 export default function TasbihScreen() {
   const { s, t: tr } = useSettings();
@@ -73,6 +105,7 @@ export default function TasbihScreen() {
       <Row style={{ justifyContent: 'space-between' }}>
         <Eyebrow>{tr.tasbih_title}</Eyebrow>
         <BleStatusChip showIdle />
+        <RingKeys />
       </Row>
       {current ? (
         <View style={{ alignItems: 'center', marginVertical: 8 }}>

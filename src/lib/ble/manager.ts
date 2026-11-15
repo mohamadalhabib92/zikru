@@ -17,11 +17,12 @@ import {
   defaultMapping,
   detectCounterField,
   detectProfile,
-  likelyCounter,
   isCounterKey,
   isValidUuid,
   autoConnectAllowed,
   classifyDevice,
+  gattIsHidOnly,
+  RECALL_SERVICES,
   COUNTER_NAME_PREFIXES,
   COUNTER_SERVICES,
   isDeviceVisible,
@@ -99,6 +100,8 @@ export type BleState = {
   hiddenCount: number;
   /** « Afficher tous les appareils » (écran Diagnostic seulement, non mémorisé : revient à la liste stricte au redémarrage). */
   showAllDevices: boolean;
+  /** Bague HID déjà prise par le système : pas de notification BLE, compter les touches. */
+  hidOnly: boolean;
 };
 
 const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: HID_ON_BY_DEFAULT, hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
@@ -143,6 +146,7 @@ class BleCounterManager {
     similar: null,
     hiddenCount: 0,
     showAllDevices: false,
+    hidOnly: false,
   };
   private lastValues: Record<string, number> = {};
   /** Identifiants refusés (« ce n'est pas mon compteur ») : jamais proposés ni connectés automatiquement. */
@@ -294,11 +298,11 @@ class BleCounterManager {
       this.set({ status: 'erreur', error: friendlyBleError(e) });
     }
   }
-  /** Liste affichée = appareils autorisés (compteurs, écouteurs, déjà associés), ou tous en mode diagnostic. */
+  /** Liste affichée = compteurs, bagues possibles, écouteurs, déjà associés, ou tous en mode diagnostic. */
   private publishScan() {
     const all = [...this.scanSeen.values()];
     const vis = all.filter((r) => isDeviceVisible(r.kind ?? 'other', { known: this.s.devices.some((d) => d.id === r.id), showAll: this.s.showAllDevices }));
-    const rank = (r: ScanResult) => (r.likely ? 0 : r.kind === 'audio' ? 1 : 2);
+    const rank = (r: ScanResult) => (r.kind === 'counter' || r.likely ? 0 : r.kind === 'maybe' ? 1 : r.kind === 'audio' ? 2 : 3);
     vis.sort((a, b) => rank(a) - rank(b) || Number(!!b.name) - Number(!!a.name) || (b.rssi ?? -999) - (a.rssi ?? -999));
     this.set({ scanResults: vis.slice(0, 60), hiddenCount: all.length - vis.length });
   }
@@ -317,25 +321,15 @@ class BleCounterManager {
       return;
     }
     this.stopScanning();
-    this.set({ scanning: true, scanResults: [], hiddenCount: 0, error: null });
+    this.set({ scanning: true, scanResults: [], hiddenCount: 0, error: null, hidOnly: false });
     const seen = new Map<string, ScanResult>();
     this.scanSeen = seen;
     try {
+      const recalled = (await transport.recall?.(RECALL_SERVICES, this.s.devices.map((d) => d.id)).catch(() => [])) ?? [];
+      for (const r of recalled) this.noteScan(r);
       this.stopScan = await transport.scan(
         (r) => {
-          const prev = seen.get(r.id);
-          const name = r.name ?? prev?.name ?? null;
-          const services = [...new Set([...(prev?.services ?? []), ...(r.services ?? [])])];
-          const appearance = r.appearance ?? prev?.appearance ?? null;
-          const manufacturerId = r.manufacturerId ?? prev?.manufacturerId ?? null;
-          const manufacturerData = r.manufacturerData ?? prev?.manufacturerData ?? null;
-          const c0 = classifyDevice({ name, services, appearance, manufacturerId, manufacturerData });
-          const cl = c0.kind === 'other' && prev?.kind && prev.kind !== 'other' ? { kind: prev.kind, reason: prev.reason ?? null } : c0;
-          const lk = likelyCounter(name, services);
-          const known = this.s.devices.some((d) => d.id === r.id);
-          const likely = cl.kind === 'counter' || known;
-          seen.set(r.id, { ...prev, ...r, name, services, appearance, manufacturerId, manufacturerData, kind: cl.kind, likely, reason: known ? 'déjà associé' : (cl.reason ?? lk.reason) });
-          this.publishScan();
+          this.noteScan(r);
         },
         (e) => {
           this.stopScanning();
@@ -349,6 +343,26 @@ class BleCounterManager {
       diag.error('scan', e);
       this.set({ scanning: false, error: bleMsg('scanFailed', { m: friendlyBleError(e) }) });
     }
+  }
+  /** Mémorise un appareil vu (scan, système ou identifiant) et rafraîchit la liste. */
+  private noteScan(r: ScanResult) {
+    const prev = this.scanSeen.get(r.id);
+    const name = r.name ?? prev?.name ?? null;
+    const services = [...new Set([...(prev?.services ?? []), ...(r.services ?? [])])];
+    const appearance = r.appearance ?? prev?.appearance ?? null;
+    const manufacturerId = r.manufacturerId ?? prev?.manufacturerId ?? null;
+    const manufacturerData = r.manufacturerData ?? prev?.manufacturerData ?? null;
+    const c0 = classifyDevice({ name, services, appearance, manufacturerId, manufacturerData });
+    const cl = c0.kind === 'other' && prev?.kind && prev.kind !== 'other' ? { kind: prev.kind, reason: prev.reason ?? c0.reason } : c0.kind === 'maybe' && prev?.kind === 'counter' ? { kind: prev.kind, reason: prev.reason ?? c0.reason } : c0;
+    const known = this.s.devices.some((d) => d.id === r.id);
+    const likely = cl.kind === 'counter' || known;
+    this.scanSeen.set(r.id, { ...prev, ...r, name, services, appearance, manufacturerId, manufacturerData, kind: cl.kind, likely, reason: known ? 'déjà associé' : cl.reason, via: r.via ?? prev?.via ?? 'scan' });
+    this.publishScan();
+  }
+  /** Connexion d’essai : on branche l’appareil et on attend les appuis pour confirmer que c’est la bague. */
+  async tryDevice(id: string) {
+    const ok = await this.connectTo(id);
+    if (ok && !this.s.hidOnly) this.startLearn(3);
   }
   stopScanning() {
     if (this.scanTimer) clearTimeout(this.scanTimer);
@@ -448,7 +462,8 @@ class BleCounterManager {
         return false;
       }
       const f = friendlyBleError(e);
-      this.set({ status: 'erreur', error: f === msg ? bleMsg('connectFailed', { m: msg }) : f });
+      const hid = this.scanSeen.get(id)?.services?.some((s) => sameUuid(s, STD.hid));
+      this.set({ status: 'erreur', error: hid ? bleMsg('hidOnly') : f === msg ? bleMsg('connectFailed', { m: msg }) : f, hidOnly: !!hid });
       this.scheduleKeeper();
       return false;
     } finally {
@@ -529,8 +544,10 @@ class BleCounterManager {
     const line = `abonnement ${ok}/${targets.length}${failed ? `, ${failed} refus` : ''} (${reason})`;
     diag.log('notify', line, failed > 0 && ok === 0 ? 'error' : 'info');
     diag.log('frame', line, failed > 0 && ok === 0 ? 'warn' : 'info');
-    if (targets.length === 0) this.set({ error: bleMsg('noNotify') });
-    else if (failed === targets.length) this.set({ error: bleMsg('subFailed', { n: failed }) });
+    if (gattIsHidOnly(link.chars) && ok === 0) this.set({ hidOnly: true, error: bleMsg('hidOnly') });
+    else if (targets.length === 0) this.set({ error: bleMsg('noNotify'), hidOnly: false });
+    else if (failed === targets.length) this.set({ error: bleMsg('subFailed', { n: failed }), hidOnly: false });
+    else this.set({ hidOnly: false });
   }
   /** Retour au premier plan, restauration iOS, ou abonnement tombé : vérifier le lien puis réarmer. */
   private scheduleRearm(reason: string) {
@@ -688,7 +705,7 @@ class BleCounterManager {
     void this.teardown();
     this.set({ battery: null });
     if (this.manualDisconnect || !this.isAuto(id)) {
-      this.set({ status: 'déconnecté' });
+      this.set({ status: 'déconnecté', hidOnly: false });
       this.refreshAutoIdle();
       return;
     }
@@ -727,7 +744,7 @@ class BleCounterManager {
     this.cancelPending();
     this.connectSeq++;
     await this.teardown();
-    this.set({ status: 'déconnecté', battery: null, attempt: 0, auto: 'inactif', autoTarget: null });
+    this.set({ status: 'déconnecté', battery: null, attempt: 0, auto: 'inactif', autoTarget: null, hidOnly: false });
   }
   /** Oublie un appareil mémorisé (par défaut l'appareil courant). */
   forget(id?: string) {
@@ -780,7 +797,17 @@ class BleCounterManager {
     this.keeperOffs.push(() => app.remove());
     if (transport.onStateChange) {
       this.keeperOffs.push(
-        transport.onStateChange((on) => {
+        transport.onStateChange((st) => {
+          if (st === 'resetting') {
+            this.set({ availability: { ok: false, kind: 'disabled', reason: bleMsg('resetting') } });
+            return;
+          }
+          if (st === 'denied') {
+            this.clearKeeperTimer();
+            this.set({ availability: { ok: false, kind: 'denied', reason: Platform.OS === 'android' ? bleMsg('deniedAndroid') : bleMsg('deniedIos') }, auto: 'indisponible' });
+            return;
+          }
+          const on = st === 'on';
           const action = reconnectDecision(on ? 'bluetooth-on' : 'bluetooth-off', { remembered: this.autoDevices().length > 0, linked: !!this.link, background: this.inBackground() });
           if (on) {
             this.set({ availability: { ok: true } });
@@ -792,7 +819,7 @@ class BleCounterManager {
             }
           } else if (action === 'pause') {
             this.clearKeeperTimer();
-            this.set({ availability: { ok: false, kind: 'disabled', reason: 'Bluetooth désactivé' }, auto: this.autoDevices().length ? 'bt-off' : 'inactif' });
+            this.set({ availability: { ok: false, kind: 'disabled', reason: bleMsg('off') }, auto: this.autoDevices().length ? 'bt-off' : 'inactif' });
           }
         }),
       );

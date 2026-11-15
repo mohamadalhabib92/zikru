@@ -396,7 +396,7 @@ test('P4 liste autorisée : compteurs de dhikr reconnus (nom, service, ZKR-R1)',
 test('P4 liste autorisée : écouteurs par apparence, service LE Audio, AirPods, nom', () => {
   const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
   for (const a of [0x0941, 0x0942, 0x0943, 0x0944, 0x0940, 0x0841, 0x0a41]) assert.equal(k(null, [], { appearance: a }), 'audio', `apparence 0x${a.toString(16)}`);
-  assert.equal(k(null, [], { appearance: 0x03c1 }), 'other', 'clavier HID');
+  assert.equal(k(null, [], { appearance: 0x03c1 }), 'maybe', 'clavier HID : bague possible, pas masqué');
   assert.equal(k(null, [], { appearance: 0x00c1 }), 'other', 'montre');
   for (const u of ['184e', '1850', '1844', 'fe2c']) assert.equal(k(null, [c.normUuid(u)]), 'audio', u);
   assert.equal(k(null, [], { manufacturerId: 0x004c, manufacturerData: new Uint8Array([0x07, 0x19, 0x01]) }), 'audio', 'AirPods');
@@ -405,18 +405,39 @@ test('P4 liste autorisée : écouteurs par apparence, service LE Audio, AirPods,
   assert.equal(k('WH-1000XM5'), 'audio');
   assert.equal(k('AirPods Pro'), 'audio');
 });
-test('P4 liste autorisée : tout le reste est ignoré (sans nom, inconnus, montres, TV, HID)', () => {
+test('P4 : une bague incertaine est montrée, pas jetée ; le reste reste masqué', () => {
   const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
-  assert.equal(k(null, []), 'other');
-  assert.equal(k(''), 'other');
+  const why = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).reason;
+  assert.equal(k(null, []), 'maybe', 'sans nom : peut-être une bague');
+  assert.equal(k(''), 'maybe');
+  assert.equal(k('Ring'), 'maybe');
+  assert.equal(k('iRing'), 'maybe');
+  assert.equal(k('BLE'), 'maybe');
+  assert.equal(k('Smart'), 'maybe');
+  assert.equal(k('HM-10'), 'maybe', 'code modèle');
+  assert.equal(k('Oura Ring'), 'maybe', 'nom « ring » : essai, pas un compteur certain');
+  assert.equal(k(null, [c.HM10_SERVICE]), 'maybe', 'service FFE0 sans nom');
+  assert.equal(k(null, [], { manufacturerId: 0x1234, manufacturerData: new Uint8Array([1, 2]) }), 'maybe', 'données fabricant seules');
+  assert.equal(k('BLE Remote', ['00001812-0000-1000-8000-00805f9b34fb']), 'maybe', 'HID montré pour essai');
+  assert.match(why('JBL Flip 5'), /écarté/);
   assert.equal(k('JBL Flip 5'), 'other', 'enceinte sans apparence annoncée : non reconnue');
-  assert.equal(k('Oura Ring'), 'other', '« ring » seul ne suffit plus');
   assert.equal(k('Presenter Clicker'), 'other');
   assert.equal(k('[TV] Samsung'), 'other');
   assert.equal(k('Mi Smart Band 8', ['0000fee0-0000-1000-8000-00805f9b34fb']), 'other');
-  assert.equal(k('BLE Remote', ['00001812-0000-1000-8000-00805f9b34fb']), 'other', 'télécommande HID masquée par défaut');
   assert.equal(k('Bowers Speaker'), 'other', '« Bo… » ne ressemble pas à BW-xxxx');
   assert.equal(c.likelyCounter('Oura Ring').likely, false);
+  assert.equal(c.isDeviceVisible('maybe'), true);
+  assert.equal(c.isCounterConnectable('maybe'), true);
+  assert.equal(c.isCounterConnectable('audio'), false);
+  const line = c.discoveryLine({ id: 'abc', name: null, rssi: -40, services: ['1812'], manufacturerId: 0x1234, manufacturerData: new Uint8Array([1]) }, { kind: 'maybe', reason: 'HID' });
+  assert.match(line, /sans nom/);
+  assert.match(line, /abc/);
+  assert.match(line, /-40/);
+  assert.match(line, /affiché/);
+  assert.match(line, /HID/);
+  assert.match(line, /1234/);
+  assert.equal(c.gattIsHidOnly([{ service: c.STD.hid, uuid: '2a4d', notify: true }]), true);
+  assert.equal(c.gattIsHidOnly([{ service: c.STD.hid, uuid: '2a4d', notify: true }, { service: c.HM10_SERVICE, uuid: c.HM10_SERIAL, notify: true }]), false);
 });
 test('P4 liste autorisée : visibilité et connexion', () => {
   assert.equal(c.isDeviceVisible('counter'), true);
@@ -450,8 +471,8 @@ test('profils documentés : iQibla par écriture 0xD004, UART publiée, noms ara
   assert.equal(k('سبحة ذكية'), 'counter');
   assert.equal(k('تسبيح'), 'counter');
   assert.equal(k('Noor N01'), 'counter');
-  assert.equal(k(null, [c.HM10_SERVICE]), 'other', 'HM-10 sans nom de compteur : hors liste');
-  assert.equal(k(null, [], { manufacturerId: 0x1234, manufacturerData: new Uint8Array([1, 2]) }), 'other', 'aucun identifiant fabricant de bague n’est publié');
+  assert.equal(k(null, [c.HM10_SERVICE]), 'maybe', 'HM-10 sans nom : bague possible, pas un compteur certain');
+  assert.equal(k(null, [], { manufacturerId: 0x1234, manufacturerData: new Uint8Array([1, 2]) }), 'maybe', 'données fabricant seules : essai, pas une certitude');
   const d004 = [{ service: c.normUuid('fff0'), uuid: c.IQIBLA_WRITE, notify: false, read: false }];
   assert.equal(c.detectProfile('Noor', d004).id, 'iqibla');
   assert.equal(c.detectProfile('Noor', []).id, 'generic', 'Noor sans 0xD004 : pas le parseur iQibla');
