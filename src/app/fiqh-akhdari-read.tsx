@@ -4,20 +4,18 @@ import { memo, useCallback, useEffect, useMemo, useState, useSyncExternalStore }
 import { FlatList, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import raw from '../../assets/fiqh/akhdari.json';
-import { AiConsentSheet } from '@/components/AiConsentSheet';
-import { askBilal, bilalErrorFr } from '@/lib/bilal';
-import { akhdariChapters, chapterParagraphs, splitSentences, type AkhdariItem } from '@/lib/akhdari-view';
-import { useConsent } from '@/lib/consent';
+import { AKHDARI_GAP, akhdariChapters, akhdariParagraphLocales, chapterParagraphs, splitSentences, type AkhdariItem } from '@/lib/akhdari-view';
+import { CONTENT_LOCALES, resolveSlot, spokenOf, type ContentLocale } from '@/lib/religious-locale';
 import { layoutAyahs } from '@/lib/quran-layout';
 import { readerPrefs } from '@/lib/quran-store';
 import { useShared } from '@/lib/shared-state';
-import { canSendToAI } from '@/lib/privacy';
 import { usePremium } from '@/lib/premium';
-import { useSettings } from '@/lib/settings';
 import { fontsAreReady, subscribeFonts } from '@/ui/fonts-ready';
 import { Ionicons } from '@/ui/kit';
 import { brand as b, fonts } from '@/ui/theme';
-import { L } from '@/lib/l10n';
+import { L, useUiLang } from '@/lib/l10n';
+
+const asLocale = (l: string): ContentLocale => ((CONTENT_LOCALES as readonly string[]).includes(l) ? (l as ContentLocale) : 'fr');
 
 const ITEMS = raw as AkhdariItem[];
 const CHAPTERS = akhdariChapters(ITEMS);
@@ -69,13 +67,9 @@ export default function AkhdariRead() {
   const font = fontReady ? fonts.quran : undefined;
   const [selected, setSelected] = useState<string | null>(rows[0]?.id ?? null);
   const [spoken, setSpoken] = useState(-1);
-  const [explain, setExplain] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [askConsent, setAskConsent] = useState(false);
+  const [explain, setExplain] = useState(false);
   const premium = usePremium();
-  const { s } = useSettings();
-  const [consent, choose, consentReady] = useConsent();
+  const locale = asLocale(useUiLang());
   const current = rows.find((r) => r.id === selected) ?? null;
   const layout = useMemo(
     () => layoutAyahs(rows.map((r) => r.text), { arSize: prefs.arSize, lineH: prefs.lineH, trSize: 0, showTr: false, showTl: false }),
@@ -103,13 +97,13 @@ export default function AkhdariRead() {
 
   const read = () => {
     if (!current || !premiumOk()) return;
-    setErr(null);
-    const parts = splitSentences(current.text);
+    const spoken = spokenOf(akhdariParagraphLocales(current.text), locale);
+    const parts = splitSentences(spoken.text);
     void Speech.stop();
     setSpoken(0);
     parts.forEach((part, index) => {
       Speech.speak(part, {
-        language: 'ar',
+        language: spoken.speech,
         rate: 0.9,
         onStart: () => setSpoken(index),
         onDone: () => {
@@ -120,23 +114,7 @@ export default function AkhdariRead() {
     });
   };
 
-  const explainPassage = async () => {
-    if (!current || !premiumOk()) return;
-    if (!consentReady || !canSendToAI(consent, consentReady)) {
-      setAskConsent(true);
-      return;
-    }
-    setErr(null);
-    setBusy(true);
-    try {
-      const text = await askBilal({ mode: 'fiqh', passage: current.text, lang: s.lang });
-      setExplain(text);
-    } catch (e) {
-      setErr(bilalErrorFr(e));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const gap = resolveSlot(AKHDARI_GAP, locale);
 
   return (
     <View style={{ flex: 1, backgroundColor: b.cream }}>
@@ -144,6 +122,9 @@ export default function AkhdariRead() {
       <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
         <Text style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: '800', color: b.brown, backgroundColor: b.goldSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
           {L('à vérifier — relecture par un savant requise avant publication')}
+        </Text>
+        <Text style={{ alignSelf: 'flex-start', marginTop: 6, fontSize: 12, fontWeight: '800', color: b.brown, backgroundColor: b.goldSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+          {L(gap.flag)}
         </Text>
         <Text style={{ color: b.ink, fontFamily: font, fontSize: 22, lineHeight: 40, textAlign: 'right', writingDirection: 'rtl', marginTop: 8 }}>{chapter?.title}</Text>
       </View>
@@ -170,11 +151,11 @@ export default function AkhdariRead() {
         extraData={`${selected}:${spoken}`}
       />
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, backgroundColor: b.paper, borderTopWidth: 1, borderTopColor: b.line, gap: 8 }}>
-        {err ? <Text style={{ color: b.rust }}>{err}</Text> : null}
         {explain ? (
           <View>
-            <Text style={{ color: b.brown, fontWeight: '800', marginBottom: 4 }}>{L('Explication générée par une IA. À faire vérifier par un savant qualifié.')}</Text>
-            <Text style={{ color: b.ink, lineHeight: 21 }}>{explain}</Text>
+            <Text style={{ color: b.brown, fontWeight: '800', marginBottom: 4 }}>{L('Commentaire — ce n’est pas le matn')}</Text>
+            <Text style={{ color: b.ink, lineHeight: 21 }}>{gap.text}</Text>
+            <Text style={{ alignSelf: 'flex-start', marginTop: 6, fontSize: 12, fontWeight: '800', color: b.brown, backgroundColor: b.goldSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>{L(gap.flag)}</Text>
           </View>
         ) : null}
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -184,22 +165,11 @@ export default function AkhdariRead() {
           <Pressable accessibilityRole="button" onPress={() => void Speech.stop()} style={{ padding: 12 }}>
             <Ionicons name="stop" size={22} color={b.ink} />
           </Pressable>
-          <Pressable accessibilityRole="button" onPress={() => void explainPassage()} style={{ flex: 1, backgroundColor: b.brown, borderRadius: 12, padding: 12, alignItems: 'center', opacity: busy ? 0.6 : 1 }}>
+          <Pressable accessibilityRole="button" onPress={() => premiumOk() && setExplain(true)} style={{ flex: 1, backgroundColor: b.brown, borderRadius: 12, padding: 12, alignItems: 'center' }}>
             <Text style={{ color: '#fff', fontWeight: '800' }}>{L('Expliquer ce passage')}</Text>
           </Pressable>
         </View>
       </View>
-      {askConsent ? (
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <AiConsentSheet
-            onAccept={() => {
-              choose('ai', true);
-              setAskConsent(false);
-            }}
-            onDecline={() => setAskConsent(false)}
-          />
-        </View>
-      ) : null}
     </View>
   );
 }
