@@ -1,4 +1,4 @@
-const { withDangerousMod, withFinalizedMod } = require('expo/config-plugins');
+const { withDangerousMod, withEntitlementsPlist, withFinalizedMod } = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -33,6 +33,15 @@ const DROP = [
   'NSLocationTemporaryUsageDescriptionDictionary',
 ];
 
+const DROP_ENTITLEMENTS = [
+  'com.apple.security.application-groups',
+  'com.apple.developer.associated-domains',
+  'aps-environment',
+  'com.apple.developer.healthkit',
+  'com.apple.developer.applesignin',
+  'com.apple.developer.networking.wifi-info',
+];
+
 function stripPhonePermissions(platformProjectRoot, projectName) {
   const plistPath = path.join(platformProjectRoot, projectName || 'Zikru', 'Info.plist');
   if (!fs.existsSync(plistPath)) return;
@@ -43,7 +52,22 @@ function stripPhonePermissions(platformProjectRoot, projectName) {
   fs.writeFileSync(plistPath, xml);
 }
 
+function stripEntitlementsFile(platformProjectRoot, projectName) {
+  const name = projectName || 'Zikru';
+  const file = path.join(platformProjectRoot, name, `${name}.entitlements`);
+  if (!fs.existsSync(file)) return;
+  let xml = fs.readFileSync(file, 'utf8');
+  for (const key of DROP_ENTITLEMENTS) {
+    xml = xml.replace(new RegExp(`<key>${key.replace(/\./g, '\\.')}</key>\\s*<(string|true|false|integer|real|array|dict)>[\\s\\S]*?</\\1>\\s*`, 'g'), '');
+  }
+  fs.writeFileSync(file, xml);
+}
+
 module.exports = function withTvPods(config) {
+  config = withEntitlementsPlist(config, (cfg) => {
+    for (const key of DROP_ENTITLEMENTS) delete cfg.modResults[key];
+    return cfg;
+  });
   config = withDangerousMod(config, [
     'ios',
     (cfg) => {
@@ -56,6 +80,7 @@ module.exports = function withTvPods(config) {
     'ios',
     (cfg) => {
       stripPhonePermissions(cfg.modRequest.platformProjectRoot, cfg.modRequest.projectName);
+      stripEntitlementsFile(cfg.modRequest.platformProjectRoot, cfg.modRequest.projectName);
       return cfg;
     },
   ]);

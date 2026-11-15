@@ -97,10 +97,24 @@ function withAppleTv(config) {
   next.push('./plugins/with-tv-pods.js');
   config.plugins = next;
   config.orientation = 'landscape';
+  // Projet Expo distinct : les profils tvOS ne partagent pas le créneau
+  // de provisionnement iPhone / Watch du projet « zikru ».
+  config.slug = 'zikru-tv';
+  config.owner = 'habib548';
+  config.version = '1.0.30';
   config.ios = config.ios || {};
+  config.ios.bundleIdentifier = 'com.vibecode.zikru-76mpdv';
+  config.ios.buildNumber = '1';
   if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
+  // Pas de groupe d’apps, pas de montre, pas de widget : le profil tvOS
+  // de cet App ID ne porte pas ces capacités.
+  config.ios.entitlements = {};
   const info = { ...(config.ios.infoPlist || {}) };
   for (const key of TV_DROP_INFO) delete info[key];
   config.ios.infoPlist = info;
+  config.extra = config.extra || {};
+  config.extra.eas = { ...(config.extra.eas || {}), projectId: '0093f2e3-7828-41e7-9e62-c3e06d9bee77' };
+  if (config.extra.eas.build) delete config.extra.eas.build;
+  // expo-updates n’est pas configuré dans ce dépôt : pas d’URL u.expo.dev.
   return config;
 }
