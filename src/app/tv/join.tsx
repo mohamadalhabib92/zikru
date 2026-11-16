@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { TextInput, View } from 'react-native';
-import { TvBack, TvButton, TvMuted, TvScroll, TvTitle } from '@/components/tv/ui';
+import { View } from 'react-native';
+import { TvBack, TvButton, TvField, TvMuted, TvScroll, TvTitle } from '@/components/tv/ui';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { L } from '@/lib/l10n';
@@ -60,24 +60,28 @@ export default function TvJoin() {
       <TvTitle>{L('Rejoindre')}</TvTitle>
       <TvMuted>{L('Rejoindre une famille ne demande pas Premium. Le code vient d’un parent, sur iPhone.')}</TvMuted>
       {!auth.session ? (
-        <View style={{ marginTop: 18, gap: 12 }}>
-          <Field label={L('E-mail')} value={email} onChange={setEmail} preferred />
+        <View style={{ marginTop: 18, gap: 16 }}>
+          <TvField label={L('E-mail')} value={email} onChange={setEmail} preferred />
           <TvButton label={L('Recevoir un code')} onPress={() => void send()} />
-          <Field label={L('Code reçu')} value={otp} onChange={setOtp} />
+          <TvField label={L('Code reçu')} value={otp} onChange={setOtp} />
           <TvButton label={L('Se connecter')} onPress={() => void verify()} />
         </View>
       ) : (
-        <View style={{ marginTop: 18, gap: 12 }}>
+        <View style={{ marginTop: 18, gap: 16 }}>
           <TvMuted>{auth.email || ''}</TvMuted>
-          <Field label={L('Code d’invitation')} value={code} onChange={(v) => setCode(v.toUpperCase())} preferred />
-          <Field label={L('Votre nom dans la famille')} value={name} onChange={setName} />
+          <TvField label={L('Code d’invitation')} value={code} onChange={(v) => setCode(v.toUpperCase())} preferred autoCapitalize="characters" />
+          <TvField label={L('Votre nom dans la famille')} value={name} onChange={setName} />
           <TvButton label={L('Rejoindre')} onPress={() => void join()} />
           <TvButton label={L('Se déconnecter')} onPress={() => void auth.signOut()} />
         </View>
       )}
-      {rules ? <TvMuted>{rules}</TvMuted> : null}
+      {rules ? (
+        <View style={{ marginTop: 16 }}>
+          <TvButton block label={rules} onPress={() => void join()} />
+        </View>
+      ) : null}
       {note ? <TvMuted>{note}</TvMuted> : null}
-      {err ? <Text style={{ color: t.danger, fontSize: 22, marginTop: 12 }}>{err}</Text> : null}
+      {err ? <Text style={{ color: t.danger, fontSize: 28, lineHeight: 38, marginTop: 12 }}>{err}</Text> : null}
       <View style={{ marginTop: 18 }}>
         <TvBack />
       </View>
@@ -85,17 +89,3 @@ export default function TvJoin() {
   );
 }
 
-function Field({ label, value, onChange, preferred }: { label: string; value: string; onChange: (v: string) => void; preferred?: boolean }) {
-  return (
-    <View>
-      <Text style={{ color: t.muted, fontSize: 18, marginBottom: 6 }}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        hasTVPreferredFocus={preferred}
-        autoCapitalize="none"
-        style={{ color: t.text, fontSize: 28, minHeight: 64, borderWidth: 3, borderColor: t.border, borderRadius: 16, paddingHorizontal: 16, backgroundColor: t.surface }}
-      />
-    </View>
-  );
-}

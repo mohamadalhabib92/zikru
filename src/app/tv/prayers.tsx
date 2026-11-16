@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
-import { TvBack, TvButton, TvMuted, TvPremiumGate, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvBack, TvButton, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
 import { playAdhanSource } from '@/lib/adhan-playback';
 import { assembleAdhanVoices, resolveAdhanVoice } from '@/lib/adhan-voices';
 import { L } from '@/lib/l10n';
@@ -50,29 +49,24 @@ function PrayerBody() {
   return (
     <TvScroll>
       <TvTitle>{tr[next.key]}</TvTitle>
-      <Text style={{ color: t.accent, fontSize: 42, lineHeight: 78, textAlign: 'left', fontFamily: fontsAreReady() ? fonts.arabic : undefined }}>{AR_NAMES[next.key]}</Text>
-      <Text style={{ color: t.text, fontSize: 64, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
+      <Text style={{ color: t.accent, fontSize: 56, lineHeight: 96, textAlign: 'left', fontFamily: fontsAreReady() ? fonts.arabic : undefined }}>{AR_NAMES[next.key]}</Text>
+      <Text style={{ color: t.text, fontSize: 84, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
       <TvMuted>
         {tr.in} {countdown(next.time.getTime() - now.getTime())} · {s.place.label}
       </TvMuted>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 22 }}>
+      <TvRow>
         {rows.map((p) => {
           const hi = p.state === 'current' || p.state === 'next';
-          return (
-            <View key={p.key} style={{ width: 200, borderRadius: 18, padding: 14, backgroundColor: hi ? t.primary : t.surface, borderWidth: 2, borderColor: hi ? t.accent : t.border }}>
-              <Text style={{ color: hi ? t.onPrimary : t.text, fontSize: 20, fontWeight: '800' }}>{tr[p.key]}</Text>
-              <Text style={{ color: hi ? t.onPrimary : t.text, fontSize: 28, fontVariant: ['tabular-nums'] }}>{hhmm(p.time)}</Text>
-            </View>
-          );
+          return <TvButton key={p.key} label={tr[p.key]} hint={hhmm(p.time)} badge={hi ? L('Maintenant') : undefined} onPress={() => {}} />;
         })}
-      </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 22 }}>
+      </TvRow>
+      <TvRow>
         <TvButton preferred label={L('Écouter l’adhan')} hint={voice.title} onPress={play} />
         <TvButton label={L('Choisir une ville')} onPress={() => setCities((v) => !v)} />
         <TvBack />
-      </View>
+      </TvRow>
       {cities ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16 }}>
+        <TvRow>
           {CITIES.map((c) => (
             <TvButton
               key={c.label}
@@ -83,7 +77,7 @@ function PrayerBody() {
               }}
             />
           ))}
-        </View>
+        </TvRow>
       ) : null}
       <TvMuted>{L('L’adhan du salon se joue pendant que cet écran est ouvert. Apple TV ne garde pas l’application éveillée en arrière-plan comme un iPhone.')}</TvMuted>
     </TvScroll>

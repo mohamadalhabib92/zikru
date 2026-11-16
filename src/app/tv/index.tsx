@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { View } from 'react-native';
-import { TvButton, TvMuted, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvButton, TvMuted, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
 import { usePremium } from '@/lib/premium';
 import { tvFeatureAllowed } from '@/lib/tv';
 import { L } from '@/lib/l10n';
@@ -21,15 +21,16 @@ export default function TvHome() {
   const premium = usePremium();
   return (
     <TvScroll>
-      <Text style={{ color: t.accent, fontSize: 18, fontWeight: '800', letterSpacing: 1.4 }}>ZIKRU</Text>
+      <Text style={{ color: t.accent, fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
       <TvTitle>{L('Zikru')}</TvTitle>
       <TvMuted>{L('Le salon : le Coran, la prière et le dhikr de la famille, sur grand écran.')}</TvMuted>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginTop: 28 }}>
+      <TvRow>
         {TILES.map((tile, i) => {
           const locked = premium.ready && !tvFeatureAllowed(tile.feature, premium.canCreate);
           return (
-            <View key={tile.href} style={{ width: '31%', minWidth: 280 }}>
+            <View key={tile.href} style={{ width: '31%', minWidth: 320 }}>
               <TvButton
+                block
                 preferred={i === 0}
                 label={L(tile.label)}
                 hint={L(tile.hint)}
@@ -39,7 +40,7 @@ export default function TvHome() {
             </View>
           );
         })}
-      </View>
+      </TvRow>
     </TvScroll>
   );
 }

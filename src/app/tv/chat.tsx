@@ -1,15 +1,13 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { TvBack, TvButton, TvMuted, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvBack, TvButton, TvMuted, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { chatBackend, type ChatBackend } from '@/lib/community/chat-api';
 import { applyIncoming, type ChatMessage } from '@/lib/community/chat-core';
 import { uid } from '@/lib/storage';
 import { L } from '@/lib/l10n';
-import { Text } from '@/ui/Text';
-import { theme as t } from '@/ui/theme';
 
 const PRESETS: { kind: 'salam' | 'bravo' | 'dua'; body: string }[] = [
   { kind: 'salam', body: 'As-salamu alaykum' },
@@ -89,10 +87,10 @@ export default function TvChat() {
       <TvScroll>
         <TvTitle>{L('Discussion')}</TvTitle>
         <TvMuted>{L('La discussion est gratuite. Connectez-vous pour la lire.')}</TvMuted>
-        <View style={{ flexDirection: 'row', gap: 14, marginTop: 18 }}>
+        <TvRow>
           <TvButton preferred label={L('Rejoindre')} onPress={() => router.push('/tv/join')} />
           <TvBack />
-        </View>
+        </TvRow>
       </TvScroll>
     );
   }
@@ -103,31 +101,30 @@ export default function TvChat() {
     <TvScroll>
       <TvTitle>{family?.name || L('Discussion')}</TvTitle>
       {err ? <TvMuted>{err}</TvMuted> : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16 }}>
-        {families.map((f, i) => (
-          <TvButton key={f.id} preferred={i === 0} label={f.name} onPress={() => setFamilyId(f.id)} />
-        ))}
-      </View>
-      <View style={{ marginTop: 18, gap: 10 }}>
+      {families.length ? (
+        <TvRow>
+          {families.map((f, i) => (
+            <TvButton key={f.id} preferred={i === 0} label={f.name} onPress={() => setFamilyId(f.id)} />
+          ))}
+        </TvRow>
+      ) : null}
+      <View style={{ marginTop: 18, gap: 14 }}>
         {visible.map((m) => (
-          <Text key={m.id} style={{ color: t.text, fontSize: 26, lineHeight: 36 }}>
-            {m.sender_name ? `${m.sender_name} · ` : ''}
-            {m.body}
-          </Text>
+          <TvButton key={m.id} block label={m.sender_name ? `${m.sender_name} · ${m.body}` : m.body} onPress={() => {}} />
         ))}
         {!visible.length ? <TvMuted>{L('Pas encore de message.')}</TvMuted> : null}
       </View>
       {canPost ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 18 }}>
+        <TvRow>
           {PRESETS.map((p) => (
             <TvButton key={p.kind} label={p.body} onPress={() => send(p.body, p.kind)} />
           ))}
-        </View>
+        </TvRow>
       ) : (
         <TvMuted>{L('Lecture seule pour ce compte.')}</TvMuted>
       )}
       <View style={{ marginTop: 16 }}>
-        <TvBack />
+        <TvBack preferred={families.length === 0} />
       </View>
     </TvScroll>
   );

@@ -2,7 +2,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { TvBack, TvButton, TvMuted, TvPremiumGate, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvBack, TvButton, TvFocusable, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { BASMALA_UTHMANI, loadSurahUthmani } from '@/lib/quran-reader-data';
 import { buildQueue } from '@/lib/recitation';
@@ -59,29 +59,29 @@ function SurahBody({ surah }: { surah: number }) {
     <TvScroll>
       <TvTitle>{meta ? `${meta[0]}. ${meta[2]}` : L('Sourate')}</TvTitle>
       {showBasmala ? (
-        <Text style={{ color: t.accent, fontSize: 36, lineHeight: 68, textAlign: 'right', marginTop: 12, fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{BASMALA_UTHMANI}</Text>
+        <Text style={{ color: t.accent, fontSize: 48, lineHeight: 86, textAlign: 'right', marginTop: 12, fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{BASMALA_UTHMANI}</Text>
       ) : null}
-      <View
-        style={{
-          marginTop: 18,
-          borderRadius: 28,
-          padding: 28,
-          backgroundColor: playingHere === ayah ? t.surfaceAlt : t.surface,
-          borderWidth: 4,
-          borderColor: playingHere === ayah ? t.accent : t.border,
-        }}
-      >
-        <Text style={{ color: t.muted, fontSize: 20, fontWeight: '800' }}>{ayah}</Text>
-        <Text style={{ color: t.text, fontSize: type.fontSize, lineHeight: type.lineHeight, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || '…'}</Text>
+      <View style={{ marginTop: 18 }}>
+        <TvFocusable block minHeight={160} label={`${ayah}`}>
+          {(on) => (
+            <>
+              <Text style={{ color: on ? '#141311' : t.muted, fontSize: 28, fontWeight: '800' }}>
+                {ayah}
+                {playingHere === ayah ? ` · ${L('Lecture')}` : ''}
+              </Text>
+              <Text style={{ color: on ? '#141311' : t.text, fontSize: type.fontSize, lineHeight: type.lineHeight, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || '…'}</Text>
+            </>
+          )}
+        </TvFocusable>
       </View>
       {err ? <TvMuted>{err}</TvMuted> : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 22 }}>
-        <TvButton preferred label={L('Verset précédent')} onPress={() => setPicked(Math.max(1, ayah - 1))} />
-        <TvButton label={rec.playing && playingHere ? L('Pause') : L('Lecture')} onPress={() => (rec.playing && playingHere ? rec.pause() : rec.pos >= 0 && playingHere ? rec.resume() : play())} />
+      <TvRow>
+        <TvButton label={L('Verset précédent')} onPress={() => setPicked(Math.max(1, ayah - 1))} />
+        <TvButton preferred label={rec.playing && playingHere ? L('Pause') : L('Lecture')} onPress={() => (rec.playing && playingHere ? rec.pause() : rec.pos >= 0 && playingHere ? rec.resume() : play())} />
         <TvButton label={L('Verset suivant')} onPress={() => setPicked(Math.min(count, ayah + 1))} />
         <TvButton label={L('Arrêter')} onPress={() => rec.stop()} />
         <TvBack />
-      </View>
+      </TvRow>
     </TvScroll>
   );
 }

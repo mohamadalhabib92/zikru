@@ -118,7 +118,10 @@ function withAppleTv(config) {
   config.version = '1.0.30';
   config.ios = config.ios || {};
   config.ios.bundleIdentifier = 'com.vibecode.zikru-76mpdv';
-  // L’envoi 1 a été refusé par App Store Connect. Le suivant doit être plus haut.
+  // appVersionSource est « remote » : EAS ignore ce buildNumber et écrit le
+  // compteur du projet zikru-tv. Le profil production-tv a autoIncrement,
+  // donc le CFBundleVersion distant (binaire accepté = 1) passe à 2.
+  // L’iPhone reste sur le projet zikru et son compteur (app.json = 69).
   config.ios.buildNumber = '2';
   if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
   // Pas de groupe d’apps, pas de montre, pas de widget : le profil tvOS

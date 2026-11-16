@@ -27,7 +27,7 @@
       }
     },
     "production-tv": {
-      "autoIncrement": false,
+      "autoIncrement": true,
       "channel": "production-tv",
       "env": {
         "EXPO_TV": "1",

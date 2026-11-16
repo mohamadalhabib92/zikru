@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
-import { TvBack, TvButton, TvMuted, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvBack, TvButton, TvColumn, TvMuted, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { getSupabase } from '@/lib/supabase';
@@ -137,10 +136,10 @@ export function FamilyBoard({ kids }: { kids?: boolean }) {
       <TvScroll>
         <TvTitle>{kids ? L('Enfants') : L('Dhikr en famille')}</TvTitle>
         <TvMuted>{L('Connectez-vous, ou rejoignez la famille avec un code. Cela reste gratuit.')}</TvMuted>
-        <View style={{ flexDirection: 'row', gap: 14, marginTop: 22 }}>
+        <TvRow>
           <TvButton preferred label={L('Rejoindre')} onPress={() => router.push('/tv/join')} />
           <TvBack />
-        </View>
+        </TvRow>
       </TvScroll>
     );
   }
@@ -150,23 +149,23 @@ export function FamilyBoard({ kids }: { kids?: boolean }) {
       <TvTitle>{family?.name || (kids ? L('Enfants') : L('Dhikr en famille'))}</TvTitle>
       {title ? <TvMuted>{title}</TvMuted> : null}
       {err ? <TvMuted>{err}</TvMuted> : null}
-      <Text style={{ color: t.text, fontSize: 120, fontWeight: '800', marginTop: 8, fontVariant: ['tabular-nums'] }}>{shown}</Text>
+      <Text style={{ color: t.text, fontSize: 140, lineHeight: 168, fontWeight: '800', marginTop: 12, fontVariant: ['tabular-nums'] }}>{shown}</Text>
       <TvMuted>{kids ? L('Seulement votre compte. Les autres ne s’affichent pas.') : live ? L('En direct, avec les téléphones et les anneaux de la famille.') : L('Aucun dhikr en direct. Le total des objectifs communs est à côté.')}</TvMuted>
-      {!kids && !live ? <Text style={{ color: t.accent, fontSize: 28, marginTop: 8 }}>{goals}</Text> : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 22 }}>
+      {!kids && !live ? <Text style={{ color: t.accent, fontSize: 40, marginTop: 10 }}>{goals}</Text> : null}
+      <TvRow>
         {live ? <TvButton preferred label={L('Compter un dhikr')} onPress={tap} /> : null}
         {(families ?? []).map((f) => (
           <TvButton key={f.id} label={f.name} onPress={() => setFamilyId(f.id)} />
         ))}
         <TvBack preferred={!live} />
-      </View>
-      {!kids
-        ? rows.map((r) => (
-            <Text key={r.userId} style={{ color: t.muted, fontSize: 22, marginTop: 8 }}>
-              {r.name} · {r.count}
-            </Text>
-          ))
-        : null}
+      </TvRow>
+      {!kids ? (
+        <TvColumn>
+          {rows.map((r) => (
+            <TvButton key={r.userId} block label={`${r.name} · ${r.count}`} onPress={() => {}} />
+          ))}
+        </TvColumn>
+      ) : null}
     </TvScroll>
   );
 }
