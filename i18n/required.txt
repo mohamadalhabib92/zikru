@@ -42,6 +42,7 @@ src/components/community/admin.tsx
 src/components/community/classes.tsx
 src/components/lesson/shared-reading.tsx
 src/components/premium/paywall.tsx
+src/components/WebKeys.tsx
 src/app/qibla.tsx
 src/app/quran/[n].tsx
 src/app/quran/bookmarks.tsx

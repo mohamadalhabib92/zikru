@@ -60,6 +60,12 @@ export default function BluetoothCounterScreen() {
         <Button title="Diagnostic" icon="pulse-outline" small variant="ghost" onPress={() => router.push('/ble-diag')} />
       </Row>
       <Muted>Tasbih électronique, anneau de dhikr ou télécommande : chaque appui ajoute +1 au compteur de session ({tasbih.count}{tasbih.target ? ` / ${tasbih.target}` : ''}).</Muted>
+      {web ? (
+        <>
+          <Spacer h={8} />
+          <Notice tone="info" title={L('Dans le navigateur')} text={L('La bague est facultative. Le Bluetooth web ne s’ouvre que si vous appuyez sur Rechercher, dans Chrome ou Edge. Safari ne le propose pas. Rien n’est scanné en arrière-plan.')} />
+        </>
+      ) : null}
       {isIosAppOnMac() ? <Muted>{L('Sur Mac, le Bluetooth peut ne pas voir toutes les bagues. Le journal plus bas indique chaque appareil et pourquoi il est affiché ou masqué.')}</Muted> : null}
       <Muted>{STATUS_HELP[s.status]}</Muted>
       <Spacer h={8} />

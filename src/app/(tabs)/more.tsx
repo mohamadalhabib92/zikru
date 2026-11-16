@@ -1,4 +1,7 @@
+import { Platform, Pressable } from 'react-native';
+import { Text } from '@/ui/Text';
 import { Hub, type HubSection } from '@/components/Hub';
+import { requestWebHelp } from '@/lib/web-keys';
 import { useSettings } from '@/lib/settings';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
@@ -40,5 +43,18 @@ export default function More() {
       ],
     },
   ];
-  return <Hub title={tr.tab_more} eyebrow="Zikru" sections={sections} />;
+  return (
+    <Hub
+      title={tr.tab_more}
+      eyebrow="Zikru"
+      sections={sections}
+      top={
+        Platform.OS === 'web' ? (
+          <Pressable accessibilityRole="button" onPress={() => requestWebHelp()} style={{ marginTop: 12, minHeight: 44, justifyContent: 'center' }}>
+            <Text style={{ color: b.green, fontWeight: '800' }}>{L('Raccourcis clavier')}</Text>
+          </Pressable>
+        ) : undefined
+      }
+    />
+  );
 }

@@ -24,6 +24,7 @@ import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import { fontsAreReady, subscribeFonts } from '@/ui/fonts-ready';
 import { L } from '@/lib/l10n';
+import { subscribeReaderKeys } from '@/lib/web-keys';
 import { arLang } from '@/ui/ar-lang';
 import type { Pal } from '@/components/quran/palette';
 
@@ -204,11 +205,24 @@ export default function SurahReader() {
     preferSurah(p.reciter, n);
   }, [p.reciter, n]);
 
+  const topRef = useRef(top);
   const scrollTo = useCallback((a: number, animated = true) => {
     try {
       list.current?.scrollToIndex({ index: a - 1, viewPosition: 0.15, animated });
     } catch {}
   }, []);
+  useEffect(() => {
+    topRef.current = top;
+  }, [top]);
+  useEffect(() => subscribeReaderKeys((cmd) => {
+    const last = SURAHS[nRef.current - 1]?.[4] ?? 1;
+    const cur = topRef.current;
+    if (cmd === 'next') scrollTo(Math.min(last, cur + 1));
+    else if (cmd === 'prev') scrollTo(Math.max(1, cur - 1));
+    else if (playingRef.current && recRef.current.playing) recRef.current.pause();
+    else if (playingRef.current) recRef.current.resume();
+    else playRef.current(cur);
+  }), [scrollTo]);
   // arrivée sur un verset précis
   useEffect(() => {
     if (!ar || startA <= 1) return;
