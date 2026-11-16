@@ -29,6 +29,7 @@ import { useWatchSync } from '@/lib/use-watch-sync';
 import { sanitizeLandscape } from '@/lib/landscapes';
 import { AppLandscape } from '@/components/landscape-backdrop';
 import { MacKeys } from '@/components/MacKeys';
+import { WebKeys } from '@/components/WebKeys';
 import '@/lib/mac-native';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
@@ -154,6 +155,7 @@ function Root() {
         <Stack.Screen name="lesson/[id]" options={{ title: L("Lecture partagée") }} />
       </Stack>
       <MacKeys />
+      <WebKeys />
       <MiniPlayer path={path} />
       <StorageAlert />
     </View>

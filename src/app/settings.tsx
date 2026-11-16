@@ -76,6 +76,16 @@ export default function SettingsScreen() {
           <Spacer />
         </>
       ) : null}
+      {Platform.OS === 'web' ? (
+        <>
+          <Notice
+            tone="info"
+            title={L('Dans le navigateur')}
+            text={L('L’Apple Watch, l’app Santé (HealthKit) et les vibrations du téléphone ne sont pas disponibles dans le navigateur. Le compteur de la montre reste gratuit sur l’iPhone. Ici, le tasbih se compte au clic ou au clavier.')}
+          />
+          <Spacer />
+        </>
+      ) : null}
       <H2>Paysages</H2>
       <Muted>Fond calme pour toute l’application. Le choix reste enregistré sur cet appareil.</Muted>
       <Spacer h={8} />
