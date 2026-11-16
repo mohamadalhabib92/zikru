@@ -15,7 +15,7 @@ export async function enableBackgroundAudio() {
   if (Platform.OS === 'web' || audioMode === 'quran') return;
   audioMode = 'quran';
   try {
-    await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' });
+    await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: !Platform.isTV, interruptionMode: 'doNotMix' });
   } catch {
     audioMode = 'none';
   }

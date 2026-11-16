@@ -34,7 +34,7 @@ function PrayerBody() {
   const voice = resolveAdhanVoice(s.adhanVoice, assembleAdhanVoices({}, null));
   const play = () => {
     if (!voice.source) return;
-    void playAdhanSource(voice.source, { title: voice.title, artist: voice.reciter || 'Adhan' }, { restart: true });
+    void playAdhanSource(voice.source, { title: voice.title, artist: voice.reciter || 'Adhan' }, { restart: true }).catch(() => {});
   };
   useEffect(() => {
     const hit = rows.find((r) => FARD.has(r.key) && Math.abs(r.time.getTime() - now.getTime()) < 20000);

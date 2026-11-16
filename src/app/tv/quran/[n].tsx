@@ -1,7 +1,7 @@
-import { useKeepAwake } from 'expo-keep-awake';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
+import { useTvKeepAwake } from '@/components/tv/keep-awake';
 import { TvBack, TvButton, TvFocusable, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { BASMALA_UTHMANI, loadSurahUthmani } from '@/lib/quran-reader-data';
@@ -13,18 +13,48 @@ import { Text } from '@/ui/Text';
 import { fonts, theme as t } from '@/ui/theme';
 import { fontsAreReady } from '@/ui/fonts-ready';
 
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
+  return <SurahCrash message={error?.message || L('La sourate n’a pas pu s’ouvrir.')} onRetry={() => void retry()} />;
+}
+
 export default function TvSurah() {
   const { n } = useLocalSearchParams<{ n: string }>();
   const surah = Math.min(114, Math.max(1, Number(n) || 1));
   return (
-    <TvPremiumGate feature="quran">
-      <SurahBody key={surah} surah={surah} />
-    </TvPremiumGate>
+    <SurahBoundary>
+      <TvPremiumGate feature="quran">
+        <SurahBody key={surah} surah={surah} />
+      </TvPremiumGate>
+    </SurahBoundary>
+  );
+}
+
+class SurahBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) return <SurahCrash message={this.state.error.message} onRetry={() => this.setState({ error: null })} />;
+    return this.props.children;
+  }
+}
+
+function SurahCrash({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <TvScroll>
+      <TvTitle>{L('La sourate n’a pas pu s’ouvrir')}</TvTitle>
+      <TvMuted>{message}</TvMuted>
+      <TvRow>
+        <TvButton preferred label={L('Réessayer')} onPress={onRetry} />
+        <TvBack />
+      </TvRow>
+    </TvScroll>
   );
 }
 
 function SurahBody({ surah }: { surah: number }) {
-  useKeepAwake('zikru-tv-quran');
+  useTvKeepAwake('zikru-tv-quran');
   const meta = SURAHS[surah - 1];
   const rec = useGlobalRecitation();
   const [ayahs, setAyahs] = useState<string[] | null>(null);
@@ -53,7 +83,8 @@ function SurahBody({ surah }: { surah: number }) {
     if (!ayahs) return;
     const verses = ayahs.map((_, i) => [surah, i + 1] as [number, number]).slice(ayah - 1);
     setPicked(null);
-    void rec.start(buildQueue(verses), 0, false);
+    setErr(null);
+    void rec.start(buildQueue(verses), 0, false).catch(() => setErr(L('La récitation n’a pas pu démarrer.')));
   };
   return (
     <TvScroll>

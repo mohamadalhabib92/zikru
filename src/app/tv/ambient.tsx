@@ -1,7 +1,7 @@
-import { useKeepAwake } from 'expo-keep-awake';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { LandscapeBackdrop } from '@/components/landscape-backdrop';
+import { useTvKeepAwake } from '@/components/tv/keep-awake';
 import { TvBack, TvButton, TvFocusable, TvPremiumGate, TvRow, TvScroll } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { LANDSCAPE_IDS, type LandscapeId } from '@/lib/landscapes';
@@ -22,7 +22,7 @@ export default function TvAmbient() {
 }
 
 function AmbientBody() {
-  useKeepAwake('zikru-tv-ambient');
+  useTvKeepAwake('zikru-tv-ambient');
   const { s, t: tr } = useSettings();
   const [i, setI] = useState(0);
   const [now, setNow] = useState(() => new Date());

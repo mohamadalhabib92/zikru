@@ -27,12 +27,14 @@ import { SURAHS } from './surahs';
 export type RecState = { queue: Step[]; pos: number; playing: boolean; loading: boolean; holding: boolean; error: string | null; loop: boolean };
 const IDLE: RecState = { queue: [], pos: -1, playing: false, loading: false, holding: false, error: null, loop: false };
 const native = Platform.OS !== 'web';
+/** Écran verrouillé, Now Playing et session gardée active : iOS/Android seulement. tvOS n’a pas ces API. */
+const lockScreen = native && !Platform.isTV;
 
 let ownerSeq = 0;
 
 export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; mode?: ReadingMode; onEnd?: (queue: Step[]) => Step[] | null }) {
   // keepAudioSessionActive : la session iOS reste active entre deux versets (cause racine de l’arrêt).
-  const player = useAudioPlayer(null, { updateInterval: 300, keepAudioSessionActive: true });
+  const player = useAudioPlayer(null, { updateInterval: 300, keepAudioSessionActive: !Platform.isTV, allowsExternalPlayback: !Platform.isTV });
   const [st, setSt] = useState<RecState>(IDLE);
   // S est la vérité synchrone (les rappels natifs la lisent) ; l’état React n’en est que le reflet pour l’affichage.
   const S = useRef<RecState>(IDLE);
@@ -63,11 +65,11 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
   const dropPreload = () => {
     const u = preloaded.current;
     preloaded.current = null;
-    if (native && u) clearPreloadedSource({ uri: u }).catch(() => {});
+    if (lockScreen && u) clearPreloadedSource({ uri: u }).catch(() => {});
   };
   /** Précharge le prochain verset différent (iOS/Android) pour un enchaînement quasi sans blanc. */
   const prefetch = (queue: Step[], pos: number) => {
-    if (!native) return;
+    if (!native || Platform.isTV) return;
     const i = nextDistinct(queue, pos, S.current.loop);
     const step = queue[i];
     if (!step) return;
@@ -130,7 +132,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
         try {
           player.setPlaybackRate(O.current.rate);
         } catch {}
-        if (native) player.setActiveForLockScreen(true, { title: `${SURAHS[step.s - 1][2]} ${step.s}:${step.a}`, artist: `${r.name} · Zikru` });
+        if (lockScreen) player.setActiveForLockScreen(true, { title: `${SURAHS[step.s - 1][2]} ${step.s}:${step.a}`, artist: `${r.name} · Zikru` });
       } catch {}
       loadWatch.current = setTimeout(() => {
         if (gate.isCurrent(token) && loadedToken.current !== token && S.current.playing && !interrupted.current) fail(pos);
@@ -194,7 +196,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
       }
       update({ playing: false, holding: false, loading: false, pos: -1 });
       try {
-        if (native) player.clearLockScreenControls();
+        if (lockScreen) player.clearLockScreenControls();
       } catch {}
       return;
     }
@@ -276,7 +278,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
     sawProgress.current = false;
     try {
       player.pause();
-      if (native) player.clearLockScreenControls();
+      if (lockScreen) player.clearLockScreenControls();
     } catch {}
     update({ playing: false, holding: false, loading: false });
   };
@@ -312,7 +314,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
       quranUnmount(ownerId);
       try {
         player.pause();
-        if (native) player.clearLockScreenControls();
+        if (lockScreen) player.clearLockScreenControls();
       } catch {}
     };
   }, [player, ownerId]);
@@ -371,7 +373,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
     dropPreload();
     try {
       player.pause();
-      if (native) player.clearLockScreenControls();
+      if (lockScreen) player.clearLockScreenControls();
     } catch {}
     S.current = IDLE;
     setSt(IDLE);

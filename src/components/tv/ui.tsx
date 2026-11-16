@@ -109,9 +109,9 @@ function chrome(on: boolean, minHeight: number): React.ComponentProps<typeof Vie
     paddingHorizontal: 28,
     paddingVertical: 20,
     justifyContent: 'center',
-    backgroundColor: on ? FOCUS_FILL : t.surface,
+    backgroundColor: on ? FOCUS_FILL : '#1A2420',
     borderWidth: 6,
-    borderColor: on ? FOCUS_EDGE : t.border,
+    borderColor: on ? FOCUS_EDGE : '#5C6B64',
     opacity: on ? 1 : 0.62,
     transform: [{ scale: on ? 1.08 : 1 }],
     shadowColor: on ? FOCUS_FILL : 'transparent',
@@ -186,8 +186,8 @@ export function TvButton({
   return (
     <TvFocusable preferred={preferred} onPress={onPress} block={block} minHeight={132} label={hint ? `${label}. ${hint}` : label}>
       {(on) => {
-        const ink = on ? FOCUS_INK : t.text;
-        const sub = on ? 'rgba(20,19,17,0.74)' : t.muted;
+        const ink = on ? FOCUS_INK : '#F4F1EA';
+        const sub = on ? 'rgba(20,19,17,0.74)' : 'rgba(244,241,234,0.78)';
         return (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
             <View style={{ flex: 1 }}>
@@ -235,14 +235,14 @@ export function TvField({
         }}
         onBlur={() => setHot(false)}
         style={{
-          color: hot ? FOCUS_INK : t.text,
+          color: hot ? FOCUS_INK : '#F4F1EA',
           fontSize: 34,
           minHeight: 92,
           borderWidth: 6,
-          borderColor: hot ? FOCUS_EDGE : t.border,
+          borderColor: hot ? FOCUS_EDGE : '#5C6B64',
           borderRadius: 18,
           paddingHorizontal: 22,
-          backgroundColor: hot ? FOCUS_FILL : t.surface,
+          backgroundColor: hot ? FOCUS_FILL : '#1A2420',
           opacity: hot ? 1 : 0.62,
           transform: [{ scale: hot ? 1.08 : 1 }],
         }}
