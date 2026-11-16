@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { createContext, useCallback, useContext, useRef, useState, type ComponentProps, type ElementRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ElementRef, type ReactNode } from 'react';
 import * as ReactNative from 'react-native';
 import { usePremium } from '@/lib/premium';
 import { tvFeatureAllowed, type TvFeatureId } from '@/lib/tv';
@@ -7,7 +7,7 @@ import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
 
-const { Dimensions, Pressable, ScrollView, TextInput, View } = ReactNative;
+const { Dimensions, FlatList, Pressable, ScrollView, TextInput, View } = ReactNative;
 type ViewProps = ComponentProps<typeof View>;
 
 /**
@@ -20,13 +20,7 @@ const FOCUS_FILL = '#F6E7B8';
 const FOCUS_INK = '#141311';
 const FOCUS_EDGE = '#FFFFFF';
 
-type GuideProps = ViewProps & {
-  autoFocus?: boolean;
-  trapFocusUp?: boolean;
-  trapFocusDown?: boolean;
-  trapFocusLeft?: boolean;
-  trapFocusRight?: boolean;
-};
+type GuideProps = ViewProps;
 
 const TVFocusGuideView: React.ComponentType<GuideProps> =
   (ReactNative as typeof ReactNative & { TVFocusGuideView?: React.ComponentType<GuideProps> }).TVFocusGuideView ?? View;
@@ -34,6 +28,39 @@ const TVFocusGuideView: React.ComponentType<GuideProps> =
 type Measurable = ElementRef<typeof View>;
 
 const ScrollFocus = createContext<(view: Measurable | null) => void>(() => {});
+
+type FocusClaim = { take: () => boolean };
+const FocusClaimCtx = createContext<FocusClaim | null>(null);
+
+function FocusScope({ children }: { children: ReactNode }) {
+  const taken = useRef(false);
+  const api = useMemo<FocusClaim>(
+    () => ({
+      take() {
+        if (taken.current) return false;
+        taken.current = true;
+        return true;
+      },
+    }),
+    [],
+  );
+  return <FocusClaimCtx.Provider value={api}>{children}</FocusClaimCtx.Provider>;
+}
+
+/** Vrai seulement au premier affichage de l’écran, puis retiré pour qu’un rendu (horloge, audio) ne ramène pas le focus. */
+function useArmedPreferred(preferred?: boolean): boolean {
+  const claim = useContext(FocusClaimCtx);
+  const [arm, setArm] = useState(() => {
+    if (!preferred) return false;
+    return claim ? claim.take() : true;
+  });
+  useEffect(() => {
+    if (!arm) return;
+    const id = setTimeout(() => setArm(false), 700);
+    return () => clearTimeout(id);
+  }, [arm]);
+  return arm;
+}
 
 function isFocused(state: { pressed: boolean }): boolean {
   return Boolean((state as { focused?: boolean }).focused);
@@ -46,52 +73,89 @@ export function TvScreen({ children }: { children: ReactNode }) {
 export function TvScroll({ children, pinEnd, transparent }: { children: ReactNode; pinEnd?: boolean; transparent?: boolean }) {
   const ref = useRef<{ scrollTo: (options: { y: number; animated?: boolean }) => void } | null>(null);
   const offset = useRef(0);
+  const lastScroll = useRef(0);
+  const setRef = useCallback((node: { scrollTo: (options: { y: number; animated?: boolean }) => void } | null) => {
+    ref.current = node;
+  }, []);
   const ensure = useCallback((view: Measurable | null) => {
     if (!view || typeof view.measureInWindow !== 'function') return;
+    if (Date.now() - lastScroll.current < 500) return;
     view.measureInWindow((_x, y, _w, h) => {
       const screenH = Dimensions.get('window').height;
-      const edge = 72;
+      const top = 60;
+      const bottom = screenH - 60;
+      const onScreen = y >= top && (h >= screenH - 120 || y + h <= bottom);
+      if (onScreen) return;
       let next = offset.current;
-      if (h > screenH - edge * 2) next = offset.current + (y - edge);
-      else if (y < edge) next = offset.current - (edge - y);
-      else if (y + h > screenH - edge) next = offset.current + (y + h - (screenH - edge));
+      if (h >= screenH - 120) next = offset.current + (y - top);
+      else if (y < top) next = offset.current - (top - y);
+      else next = offset.current + (y + h - bottom);
       next = Math.max(0, next);
-      if (Math.abs(next - offset.current) > 2) ref.current?.scrollTo({ y: next, animated: true });
+      if (Math.abs(next - offset.current) < 24) return;
+      lastScroll.current = Date.now();
+      ref.current?.scrollTo({ y: next, animated: false });
     });
   }, []);
   return (
-    <ScrollFocus.Provider value={ensure}>
-      <TVFocusGuideView style={{ flex: 1 }}>
-        <ScrollView
-          ref={(node) => {
-            ref.current = node;
-          }}
-          style={{ flex: 1, backgroundColor: transparent ? 'transparent' : t.bg }}
-          contentContainerStyle={[tvPad, pinEnd ? { flexGrow: 1, justifyContent: 'flex-end' } : { flexGrow: 1 }]}
-          keyboardShouldPersistTaps="handled"
-          scrollEventThrottle={16}
-          onScroll={(e) => {
-            offset.current = e.nativeEvent.contentOffset.y;
-          }}
-        >
-          {children}
-        </ScrollView>
-      </TVFocusGuideView>
-    </ScrollFocus.Provider>
+    <FocusScope>
+      <ScrollFocus.Provider value={ensure}>
+        <TVFocusGuideView style={{ flex: 1 }}>
+          <ScrollView
+            ref={setRef}
+            style={{ flex: 1, backgroundColor: transparent ? 'transparent' : t.bg }}
+            contentContainerStyle={[tvPad, pinEnd ? { flexGrow: 1, justifyContent: 'flex-end' } : { flexGrow: 1 }]}
+            keyboardShouldPersistTaps="handled"
+            scrollEventThrottle={16}
+            onScroll={(e) => {
+              offset.current = e.nativeEvent.contentOffset.y;
+            }}
+          >
+            {children}
+          </ScrollView>
+        </TVFocusGuideView>
+      </ScrollFocus.Provider>
+    </FocusScope>
   );
 }
 
-/** Rangée : gauche/droite restent dans la rangée, haut/bas passent à la suivante. */
+/** Rangée. Pas de piège gauche/droite : un retour à la ligne avec trap fait sauter le focus. */
 export function TvRow({ children }: { children: ReactNode }) {
-  return (
-    <TVFocusGuideView trapFocusLeft trapFocusRight style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 20, alignItems: 'stretch' }}>
-      {children}
-    </TVFocusGuideView>
-  );
+  return <TVFocusGuideView style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 20, alignItems: 'stretch' }}>{children}</TVFocusGuideView>;
 }
 
 export function TvColumn({ children }: { children: ReactNode }) {
   return <TVFocusGuideView style={{ marginTop: 18, gap: 14 }}>{children}</TVFocusGuideView>;
+}
+
+/** Liste virtualisée. `removeClippedSubviews` reste faux : le découpage fait perdre le focus tvOS. */
+export function TvVirtualList<T>({
+  data,
+  keyExtractor,
+  renderItem,
+  header,
+}: {
+  data: readonly T[];
+  keyExtractor: (item: T, index: number) => string;
+  renderItem: (item: T) => ReactNode;
+  header?: ReactNode;
+}) {
+  return (
+    <FocusScope>
+      <FlatList
+        data={data as T[]}
+        keyExtractor={keyExtractor}
+        renderItem={({ item }) => <>{renderItem(item)}</>}
+        ListHeaderComponent={header ? <>{header}</> : undefined}
+        style={{ flex: 1, backgroundColor: t.bg }}
+        contentContainerStyle={tvPad}
+        removeClippedSubviews={false}
+        initialNumToRender={8}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        keyboardShouldPersistTaps="handled"
+      />
+    </FocusScope>
+  );
 }
 
 export function TvTitle({ children }: { children: ReactNode }) {
@@ -137,16 +201,17 @@ export function TvFocusable({
   label?: string;
   children: (focused: boolean) => ReactNode;
 }) {
+  const arm = useArmedPreferred(preferred);
   const [hot, setHot] = useState(false);
   const box = useRef<Measurable>(null);
   const ensure = useContext(ScrollFocus);
   return (
-    <View ref={box} collapsable={false} style={{ flexGrow: block ? 1 : undefined, width: block ? '100%' : undefined, minWidth: block ? undefined : 280, zIndex: hot ? 4 : 0 }}>
+    <View ref={box} collapsable={false} style={{ flexGrow: block ? 1 : undefined, width: block ? '100%' : undefined, minWidth: block ? undefined : 280 }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ selected: hot }}
-        hasTVPreferredFocus={!!preferred}
+        hasTVPreferredFocus={arm}
         onFocus={() => {
           setHot(true);
           ensure(box.current);
@@ -217,16 +282,17 @@ export function TvField({
   preferred?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }) {
+  const arm = useArmedPreferred(preferred);
   const [hot, setHot] = useState(false);
   const box = useRef<Measurable>(null);
   const ensure = useContext(ScrollFocus);
   return (
-    <View ref={box} collapsable={false} style={{ zIndex: hot ? 4 : 0 }}>
-      <Text style={{ color: hot ? FOCUS_INK : t.muted, fontSize: 26, fontWeight: '700', marginBottom: 8 }}>{label}</Text>
+    <View ref={box} collapsable={false}>
+      <Text style={{ color: hot ? FOCUS_INK : '#C9D0CB', fontSize: 26, fontWeight: '700', marginBottom: 8 }}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChange}
-        hasTVPreferredFocus={!!preferred}
+        hasTVPreferredFocus={arm}
         autoCapitalize={autoCapitalize}
         placeholderTextColor={t.muted}
         onFocus={() => {

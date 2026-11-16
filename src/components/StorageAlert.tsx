@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +15,13 @@ export function StorageAlert() {
   const [busy, setBusy] = useState(false);
   const [hot, setHot] = useState(false);
   const tv = Platform.isTV;
+  const [arm, setArm] = useState(tv);
   const focused = tv && hot;
+  useEffect(() => {
+    if (!arm) return;
+    const id = setTimeout(() => setArm(false), 700);
+    return () => clearTimeout(id);
+  }, [arm]);
   if (!issues.length) return null;
   const write = issues.some((i) => i.op === 'write');
   const corrupt = issues.find((i) => i.op === 'read');
@@ -36,7 +42,7 @@ export function StorageAlert() {
           <Pressable
             accessibilityRole="button"
             disabled={busy}
-            hasTVPreferredFocus={tv}
+            hasTVPreferredFocus={arm}
             onFocus={() => setHot(true)}
             onBlur={() => setHot(false)}
             onPress={() => {
@@ -50,7 +56,7 @@ export function StorageAlert() {
         ) : (
           <Pressable
             accessibilityRole="button"
-            hasTVPreferredFocus={tv}
+            hasTVPreferredFocus={arm}
             onFocus={() => setHot(true)}
             onBlur={() => setHot(false)}
             onPress={() => issues.filter((i) => i.op === 'read').forEach((i) => storageIssues.dismissFull(i.key))}
