@@ -22,7 +22,8 @@ import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
 import { DEFAULT_CONSENT } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
-import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Notice, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { isIosAppOnMac } from '@/lib/mac';
 import { L } from '@/lib/l10n';
 import { usePremium } from '@/lib/premium';
 import { readerPrefs } from '@/lib/quran-store';
@@ -69,6 +70,12 @@ export default function SettingsScreen() {
           setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
         }}
       />
+      {isIosAppOnMac() ? (
+        <>
+          <Notice tone="info" title={L('Sur Mac')} text={L('Sur Mac, la montre, les widgets, l’appareil photo et les vibrations ne sont pas disponibles. Le Coran, l’adhan, le tasbih et le reste de Zikru restent ici.')} />
+          <Spacer />
+        </>
+      ) : null}
       <H2>Paysages</H2>
       <Muted>Fond calme pour toute l’application. Le choix reste enregistré sur cet appareil.</Muted>
       <Spacer h={8} />

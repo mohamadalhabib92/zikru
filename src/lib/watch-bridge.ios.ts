@@ -1,4 +1,6 @@
 import { requireOptionalNativeModule } from 'expo';
+import '@/lib/mac-native';
+import { isIosAppOnMac } from '@/lib/mac';
 import type { WatchNative } from './watch-bridge';
 
 type Native = {
@@ -23,7 +25,7 @@ function safe<T>(fn: () => T, fallback: T): T {
 /** Module local `modules/zikru-watch`. Absent d’un binaire construit avant cette cible : tout est sans effet. */
 export const watchNative: WatchNative | null = native
   ? {
-      supported: () => safe(() => native.supported(), false),
+      supported: () => !isIosAppOnMac() && safe(() => native.supported(), false),
       pushContext: (json) => safe(() => native.pushContext(json), undefined),
       transferSessions: (json) => safe(() => native.transferSessions(json), undefined),
       pushLive: (json) => safe(() => native.pushLive(json), undefined),

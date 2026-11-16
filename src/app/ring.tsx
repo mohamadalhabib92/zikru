@@ -13,6 +13,7 @@ import { Badge, Body, Button, Card, Chip, Divider, Eyebrow, Field, H2, ListItem,
 import { theme as t } from '@/ui/theme';
 import { UI_LOCALE } from '@/lib/i18n';
 import { L, uiLang } from '@/lib/l10n';
+import { isIosAppOnMac } from '@/lib/mac';
 
 const STATUS_TONE = { connecté: 'success', connexion: 'info', reconnexion: 'warning', déconnecté: 'neutral', erreur: 'danger' } as const;
 const STATUS_HELP = {
@@ -59,6 +60,7 @@ export default function BluetoothCounterScreen() {
         <Button title="Diagnostic" icon="pulse-outline" small variant="ghost" onPress={() => router.push('/ble-diag')} />
       </Row>
       <Muted>Tasbih électronique, anneau de dhikr ou télécommande : chaque appui ajoute +1 au compteur de session ({tasbih.count}{tasbih.target ? ` / ${tasbih.target}` : ''}).</Muted>
+      {isIosAppOnMac() ? <Muted>{L('Sur Mac, le Bluetooth peut ne pas voir toutes les bagues. Le journal plus bas indique chaque appareil et pourquoi il est affiché ou masqué.')}</Muted> : null}
       <Muted>{STATUS_HELP[s.status]}</Muted>
       <Spacer h={8} />
       <BleStatusChip />

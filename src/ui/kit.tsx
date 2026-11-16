@@ -8,6 +8,7 @@ import { useSettings } from '@/lib/settings';
 import { sanitizeLandscape } from '@/lib/landscapes';
 import { currentScheme, elevation, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
+import { isIosAppOnMac } from '@/lib/mac';
 import { KbInput } from './keyboard-done';
 
 const S = () => getStyles();
@@ -72,7 +73,10 @@ export function Card({ children, style, onPress, accessibilityLabel }: { childre
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={typeof accessibilityLabel === "string" ? L(accessibilityLabel) : accessibilityLabel}
-        style={({ pressed }) => [S().card, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, style]}
+        style={(state) => {
+          const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+          return [S().card, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, (hovered || focused) && { borderColor: t.primary }, style];
+        }}
       >
         {children}
       </Pressable>
@@ -122,15 +126,19 @@ export function Button({
       accessibilityLabel={L(accessibilityLabel ?? title)}
       accessibilityState={{ disabled: !!off, busy: !!loading }}
       hitSlop={6}
-      style={({ pressed }) => [
-        S().btn,
-        small && S().btnSmall,
-        { backgroundColor: bg },
-        variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
-        pressed && !off && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-        off && { opacity: 0.45 },
-        style,
-      ]}
+      style={(state) => {
+        const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+        return [
+          S().btn,
+          small && S().btnSmall,
+          { backgroundColor: bg },
+          variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
+          pressed && !off && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+          (hovered || focused) && !off && { opacity: 0.92 },
+          off && { opacity: 0.45 },
+          style,
+        ];
+      }}
     >
       {loading ? (
         <ActivityIndicator color={fg} />
@@ -152,7 +160,10 @@ export function IconButton({ icon, onPress, label, color = t.text, size = 22 }: 
       accessibilityLabel={typeof label === "string" ? L(label) : label}
       hitSlop={4}
       // La boîte suit la taille de l’icône (≥ 44 pt) : une icône de 64 pt dans une boîte fixe de 44 pt était rognée sur iOS.
-      style={({ pressed }) => [S().iconBtn, size > 36 && { width: size + 8, height: size + 8, borderRadius: (size + 8) / 2 }, pressed && { backgroundColor: t.surfaceAlt }]}
+      style={(state) => {
+        const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+        return [S().iconBtn, size > 36 && { width: size + 8, height: size + 8, borderRadius: (size + 8) / 2 }, (pressed || hovered || focused) && { backgroundColor: t.surfaceAlt }];
+      }}
     >
       <Ionicons name={icon} size={size} color={color} allowFontScaling={false} style={{ width: size, height: size, lineHeight: size, textAlign: 'center' }} />
     </Pressable>
@@ -166,11 +177,15 @@ export function Chip({ label, active, onPress, color }: { label: string; active?
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
-      style={({ pressed }) => [
-        S().chip,
-        { borderColor: active ? c : t.border, backgroundColor: active ? c : 'transparent' },
-        pressed && { opacity: 0.8 },
-      ]}
+      style={(state) => {
+        const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+        return [
+          S().chip,
+          { borderColor: active ? c : t.border, backgroundColor: active ? c : 'transparent' },
+          pressed && { opacity: 0.8 },
+          (hovered || focused) && !active && { borderColor: c },
+        ];
+      }}
     >
       <Text maxFontSizeMultiplier={1.35} style={{ color: active ? (color ? '#fff' : t.onPrimary) : t.text, fontWeight: '600', fontSize: 14, flexShrink: 1, textAlign: 'center' }}>{label}</Text>
     </Pressable>
@@ -341,10 +356,10 @@ export function shadow(level = 1): ViewStyle {
 
 const makeStyles = () => StyleSheet.create({
   screen: { flex: 1, backgroundColor: t.bg },
-  inner: { width: '100%', maxWidth: 860, alignSelf: 'center' },
-  h1: { color: t.text, fontSize: 30, fontWeight: '800', letterSpacing: -0.6, marginBottom: 4, fontFamily: t.displayFont },
-  h2: { color: t.text, fontSize: 18, fontWeight: '700', letterSpacing: -0.2, marginBottom: 8 },
-  body: { color: t.text, fontSize: 16, lineHeight: 23 },
+  inner: { width: '100%', maxWidth: 1040, alignSelf: 'center' },
+  h1: { color: t.text, fontSize: isIosAppOnMac() ? 34 : 30, fontWeight: '800', letterSpacing: -0.6, marginBottom: 4, fontFamily: t.displayFont },
+  h2: { color: t.text, fontSize: isIosAppOnMac() ? 20 : 18, fontWeight: '700', letterSpacing: -0.2, marginBottom: 8 },
+  body: { color: t.text, fontSize: isIosAppOnMac() ? 17 : 16, lineHeight: isIosAppOnMac() ? 25 : 23 },
   muted: { color: t.muted, fontSize: 15, lineHeight: 21 },
   eyebrow: { color: t.accent, fontSize: 12, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 6 },
   card: {

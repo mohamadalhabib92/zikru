@@ -1,4 +1,6 @@
 import { requireOptionalNativeModule } from 'expo';
+import '@/lib/mac-native';
+import { isIosAppOnMac } from '@/lib/mac';
 import type { LiveActivity, LiveActivityFactory, Widget } from 'expo-widgets';
 import type { DhikrProps, NextPrayerProps, PrayerActivityProps, TasbihProps } from './widget-data';
 import type { WidgetPayload } from './widget-bridge';
@@ -29,10 +31,11 @@ function load(): Mods | null {
   return mods;
 }
 
-export const widgetsAvailable = !!native;
-export const liveActivityAvailable = !!native;
+export const widgetsAvailable = !!native && !isIosAppOnMac();
+export const liveActivityAvailable = widgetsAvailable;
 
 export function pushWidgets(p: Partial<WidgetPayload>): void {
+  if (isIosAppOnMac()) return;
   const m = load();
   if (!m) return;
   try {
@@ -48,6 +51,7 @@ export function pushWidgets(p: Partial<WidgetPayload>): void {
 
 /** Démarre, met à jour ou termine l’unique activité « prochaine prière ». `null` = aucune activité. */
 export async function syncLiveActivity(p: PrayerActivityProps | null): Promise<void> {
+  if (isIosAppOnMac()) return;
   const m = load();
   if (!m) return;
   try {

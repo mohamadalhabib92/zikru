@@ -6,6 +6,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, type IconName } from './kit';
 import { alpha, brand as b, elevation } from './theme';
 import { L } from '@/lib/l10n';
+import { isIosAppOnMac } from '@/lib/mac';
 
 /** Composants du système de design 1.0.19 (au-dessus de kit/light). */
 
@@ -27,9 +28,9 @@ export function useReduceMotion(): boolean {
   }, []);
   return on;
 }
-/** Retour haptique léger (silencieux sur le web). */
+/** Retour haptique léger (silencieux sur le web et sur Mac, qui n’a pas ce moteur). */
 export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'light') {
-  if (!native) return;
+  if (!native || isIosAppOnMac()) return;
   try {
     if (kind === 'success') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     else if (kind === 'select') void Haptics.selectionAsync();
@@ -41,7 +42,7 @@ export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'lig
 export const SIDEBAR_MIN_WINDOW = 1024;
 export const SIDEBAR_WIDTH = 232;
 export function hasSidebar(windowWidth: number) {
-  return windowWidth >= SIDEBAR_MIN_WINDOW;
+  return windowWidth >= (isIosAppOnMac() ? 900 : SIDEBAR_MIN_WINDOW);
 }
 
 /**

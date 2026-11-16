@@ -28,6 +28,8 @@ import { setFontsReady } from '@/ui/fonts-ready';
 import { useWatchSync } from '@/lib/use-watch-sync';
 import { sanitizeLandscape } from '@/lib/landscapes';
 import { AppLandscape } from '@/components/landscape-backdrop';
+import { MacKeys } from '@/components/MacKeys';
+import '@/lib/mac-native';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -151,6 +153,7 @@ function Root() {
         <Stack.Screen name="discussion" options={{ title: L("Discussion") }} />
         <Stack.Screen name="lesson/[id]" options={{ title: L("Lecture partagée") }} />
       </Stack>
+      <MacKeys />
       <MiniPlayer path={path} />
       <StorageAlert />
     </View>

@@ -2,6 +2,7 @@
 import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { applyUiClickMode } from '@/components/PlayerBar';
+import { isIosAppOnMac } from '@/lib/mac';
 
 let players: { tap: AudioPlayer; cycle: AudioPlayer } | null = null;
 function getPlayers() {
@@ -15,7 +16,7 @@ function getPlayers() {
   return players;
 }
 export function feedback(kind: 'tap' | 'cycle', opts: { sound: boolean; haptics: boolean }) {
-  if (opts.haptics) void (kind === 'cycle' ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success) : Haptics.selectionAsync()).catch(() => {});
+  if (opts.haptics && !isIosAppOnMac()) void (kind === 'cycle' ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success) : Haptics.selectionAsync()).catch(() => {});
   if (opts.sound) {
     const p = getPlayers()?.[kind];
     if (p) {

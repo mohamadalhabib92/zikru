@@ -12,13 +12,14 @@
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { isIosAppOnMac } from './mac';
 import { loadJSON, saveJSON } from './storage';
 import { getSupabase } from './supabase';
 
 const KEY = 'group-push';
 type Saved = { on: boolean; token: string | null; lang?: string };
 
-export const groupPushAvailable = () => process.env.EXPO_PUBLIC_GROUP_PUSH === '1' && (Platform.OS === 'ios' || Platform.OS === 'android');
+export const groupPushAvailable = () => process.env.EXPO_PUBLIC_GROUP_PUSH === '1' && (Platform.OS === 'ios' || Platform.OS === 'android') && !isIosAppOnMac();
 
 export async function groupPushEnabled(): Promise<boolean> {
   if (!groupPushAvailable()) return false;

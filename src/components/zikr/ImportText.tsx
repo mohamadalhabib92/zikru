@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Platform, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { L, useUiLang } from '@/lib/l10n';
+import { isIosAppOnMac } from '@/lib/mac';
 import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { quranEditionLang } from '@/lib/i18n';
 import { translationFor } from '@/lib/quran';
@@ -124,6 +125,7 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   const [note, setNote] = useState<string | null>(null);
   const support = useMemo(() => ocrSupport(), []);
   const canPhoto = Platform.OS !== 'web';
+  const canCamera = canPhoto && !isIosAppOnMac();
 
   // Analyse (lecture seule) du texte : le résultat n’est valable que pour le texte exact analysé.
   const res = found && found.q === text && text.trim() ? found.r : null;
@@ -161,6 +163,7 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   const shoot = async (camera: boolean) => {
     setNote(null);
     if (camera) {
+      if (isIosAppOnMac()) return setNote(L('Sur Mac, l’appareil photo n’est pas disponible. Choisissez une image déjà enregistrée.'));
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) return setNote(L('Accès à l’appareil photo refusé. Vous pouvez l’autoriser dans les Réglages.'));
     }
@@ -221,7 +224,7 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
       <LMuted>Collez un verset ou un zikr, ou photographiez un texte. Votre texte n’est jamais modifié sans votre accord.</LMuted>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         <LBtn icon="clipboard-outline" label="Coller" solid onPress={paste} />
-        {canPhoto ? <LBtn icon="camera-outline" label="Photographier" onPress={() => shoot(true)} /> : null}
+        {canCamera ? <LBtn icon="camera-outline" label="Photographier" onPress={() => shoot(true)} /> : null}
         {canPhoto ? <LBtn icon="image-outline" label="Choisir une photo" onPress={() => shoot(false)} /> : null}
         {hasText || photo ? <LBtn icon="close" label="Effacer" onPress={reset} /> : null}
       </View>

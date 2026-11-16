@@ -15,9 +15,18 @@
     },
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": false,
       "bundleIdentifier": "com.vibecode.zikru-76mpdv",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "Zikru utilise le Bluetooth pour se connecter à votre compteur de tasbih ou anneau de dhikr et compter chaque appui.",
+        "UIApplicationSupportsIndirectInputEvents": true,
+        "UIRequiredDeviceCapabilities": ["arm64"],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "fr",
         "NSLocationWhenInUseUsageDescription": "Zikru utilise votre position pour calculer sur l’appareil les horaires de prière et la qibla. Si vous activez la météo, une position arrondie (≈ 10 km) est envoyée à Open-Meteo (Suisse). Aucun suivi publicitaire.",
@@ -29,7 +38,7 @@
         "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
         "NSMicrophoneUsageDescription": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
       },
-      "buildNumber": "70",
+      "buildNumber": "71",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -154,7 +163,7 @@
         "android.permission.INTERNET",
         "android.permission.WAKE_LOCK"
       ],
-      "versionCode": 70,
+      "versionCode": 71,
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW"
       ]

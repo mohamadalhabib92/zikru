@@ -14,6 +14,7 @@ import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, V
 import { KbInput } from '@/ui/keyboard-done';
 import { LBtn } from '@/components/zikr/parts';
 import { L } from '@/lib/l10n';
+import { isIosAppOnMac } from '@/lib/mac';
 import { usePremium } from '@/lib/premium';
 import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { ocrToLines } from '@/lib/ocr-lines';
@@ -181,6 +182,7 @@ export default function ImportProgram() {
   const ocr = useMemo(() => ocrSupport(), []);
   const pdfOk = useMemo(() => pdfSupport(), []);
   const canPhoto = Platform.OS !== 'web';
+  const canCamera = canPhoto && !isIosAppOnMac();
 
   const destKey = dest ? dest.scope + ':' + dest.id : '';
   useEffect(() => {
@@ -286,6 +288,7 @@ export default function ImportProgram() {
   const fromPhoto = async (camera: boolean) => {
     setNote(null);
     if (camera) {
+      if (isIosAppOnMac()) return;
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) return setNote(L('Accès à l’appareil photo refusé. Vous pouvez l’autoriser dans les Réglages.'));
     }
@@ -524,7 +527,7 @@ export default function ImportProgram() {
         <LMuted>Photographiez une page, importez un PDF ou collez le texte d’un programme (ex. une formule et son nombre de répétitions par ligne). Zikru propose les étapes dans l’ordre : vous vérifiez, corrigez, puis créez la composition. Tout reste sur votre appareil.</LMuted>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <LBtn icon="clipboard-outline" label="Coller" solid onPress={() => void fromPaste()} />
-          {canPhoto ? <LBtn icon="camera-outline" label="Photographier" onPress={() => void fromPhoto(true)} /> : null}
+          {canCamera ? <LBtn icon="camera-outline" label="Photographier" onPress={() => void fromPhoto(true)} /> : null}
           {canPhoto ? <LBtn icon="images-outline" label="Choisir des photos" onPress={() => void fromPhoto(false)} /> : null}
           <LBtn icon="document-outline" label={ocr.ok ? 'Importer un fichier (PDF ou image)' : 'Importer un PDF'} onPress={() => void fromPdf()} />
           {pages.length || paste ? <LBtn icon="close" label="Effacer" onPress={() => { reset(); setPaste(''); setVia('paste'); }} /> : null}

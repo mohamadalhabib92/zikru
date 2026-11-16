@@ -45,7 +45,7 @@ export function useWatchSync() {
   });
 
   useEffect(() => {
-    if (!native) return;
+    if (!native?.supported()) return;
     return native.subscribe((json) => {
       const sessions = sessionsFromPayload(json);
       if (!sessions.length) return;
@@ -55,13 +55,13 @@ export function useWatchSync() {
   }, [native]);
 
   useEffect(() => {
-    if (!native?.pushLive || !dataReady) return;
+    if (!native?.supported() || !native.pushLive || !dataReady) return;
     const phone = tasbihStore.notePhone(Date.now());
     if (phone) native.pushLive(sessionsPayload([phone]));
   }, [native, dataReady, tasbih]);
 
   useEffect(() => {
-    if (!native || !settingsReady || !dataReady || !zikrReady) return;
+    if (!native?.supported() || !settingsReady || !dataReady || !zikrReady) return;
     let dead = false;
     const send = () => {
       if (dead) return;

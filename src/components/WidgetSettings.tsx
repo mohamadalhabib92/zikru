@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { isIosAppOnMac } from '@/lib/mac';
 import { L } from '@/lib/l10n';
 import { useShared } from '@/lib/shared-state';
 import { liveActivityAvailable, widgetsAvailable } from '@/lib/widget-bridge';
@@ -13,7 +14,9 @@ export function WidgetSettings() {
     <>
       <H2>{L('Widgets')}</H2>
       <Card>
-        {!native ? (
+        {isIosAppOnMac() ? (
+          <Muted>{L('Les widgets et la montre ne sont pas disponibles quand Zikru tourne sur Mac.')}</Muted>
+        ) : !native ? (
           <Muted>{L('Les widgets (prochaine prière, tasbih, dhikr du jour) sont disponibles dans l’app iPhone et Android.')}</Muted>
         ) : !widgetsAvailable ? (
           <Notice tone="info" title={L('Cette version de l’app ne contient pas encore les widgets. Ils arriveront avec une prochaine mise à jour.')} />
@@ -24,7 +27,7 @@ export function WidgetSettings() {
               : L('Ajoutez un widget : appui long sur l’écran d’accueil, puis « Widgets » et Zikru. Les horaires sont calculés sur l’appareil, sans réseau.')}
           </Muted>
         )}
-        {liveActivityAvailable ? (
+        {liveActivityAvailable && !isIosAppOnMac() ? (
           <>
             <Divider />
             <Toggle
