@@ -1,7 +1,8 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Speech from 'expo-speech';
 import { memo, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import raw from '../../assets/fiqh/akhdari.json';
 import { AiConsentSheet } from '@/components/AiConsentSheet';

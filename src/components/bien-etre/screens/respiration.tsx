@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { announce, BEScreen, Choice, mmss, Panel, softHaptic, useClock, useReduceMotion } from '@/components/bien-etre/common';
 import { useReaderKeepAwake } from '@/components/quran/keep-awake';

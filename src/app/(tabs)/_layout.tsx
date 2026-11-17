@@ -1,5 +1,6 @@
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Platform, useWindowDimensions, View } from 'react-native';
+import { TVPressable, type TVPressableProps } from '@/ui/tv-pressable';
 import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { useDataReady } from '@/lib/data';
@@ -50,6 +51,7 @@ export default function TabsLayout() {
         tabBarAllowFontScaling: false,
         tabBarLabelStyle: sidebar ? { fontSize: 15, fontWeight: '600' } : { fontSize: 11, fontWeight: '700' },
         sceneStyle: { backgroundColor: landscape === 'none' ? t.bg : 'transparent' },
+        ...(Platform.isTV ? { tabBarButton: (props) => <TVPressable {...(props as unknown as TVPressableProps)} /> } : {}),
       }}
     >
       <Tabs.Screen name="index" options={{ headerShown: false, title: tr.tab_home, tabBarIcon: icon('home-outline', 'home') }} />

@@ -1,6 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { Platform, Pressable, Share, TextInput, View } from 'react-native';
+import { Platform, Share, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { arNum } from '@/lib/quran-nav';
 import { BOOKMARK_COLORS, HIGHLIGHTS, keyOf, marks, removeBookmark, saveBookmark, setHighlight, setNote } from '@/lib/quran-store';

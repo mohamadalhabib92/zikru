@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { confirmAsk } from '@/components/community/parts';
 import { formatBytes, entry, isComplete, reciterSummary, remainingBytes, sizeOf, totalBytes } from '@/lib/audio-dl-core';

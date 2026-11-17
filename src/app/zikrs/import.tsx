@@ -7,7 +7,8 @@
  */
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, ScrollView, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { KbInput } from '@/ui/keyboard-done';
 import { LBtn } from '@/components/zikr/parts';
 import { L } from '@/lib/l10n';

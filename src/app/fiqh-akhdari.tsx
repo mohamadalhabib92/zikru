@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import raw from '../../assets/fiqh/akhdari.json';
 import { akhdariChapters, AKHDARI_AUTHOR, type AkhdariItem } from '@/lib/akhdari-view';

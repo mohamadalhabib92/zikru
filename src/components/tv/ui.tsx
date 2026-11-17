@@ -6,8 +6,9 @@ import { tvFeatureAllowed, type TvFeatureId } from '@/lib/tv';
 import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
+import { TVPressable, tvFocusStyle } from '@/ui/tv-pressable';
 
-const { Dimensions, FlatList, Pressable, ScrollView, TextInput, View } = ReactNative;
+const { Dimensions, FlatList, ScrollView, TextInput, View } = ReactNative;
 type ViewProps = ComponentProps<typeof View>;
 
 /**
@@ -16,9 +17,7 @@ type ViewProps = ComponentProps<typeof View>;
  */
 export const tvPad = { paddingHorizontal: 90, paddingTop: 60, paddingBottom: 72 };
 
-const FOCUS_FILL = '#F6E7B8';
 const FOCUS_INK = '#141311';
-const FOCUS_EDGE = '#FFFFFF';
 
 type GuideProps = ViewProps;
 
@@ -166,23 +165,14 @@ export function TvMuted({ children }: { children: ReactNode }) {
   return <Text style={{ color: t.muted, fontSize: 28, lineHeight: 38, marginTop: 10 }}>{children}</Text>;
 }
 
-function chrome(on: boolean, minHeight: number): React.ComponentProps<typeof View>['style'] {
+function chrome(minHeight: number): React.ComponentProps<typeof View>['style'] {
   return {
     minHeight,
     borderRadius: 22,
     paddingHorizontal: 28,
     paddingVertical: 20,
     justifyContent: 'center',
-    backgroundColor: on ? FOCUS_FILL : '#1A2420',
-    borderWidth: 6,
-    borderColor: on ? FOCUS_EDGE : '#5C6B64',
-    opacity: on ? 1 : 0.62,
-    transform: [{ scale: on ? 1.08 : 1 }],
-    shadowColor: on ? FOCUS_FILL : 'transparent',
-    shadowOpacity: on ? 0.95 : 0,
-    shadowRadius: on ? 28 : 0,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: on ? 16 : 0,
+    backgroundColor: '#1A2420',
   };
 }
 
@@ -207,7 +197,7 @@ export function TvFocusable({
   const ensure = useContext(ScrollFocus);
   return (
     <View ref={box} collapsable={false} style={{ flexGrow: block ? 1 : undefined, width: block ? '100%' : undefined, minWidth: block ? undefined : 280 }}>
-      <Pressable
+      <TVPressable
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ selected: hot }}
@@ -218,10 +208,10 @@ export function TvFocusable({
         }}
         onBlur={() => setHot(false)}
         onPress={onPress}
-        style={(state) => chrome(isFocused(state) || hot, minHeight)}
+        style={chrome(minHeight)}
       >
         {(state) => children(isFocused(state) || hot)}
-      </Pressable>
+      </TVPressable>
     </View>
   );
 }
@@ -300,18 +290,17 @@ export function TvField({
           ensure(box.current);
         }}
         onBlur={() => setHot(false)}
-        style={{
-          color: hot ? FOCUS_INK : '#F4F1EA',
-          fontSize: 34,
-          minHeight: 92,
-          borderWidth: 6,
-          borderColor: hot ? FOCUS_EDGE : '#5C6B64',
-          borderRadius: 18,
-          paddingHorizontal: 22,
-          backgroundColor: hot ? FOCUS_FILL : '#1A2420',
-          opacity: hot ? 1 : 0.62,
-          transform: [{ scale: hot ? 1.08 : 1 }],
-        }}
+        style={[
+          {
+            color: hot ? FOCUS_INK : '#F4F1EA',
+            fontSize: 34,
+            minHeight: 92,
+            borderRadius: 18,
+            paddingHorizontal: 22,
+            backgroundColor: '#1A2420',
+          },
+          tvFocusStyle(hot),
+        ]}
       />
     </View>
   );

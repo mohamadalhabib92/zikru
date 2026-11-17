@@ -1,5 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { BEScreen, softHaptic } from '@/components/bien-etre/common';
 import { Ionicons, type IconName } from '@/ui/kit';

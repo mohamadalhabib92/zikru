@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Platform, Pressable, TextInput, View } from 'react-native';
+import { Alert, Platform, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey, HABIT_PRESETS, streak, useGrowth, type Habit } from '@/lib/growth';

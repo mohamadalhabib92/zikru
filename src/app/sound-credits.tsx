@@ -1,4 +1,5 @@
-import { Linking, Pressable } from 'react-native';
+import { Linking } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { ADHAN_CUE, LOCAL_ADHAN_SLOTS, assembleAdhanVoices, licenseBlockReason } from '@/lib/adhan-voices';
 import { L } from '@/lib/l10n';
