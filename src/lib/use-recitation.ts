@@ -28,14 +28,18 @@ import { SURAHS } from './surahs';
 export type RecState = { queue: Step[]; pos: number; playing: boolean; loading: boolean; holding: boolean; error: string | null; loop: boolean };
 const IDLE: RecState = { queue: [], pos: -1, playing: false, loading: false, holding: false, error: null, loop: false };
 const native = Platform.OS !== 'web';
+/** Écran verrouillé, Now Playing et session gardée active : iOS/Android seulement. tvOS n’a pas ces API. */
+const lockScreen = native && !Platform.isTV;
 
 let ownerSeq = 0;
 
 export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; mode?: ReadingMode; onEnd?: (queue: Step[]) => Step[] | null }) {
   // keepAudioSessionActive : la session iOS reste active entre deux versets (cause racine de l’arrêt).
   // Deux lecteurs : pendant que l’un joue, l’autre a déjà le fichier du verset suivant.
-  const playerA = useAudioPlayer(null, { updateInterval: 300, keepAudioSessionActive: true });
-  const playerB = useAudioPlayer(null, { updateInterval: 300, keepAudioSessionActive: true });
+  // Sur Apple TV, pas de session lock-screen ni de lecture externe.
+  const playerOpts = { updateInterval: 300, keepAudioSessionActive: !Platform.isTV, allowsExternalPlayback: !Platform.isTV };
+  const playerA = useAudioPlayer(null, playerOpts);
+  const playerB = useAudioPlayer(null, playerOpts);
   const active = useRef(0);
   const primedUrl = useRef<string | null>(null);
   const readyUrl = useRef<string | null>(null);
@@ -71,7 +75,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
   const dropPreload = () => {
     const urls = preloaded.current;
     preloaded.current = [];
-    if (native) for (const u of urls) clearPreloadedSource({ uri: u }).catch(() => {});
+    if (lockScreen) for (const u of urls) clearPreloadedSource({ uri: u }).catch(() => {});
   };
   /** Tient prêts les 3 versets suivants : le premier dans le lecteur au repos, les autres en mémoire et sur disque. */
   const primeNext = (queue: Step[], pos: number) => {
@@ -94,7 +98,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
         primedUrl.current = null;
       }
     }
-    if (!native) return;
+    if (!lockScreen) return;
     const ahead = steps.slice(1).map((s) => playableUrl(O.current.reciter, s.s, s.a)).filter((u) => u !== url);
     for (const u of preloaded.current) if (!ahead.includes(u)) clearPreloadedSource({ uri: u }).catch(() => {});
     preloaded.current = ahead;
@@ -149,7 +153,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
         try {
           p.setPlaybackRate(O.current.rate);
         } catch {}
-        if (native) p.setActiveForLockScreen(true, { title: `${SURAHS[step.s - 1][2]} ${step.s}:${step.a}`, artist: `${r.name} · Zikru` });
+        if (lockScreen) p.setActiveForLockScreen(true, { title: `${SURAHS[step.s - 1][2]} ${step.s}:${step.a}`, artist: `${r.name} · Zikru` });
       } catch {}
       primeNext(queue, pos);
       loadWatch.current = setTimeout(() => {
@@ -241,7 +245,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
       }
       update({ playing: false, holding: false, loading: false, pos: -1 });
       try {
-        if (native) live().clearLockScreenControls();
+        if (lockScreen) live().clearLockScreenControls();
       } catch {}
       return;
     }
@@ -337,7 +341,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
     try {
       playerA.pause();
       playerB.pause();
-      if (native) {
+      if (lockScreen) {
         playerA.clearLockScreenControls();
         playerB.clearLockScreenControls();
       }
@@ -377,7 +381,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
       try {
         playerA.pause();
         playerB.pause();
-        if (native) {
+        if (lockScreen) {
           playerA.clearLockScreenControls();
           playerB.clearLockScreenControls();
         }
@@ -440,7 +444,7 @@ export function useRecitation(opts: { reciter: string; rate: number; gap?: Gap; 
     try {
       playerA.pause();
       playerB.pause();
-      if (native) {
+      if (lockScreen) {
         playerA.clearLockScreenControls();
         playerB.clearLockScreenControls();
       }

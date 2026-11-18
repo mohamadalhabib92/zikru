@@ -82,8 +82,9 @@ function Root() {
   return (
     <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <AppLandscape id={landscape} />
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} hidden={Platform.isTV} />
       <Stack
+        {...(Platform.isTV ? { initialRouteName: 'tv' as const } : {})}
         screenOptions={{
           headerStyle: { backgroundColor: brand.cream },
           headerTintColor: brand.ink,
@@ -152,9 +153,10 @@ function Root() {
         <Stack.Screen name="program/[id]" options={{ title: L("Programme de groupe") }} />
         <Stack.Screen name="discussion" options={{ title: L("Discussion") }} />
         <Stack.Screen name="lesson/[id]" options={{ title: L("Lecture partagée") }} />
+        <Stack.Screen name="tv" options={{ headerShown: false }} />
       </Stack>
       <MacKeys />
-      <MiniPlayer path={path} />
+      {Platform.isTV ? null : <MiniPlayer path={path} />}
       <StorageAlert />
     </View>
   );

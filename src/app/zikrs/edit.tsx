@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, TextInput, View } from 'react-native';
+import { Image, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { KbInput } from '@/ui/keyboard-done';
 import { Text } from '@/ui/Text';
 import { ItemPicker } from '@/components/zikr/Picker';

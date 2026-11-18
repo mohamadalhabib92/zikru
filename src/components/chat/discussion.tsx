@@ -6,7 +6,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
-import { AppState, FlatList, KeyboardAvoidingView, Platform, Pressable, Text as RNText, TextInput, View } from 'react-native';
+import { AppState, FlatList, KeyboardAvoidingView, Platform, Text as RNText, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlockButton, KINDS, ReportButton } from '@/components/community/parts';
 import * as api from '@/lib/community/api';

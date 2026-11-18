@@ -3,7 +3,8 @@
 // au-dessus du clavier (InputAccessoryView rendue à côté de CHAQUE champ : avec la nouvelle architecture,
 // la barre se lie au champ présent au montage, une barre globale ne suffirait pas).
 import { useId } from 'react';
-import { InputAccessoryView, Keyboard, Platform, Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { InputAccessoryView, Keyboard, Platform, TextInput, View, type TextInputProps } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { theme as t } from './theme';
 

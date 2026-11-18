@@ -1,7 +1,8 @@
 import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useTranslationId } from '@/components/quran/data';
 import { dayKey } from '@/lib/dates';

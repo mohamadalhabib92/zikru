@@ -1,7 +1,8 @@
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Platform, Pressable, TextInput, View } from 'react-native';
+import { Animated, Platform, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';

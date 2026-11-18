@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, type IconName } from '@/ui/kit';
@@ -14,8 +15,8 @@ export function Sheet({ visible, onClose, title, subtitle, pal, children, footer
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Pressable accessibilityLabel={L("Fermer")} onPress={onClose} style={{ flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 640, maxHeight: '88%', backgroundColor: pal.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: Math.max(insets.bottom, 12) }}>
+        <Pressable tvPlain accessibilityLabel={L("Fermer")} onPress={onClose} style={{ flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <Pressable tvPlain onPress={() => {}} style={{ width: '100%', maxWidth: 640, maxHeight: '88%', backgroundColor: pal.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: Math.max(insets.bottom, 12) }}>
             <View style={{ alignItems: 'center', paddingTop: 8 }}>
               <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: alpha(pal.muted, 0.4) }} />
             </View>

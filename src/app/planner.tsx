@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { GoalsLink } from '@/components/GoalsLink';
 import { PatternBg } from '@/components/zikru/Pattern';

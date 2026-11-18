@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import Svg, { Rect } from 'react-native-svg';
 import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';

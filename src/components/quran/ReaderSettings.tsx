@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, Switch, View } from 'react-native';
+import { Switch, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { NURANI_LETTERS, NURANI_MNEMONIC } from '@/lib/nuraniyya';

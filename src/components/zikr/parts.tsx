@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, Share, TextInput, View } from 'react-native';
+import { Modal, Platform, ScrollView, Share, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { computeAbjad } from '@/lib/abjad';
 import { nameBare, nameCall, nameCallTr, type AllahName } from '@/lib/names';

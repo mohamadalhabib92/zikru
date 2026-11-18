@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { Hub, type HubSection } from '@/components/Hub';
 import { useSettings } from '@/lib/settings';

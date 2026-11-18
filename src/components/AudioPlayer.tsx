@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Linking, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { getAdhanSnap, pauseAdhan, playAdhanSource, subscribeAdhan, type AdhanSnap } from '@/lib/adhan-playback';
 import { adhanVoices, selectedAdhanVoice, type AdhanVoice } from '@/lib/audio';

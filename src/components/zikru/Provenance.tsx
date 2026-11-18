@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Linking, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { GRADE_LABEL, dorarSearchUrl, gradeTone, reportUrl } from '@/lib/provenance-lite';
 import type { ProvenanceItem, ProvenanceSet } from '@/lib/provenance-types';

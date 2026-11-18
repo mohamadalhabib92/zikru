@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Linking, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { APP_VERSION } from '@/components/zikru/Provenance';
 import { SCHOOLS, SCHOOL_LABEL, citation, type FiqhSource } from '@/lib/fiqh-rulings';

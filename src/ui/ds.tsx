@@ -1,6 +1,6 @@
-import * as Haptics from 'expo-haptics';
 import { useEffect, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, type IconName } from './kit';
@@ -11,6 +11,10 @@ import { isIosAppOnMac } from '@/lib/mac';
 /** Composants du système de design 1.0.19 (au-dessus de kit/light). */
 
 const native = Platform.OS !== 'web';
+type HapticModule = typeof import('expo-haptics');
+// Apple TV n’a pas de retour haptique. Sur iPhone, Platform.isTV est faux : le module est chargé au démarrage, comme avant.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Haptics: HapticModule | null = Platform.isTV ? null : (require('expo-haptics') as HapticModule);
 
 /** Préférence système « Réduire les animations » (iOS, Android, navigateur), suivie en direct. */
 export function useReduceMotion(): boolean {
@@ -30,7 +34,7 @@ export function useReduceMotion(): boolean {
 }
 /** Retour haptique léger (silencieux sur le web et sur Mac, qui n’a pas ce moteur). */
 export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'light') {
-  if (!native || isIosAppOnMac()) return;
+  if (!native || !Haptics || isIosAppOnMac()) return;
   try {
     if (kind === 'success') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     else if (kind === 'select') void Haptics.selectionAsync();

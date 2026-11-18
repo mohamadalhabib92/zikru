@@ -1,6 +1,7 @@
 import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { afterLoginRoute } from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';

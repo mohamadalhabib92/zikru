@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { BEScreen, Choice, Panel, softHaptic, useUthmani } from '@/components/bien-etre/common';
 import { dayKey } from '@/lib/dates';

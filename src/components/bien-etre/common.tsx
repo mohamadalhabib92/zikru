@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AccessibilityInfo,
   Platform,
-  Pressable,
   ScrollView,
   View,
 } from "react-native";
+import { TVPressable as Pressable } from "@/ui/tv-pressable";
 import { Stack } from "expo-router";
 import { Text } from "@/ui/Text";
 import { loadUthmani } from "@/lib/quran-reader-data";

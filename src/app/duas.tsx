@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';

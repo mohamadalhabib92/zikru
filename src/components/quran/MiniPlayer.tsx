@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, Pressable, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/ui/Text';
 import { readerPrefs } from '@/lib/quran-store';

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pressable, Text as RNText, View } from 'react-native';
+import { Text as RNText, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { useRouter } from 'expo-router';
 import { Text } from '@/ui/Text';
 import { announce, BEScreen, Choice, Panel, softHaptic, useReduceMotion } from '@/components/bien-etre/common';

@@ -5,12 +5,10 @@
  * Un programme importé reste personnel : il n’est jamais présenté comme validé par une voie.
  * Tout se fait sur l’appareil : aucun fichier, photo ou texte n’est envoyé.
  */
-import * as Clipboard from 'expo-clipboard';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, ScrollView, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { KbInput } from '@/ui/keyboard-done';
 import { LBtn } from '@/components/zikr/parts';
 import { L } from '@/lib/l10n';
@@ -19,6 +17,18 @@ import { usePremium } from '@/lib/premium';
 import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { ocrToLines } from '@/lib/ocr-lines';
 import { closePdf, ocrPdfPage, openPdf, pdfSupport, renderPdfPage, type PdfDoc } from '@/lib/pdf';
+
+import type { ImagePickerOptions } from 'expo-image-picker';
+type ClipboardMod = typeof import('expo-clipboard');
+type ImagePickerMod = typeof import('expo-image-picker');
+type DocumentPickerMod = typeof import('expo-document-picker');
+// iPhone : chargés à l’évaluation. Apple TV : pods iOS seulement.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Clipboard: ClipboardMod | null = Platform.isTV ? null : (require('expo-clipboard') as ClipboardMod);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ImagePicker: ImagePickerMod | null = Platform.isTV ? null : (require('expo-image-picker') as ImagePickerMod);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const DocumentPicker: DocumentPickerMod | null = Platform.isTV ? null : (require('expo-document-picker') as DocumentPickerMod);
 import { pageIsScanned } from '@/lib/pdf-types';
 import { detectLanguages, LANG_LABEL, type LangCode } from '@/lib/program-lang';
 import { importTooLarge, latinDigits, MAX_IMPORT_CHARS, parseProgram, programHasArabic, sourceLinesForResplit, type IgnoredLine, type ProgramStep } from '@/lib/program-parse';
@@ -272,6 +282,7 @@ export default function ImportProgram() {
   };
 
   const fromPaste = async () => {
+    if (!Clipboard) return;
     const s = await Clipboard.getStringAsync().catch(() => '');
     if (!s.trim()) return setNote(L('Le presse-papiers est vide.'));
     reset();
@@ -287,12 +298,13 @@ export default function ImportProgram() {
 
   const fromPhoto = async (camera: boolean) => {
     setNote(null);
+    if (!ImagePicker) return;
     if (camera) {
       if (isIosAppOnMac()) return;
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) return setNote(L('Accès à l’appareil photo refusé. Vous pouvez l’autoriser dans les Réglages.'));
     }
-    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1, exif: false, base64: false, allowsMultipleSelection: !camera, selectionLimit: 10 };
+    const opts: ImagePickerOptions = { mediaTypes: ['images'], quality: 1, exif: false, base64: false, allowsMultipleSelection: !camera, selectionLimit: 10 };
     const r = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
     if (r.canceled || !r.assets?.length) return;
     await readImages(r.assets.map((a) => a.uri));
@@ -329,6 +341,7 @@ export default function ImportProgram() {
     // Fichiers : PDF (si lisible ici) et images (si la lecture des photos est disponible sur l’appareil).
     const types = [...(pdfOk.text ? ['application/pdf'] : []), ...(ocr.ok ? ['image/*'] : [])];
     if (!types.length) return setNote(pdfNote(pdfOk.reason));
+    if (!DocumentPicker) return;
     const r = await DocumentPicker.getDocumentAsync({ type: types, copyToCacheDirectory: true, multiple: false });
     if (r.canceled || !r.assets?.[0]) return;
     const a = r.assets[0];

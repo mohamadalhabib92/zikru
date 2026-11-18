@@ -1,6 +1,7 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { adhkarDays } from '@/lib/adhkar-store';

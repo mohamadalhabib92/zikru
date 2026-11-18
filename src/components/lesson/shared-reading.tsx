@@ -4,7 +4,8 @@
  * Le suivi se met en pause quand l’élève fait défiler, et reprend d’un toucher.
  */
 import { memo, useEffect, useRef, useState } from 'react';
-import { Pressable, View, type LayoutChangeEvent } from 'react-native';
+import { View, type LayoutChangeEvent } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import Animated, { Easing, interpolateColor, scrollTo, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';

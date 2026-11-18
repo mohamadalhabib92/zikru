@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { Platform } from 'react-native';
 import { autoOrder, downloadHold, type DownloadHold, type NetKind } from './audio-auto';
 import { addVerse, entry, isComplete, isLocal, mapLimit, removeReciter, removeSurah, type DlManifest, type SizeTable } from './audio-dl-core';
 import { deleteReciter, deleteSurah, freeSpace, localUri, saveVerse } from './audio-store';
@@ -17,8 +18,11 @@ export const dlSizes = shared<SizeTable>('quran-audio-sizes', {});
 
 /** URL à lire : fichier déjà sur l’appareil (même hors manifeste), sinon l’URL d’origine. */
 export function playableUrl(rid: string, s: number, a: number): string {
-  const u = localUri(rid, s, a);
-  if (u) return u;
+  if (Platform.isTV) return ayahUrl(reciterById(rid), s, a);
+  if (isLocal(dlManifest.get(), rid, s, a)) {
+    const u = localUri(rid, s, a);
+    if (u) return u;
+  }
   return ayahUrl(reciterById(rid), s, a);
 }
 
@@ -83,6 +87,7 @@ export function preferSurah(rid: string, s: number) {
 
 /** Met en file le récitateur choisi : sourate ouverte d’abord, puis le reste. Ne fait rien hors Wi-Fi ou sans place. */
 export async function ensureReciterDownload(rid: string) {
+  if (Platform.isTV) return;
   await dlManifest.load();
   const free = await freeSpace();
   gate = { ...gate, free };

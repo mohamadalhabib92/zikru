@@ -10,16 +10,22 @@
  * l'écouteur de reminders.native.ts).
  */
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
+import type { NotificationChannelInput } from 'expo-notifications';
 import { Platform } from 'react-native';
 import { isIosAppOnMac } from './mac';
 import { loadJSON, saveJSON } from './storage';
 import { getSupabase } from './supabase';
 
+type Notes = typeof import('expo-notifications');
+// Apple TV n’a pas ce module (pod iOS seulement). Sur iPhone, Platform.isTV est faux : require s’exécute au chargement, comme l’import précédent.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Notifications: Notes | null = Platform.isTV ? null : (require('expo-notifications') as Notes);
+
 const KEY = 'group-push';
 type Saved = { on: boolean; token: string | null; lang?: string };
 
-export const groupPushAvailable = () => process.env.EXPO_PUBLIC_GROUP_PUSH === '1' && (Platform.OS === 'ios' || Platform.OS === 'android') && !isIosAppOnMac();
+export const groupPushAvailable = () =>
+  !Platform.isTV && !isIosAppOnMac() && process.env.EXPO_PUBLIC_GROUP_PUSH === '1' && (Platform.OS === 'ios' || Platform.OS === 'android');
 
 export async function groupPushEnabled(): Promise<boolean> {
   if (!groupPushAvailable()) return false;
@@ -27,10 +33,11 @@ export async function groupPushEnabled(): Promise<boolean> {
 }
 
 async function token(): Promise<string | null> {
+  if (!Notifications) return null;
   const projectId = (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ?? Constants.easConfig?.projectId;
   if (!projectId) return null;
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('groups', { name: 'Discussions de groupe', importance: 5 /* AndroidImportance.DEFAULT (enum expo-notifications) */ as Notifications.NotificationChannelInput['importance'], sound: 'default' });
+    await Notifications.setNotificationChannelAsync('groups', { name: 'Discussions de groupe', importance: 5 /* AndroidImportance.DEFAULT (enum expo-notifications) */ as NotificationChannelInput['importance'], sound: 'default' });
   }
   return (await Notifications.getExpoPushTokenAsync({ projectId })).data;
 }
@@ -43,7 +50,7 @@ async function register(t: string, lang: string) {
 }
 
 export async function enableGroupPush(lang: string): Promise<'ok' | 'denied' | 'unavailable'> {
-  if (!groupPushAvailable()) return 'unavailable';
+  if (!groupPushAvailable() || !Notifications) return 'unavailable';
   const cur = await Notifications.getPermissionsAsync();
   const ok = cur.granted || (cur.canAskAgain && (await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } })).granted);
   if (!ok) return 'denied';

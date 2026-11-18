@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { useRouter, type Href } from 'expo-router';
 import { Text } from '@/ui/Text';
 import { softHaptic } from '@/components/bien-etre/common';

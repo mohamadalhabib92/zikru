@@ -31,6 +31,8 @@ const WIDGETS = [
 ];
 
 module.exports = ({ config }) => {
+  // Apple TV uniquement. Sans EXPO_TV=1, le projet iPhone / Watch ci-dessous n’est pas modifié.
+  if (process.env.EXPO_TV === '1') return withAppleTv(config);
   if (process.env.EAS_BUILD && config.experiments) {
     const { baseUrl, ...rest } = config.experiments;
     config.experiments = rest;
@@ -66,3 +68,71 @@ module.exports = ({ config }) => {
   config.plugins = [...(config.plugins || []), '@bacons/apple-targets', './plugins/with-watch-version.js'];
   return config;
 };
+
+const TV_DROP_INFO = [
+  'NSBluetoothAlwaysUsageDescription',
+  'NSCameraUsageDescription',
+  'NSPhotoLibraryUsageDescription',
+  'NSMicrophoneUsageDescription',
+  'NSMotionUsageDescription',
+  'NSLocationWhenInUseUsageDescription',
+  'NSLocationTemporaryUsageDescriptionDictionary',
+];
+
+/**
+ * Projet tvOS séparé : même identifiant de bundle (achat universel), sans widgets,
+ * sans montre, sans Bluetooth, sans appareil photo. Le plugin config-tv ne s’exécute qu’ici.
+ */
+function withAppleTv(config) {
+  if (process.env.EAS_BUILD && config.experiments) {
+    const { baseUrl, ...rest } = config.experiments;
+    config.experiments = rest;
+  }
+  const keep = new Set(['expo-router', 'expo-audio', 'expo-iap']);
+  const plugins = (config.plugins || []).filter((p) => keep.has(Array.isArray(p) ? p[0] : p));
+  const audio = ['expo-audio', { microphonePermission: false, enableBackgroundPlayback: true, recordAudioAndroid: false }];
+  const next = plugins.map((p) => (Array.isArray(p) && p[0] === 'expo-audio' ? audio : p));
+  if (!next.some((p) => (Array.isArray(p) ? p[0] : p) === 'expo-iap')) next.push('expo-iap');
+  // config-tv écrit TVAppIcon.brandassets et ASSETCATALOG_COMPILER_APPICON_NAME.
+  // actool en déduit CFBundleIcons.CFBundlePrimaryIcon et TVTopShelfImage.
+  next.push(['@react-native-tvos/config-tv', {
+    isTV: true,
+    tvosDeploymentTarget: '16.4',
+    appleTVImages: {
+      iconSmallLayers: { front: './assets/tv/icon-home-front.png', back: './assets/tv/icon-home-back.png' },
+      iconSmall2xLayers: { front: './assets/tv/icon-home-front@2x.png', back: './assets/tv/icon-home-back@2x.png' },
+      iconLayers: { front: './assets/tv/icon-store-front.png', back: './assets/tv/icon-store-back.png' },
+      topShelf: './assets/tv/top-shelf.png',
+      topShelf2x: './assets/tv/top-shelf@2x.png',
+      topShelfWide: './assets/tv/top-shelf-wide.png',
+      topShelfWide2x: './assets/tv/top-shelf-wide@2x.png',
+    },
+  }]);
+  next.push('./plugins/with-tv-pods.js');
+  config.plugins = next;
+  config.orientation = 'landscape';
+  // Projet Expo distinct : les profils tvOS ne partagent pas le créneau
+  // de provisionnement iPhone / Watch du projet « zikru ».
+  config.slug = 'zikru-tv';
+  config.owner = 'habib548';
+  config.version = '1.0.30';
+  config.ios = config.ios || {};
+  config.ios.bundleIdentifier = 'com.vibecode.zikru-76mpdv';
+  // appVersionSource est « remote » : EAS ignore ce buildNumber et écrit le
+  // compteur du projet zikru-tv. Le profil production-tv a autoIncrement,
+  // donc le CFBundleVersion distant (binaire accepté = 1) passe à 2.
+  // L’iPhone reste sur le projet zikru et son compteur (app.json = 69).
+  config.ios.buildNumber = '2';
+  if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
+  // Pas de groupe d’apps, pas de montre, pas de widget : le profil tvOS
+  // de cet App ID ne porte pas ces capacités.
+  config.ios.entitlements = {};
+  const info = { ...(config.ios.infoPlist || {}) };
+  for (const key of TV_DROP_INFO) delete info[key];
+  config.ios.infoPlist = info;
+  config.extra = config.extra || {};
+  config.extra.eas = { ...(config.extra.eas || {}), projectId: '0093f2e3-7828-41e7-9e62-c3e06d9bee77' };
+  if (config.extra.eas.build) delete config.extra.eas.build;
+  // expo-updates n’est pas configuré dans ce dépôt : pas d’URL u.expo.dev.
+  return config;
+}

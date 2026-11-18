@@ -1,5 +1,6 @@
 import { useSyncExternalStore, type ReactNode } from 'react';
-import { Pressable, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { brand as b, elevation, fonts, onColor } from './theme';
 import { arLang } from './ar-lang';
