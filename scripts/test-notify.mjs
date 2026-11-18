@@ -120,4 +120,22 @@ t('rappels : les couper est enregistré même sans permission ; les allumer exig
   assert.equal(P.remindersStored(true, false), false);
   assert.equal(P.remindersStored(true, true), true);
 });
+t('hailala optionnelle : vendredi seulement, après l’asr, absente par défaut', () => {
+  const off = P.buildPlan(now, compute, D, L);
+  assert.ok(!off.some((e) => e.id.endsWith('hailala')));
+  const p = P.buildPlan(now, compute, { ...D, haylala: true, wird: false, friday: false }, L);
+  const h = p.filter((e) => e.id.endsWith('hailala'));
+  assert.ok(h.length > 0);
+  assert.ok(h.every((e) => e.date.getDay() === 5));
+  for (const e of h) {
+    const asr = compute(e.date).find((x) => x.key === 'asr').time;
+    const maghrib = compute(e.date).find((x) => x.key === 'maghrib').time;
+    assert.ok(e.date.getTime() > asr.getTime() && e.date.getTime() < maghrib.getTime());
+  }
+});
+t('wird déjà actif : un seul rappel hailala par vendredi', () => {
+  const p = P.buildPlan(now, compute, { ...all, haylala: true }, L).filter((e) => e.id.endsWith('hailala'));
+  const days = p.map((e) => e.date.toDateString());
+  assert.equal(new Set(days).size, days.length);
+});
 console.log(`Notifications : ${ok} tests passent.`);

@@ -24,6 +24,12 @@ export type NotifPrefs = {
   adhkar: boolean;
   /** Wird al-Lazim matin et soir, Wazifa après le Maghrib, Hailala le vendredi. */
   wird: boolean;
+  /**
+   * Rappel propre à la Haylala, le vendredi après l’Asr.
+   * Absent d’un ancien réglage : traité comme désactivé (opt-in).
+   * Si `wird` est déjà actif, le rappel du vendredi qu’il programme suffit : on n’en ajoute pas un second.
+   */
+  haylala?: boolean;
   /** Lecture du Coran (khatma / révision hifz) : après le Fajr, après le ‘Isha, ou désactivé. */
   quran?: QuranSlot;
   /**
@@ -134,6 +140,9 @@ export function eventsForDay(day: Date, times: DayTimes, prefs: NotifPrefs, L: P
     if (asr) out.push({ id: `${dk}-wird-pm`, date: new Date(asr.getTime() + 30 * MIN), title: L.wirdEvening, body: L.wirdBody, url: '/tijani?tab=wird', kind: 'wird' });
     if (friday && asr) out.push({ id: `${dk}-hailala`, date: new Date(asr.getTime() + 45 * MIN), title: L.hailala, body: L.wirdBody, url: '/tijani?tab=hailala', kind: 'wird' });
     if (maghrib) out.push({ id: `${dk}-wazifa`, date: new Date(maghrib.getTime() + 30 * MIN), title: L.wazifa, body: L.wirdBody, url: '/tijani?tab=wazifa', kind: 'wird' });
+  }
+  if (prefs.haylala && friday && asr && !out.some((e) => e.id.endsWith('-hailala'))) {
+    out.push({ id: `${dk}-hailala`, date: new Date(asr.getTime() + 15 * MIN), title: L.hailala, body: L.wirdBody, url: '/tijani?tab=hailala', kind: 'wird' });
   }
   const isha = at('isha');
   if (prefs.quran === 'fajr' && fajr) out.push({ id: `${dk}-quran`, date: new Date(fajr.getTime() + 45 * MIN), title: L.quranTitle, body: L.quranBody, url: '/quran', kind: 'quran' });

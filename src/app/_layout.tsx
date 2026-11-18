@@ -13,10 +13,13 @@ import { DispenseProvider } from '@/lib/dispense-context';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
-import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
+import { applyVisual, brand, theme as t, type Scheme, type ThemeFinish } from '@/ui/theme';
+import { VisualEffectsProvider } from '@/ui/effects';
 import { takePendingRoute } from '@/ui/appearance';
+import { useFeatureFlags } from '@/lib/use-premium';
+import { PremiumProvider, usePremium } from '@/lib/premium';
+import { isPremiumActive } from '@/lib/premium-logic';
 import { GrowthProvider } from '@/lib/growth';
-import { PremiumProvider } from '@/lib/premium';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
 import { StorageAlert } from '@/components/StorageAlert';
@@ -39,10 +42,15 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Pro
 function Root() {
   useWatchSync();
   const { s, t: tr } = useSettings();
+  const flags = useFeatureFlags();
+  const storePremium = usePremium();
   const sys = useColorScheme();
   const scheme: Scheme = s.appearance === 'light' || s.appearance === 'dark' ? s.appearance : sys === 'dark' ? 'dark' : 'light';
+  const requested: ThemeFinish = s.themeFinish === 'verre' || s.themeFinish === 'verre-or' ? s.themeFinish : 'classic';
+  const themesOn = flags.themes || isPremiumActive(storePremium.record);
+  const finish: ThemeFinish = requested !== 'classic' && !themesOn ? 'classic' : requested;
   // Les jetons sont réécrits AVANT le rendu des enfants ; la clé force un redessin complet.
-  applyScheme(scheme);
+  applyVisual(scheme, finish);
   // Messages Bluetooth (transports hors React) dans la langue de l'interface.
   setBleLang(s.lang);
   const rtl = isRTL(s.lang);
@@ -80,9 +88,10 @@ function Root() {
   const catReady = useUiCatalog(s.lang);
   if ((!fontsLoaded && !fontTimeout) || !catReady) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
-    <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
+    <View key={`${scheme}-${finish}`} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <AppLandscape id={landscape} />
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} hidden={Platform.isTV} />
+      <VisualEffectsProvider>
       <Stack
         {...(Platform.isTV ? { initialRouteName: 'tv' as const } : {})}
         screenOptions={{
@@ -154,10 +163,12 @@ function Root() {
         <Stack.Screen name="discussion" options={{ title: L("Discussion") }} />
         <Stack.Screen name="lesson/[id]" options={{ title: L("Lecture partagée") }} />
         <Stack.Screen name="tv" options={{ headerShown: false }} />
+        <Stack.Screen name="tijani-guide" options={{ title: L("Récitation guidée") }} />
       </Stack>
       <MacKeys />
       {Platform.isTV ? null : <MiniPlayer path={path} />}
       <StorageAlert />
+      </VisualEffectsProvider>
     </View>
   );
 }

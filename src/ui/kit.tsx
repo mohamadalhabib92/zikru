@@ -1,16 +1,23 @@
 import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import { useState, type ComponentProps, type ReactNode } from 'react';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSettings } from '@/lib/settings';
 import { sanitizeLandscape } from '@/lib/landscapes';
-import { currentScheme, elevation, theme as t, type Scheme } from './theme';
+import { useVisualEffects } from './effects';
+import { GlassLayers, raisedShadow, useGlassLook } from './glass';
+import { currentFinish, currentScheme, elevation, isDark, isGlass, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
 import { isIosAppOnMac } from '@/lib/mac';
 import { KbInput } from './keyboard-done';
+
+type HapticModule = typeof import('expo-haptics');
+// Apple TV n’a pas ce module. Sur iPhone, Platform.isTV est faux.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Haptics: HapticModule | null = Platform.isTV ? null : (require('expo-haptics') as HapticModule);
 
 const S = () => getStyles();
 
@@ -23,11 +30,14 @@ export function Screen({ children, scroll = true, padded = true, bg }: { childre
   const mini = useMiniPlayerInset();
   const { s } = useSettings();
   const openLandscape = !bg && sanitizeLandscape(s.landscape) !== 'none';
+  const glass = useGlassLook();
+  const wash = currentFinish() === 'verre-or' ? 'rgba(227,190,90,0.28)' : 'rgba(14,107,79,0.16)';
   const inner = (
     <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom + mini }]}>{children}</View>
   );
   return (
     <View style={[S().screen, bg ? { backgroundColor: bg } : openLandscape ? { backgroundColor: 'transparent' } : null]}>
+      {glass && !openLandscape ? <View pointerEvents="none" style={{ position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: wash, top: -60, right: -70 }} /> : null}
       {scroll ? (
         <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
           {inner}
@@ -68,6 +78,17 @@ export function Eyebrow({ children, style }: { children: ReactNode; style?: Styl
 }
 
 export function Card({ children, style, onPress, accessibilityLabel }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; accessibilityLabel?: string }) {
+  const glass = useGlassLook();
+  if (glass) {
+    const inner = <View style={[{ padding: 16 }, style]}>{children}</View>;
+    if (onPress)
+      return (
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={typeof accessibilityLabel === "string" ? L(accessibilityLabel) : accessibilityLabel} style={({ pressed }) => [{ marginBottom: 12, borderRadius: 18 }, pressed && { opacity: 0.92 }]}>
+          <GlassLayers radius={18}>{inner}</GlassLayers>
+        </Pressable>
+      );
+    return <GlassLayers radius={18} style={[{ marginBottom: 12 }, style]}>{inner}</GlassLayers>;
+  }
   if (onPress) {
     return (
       <Pressable
@@ -120,27 +141,46 @@ export function Button({
   const bg = { primary: t.primary, secondary: t.surfaceAlt, ghost: 'transparent', danger: t.danger }[variant];
   const fg = { primary: t.onPrimary, secondary: t.text, ghost: t.primary, danger: t.surface }[variant];
   const off = disabled || loading;
+  const raised = isGlass() && variant !== 'ghost';
+  const fx = useVisualEffects();
+  const [focused, setFocused] = useState(false);
   return (
     <Pressable
       onPress={off ? undefined : onPress}
+      onPressIn={
+        raised && !off
+          ? () => {
+              if (Platform.OS === 'web' || fx.tv || !Haptics || isIosAppOnMac()) return;
+              try {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              } catch {}
+            }
+          : undefined
+      }
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       accessibilityRole="button"
       accessibilityLabel={L(accessibilityLabel ?? title)}
       accessibilityState={{ disabled: !!off, busy: !!loading }}
       hitSlop={6}
       style={(state) => {
-        const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+        const { pressed, hovered, focused: tvFocused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
         return [
           S().btn,
           small && S().btnSmall,
-          { backgroundColor: bg },
+          { backgroundColor: bg, overflow: 'hidden' },
           variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
-          pressed && !off && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-          (hovered || focused) && !off && { opacity: 0.92 },
+          raised && !fx.tv && raisedShadow(pressed && !off, fx.motion),
+          !raised && pressed && !off && fx.motion && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+          !raised && pressed && !off && !fx.motion && { opacity: 0.85 },
+          (hovered || tvFocused) && !off && !fx.tv && { opacity: 0.92 },
+          (focused || tvFocused) && fx.tv && { borderWidth: 3, borderColor: isDark() ? '#E3BE5A' : '#9C7A22' },
           off && { opacity: 0.45 },
           style,
         ];
       }}
     >
+      {raised ? <View pointerEvents="none" style={{ position: 'absolute', top: 1, left: 12, right: 12, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.28)' }} /> : null}
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (

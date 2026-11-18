@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { umalquraAvailable } from '@/lib/hijri';
 import { useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
 import { needsReview, pickableLangs } from '@/lib/i18n';
 import { getGpsPlace } from '@/lib/location';
@@ -17,6 +17,7 @@ import { DispenseSettings } from '@/components/DispenseSettings';
 import { PrayerOptions } from '@/components/PrayerOptions';
 import { useSettings } from '@/lib/settings';
 import { LANDSCAPE_THEMES_REQUIRE_PREMIUM, sanitizeLandscape, type LandscapeChoice } from '@/lib/landscapes';
+import { useFeatureFlags } from '@/lib/use-premium';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
@@ -26,6 +27,7 @@ import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Notic
 import { isIosAppOnMac } from '@/lib/mac';
 import { L } from '@/lib/l10n';
 import { usePremium } from '@/lib/premium';
+import { isPremiumActive } from '@/lib/premium-logic';
 import { readerPrefs } from '@/lib/quran-store';
 import { RECITERS, applyReciterChoice } from '@/lib/recitation';
 import { useShared } from '@/lib/shared-state';
@@ -93,6 +95,9 @@ export default function SettingsScreen() {
         <Chip label="Émeraude et or" active={landscape === 'emerald'} onPress={() => pickLandscape('emerald')} />
       </Row>
       <Muted>Images créées pour Zikru, libres d’usage dans l’application. Pas de photo tierce.</Muted>
+      <H2>{L('Thème')}</H2>
+      <Muted>{L('Le thème classique reste celui qui est déjà le vôtre. Verre et Verre or sont translucides.')}</Muted>
+      <ThemeFinishPicker />
       <Spacer h={8} />
       <H2>{tr.language}</H2>
       <Row wrap>
@@ -292,5 +297,54 @@ export default function SettingsScreen() {
       <Spacer />
       <Muted>Zikru {Constants.expoConfig?.version ?? '1.0.19'} · {pt.local_footer}</Muted>
     </Screen>
+  );
+}
+
+function ThemeFinishPicker() {
+  const { s, set } = useSettings();
+  const flags = useFeatureFlags();
+  const premium = usePremium();
+  const themesOn = flags.themes || isPremiumActive(premium.record);
+  const [locked, setLocked] = useState(false);
+  const current = s.themeFinish === 'verre' || s.themeFinish === 'verre-or' ? s.themeFinish : 'classic';
+  const options: { id: 'classic' | 'verre' | 'verre-or'; label: string; swatch: string }[] = [
+    { id: 'classic', label: L('Classique'), swatch: '#0E6B4F' },
+    { id: 'verre', label: L('Verre'), swatch: 'rgba(14,107,79,0.45)' },
+    { id: 'verre-or', label: L('Verre or'), swatch: 'rgba(217,182,92,0.7)' },
+  ];
+  return (
+    <>
+      <Row wrap>
+        {options.map((o) => {
+          const premiumOnly = o.id !== 'classic';
+          const on = current === o.id;
+          return (
+            <Chip
+              key={o.id}
+              label={premiumOnly && !themesOn ? `${o.label} · ${L('Premium')}` : o.label}
+              active={on}
+              onPress={() => {
+                if (premiumOnly && !themesOn) {
+                  setLocked(true);
+                  return;
+                }
+                setLocked(false);
+                if (o.id === current) return;
+                setPendingRoute('/settings');
+                set({ themeFinish: o.id });
+                setTimeout(() => takePendingRoute(), 2000);
+              }}
+            />
+          );
+        })}
+      </Row>
+      <Row wrap>
+        {options.map((o) => (
+          <View key={o.id} style={{ width: 36, height: 28, borderRadius: 8, backgroundColor: o.swatch, borderWidth: 1, borderColor: '#E5DFD3' }} />
+        ))}
+      </Row>
+      {locked ? <Muted>{L('Thème Premium. Votre thème actuel est conservé.')}</Muted> : null}
+      {current !== 'classic' && themesOn ? <Muted>{L('Fond dépoli et boutons en relief. Réduire la transparence du système revient à un fond plein.')}</Muted> : null}
+    </>
   );
 }

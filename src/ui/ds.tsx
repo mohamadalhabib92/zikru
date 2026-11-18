@@ -3,6 +3,7 @@ import { AccessibilityInfo, Animated, Easing, Platform, View, useWindowDimension
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import Svg, { Circle } from 'react-native-svg';
+import { useVisualEffects } from './effects';
 import { Ionicons, type IconName } from './kit';
 import { alpha, brand as b, elevation } from './theme';
 import { L } from '@/lib/l10n';
@@ -182,7 +183,10 @@ export function FadeIn({ children, delay = 0, style }: { children: ReactNode; de
   const reduce = useReduceMotion();
   const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    if (reduce) return v.setValue(1); // passe 6 : apparition immédiate si « Réduire les animations »
+    if (reduce) {
+      v.setValue(1);
+      return;
+    }
     Animated.timing(v, { toValue: 1, duration: 320, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
   }, [v, delay, reduce]);
   return <Animated.View style={[{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }, style]}>{children}</Animated.View>;

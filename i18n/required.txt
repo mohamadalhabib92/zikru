@@ -58,6 +58,7 @@ src/app/songs.tsx
 src/app/sound-credits.tsx
 src/app/sources.tsx
 src/app/tijani.tsx
+src/app/tijani-guide.tsx
 src/app/validation.tsx
 src/app/zikrs/edit.tsx
 src/app/zikrs/index.tsx

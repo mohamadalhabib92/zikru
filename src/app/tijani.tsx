@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
@@ -6,12 +6,13 @@ import { Text } from '@/ui/Text';
 import Svg, { Circle, Line, Rect, Text as SvgText } from 'react-native-svg';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { dayKey } from '@/lib/growth';
+import { haylalaWindow, isLocalFriday, type HaylalaWindow } from '@/lib/haylala-window';
 import { computeDay, hhmm, type PrayerKey } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { usePersistentState } from '@/lib/storage';
 import { ADILLA_I18N } from '@/lib/i18n-content/tijani';
 import { ADILLA, BIOGRAPHY, CONDITIONS, FORMULAS, MUQADDAM_NOTE, PRACTICES, SHAYKH, practiceDoneKey, type Practice } from '@/lib/tijani';
-import { Ionicons, Screen, type IconName } from '@/ui/kit';
+import { Button, Ionicons, Screen, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LText, LTitle, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
@@ -28,8 +29,22 @@ const TABS: { v: Tab; label: string; icon: IconName }[] = [
 
 export default function Tijani() {
   const p = useLocalSearchParams<{ tab?: string }>();
-  const initial = (TABS.find((x) => x.v === p.tab)?.v ?? 'wird') as Tab;
+  const { s } = useSettings();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const prayerDay = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const times = useMemo(() => {
+    const [y, m, d] = prayerDay.split('-').map(Number);
+    return computeDay(new Date(y, m, d, 12, 0, 0), s.place, s.method, s.madhab, s.prayer);
+  }, [prayerDay, s.place, s.method, s.madhab]);
+  const hay = haylalaWindow(now, times.find((x) => x.key === 'asr')?.time ?? null, times.find((x) => x.key === 'maghrib')?.time ?? null);
+  const tabs = TABS.filter((x) => x.v !== 'hailala' || hay.shown);
+  const initial = (tabs.find((x) => x.v === p.tab)?.v ?? 'wird') as Tab;
   const [tab, setTab] = useState<Tab>(initial);
+  const visible = tabs.some((x) => x.v === tab) ? tab : 'wird';
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
   return (
     <Screen padded={false} bg={b.cream}>
@@ -42,30 +57,30 @@ export default function Tijani() {
         <ShaykhCard />
         <DaySchedule />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }} style={{ marginBottom: 12 }}>
-          {TABS.map((x) => (
+          {tabs.map((x) => (
             <Pressable
               key={x.v}
               accessibilityRole="tab"
-              accessibilityState={{ selected: tab === x.v }}
+              accessibilityState={{ selected: visible === x.v }}
               onPress={() => setTab(x.v)}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, minHeight: 40, borderRadius: 20, backgroundColor: tab === x.v ? b.green : b.paper, borderWidth: 1, borderColor: tab === x.v ? b.green : b.line }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, minHeight: 40, borderRadius: 20, backgroundColor: visible === x.v ? b.green : b.paper, borderWidth: 1, borderColor: visible === x.v ? b.green : b.line }}
             >
-              <Ionicons name={x.icon} size={16} color={tab === x.v ? b.gold : b.green} />
-              <Text style={{ color: tab === x.v ? '#fff' : b.ink, fontWeight: '700' }}>{x.label}</Text>
+              <Ionicons name={x.icon} size={16} color={visible === x.v ? b.gold : b.green} />
+              <Text style={{ color: visible === x.v ? '#fff' : b.ink, fontWeight: '700' }}>{x.label}</Text>
             </Pressable>
           ))}
         </ScrollView>
-        {tab === 'wird' || tab === 'wazifa' || tab === 'hailala' ? (
+        {visible === 'wird' || visible === 'wazifa' || visible === 'hailala' ? (
           <>
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
               <Pill label="Français" active={lang === 'fr'} onPress={() => setLang('fr')} color={b.brown} />
               <Pill label="English" active={lang === 'en'} onPress={() => setLang('en')} color={b.brown} />
             </View>
-            <PracticeCard key={tab} p={PRACTICES.find((x) => x.id === tab)!} lang={lang} />
+            <PracticeCard key={visible} p={PRACTICES.find((x) => x.id === visible)!} lang={lang} hay={hay} />
           </>
         ) : null}
-        {tab === 'path' ? <PathTab /> : null}
-        {tab === 'adilla' ? <AdillaTab /> : null}
+        {visible === 'path' ? <PathTab /> : null}
+        {visible === 'adilla' ? <AdillaTab /> : null}
         <LCard style={{ backgroundColor: b.blueSoft, borderColor: b.blueSoft }}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Ionicons name="person-circle-outline" size={22} color={b.blue} />
@@ -136,12 +151,12 @@ function DaySchedule() {
   const mins = (d: Date) => d.getHours() * 60 + d.getMinutes();
   const pad = 8;
   const X = (m: number) => pad + ((w - pad * 2) * m) / 1440;
-  const friday = now.getDay() === 5;
+  const friday = isLocalFriday(now);
   const windows = [
     { from: at('fajr'), to: at('dhuhr'), color: b.wirdGreen, row: 0, op: 0.9 },
     { from: at('asr'), to: at('isha'), color: b.wirdGreen, row: 0, op: 0.9 },
     { from: at('maghrib'), to: at('isha'), color: b.wazifa, row: 1, op: 0.95 },
-    { from: at('asr'), to: at('maghrib'), color: b.hailala, row: 2, op: friday ? 0.95 : 0.35 },
+    ...(friday ? [{ from: at('asr'), to: at('maghrib'), color: b.hailala, row: 2, op: 0.95 }] : []),
   ];
   const H = 128;
   const axisY = 96;
@@ -183,7 +198,7 @@ function DaySchedule() {
         {[
           [b.wirdGreen, 'Wird al-Lazim'],
           [b.wazifa, 'Wazifa'],
-          [b.hailala, 'Hailala (vendredi)'],
+          ...(friday ? [[b.hailala, 'Hailala (vendredi)']] : []),
           [b.gold, 'Maintenant'],
         ].map(([c, l]) => (
           <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -197,7 +212,24 @@ function DaySchedule() {
   );
 }
 
-function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
+function ReviewFlag() {
+  return (
+    <View accessibilityRole="text" style={{ alignSelf: 'center', backgroundColor: b.goldSoft, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, marginTop: 6 }}>
+      <Text style={{ color: b.goldDeep, fontWeight: '800', fontSize: 12 }}>{L('à vérifier')}</Text>
+    </View>
+  );
+}
+
+function haylalaNote(w: HaylalaWindow): string | null {
+  if (!w.shown) return null;
+  if (w.phase === 'open') return L('Fenêtre ouverte : après l’Asr, avant le Maghrib.');
+  if (w.phase === 'before-asr') return L('Vendredi : la Hailala s’ouvre après l’Asr.');
+  if (w.phase === 'after-maghrib') return L('La fenêtre de cet après-midi est terminée.');
+  return L('Vendredi, mais les horaires de prière ne permettent pas de confirmer la fenêtre.');
+}
+
+function PracticeCard({ p, lang, hay }: { p: Practice; lang: 'fr' | 'en'; hay: HaylalaWindow }) {
+  const router = useRouter();
   const [done, setDone] = usePersistentState<Record<string, number[]>>('tijani-done', {});
   const [open, setOpen] = useState<number | null>(null);
   const key = practiceDoneKey(dayKey(), p.id);
@@ -218,6 +250,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
           {p.ar}
         </Arabic>
         <Text style={{ color: b.ink, fontSize: 20, fontWeight: '900', textAlign: 'center' }}>{p.name}</Text>
+        <ReviewFlag />
       </View>
       <View style={{ flexDirection: 'row', backgroundColor: b.greenDeep }}>
         {[
@@ -267,6 +300,7 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
                     <View style={{ backgroundColor: b.gold, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
                       <Text style={{ color: b.ink, fontWeight: '900', fontSize: 12 }}>{st.count ? `×${st.count}` : '∞'}</Text>
                     </View>
+                    <Text style={{ color: b.goldDeep, fontSize: 11, fontWeight: '800' }}>{L('à vérifier')}</Text>
                     <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={b.inkMuted} />
                   </Pressable>
                 </View>
@@ -277,13 +311,22 @@ function PracticeCard({ p, lang }: { p: Practice; lang: 'fr' | 'en' }) {
                     {f.indicative ? <LMuted style={{ fontSize: 12 }}>{lang === 'fr' ? 'Traduction indicative.' : 'Indicative translation.'}</LMuted> : null}
                     {f.note ? <LMuted style={{ fontSize: 12, marginTop: 4 }}>{f.note}</LMuted> : null}
                     {st.extra ? <LMuted style={{ marginTop: 4 }}>{st.extra}</LMuted> : null}
+                    {f.sources.map((src) => (
+                      <LMuted key={src.ref} style={{ fontSize: 11, marginTop: 4 }}>{`${src.title} — ${src.ref}`}</LMuted>
+                    ))}
+                    {(st.todos ?? f.todos ?? []).map((todo) => (
+                      <LMuted key={todo} style={{ fontSize: 11, marginTop: 4 }}>{todo}</LMuted>
+                    ))}
                   </View>
                 ) : null}
               </View>
             );
           })}
         </View>
-        {p.id === 'hailala' ? <LMuted style={{ marginTop: 10 }}>{new Date().getDay() === 5 ? 'C’est vendredi aujourd’hui : Jumu‘a mubaraka !' : 'Prochaine hailala : vendredi, après ‘Asr.'}</LMuted> : null}
+        {p.id === 'hailala' ? <LMuted style={{ marginTop: 10 }}>{haylalaNote(hay)}</LMuted> : null}
+        <View style={{ marginTop: 12 }}>
+          <Button title="Récitation guidée" icon="play" onPress={() => router.push(`/tijani-guide?id=${p.id}`)} />
+        </View>
         {checked.length === p.steps.length ? <Text style={{ color: b.wirdGreen, fontWeight: '800', marginTop: 10 }}>Bārak Allāhu fīk — pratique complétée aujourd’hui.</Text> : null}
       </View>
     </LCard>

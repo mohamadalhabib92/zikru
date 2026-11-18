@@ -59,3 +59,33 @@ Activité en direct : prochaine prière	Live Activity: next prayer	النشاط 
 Sur l’écran verrouillé et la Dynamic Island, dans les 2 heures avant la prière. Elle démarre quand vous ouvrez l’app.	On the Lock Screen and Dynamic Island, within 2 hours before the prayer. It starts when you open the app.	على شاشة القفل وفي Dynamic Island، خلال الساعتين السابقتين للصلاة. يبدأ عند فتح التطبيق.
 Ramadan : suhur et iftar	Ramadan: suhur and iftar	رمضان: السحور والإفطار
 Pendant ramadan, affiche la fin du suhur (Fajr) et l’iftar (Maghrib) selon vos horaires calculés, sans marge ajoutée.	During Ramadan, shows the end of suhur (Fajr) and iftar (Maghrib) from your calculated times, with no added margin.	في رمضان، يعرض نهاية السحور (الفجر) والإفطار (المغرب) حسب مواقيتك المحسوبة، دون إضافة أي هامش.
+# Wirds tijani et thèmes verre
+à vérifier	To be checked	للمراجعة
+Fenêtre ouverte : après l’Asr, avant le Maghrib.	Window open: after Asr, before Maghrib.	النافذة مفتوحة: بعد العصر وقبل المغرب.
+Vendredi : la Hailala s’ouvre après l’Asr.	Friday: the Haylala opens after Asr.	الجمعة: تُفتح الهيللة بعد العصر.
+La fenêtre de cet après-midi est terminée.	This afternoon’s window is over.	انتهت نافذة عصر اليوم.
+Vendredi, mais les horaires de prière ne permettent pas de confirmer la fenêtre.	It is Friday, but the prayer times do not confirm the window.	اليوم جمعة، لكن مواقيت الصلاة لا تؤكد النافذة.
+Récitation guidée	Guided recitation	تلاوة موجهة
+Cette récitation est introuvable.	This recitation cannot be found.	هذه التلاوة غير موجودة.
+Texte indicatif, à faire relire. Le compteur, la bague et les groupes restent disponibles sans ce parcours.	Indicative text, pending review. The counter, the ring and groups stay available without this path.	نص تقريبي بانتظار المراجعة. يبقى العدّاد والخاتم والمجموعات متاحة من دون هذا المسار.
+La Hailala n’est affichée que le vendredi, à l’heure de cet appareil.	The Haylala is shown only on Friday, by this device’s clock.	لا تُعرض الهيللة إلا يوم الجمعة، حسب ساعة هذا الجهاز.
+La Hailala s’ouvre après l’Asr ({h}).	The Haylala opens after Asr ({h}).	تُفتح الهيللة بعد العصر ({h}).
+La récitation guidée est une fonction Premium. Le texte ci-dessous reste lisible.	Guided recitation is a Premium feature. The text below stays readable.	التلاوة الموجهة وظيفة بريميوم. يبقى النص أدناه مقروءًا.
+Sans nombre fixé	No fixed number	بلا عدد محدد
+Objectif {n}	Target {n}	الهدف {n}
+Récitation terminée	Recitation complete	اكتملت التلاوة
+Les étapes sont notées pour aujourd’hui. Le compteur de tasbih garde la séance.	The steps are marked for today. The tasbih counter keeps the session.	سُجّلت المراحل لليوم. يحتفظ عدّاد التسبيح بالجلسة.
+{n} dans cette étape, sans total fixé	{n} in this step, with no fixed total	{n} في هذه المرحلة، بلا مجموع محدد
+Compter. {n}	Count. {n}	عُدّ. {n}
+Touchez le cercle ou utilisez votre compteur Bluetooth. La bague compte dans la même séance.	Tap the circle or use your Bluetooth counter. The ring counts in the same session.	المس الدائرة أو استعمل عدّاد البلوتوث. يُحسب الخاتم في الجلسة نفسها.
+Terminer cette étape	Finish this step	إنهاء هذه المرحلة
+Thème	Theme	النسق
+Le thème classique reste celui qui est déjà le vôtre. Verre et Verre or sont translucides.	The classic theme stays the one you already have. Glass and Gold glass are translucent.	يبقى النسق الكلاسيكي هو نسقك الحالي. زجاج وزجاج ذهبي نصف شفّافين.
+Classique	Classic	كلاسيكي
+Verre	Glass	زجاج
+Verre or	Gold glass	زجاج ذهبي
+Premium	Premium	بريميوم
+Thème Premium. Votre thème actuel est conservé.	Premium theme. Your current theme is kept.	نسق بريميوم. يُحفظ نسقك الحالي.
+Fond dépoli et boutons en relief. Réduire la transparence du système revient à un fond plein.	Frosted background and raised buttons. Reduce Transparency in the system switches to a solid background.	خلفية مصقولة وأزرار بارزة. تقليل الشفافية في النظام يعيد خلفية صلبة.
+Rappel de la Hailala, vendredi après l’Asr	Haylala reminder, Friday after Asr	تذكير الهيللة، الجمعة بعد العصر
+Une notification le vendredi, un quart d’heure après l’Asr calculé sur cet appareil. Coupé par défaut. Si le rappel du wird est déjà actif, il couvre déjà ce vendredi.	A notification on Friday, fifteen minutes after Asr as computed on this device. Off by default. If the wird reminder is already on, it already covers this Friday.	إشعار يوم الجمعة، بعد ربع ساعة من العصر المحسوب على هذا الجهاز. مطفأ افتراضيًا. إذا كان تذكير الورد مفعّلًا فهو يغطي هذه الجمعة.

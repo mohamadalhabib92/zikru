@@ -27,6 +27,13 @@ export type Settings = {
   landscape?: LandscapeChoice;
   /** true : la récitation peut se télécharger en réseau mobile. Absent = Wi-Fi seulement. */
   audioCellular?: boolean;
+  /**
+   * Habillage. `classic` = le thème déjà livré (clair/sombre).
+   * `verre` et `verre-or` sont les thèmes translucides (Premium) : le choix est
+   * conservé même si le droit n’est pas là, et l’affichage retombe alors sur `classic`.
+   * Absent d’un ancien réglage : classique.
+   */
+  themeFinish?: 'classic' | 'verre' | 'verre-or';
   /** Rappels de prière (notifications web / préférence). */
   reminders: boolean;
   /** Détail des rappels (prières, avant l’adhan, vendredi, adhkar, wird). */

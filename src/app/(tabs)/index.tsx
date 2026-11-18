@@ -23,6 +23,7 @@ import { canFetchWeather, canSendToAI, undecided } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
 import { usePersistentState } from '@/lib/storage';
 import { SURAHS } from '@/lib/surahs';
+import { isLocalFriday } from '@/lib/haylala-window';
 import { PRACTICES, practiceDoneKey } from '@/lib/tijani';
 import { getWeather, wmo, type Weather } from '@/lib/weather';
 import { usePremium } from '@/lib/premium';
@@ -157,7 +158,7 @@ export default function Home() {
   const temp = (c: number) => Math.round(unit === 'C' ? c : (c * 9) / 5 + 32);
 
   // Pratique tijanie du jour (clé `tijani-done` : `${jour}-${id}` → étapes cochées)
-  const practice = PRACTICES.filter((p) => p.id !== 'hailala' || now.getDay() === 5).map((p) => ({ p, done: (tijaniDone[practiceDoneKey(today, p.id)] ?? []).length, total: p.steps.length }));
+  const practice = PRACTICES.filter((p) => p.id !== 'hailala' || isLocalFriday(now)).map((p) => ({ p, done: (tijaniDone[practiceDoneKey(today, p.id)] ?? []).length, total: p.steps.length }));
 
   // Reprendre
   const lastZikr = [...zikrs].filter((z) => z.items.length).sort((a, c) => (a.updatedAt < c.updatedAt ? 1 : -1))[0];

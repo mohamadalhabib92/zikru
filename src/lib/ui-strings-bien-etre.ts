@@ -148,7 +148,6 @@ export const UI_STRINGS_BIEN_ETRE: Record<string, [en: string, ar: string, de: s
   "Tafakkur": ["Tafakkur","التفكّر","Tafakkur"],
   "Tafakkur & murāqaba": ["Tafakkur & murāqaba","التفكّر والمراقبة","Tafakkur & Murāqaba"],
   "Tajwid": ["Tajwid","التجويد","Tadschwid"],
-  "Thème": ["Theme","الموضوع","Thema"],
   "Touchez le cercle pour commencer ou mettre en pause": ["Tap the circle to start or pause","المس الدائرة للبدء أو الإيقاف المؤقت","Tippen Sie auf den Kreis, um zu starten oder zu pausieren"],
   "Touchez les mots dans l’ordre du verset.": ["Tap the words in the order of the verse.","المس الكلمات بترتيب الآية.","Tippen Sie die Wörter in der Reihenfolge des Verses an."],
   "Touchez pour commencer": ["Tap to start","المس للبدء","Zum Starten tippen"],

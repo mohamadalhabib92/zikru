@@ -33,7 +33,7 @@
         "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
         "NSMicrophoneUsageDescription": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
       },
-      "buildNumber": "71",
+      "buildNumber": "86",
       "config": {
         "usesNonExemptEncryption": false
       },
