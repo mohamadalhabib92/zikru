@@ -12,8 +12,10 @@ import { DataProvider } from '@/lib/data';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
-import { applyScheme, brand, theme as t, type Scheme } from '@/ui/theme';
+import { applyVisual, brand, theme as t, type Scheme, type ThemeFinish } from '@/ui/theme';
+import { VisualEffectsProvider } from '@/ui/effects';
 import { takePendingRoute } from '@/ui/appearance';
+import { usePremium } from '@/lib/use-premium';
 import { GrowthProvider } from '@/lib/growth';
 import { ZikrProvider } from '@/lib/zikrs';
 import { AppErrorBoundary, ErrorScreen } from '@/components/AppErrorBoundary';
@@ -27,10 +29,13 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Pro
 
 function Root() {
   const { s, t: tr } = useSettings();
+  const premium = usePremium();
   const sys = useColorScheme();
   const scheme: Scheme = s.appearance === 'light' || s.appearance === 'dark' ? s.appearance : sys === 'dark' ? 'dark' : 'light';
+  const requested: ThemeFinish = s.themeFinish === 'verre' || s.themeFinish === 'verre-or' ? s.themeFinish : 'classic';
+  const finish: ThemeFinish = requested !== 'classic' && !premium.themes ? 'classic' : requested;
   // Les jetons sont réécrits AVANT le rendu des enfants ; la clé force un redessin complet.
-  applyScheme(scheme);
+  applyVisual(scheme, finish);
   // Messages Bluetooth (transports hors React) dans la langue de l'interface.
   setBleLang(s.lang);
   const rtl = isRTL(s.lang);
@@ -62,8 +67,9 @@ function Root() {
   }, [scheme]);
   if (!fontsLoaded && !fontTimeout) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
   return (
-    <View key={scheme} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
+    <View key={`${scheme}-${finish}`} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <VisualEffectsProvider>
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: brand.cream },
@@ -118,8 +124,10 @@ function Root() {
         <Stack.Screen name="family/[id]" options={{ title: L("Ma famille") }} />
         <Stack.Screen name="circle/[id]" options={{ title: L("Mon cercle") }} />
         <Stack.Screen name="live/[id]" options={{ title: L("Zikr en direct") }} />
+        <Stack.Screen name="tijani-guide" options={{ title: L("Récitation guidée") }} />
       </Stack>
       <StorageAlert />
+      </VisualEffectsProvider>
     </View>
   );
 }

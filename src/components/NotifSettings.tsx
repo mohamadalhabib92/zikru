@@ -64,6 +64,12 @@ export function NotifSettings() {
             <Toggle label={tr.notif_friday} value={n.friday} onChange={(v) => patch({ friday: v })} />
             <Toggle label={tr.notif_adhkar} value={n.adhkar} onChange={(v) => patch({ adhkar: v })} />
             <Toggle label={tr.notif_wird} value={n.wird} onChange={(v) => patch({ wird: v })} />
+            <Toggle
+              label="Rappel de la Hailala, vendredi après l’Asr"
+              hint="Une notification le vendredi, un quart d’heure après l’Asr calculé sur cet appareil. Coupé par défaut. Si le rappel du wird est déjà actif, il couvre déjà ce vendredi."
+              value={n.haylala === true}
+              onChange={(v) => patch({ haylala: v })}
+            />
             <Segmented
               label={tr.notif_quran}
               options={[{ label: tr.notif_off, value: 'off' as const }, { label: tr.notif_quran_fajr, value: 'fajr' as const }, { label: tr.notif_quran_isha, value: 'isha' as const }]}
