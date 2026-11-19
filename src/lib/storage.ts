@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createDurable, type StorageIssue } from './durable';
+import { buildLocalExport, MARKETING_VERSION, type LocalExportV1 } from './preserve';
 
 /**
  * Stockage local (AsyncStorage sur mobile, localStorage sur le web).
@@ -76,19 +77,18 @@ export async function clearAll(): Promise<void> {
   clearSubs.forEach((f) => f());
 }
 
-export async function exportAll(): Promise<Record<string, unknown>> {
+/**
+ * Copie locale : chaînes brutes, pas un objet réinterprété.
+ * `deviceBackup` est toujours false. Ce n'est pas une sauvegarde d'appareil vérifiée.
+ */
+export async function exportAll(): Promise<LocalExportV1> {
   await durable.flush();
   const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(PREFIX));
   const pairs = await AsyncStorage.multiGet(keys);
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of pairs) {
-    try {
-      out[k.slice(PREFIX.length)] = v ? JSON.parse(v) : null;
-    } catch {
-      out[k.slice(PREFIX.length)] = v;
-    }
-  }
-  return out;
+  return buildLocalExport(
+    pairs.map(([k, v]) => ({ key: k.slice(PREFIX.length), raw: v })),
+    MARKETING_VERSION,
+  );
 }
 
 /**
@@ -103,13 +103,28 @@ export function usePersistentState<T>(key: string, initial: T | (() => T)) {
   const cur = useRef<T>(value);
   const loaded = useRef(false);
   const early = useRef<(T | ((prev: T) => T))[]>([]);
+  const epoch = useRef(0);
+
+  useEffect(() => {
+    return onStorageCleared(() => {
+      epoch.current += 1;
+      const fb = typeof initialRef.current === 'function' ? (initialRef.current as () => T)() : initialRef.current;
+      early.current = [];
+      loaded.current = true;
+      cur.current = fb;
+      setValue(fb);
+      setReady(true);
+    });
+  }, []);
 
   useEffect(() => {
     let alive = true;
+    const started = epoch.current;
     loaded.current = false;
+    early.current = [];
     const fb = typeof initialRef.current === 'function' ? (initialRef.current as () => T)() : initialRef.current;
     loadJSON<T>(key, fb).then((stored) => {
-      if (!alive) return;
+      if (!alive || started !== epoch.current) return;
       let v = stored;
       const ops = early.current;
       early.current = [];

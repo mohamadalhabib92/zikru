@@ -1,0 +1,42 @@
+# @lazy chat
+# Passe 5 : discussion de groupe (cercles et familles), chiffré en transit — chargé à la demande (ar : traduction à relire)
+Vos messages ne sont lus que par vos parents, et vous ne lisez que les leurs (réglage parental).	Your messages are read only by your parents, and you read only theirs (parental setting).	لا يقرأ رسائلك إلا والداك، ولا تقرأ إلا رسائلهما (إعداد أبوي).
+Vos messages sont lus par votre famille, jamais par les invités (réglage parental).	Your messages are read by your family, never by guests (parental setting).	تقرأ عائلتك رسائلك، ولا يقرؤها الضيوف أبدًا (إعداد أبوي).
+En tant qu’invité, vous ne voyez pas les messages des enfants et ils ne voient pas les vôtres.	As a guest, you do not see the children’s messages and they do not see yours.	بصفتك ضيفًا، لا ترى رسائل الأطفال ولا يرون رسائلك.
+Le réglage parental ne permet pas d’utiliser la discussion.	The parental setting does not allow using the chat.	الإعداد الأبوي لا يسمح باستخدام المحادثة.
+Hier	Yesterday	أمس
+Cercle de démonstration	Demo circle	حلقة تجريبية
+Message trop long ({n} caractères maximum).	Message too long ({n} characters maximum).	الرسالة طويلة جدًا ({n} حرفًا كحدّ أقصى).
+Connectez-vous pour lire et écrire dans la discussion de votre groupe.	Sign in to read and write in your group’s chat.	سجّل الدخول لقراءة محادثة مجموعتك والكتابة فيها.
+Réactiver les notifications	Turn notifications back on	إعادة تفعيل الإشعارات
+Mettre en sourdine	Mute	كتم
+Discussion en sourdine	Chat muted	تم كتم المحادثة
+Notifications réactivées	Notifications turned back on	أُعيد تفعيل الإشعارات
+Démo	Demo	تجريبي
+Hors ligne : vos messages partiront dès le retour du réseau.	Offline: your messages will be sent as soon as the network is back.	غير متصل: ستُرسل رسائلك فور عودة الشبكة.
+Rejoindre le zikr en direct : {title}	Join the live zikr: {title}	الانضمام إلى الذكر المباشر: {title}
+En direct : {title}	Live: {title}	مباشر: {title}
+Discussion indisponible	Chat unavailable	المحادثة غير متاحة
+Accès réservé	Restricted access	دخول مقيّد
+Seuls les membres de ce groupe peuvent lire sa discussion.	Only members of this group can read its chat.	لا يقرأ محادثة هذه المجموعة إلا أعضاؤها.
+Aucun message pour l’instant. Commencez par un salām !	No messages yet. Start with a salām!	لا رسائل حتى الآن. ابدأ بالسلام!
+Début de la discussion · messages gardés 365 jours	Start of the chat · messages kept 365 days	بداية المحادثة · تُحفظ الرسائل 365 يومًا
+Message copié	Message copied	تم نسخ الرسالة
+Message supprimé pour tous	Message deleted for everyone	حُذفت الرسالة لدى الجميع
+Réponse à {name}	Reply to {name}	ردّ على {name}
+Annuler la réponse	Cancel reply	إلغاء الردّ
+Écrire un message	Write a message	اكتب رسالة
+Vous ne pouvez pas écrire dans cette discussion pour le moment.	You cannot write in this chat for now.	لا يمكنك الكتابة في هذه المحادثة حاليًا.
+{name}, {time} : message supprimé	{name}, {time}: message deleted	{name}، {time}: رسالة محذوفة
+{name}, {time} : {text}	{name}, {time}: {text}	{name}، {time}: {text}
+envoi en cours	sending	جارٍ الإرسال
+échec de l’envoi	sending failed	فشل الإرسال
+Touchez pour répondre, copier ou signaler	Tap to reply, copy or report	المس للردّ أو النسخ أو الإبلاغ
+Message supprimé	Message deleted	رسالة محذوفة
+Abandonner	Discard	تجاهل
+Répondre	Reply	ردّ
+Confirmer (modération)	Confirm (moderation)	تأكيد (الإشراف)
+Confirmer la suppression	Confirm deletion	تأكيد الحذف
+Supprimer pour tous	Delete for everyone	حذف لدى الجميع
+Le message sera effacé pour tout le groupe ; une copie reste à la seule équipe de modération.	The message will be erased for the whole group; a copy stays with the moderation team only.	ستُمحى الرسالة لدى المجموعة كلها؛ وتبقى نسخة لدى فريق الإشراف وحده.
+Le message sera effacé pour tout le groupe.	The message will be erased for the whole group.	ستُمحى الرسالة لدى المجموعة كلها.

@@ -39,6 +39,16 @@ const M = {
     en: 'Bluetooth not ready yet: answer the permission prompt, then try again.',
     ar: 'البلوتوث غير جاهز بعد: أجب على طلب الإذن ثم أعد المحاولة.',
   },
+  resetting: {
+    fr: 'Le Bluetooth redémarre. Patientez un instant, puis touchez Réessayer.',
+    en: 'Bluetooth is restarting. Wait a moment, then tap Try again.',
+    ar: 'البلوتوث يعيد التشغيل. انتظر لحظة ثم أعد المحاولة.',
+  },
+  hidOnly: {
+    fr: 'Cette bague est déjà reliée au téléphone comme clavier. Zikru ne reçoit pas ses notifications Bluetooth. Activez le mode clavier plus bas : les touches comptent ici et sur l’écran du compteur.',
+    en: 'This ring is already connected to the phone as a keyboard. Zikru cannot read its Bluetooth notifications. Turn on keyboard mode below: key presses count here and on the counter screen.',
+    ar: 'هذا الخاتم متصل بالهاتف كلوحة مفاتيح. لا تصل إشعاراته إلى ذكرُ. فعّل وضع لوحة المفاتيح: المفاتيح تُحسب هنا وعلى شاشة العدّاد.',
+  },
   locationOff: {
     fr: 'Android exige la localisation activée pour rechercher des appareils Bluetooth sur cette version.',
     en: 'Android requires Location to be on to scan for Bluetooth devices on this version.',

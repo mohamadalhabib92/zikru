@@ -26,6 +26,11 @@ export type TasbihDoc = {
   ble: Record<string, number>;
   t: Tasbih;
   migratedFrom?: 1;
+  /**
+   * Synchro Apple Watch (voir watch-sync.ts). Même écriture que le journal :
+   * un identifiant de séance déjà appliqué ne peut pas compter une seconde fois.
+   */
+  watch?: import('./watch-sync').WatchMeta;
 };
 
 export const TASBIH0: Tasbih = { count: 0, target: 33, dhikrId: 'subhanallah', total: 0, sessions: [] };

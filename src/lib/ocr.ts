@@ -10,9 +10,10 @@ export type { OcrResult, OcrSupport } from './ocr-types';
 export function ocrSupport(): OcrSupport {
   return { ok: false, reason: 'web' };
 }
-export async function recognizeArabic(_uri: string): Promise<OcrResult> {
+export async function recognizeText(_uri: string): Promise<OcrResult> {
   throw new Error('ocr-unsupported');
 }
+export const recognizeArabic = recognizeText;
 export function keepPhoto(_uri: string): string | undefined {
   return undefined;
 }

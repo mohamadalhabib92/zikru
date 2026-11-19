@@ -1,10 +1,23 @@
+import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import { useState, type ComponentProps, type ReactNode } from 'react';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { currentScheme, elevation, theme as t, type Scheme } from './theme';
+import { useSettings } from '@/lib/settings';
+import { sanitizeLandscape } from '@/lib/landscapes';
+import { useVisualEffects } from './effects';
+import { GlassLayers, raisedShadow, useGlassLook } from './glass';
+import { currentFinish, currentScheme, elevation, isDark, isGlass, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
+import { isIosAppOnMac } from '@/lib/mac';
+import { KbInput } from './keyboard-done';
+
+type HapticModule = typeof import('expo-haptics');
+// Apple TV n’a pas ce module. Sur iPhone, Platform.isTV est faux.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Haptics: HapticModule | null = Platform.isTV ? null : (require('expo-haptics') as HapticModule);
 
 const S = () => getStyles();
 
@@ -14,13 +27,19 @@ export { Ionicons };
 /** Conteneur d'écran défilant, largeur max sur desktop (PWA). */
 export function Screen({ children, scroll = true, padded = true, bg }: { children: ReactNode; scroll?: boolean; padded?: boolean; bg?: string }) {
   const insets = useSafeAreaInsets();
+  const mini = useMiniPlayerInset();
+  const { s } = useSettings();
+  const openLandscape = !bg && sanitizeLandscape(s.landscape) !== 'none';
+  const glass = useGlassLook();
+  const wash = currentFinish() === 'verre-or' ? 'rgba(227,190,90,0.28)' : 'rgba(14,107,79,0.16)';
   const inner = (
-    <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom }]}>{children}</View>
+    <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom + mini }]}>{children}</View>
   );
   return (
-    <View style={[S().screen, bg ? { backgroundColor: bg } : null]}>
+    <View style={[S().screen, bg ? { backgroundColor: bg } : openLandscape ? { backgroundColor: 'transparent' } : null]}>
+      {glass && !openLandscape ? <View pointerEvents="none" style={{ position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: wash, top: -60, right: -70 }} /> : null}
       {scroll ? (
-        <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
+        <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
           {inner}
         </ScrollView>
       ) : (
@@ -59,13 +78,27 @@ export function Eyebrow({ children, style }: { children: ReactNode; style?: Styl
 }
 
 export function Card({ children, style, onPress, accessibilityLabel }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; accessibilityLabel?: string }) {
+  const glass = useGlassLook();
+  if (glass) {
+    const inner = <View style={[{ padding: 16 }, style]}>{children}</View>;
+    if (onPress)
+      return (
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={typeof accessibilityLabel === "string" ? L(accessibilityLabel) : accessibilityLabel} style={({ pressed }) => [{ marginBottom: 12, borderRadius: 18 }, pressed && { opacity: 0.92 }]}>
+          <GlassLayers radius={18}>{inner}</GlassLayers>
+        </Pressable>
+      );
+    return <GlassLayers radius={18} style={[{ marginBottom: 12 }, style]}>{inner}</GlassLayers>;
+  }
   if (onPress) {
     return (
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={typeof accessibilityLabel === "string" ? L(accessibilityLabel) : accessibilityLabel}
-        style={({ pressed }) => [S().card, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, style]}
+        style={(state) => {
+          const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+          return [S().card, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }, (hovered || focused) && { borderColor: t.primary }, style];
+        }}
       >
         {children}
       </Pressable>
@@ -108,23 +141,46 @@ export function Button({
   const bg = { primary: t.primary, secondary: t.surfaceAlt, ghost: 'transparent', danger: t.danger }[variant];
   const fg = { primary: t.onPrimary, secondary: t.text, ghost: t.primary, danger: t.surface }[variant];
   const off = disabled || loading;
+  const raised = isGlass() && variant !== 'ghost';
+  const fx = useVisualEffects();
+  const [focused, setFocused] = useState(false);
   return (
     <Pressable
       onPress={off ? undefined : onPress}
+      onPressIn={
+        raised && !off
+          ? () => {
+              if (Platform.OS === 'web' || fx.tv || !Haptics || isIosAppOnMac()) return;
+              try {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              } catch {}
+            }
+          : undefined
+      }
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       accessibilityRole="button"
       accessibilityLabel={L(accessibilityLabel ?? title)}
       accessibilityState={{ disabled: !!off, busy: !!loading }}
       hitSlop={6}
-      style={({ pressed }) => [
-        S().btn,
-        small && S().btnSmall,
-        { backgroundColor: bg },
-        variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
-        pressed && !off && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-        off && { opacity: 0.45 },
-        style,
-      ]}
+      style={(state) => {
+        const { pressed, hovered, focused: tvFocused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+        return [
+          S().btn,
+          small && S().btnSmall,
+          { backgroundColor: bg, overflow: 'hidden' },
+          variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
+          raised && !fx.tv && raisedShadow(pressed && !off, fx.motion),
+          !raised && pressed && !off && fx.motion && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+          !raised && pressed && !off && !fx.motion && { opacity: 0.85 },
+          (hovered || tvFocused) && !off && !fx.tv && { opacity: 0.92 },
+          (focused || tvFocused) && fx.tv && { borderWidth: 3, borderColor: isDark() ? '#E3BE5A' : '#9C7A22' },
+          off && { opacity: 0.45 },
+          style,
+        ];
+      }}
     >
+      {raised ? <View pointerEvents="none" style={{ position: 'absolute', top: 1, left: 12, right: 12, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.28)' }} /> : null}
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (
@@ -145,7 +201,10 @@ export function IconButton({ icon, onPress, label, color = t.text, size = 22 }: 
       accessibilityLabel={typeof label === "string" ? L(label) : label}
       hitSlop={4}
       // La boîte suit la taille de l’icône (≥ 44 pt) : une icône de 64 pt dans une boîte fixe de 44 pt était rognée sur iOS.
-      style={({ pressed }) => [S().iconBtn, size > 36 && { width: size + 8, height: size + 8, borderRadius: (size + 8) / 2 }, pressed && { backgroundColor: t.surfaceAlt }]}
+      style={(state) => {
+        const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+        return [S().iconBtn, size > 36 && { width: size + 8, height: size + 8, borderRadius: (size + 8) / 2 }, (pressed || hovered || focused) && { backgroundColor: t.surfaceAlt }];
+      }}
     >
       <Ionicons name={icon} size={size} color={color} allowFontScaling={false} style={{ width: size, height: size, lineHeight: size, textAlign: 'center' }} />
     </Pressable>
@@ -159,11 +218,15 @@ export function Chip({ label, active, onPress, color }: { label: string; active?
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
-      style={({ pressed }) => [
-        S().chip,
-        { borderColor: active ? c : t.border, backgroundColor: active ? c : 'transparent' },
-        pressed && { opacity: 0.8 },
-      ]}
+      style={(state) => {
+        const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
+        return [
+          S().chip,
+          { borderColor: active ? c : t.border, backgroundColor: active ? c : 'transparent' },
+          pressed && { opacity: 0.8 },
+          (hovered || focused) && !active && { borderColor: c },
+        ];
+      }}
     >
       <Text maxFontSizeMultiplier={1.35} style={{ color: active ? (color ? '#fff' : t.onPrimary) : t.text, fontWeight: '600', fontSize: 14, flexShrink: 1, textAlign: 'center' }}>{label}</Text>
     </Pressable>
@@ -190,7 +253,7 @@ export function Field({ label, hint, error, style, ...props }: TextInputProps & 
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={S().label}>{label}</Text>
-      <TextInput
+      <KbInput
         placeholderTextColor={t.muted}
         accessibilityLabel={typeof label === "string" ? L(label) : label}
         style={[S().input, props.multiline && { minHeight: 88, textAlignVertical: 'top', paddingTop: 12 }, error ? { borderColor: t.danger } : null, style]}
@@ -214,7 +277,8 @@ export function Segmented<T extends string | number>({ options, value, onChange,
               key={String(o.value)}
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
+              accessibilityLabel={o.label}
+              accessibilityState={{ checked: on }} aria-checked={on}
               style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
             >
               <Text maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14, textAlign: 'center' }}>{o.label}</Text>
@@ -231,7 +295,7 @@ export function Toggle({ label, value, onChange, hint }: { label: string; value:
     <Pressable
       onPress={() => onChange(!value)}
       accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
+      accessibilityState={{ checked: value }} aria-checked={value}
       accessibilityLabel={typeof label === "string" ? L(label) : label}
       style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, gap: 12 }}
     >
@@ -333,10 +397,10 @@ export function shadow(level = 1): ViewStyle {
 
 const makeStyles = () => StyleSheet.create({
   screen: { flex: 1, backgroundColor: t.bg },
-  inner: { width: '100%', maxWidth: 860, alignSelf: 'center' },
-  h1: { color: t.text, fontSize: 30, fontWeight: '800', letterSpacing: -0.6, marginBottom: 4, fontFamily: t.displayFont },
-  h2: { color: t.text, fontSize: 18, fontWeight: '700', letterSpacing: -0.2, marginBottom: 8 },
-  body: { color: t.text, fontSize: 16, lineHeight: 23 },
+  inner: { width: '100%', maxWidth: 1040, alignSelf: 'center' },
+  h1: { color: t.text, fontSize: isIosAppOnMac() ? 34 : 30, fontWeight: '800', letterSpacing: -0.6, marginBottom: 4, fontFamily: t.displayFont },
+  h2: { color: t.text, fontSize: isIosAppOnMac() ? 20 : 18, fontWeight: '700', letterSpacing: -0.2, marginBottom: 8 },
+  body: { color: t.text, fontSize: isIosAppOnMac() ? 17 : 16, lineHeight: isIosAppOnMac() ? 25 : 23 },
   muted: { color: t.muted, fontSize: 15, lineHeight: 21 },
   eyebrow: { color: t.accent, fontSize: 12, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 6 },
   card: {

@@ -5,19 +5,27 @@
  *   peut être demandée à api.alquran.cloud pour la traduction si elle n’est pas déjà en cache.
  * - La reconnaissance de texte (photo) est faite sur l’appareil (Apple Vision) ; la photo reste locale.
  */
-import * as Clipboard from 'expo-clipboard';
-import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Platform, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { L, useUiLang } from '@/lib/l10n';
-import { keepPhoto, ocrSupport, recognizeArabic } from '@/lib/ocr';
+import { isIosAppOnMac } from '@/lib/mac';
+import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { quranEditionLang } from '@/lib/i18n';
 import { translationFor } from '@/lib/quran';
 import { normAr } from '@/lib/ar-norm';
 import { loadQuranIndex, matchQuran, type MatchResult, type QuranProposal } from '@/lib/quran-match';
 import { surahEdition } from '@/lib/quran-reader-data';
 import { SURAHS } from '@/lib/surahs';
+
+import type { ImagePickerOptions } from 'expo-image-picker';
+type ClipboardMod = typeof import('expo-clipboard');
+type ImagePickerMod = typeof import('expo-image-picker');
+// iPhone : chargés à l’évaluation. Apple TV : pods iOS seulement.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Clipboard: ClipboardMod | null = Platform.isTV ? null : (require('expo-clipboard') as ClipboardMod);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ImagePicker: ImagePickerMod | null = Platform.isTV ? null : (require('expo-image-picker') as ImagePickerMod);
 import { Arabic, LMuted } from '@/ui/light';
 import { brand as b, theme as t } from '@/ui/theme';
 import { AbjadBadge, LBtn, type DraftItem } from './parts';
@@ -124,6 +132,7 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   const [note, setNote] = useState<string | null>(null);
   const support = useMemo(() => ocrSupport(), []);
   const canPhoto = Platform.OS !== 'web';
+  const canCamera = canPhoto && !isIosAppOnMac();
 
   // Analyse (lecture seule) du texte : le résultat n’est valable que pour le texte exact analysé.
   const res = found && found.q === text && text.trim() ? found.r : null;
@@ -153,18 +162,20 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
   };
   const paste = async () => {
     setNote(null);
-    const s = await Clipboard.getStringAsync().catch(() => '');
+    const s = Clipboard ? await Clipboard.getStringAsync().catch(() => '') : '';
     if (!s.trim()) return setNote(L('Le presse-papiers est vide.'));
     reset();
     setText(s);
   };
   const shoot = async (camera: boolean) => {
     setNote(null);
+    if (!ImagePicker) return;
     if (camera) {
+      if (isIosAppOnMac()) return setNote(L('Sur Mac, l’appareil photo n’est pas disponible. Choisissez une image déjà enregistrée.'));
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) return setNote(L('Accès à l’appareil photo refusé. Vous pouvez l’autoriser dans les Réglages.'));
     }
-    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1, exif: false, base64: false };
+    const opts: ImagePickerOptions = { mediaTypes: ['images'], quality: 1, exif: false, base64: false };
     const r = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
     if (r.canceled || !r.assets?.[0]) return;
     reset();
@@ -178,7 +189,7 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
     setOcr('busy');
     setEditing(false);
     try {
-      const o = await recognizeArabic(r.assets[0].uri);
+      const o = await recognizeText(r.assets[0].uri);
       setOrig(o.text);
       setText(o.text);
       setConf(o.minConfidence);
@@ -221,7 +232,7 @@ export function ImportText({ onAdd }: { onAdd: (d: DraftItem) => void }) {
       <LMuted>Collez un verset ou un zikr, ou photographiez un texte. Votre texte n’est jamais modifié sans votre accord.</LMuted>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         <LBtn icon="clipboard-outline" label="Coller" solid onPress={paste} />
-        {canPhoto ? <LBtn icon="camera-outline" label="Photographier" onPress={() => shoot(true)} /> : null}
+        {canCamera ? <LBtn icon="camera-outline" label="Photographier" onPress={() => shoot(true)} /> : null}
         {canPhoto ? <LBtn icon="image-outline" label="Choisir une photo" onPress={() => shoot(false)} /> : null}
         {hasText || photo ? <LBtn icon="close" label="Effacer" onPress={reset} /> : null}
       </View>

@@ -1,15 +1,17 @@
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, Share, TextInput, View } from 'react-native';
+import { Modal, Platform, ScrollView, Share, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { computeAbjad } from '@/lib/abjad';
 import { nameBare, nameCall, nameCallTr, type AllahName } from '@/lib/names';
 import type { ZikrItem } from '@/lib/zikr';
+import { usePremium } from '@/lib/premium';
 import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
-import { brand as b } from '@/ui/theme';
+import { brand as b, onColor } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
 const SYSC = {
@@ -24,7 +26,7 @@ export const fmt = (n: number) => n.toLocaleString('fr-CH');
 
 /** Bouton clair (thème crème). */
 export function LBtn({ icon, label, onPress, active, color = b.green, solid, disabled }: { icon?: IconName; label: string; onPress: () => void; active?: boolean; color?: string; solid?: boolean; disabled?: boolean }) {
-  const fg = solid ? '#fff' : active ? color : b.ink;
+  const fg = solid ? onColor(color) : active ? color : b.ink; // passe 6 : encre choisie pour ≥ 4,5:1 (blanc sur vert sombre = 3,3)
   return (
     <Pressable
       accessibilityRole="button"
@@ -150,6 +152,7 @@ export async function shareZikr(text: string, title: string): Promise<'shared' |
 /** Feuille « Ajouter à un zikr » : choisir une composition existante ou en créer une. */
 export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onClose: () => void }) {
   const { zikrs, addItem, create } = useZikrs();
+  const premium = usePremium();
   const router = useRouter();
   const [name, setName] = useState('');
   const [done, setDone] = useState<string | null>(null);
@@ -275,6 +278,12 @@ export function AddToZikrSheet({ item, onClose }: { item: DraftItem | null; onCl
                   label="Créer"
                   solid
                   onPress={() => {
+                    if (!premium.ready) return;
+                    if (!premium.canCreate) {
+                      onClose();
+                      router.push('/premium');
+                      return;
+                    }
                     const z = create(name.trim() || 'Mon zikr');
                     pick(z.id, z.name);
                   }}

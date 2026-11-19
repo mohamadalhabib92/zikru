@@ -1,4 +1,3 @@
-/* eslint-disable */
 // FICHIER GÉNÉRÉ par scripts/verify-hadith/build.py — ne pas modifier à la main.
 // Jugements recopiés tels qu'affichés par sunnah.com et dorar.net (consultés le 2026-10-29).
 // Aucun jugement n'est déduit ni deviné : absence = « grading non vérifié ».

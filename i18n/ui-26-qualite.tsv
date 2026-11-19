@@ -1,0 +1,6 @@
+Enregistrement impossible pour le moment	Can’t save right now	تعذّر الحفظ الآن
+Lecture des données locales impossible	Can’t read the data on this device	تعذّرت قراءة البيانات على هذا الجهاز
+Vos appuis sont gardés en mémoire et seront enregistrés dès que possible (nouvel essai automatique). Si le stockage du téléphone est plein, libérez de la place. Ne fermez pas l’app tant que ce message est affiché.	Your taps are kept in memory and will be saved as soon as possible (automatic retry). If the phone storage is full, free some space. Don’t close the app while this message is showing.	ضغطاتك محفوظة في الذاكرة وستُسجَّل حالما يتيسّر ذلك (إعادة محاولة تلقائية). إذا كانت ذاكرة الهاتف ممتلئة، أفرغ بعض المساحة. لا تغلق التطبيق ما دام هذا التنبيه ظاهرًا.
+Essai…	Trying…	جارٍ المحاولة…
+Ce texte est trop long ({n} caractères au maximum). Coupez-le en plusieurs imports.	This text is too long ({n} characters at most). Split it into several imports.	هذا النص أطول من اللازم ({n} حرفًا على الأكثر). قسّمه على عدة عمليات استيراد.
+Seules les {n} premières étapes ont été lues. Coupez le reste en un autre import.	Only the first {n} steps were read. Put the rest in another import.	لم تُقرأ إلا الخطوات الـ {n} الأولى. ضع الباقي في استيراد آخر.

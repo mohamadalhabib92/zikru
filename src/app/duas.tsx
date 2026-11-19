@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
@@ -47,7 +48,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
     <LCard>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: COLOR, fontWeight: '800', fontSize: 11, letterSpacing: 0.6 }}>{L(duaCatLabel(d.cat)).toUpperCase()}</Text>
+          <Text style={{ color: b.blue, fontWeight: '800', fontSize: 11, letterSpacing: 0.6 }}>{L(duaCatLabel(d.cat)).toUpperCase()}</Text>
           <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16, marginTop: 2 }}>{v.title}</Text>
           {v.when ? <LMuted style={{ fontSize: 12, marginTop: 2 }}>{v.when}</LMuted> : null}
         </View>

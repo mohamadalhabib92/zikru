@@ -10,6 +10,12 @@ export type AbjadPrefs = {
   ta: 'ha' | 'ta';
   hamza: 1 | 0;
   words: boolean;
+  /** Absent dans un ancien réglage : traité comme « one ». */
+  madda?: 'one' | 'two';
+  /** Absent : une fois. */
+  shadda?: 'once' | 'twice';
+  /** Absent : comme un alif. */
+  wasl?: 'alif' | 'zero';
 };
 export const ABJAD_PREFS0: AbjadPrefs = {
   view: 'both',
@@ -77,7 +83,7 @@ export function ZikrProvider({ children }: { children: ReactNode }) {
     update,
     prefs,
     setPrefs: (patch) => setP((x) => ({ ...x, ...patch })),
-    opts: { taMarbuta: prefs.ta, hamza: prefs.hamza },
+    opts: { taMarbuta: prefs.ta, hamza: prefs.hamza, madda: prefs.madda ?? 'one', shadda: prefs.shadda ?? 'once', wasl: prefs.wasl ?? 'alif' },
     systems: prefs.view === 'both' ? ['mashriqi', 'maghribi'] : [prefs.view],
     repSys: prefs.view === 'maghribi' ? 'maghribi' : 'mashriqi',
   };

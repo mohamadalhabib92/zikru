@@ -1,15 +1,17 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { ErrorNote, fmt, ProgressBar, ReportButton } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { onClicks } from '@/lib/community/clicks';
 import { feedback } from '@/lib/feedback';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { Badge, Button, Card, Eyebrow, H1, Muted, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
+import { useLatest } from '@/ui/use-latest';
 import { L } from '@/lib/l10n';
 
 /**
@@ -47,33 +49,39 @@ export default function LiveScreen() {
       }
     };
     void load();
-    const ch = supabase
-      ?.channel(`live:${sid}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'zikr_session_counts', filter: `session_id=eq.${sid}` }, (p) => {
-        const row = p.new as api.SessionCount;
-        if (!row?.user_id) return;
-        setCounts((cs) => [...cs.filter((x) => x.user_id !== row.user_id), row].sort((a, b) => b.count - a.count));
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'zikr_sessions', filter: `id=eq.${sid}` }, (p) => setSession(p.new as api.ZikrSession))
-      .subscribe();
+    // Temps réel : client chargé à la demande ; le désabonnement reste possible avant qu'il soit prêt.
+    let stop: (() => void) | null = null;
+    void getSupabase().then((c) => {
+      if (!alive || !c) return;
+      const ch = c
+        .channel(`live:${sid}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'zikr_session_counts', filter: `session_id=eq.${sid}` }, (p) => {
+          const row = p.new as api.SessionCount;
+          if (!row?.user_id) return;
+          setCounts((cs) => [...cs.filter((x) => x.user_id !== row.user_id), row].sort((a, b) => b.count - a.count));
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'zikr_sessions', filter: `id=eq.${sid}` }, (p) => setSession(p.new as api.ZikrSession))
+        .subscribe();
+      stop = () => void c.removeChannel(ch);
+    });
     const poll = setInterval(load, 30000); // filet de sécurité si le temps réel est coupé
     return () => {
       alive = false;
       clearInterval(poll);
-      if (ch) void supabase?.removeChannel(ch);
+      stop?.();
     };
   }, [sid, userId]);
 
   const live = session?.status === 'live';
-  const liveRef = useRef(live);
-  liveRef.current = live;
+  const liveRef = useLatest(live);
   const tap = (n: number) => {
     if (!liveRef.current) return;
     mineRef.current += n;
     setMine(mineRef.current);
   };
+  const tapRef = useLatest(tap);
   // Appuis Bluetooth / clavier pendant la session.
-  useEffect(() => onClicks((n, src) => (src !== 'manuel' ? tap(n) : undefined)), []);
+  useEffect(() => onClicks((n, src) => (src !== 'manuel' ? tapRef.current(n) : undefined)), [tapRef]);
   // Envoi groupé (compteur absolu : aucune perte ni double comptage).
   useEffect(() => {
     const i = setInterval(() => {
@@ -85,7 +93,7 @@ export default function LiveScreen() {
         .catch(() => {});
     }, 1500);
     return () => clearInterval(i);
-  }, [sid, userId, displayName]);
+  }, [sid, userId, displayName, liveRef]);
 
   const others = counts.filter((c) => c.user_id !== userId);
   const total = others.reduce((a, c) => a + c.count, 0) + mine;

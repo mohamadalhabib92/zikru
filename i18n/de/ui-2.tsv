@@ -1,0 +1,93 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+Afficher plus ({n} restants)	Mehr anzeigen ({n} verbleibend)
+Ajouter à {n}	Zu {n} hinzufügen
+Ajouté à « {n} »	Zu „{n}“ hinzugefügt
+Aller à {s} {r}	Zu {s} {r} wechseln
+Appareil semblable détecté — à confirmer	Ähnliches Gerät erkannt — bitte bestätigen
+Caractéristique {u}.	Merkmal {u}.
+Champ repéré : {f} sur {u}. Confirmez en appuyant 3 fois : le profil sera mémorisé pour cet appareil.	Feld gefunden: {f} auf {u}. Bestätigen Sie durch 3-maliges Drücken: Das Profil wird für dieses Gerät gespeichert.
+Compter : {n} sur {r}	Zählung: {n} von {r}
+Compteur ({r})	Zähler ({r})
+Compteur connecté ✓	Zähler verbunden ✓
+Continuer : {s}, verset {a}	Fortsetzen: {s}, Vers {a}
+Continuer la lecture : {s}, verset {a}	Weiterlesen: {s}, Vers {a}
+Correspondance enregistrée (confiance {c})	Zuordnung gespeichert (Zuverlässigkeit {c})
+Dernière erreur · {t}	Letzter Fehler · {t}
+Désactivé	Aus
+Favoris	Favoriten
+Hizb {n}	Hizb {n}
+Hors liste (mode diagnostic)	Nicht in der Liste (Diagnosemodus)
+Juz’ {n}	Juz’ {n}
+Khatma {p} %	Khatma {p} %
+Khatma · {d}/{t} pages	Khatma · {d}/{t} Seiten
+Marque-page {c}	Lesezeichen {c}
+Marque-pages : {b} · notes : {n}	Lesezeichen: {b} · Notizen: {n}
+Mode page · p. {p}	Seitenmodus · S. {p}
+Même nom que votre compteur, mais identifiant différent ({id}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.	Gleicher Name wie Ihr Zähler, aber eine andere Kennung ({id}). Es könnte nach einem Zurücksetzen Ihrer sein — oder der einer Person in der Nähe. Zikru verbindet sich nicht ohne Ihre Zustimmung damit.
+Même service que votre compteur, mais identifiant différent ({id}). C’est peut-être le vôtre après une réinitialisation — ou celui de quelqu’un à côté. Zikru ne s’y connecte pas sans votre accord.	Gleicher Dienst wie Ihr Zähler, aber eine andere Kennung ({id}). Es könnte nach einem Zurücksetzen Ihrer sein — oder der einer Person in der Nähe. Zikru verbindet sich nicht ohne Ihre Zustimmung damit.
+Ouvrir la page {n}	Seite {n} öffnen
+Ouvrir la sourate {n} · {s}	Sure {n} öffnen · {s}
+Ouvrir le hizb {n}	Hizb {n} öffnen
+Ouvrir le juz’ {n}	Juz’ {n} öffnen
+Page {n}	Seite {n}
+Page {p} · {n} j de suite	Seite {p} · Serie von {n} Tagen
+Recherche du compteur…	Zähler wird gesucht…
+Retirer le marque-page {c}	Lesezeichen {c} entfernen
+Rien n’a été écrasé : si des données sont illisibles, une copie est conservée (et le compteur reprend sa dernière sauvegarde). Détail : {d}	Nichts wurde überschrieben: Wenn Daten unlesbar sind, wird eine Kopie aufbewahrt (und der Zähler setzt beim letzten Speicherstand fort). Detail: {d}
+Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite).	Unabhängig von der Rechtsschule: Schatten ×1 (Mehrheit) oder ×2 (Hanafi).
+Révision du jour : {n} versets	Heutige Wiederholung: {n} Verse
+SOURATE {n} · {k} · {v} VERSETS	SURE {n} · {k} · {v} VERSE
+Sabaq {a} · Sabqi {b} · Manzil {c}	Sabaq {a} · Sabqi {b} · Manzil {c}
+Sans filtre : tous les appareils BLE (recommandé, la plupart des anneaux n’annoncent pas leur service). Avec filtre : seulement les services connus ({k}).	Ohne Filter: alle BLE-Geräte (empfohlen — die meisten Ringe senden ihren Dienst nicht). Mit Filter: nur bekannte Dienste ({k}).
+Simuler un appui (+1)	Einen Druck simulieren (+1)
+Surligner en {c}	In {c} markieren
+Synchronisé : +{n}	Synchronisiert: +{n}
+Série de lecture : {n} jours	Leseserie: {n} Tage
+Texte : Tanzil (uthmani, CC BY 3.0) · Traduction : {t} via alquran.cloud	Text: Tanzil (Uthmani, CC BY 3.0) · Übersetzung: {t} über alquran.cloud
+Thème {t}	Thema {t}
+Toucher pour reconnecter	Zum erneuten Verbinden tippen
+Toucher pour reconnecter le compteur	Tippen, um den Zähler erneut zu verbinden
+Touchez un verset pour ses actions	Tippen Sie auf einen Vers für seine Aktionen
+Verset {n}. Actions	Vers {n}. Aktionen
+Versets à réviser : {n}	Zu wiederholende Verse: {n}
+Vitesse ×{r}	Geschwindigkeit ×{r}
+Vu le {d}	Gesehen am {d}
+Wird : p. {a}–{b}	Wird: S. {a}–{b}
+hifz {p} %	Hifz {p} %
+mixte ({n} via compteur)	gemischt ({n} über Zähler)
+méthode	Methode
+p. {a}–{b}	S. {a}–{b}
+p. {n}	S. {n}
+page {p}	Seite {p}
+{c} : {s}, verset {a}	{c}: {s}, Vers {a}
+{l} : augmenter	{l}: vergrößern
+{l} : diminuer	{l}: verkleinern
+{name}, {n} formules	{name}, {n} Formeln
+{n} appareil(s) non reconnu(s) masqué(s). Votre compteur n’apparaît pas ? Bouton « Diagnostic » › « Afficher tous les appareils ».	{n} nicht erkannte(s) Gerät(e) ausgeblendet. Ihr Zähler wird nicht angezeigt? Schaltfläche „Diagnose“ › „Alle Geräte anzeigen“.
+{n} dhikr	{n} Dhikr
+{n} invocations · {c} catégories · sources indiquées	{n} Bittgebete · {c} Kategorien · Quellen angegeben
+{n} min	{n} Min.
+{n} v.	{n} V.
+{n} versets	{n} Verse
+{n} versets — affinez, ou ouvrez la recherche complète.	{n} Verse — verfeinern oder die vollständige Suche öffnen.
+{n} à réviser aujourd’hui	{n} heute zu wiederholen
+« {n} » détecté avec un autre identifiant	„{n}“ mit einer anderen Kennung erkannt
+Écouter le verset {n}	Vers {n} anhören
+Écouteurs — gérés par le système, pas un compteur. La récitation passe par la sortie audio choisie dans les réglages du téléphone.	Kopfhörer — vom System verwaltet, kein Zähler. Die Rezitation wird über die in den Einstellungen Ihres Telefons gewählte Audioausgabe abgespielt.
+Éléments : {n}	Elemente: {n}
+× {r} — touchez pour compter, appui long pour remettre à zéro.	× {r} — tippen zum Zählen, lange drücken zum Zurücksetzen.
+MECQUOISE	MEKKANISCH
+MÉDINOISE	MEDINENSISCH
+mecquoise	Mekkanisch
+médinoise	Medinensisch
+Coran	Koran
+Tafsir	Tafsir
+ · Translittération : alquran.cloud	 · Umschrift: alquran.cloud
+ · mushaf	 · Mushaf
+Appareil sans nom	Unbenanntes Gerät
+format connu	bekanntes Format
+Jamais vu	Nie gesehen
+connecté	verbunden
+Choisi manuellement.	Manuell festgelegt.
+Suit l’école choisie ci-dessus.	Folgt der oben gewählten Rechtsschule.

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { Hub, type HubSection } from '@/components/Hub';
 import { useSettings } from '@/lib/settings';
@@ -27,6 +28,10 @@ export default function Read() {
         { icon: 'reader', title: 'Adhkar', sub: 'Formules validées avec sources', href: '/dhikr', color: b.teal },
         { icon: 'headset', title: tr.kahf, sub: 'Sourate al-Kahf du vendredi', href: '/kahf', color: b.wirdGreen },
       ],
+    },
+    {
+      title: 'Bien-être',
+      items: [{ icon: 'leaf', title: 'Respirer, contempler, apprendre', sub: 'Cohérence · tafakkur · jeux · tajwid', href: '/bien-etre', color: b.teal }],
     },
     {
       title: 'Savoir',

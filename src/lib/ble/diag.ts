@@ -3,11 +3,24 @@
  * événements du scan, de la connexion, des abonnements et dernière erreur.
  * Alimenté par les transports (web / natif) et par le gestionnaire ; lu par l'écran /ble-diag.
  */
-import { classifyDevice, type Bytes, type DeviceKind, type GattChar } from './core';
+import { classifyDevice, discoveryLine, type Bytes, type DeviceKind, type GattChar } from './core';
 
 export type DiagLevel = 'info' | 'warn' | 'error';
 export type DiagEntry = { t: number; level: DiagLevel; tag: string; msg: string };
-export type DiagSeen = { id: string; name: string | null; rssi: number | null; services: string[]; count: number; last: number; appearance: number | null; kind: DeviceKind; reason: string | null };
+export type DiagSeen = {
+  id: string;
+  name: string | null;
+  rssi: number | null;
+  services: string[];
+  count: number;
+  last: number;
+  appearance: number | null;
+  kind: DeviceKind;
+  reason: string;
+  manufacturer: string | null;
+  manufacturerHex: string | null;
+  via: string | null;
+};
 
 const MAX = 300;
 let entries: DiagEntry[] = [];
@@ -51,27 +64,24 @@ export const diag = {
   error(tag: string, e: unknown) {
     diag.log(tag, errMsg(e), 'error');
   },
-  seen(r: { id: string; name: string | null; rssi: number | null; services?: string[]; appearance?: number | null; manufacturerId?: number | null; manufacturerData?: Bytes | null }) {
+  seen(r: { id: string; name: string | null; rssi: number | null; services?: string[]; appearance?: number | null; manufacturerId?: number | null; manufacturerData?: Bytes | null; via?: string | null }) {
     const p = seen.get(r.id);
     const isNew = !p;
     const name = r.name ?? p?.name ?? null;
     const services = [...new Set([...(p?.services ?? []), ...(r.services ?? [])])];
     const appearance = r.appearance ?? p?.appearance ?? null;
-    const cl = classifyDevice({ name, services, appearance, manufacturerId: r.manufacturerId, manufacturerData: r.manufacturerData });
+    const manufacturerId = r.manufacturerId ?? null;
+    const manufacturerData = r.manufacturerData ?? null;
+    const cl = classifyDevice({ name, services, appearance, manufacturerId, manufacturerData });
     // Un appareil reconnu une fois le reste (les annonces alternent nom / données fabricant).
-    const kind = cl.kind === 'other' && p && p.kind !== 'other' ? p.kind : cl.kind;
-    seen.set(r.id, {
-      id: r.id,
-      name,
-      rssi: r.rssi ?? p?.rssi ?? null,
-      services,
-      count: (p?.count ?? 0) + 1,
-      last: Date.now(),
-      appearance,
-      kind,
-      reason: kind === cl.kind ? cl.reason : (p?.reason ?? null),
-    });
-    if (isNew) diag.log('scan', `vu ${r.name ?? '(sans nom)'} · ${r.id} · RSSI ${r.rssi ?? '?'}${r.services?.length ? ` · ${r.services.join(', ')}` : ''}`);
+    // « maybe » peut monter vers « counter » ; on ne redescend pas un compteur vers « other ».
+    const kind = cl.kind === 'other' && p && p.kind !== 'other' ? p.kind : cl.kind === 'maybe' && p?.kind === 'counter' ? p.kind : cl.kind;
+    const reason = kind === cl.kind ? cl.reason : (p?.reason ?? cl.reason);
+    const manufacturer = manufacturerId != null ? `0x${manufacturerId.toString(16).padStart(4, '0')}` : (p?.manufacturer ?? null);
+    const manufacturerHex = manufacturerData && manufacturerData.length ? [...manufacturerData].slice(0, 12).map((b) => b.toString(16).padStart(2, '0')).join(' ') : (p?.manufacturerHex ?? null);
+    const via = r.via ?? p?.via ?? 'scan';
+    seen.set(r.id, { id: r.id, name, rssi: r.rssi ?? p?.rssi ?? null, services, count: (p?.count ?? 0) + 1, last: Date.now(), appearance, kind, reason, manufacturer, manufacturerHex, via });
+    if (isNew || (p && (p.kind !== kind || p.reason !== reason))) diag.log('scan', discoveryLine({ id: r.id, name, rssi: r.rssi ?? p?.rssi ?? null, services, manufacturerId, manufacturerData }, { kind, reason }));
     else emit();
   },
   clearSeen() {
@@ -108,7 +118,9 @@ export const diag = {
       lines.push('');
     }
     lines.push(`Appareils vus (${seen.size}):`);
-    for (const d of [...seen.values()].sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999))) lines.push(`  ${d.rssi ?? '?'} dBm  ${d.name ?? '(sans nom)'}  ${d.id}${d.services.length ? `  [${d.services.join(', ')}]` : ''}`);
+    for (const d of [...seen.values()].sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999))) {
+      lines.push(`  ${d.rssi ?? '?'} dBm  ${d.name ?? '(sans nom)'}  ${d.id}  via ${d.via}  ${d.kind}  ${d.reason}${d.services.length ? `  [${d.services.join(', ')}]` : ''}${d.manufacturer ? `  ${d.manufacturer}` : ''}${d.manufacturerHex ? `  ${d.manufacturerHex}` : ''}`);
+    }
     lines.push('', 'Journal:');
     for (const e of entries) lines.push(`${iso(e.t)} ${e.level.toUpperCase()} [${e.tag}] ${e.msg}`);
     return lines.join('\n');

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Pressable } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
 import { Ionicons, type IconName } from '@/ui/kit';

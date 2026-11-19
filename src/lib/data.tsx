@@ -2,8 +2,9 @@ import { createContext, useContext, useEffect, useSyncExternalStore, type ReactN
 import { AppState, Platform } from 'react-native';
 import { emitClicks } from './community/clicks';
 import { bleCounter, type BleCursor } from './ble/manager';
-import { SEED_CONTENT, type ContentItem } from './content';
+import { mergePresets, SEED_CONTENT, type ContentItem } from './content';
 import { feedback } from './feedback';
+import { tapHaptic } from '@/ui/ds';
 import { durable, flushStorage, onStorageCleared, storageKey, uid, usePersistentState } from './storage';
 import { closeSession, type ClickSource, type Tasbih } from './tasbih-core';
 import { createTasbihStore } from './tasbih-store';
@@ -39,11 +40,15 @@ type Ctx = {
   ready: boolean;
 };
 const C = createContext<Ctx | null>(null);
+const ReadyC = createContext(false);
 
 const addClicks = (n: number, source: ClickSource, cursor?: BleCursor) => {
   const r = tasbihStore.addClicks(n, source, cursor);
   if (!r.added) return; // rafale Bluetooth déjà comptée
   const p = bleCounter.state.prefs;
+  // Même retour que le doigt : impact léger, puis réussite si l’objectif vient d’être atteint.
+  tapHaptic('light');
+  if (r.cycleCompleted) tapHaptic('success');
   feedback(r.cycleCompleted ? 'cycle' : 'tap', { sound: p.sound, haptics: p.haptics });
   if (r.cycleCompleted && source !== 'manuel') void bleCounter.vibrate();
   emitClicks(r.added, source);
@@ -55,6 +60,13 @@ const saveSession = () => tasbihStore.set((t) => closeSession(t, uid('s'), new D
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [content, setContent, r1] = usePersistentState<ContentItem[]>('content', SEED_CONTENT);
+  useEffect(() => {
+    if (!r1) return;
+    const next = mergePresets(content);
+    if (next !== content) setContent(next);
+    // Une fois le stockage lu : on ajoute seulement les présets dont l’identifiant manque.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [r1]);
   const tasbih = useSyncExternalStore(tasbihStore.subscribe, tasbihStore.get, tasbihStore.get);
   const r2 = useSyncExternalStore(tasbihStore.subscribe, tasbihStore.ready, tasbihStore.ready);
 
@@ -62,6 +74,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     void tasbihStore.load();
     // Curseurs Bluetooth enregistrés avec le compte (aucun double comptage après un arrêt brutal).
     bleCounter.setCursorStore({ get: tasbihStore.cursor, set: (c) => tasbihStore.setCursor(c), drop: (id) => tasbihStore.dropCursor(id) });
+    bleCounter.setCounterSnap(() => {
+      const t = tasbihStore.get();
+      return { zikrId: t.dhikrId, count: t.count, session: t.firstAt != null ? `ouverte:${t.dhikrId}:${t.firstAt}` : `ouverte:${t.dhikrId}` };
+    });
     // Pont compteur Bluetooth / clavier → compteur de session (actif sur tous les écrans).
     const off = bleCounter.onClicks((n, src, cursor) => addClicks(n, src === 'clavier' ? 'clavier' : src === 'simulation' ? 'manuel' : 'bluetooth', src === 'bluetooth' ? cursor : undefined));
     // Écriture forcée au passage en arrière-plan (iOS/Android) et à la fermeture/masquage de l'onglet (web).
@@ -79,6 +95,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       off();
       sub.remove();
       bleCounter.setCursorStore(null);
+      bleCounter.setCounterSnap(null);
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.removeEventListener('pagehide', hide);
         document.removeEventListener('visibilitychange', hide);
@@ -90,11 +107,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (r2) void bleCounter.init();
   }, [r2]);
 
-  return <C.Provider value={{ content, setContent, tasbih, setTasbih, addClicks, increment, saveSession, ready: r1 && r2 }}>{children}</C.Provider>;
+  const ready = r1 && r2;
+  return (
+    <ReadyC.Provider value={ready}>
+      <C.Provider value={{ content, setContent, tasbih, setTasbih, addClicks, increment, saveSession, ready }}>{children}</C.Provider>
+    </ReadyC.Provider>
+  );
 }
 
 export function useData() {
   const v = useContext(C);
   if (!v) throw new Error('DataProvider manquant');
   return v;
+}
+/** Prêt ou non, sans se redessiner à chaque appui du compteur. */
+export function useDataReady() {
+  return useContext(ReadyC);
 }

@@ -1,4 +1,3 @@
-/* eslint-disable */
 // GÉNÉRÉ — ne pas modifier. Texte coranique Tanzil « Simple » v1.1, reproduit à l’identique (format sourate|verset|texte),
 // avec son bloc de copyright ci-dessous. Source : https://tanzil.net — Licence : Creative Commons Attribution 3.0.
 // Chargé à la demande (import dynamique) pour la recherche hors-ligne et la lecture sans connexion.

@@ -1,0 +1,35 @@
+# Traduction allemande (de) — NON RELUE par un humain.
+Classes	Klassen
+Un enseignant validé par Bissabi, avec Zikru Premium, ouvre une classe. Personne ne s’accorde ce rôle soi-même. Rejoindre reste gratuit.	Eine von Bissabi bestätigte Lehrperson mit Zikru Premium eröffnet eine Klasse. Niemand gibt sich diese Rolle selbst. Der Beitritt bleibt kostenlos.
+Classe de Coran	Koranklasse
+Nom de la classe	Name der Klasse
+Créer une classe	Klasse erstellen
+Enseignant	Lehrperson
+Bissabi doit d’abord valider votre rôle. Ce n’est pas une case dans l’application.	Bissabi muss Ihre Rolle zuerst bestätigen. Das ist kein Schalter in der App.
+Classe	Klasse
+La leçon en direct utilise l’appel du groupe. Le micro et la caméra restent éteints tant que chacun ne les ouvre pas. Zikru n’écoute pas et ne note pas la récitation.	Die Live-Lektion nutzt den Gruppenanruf. Mikrofon und Kamera bleiben aus, bis jede Person sie einschaltet. Zikru hört die Rezitation nicht an und benotet sie nicht.
+Accueillir des mineurs	Minderjährige aufnehmen
+Fermé par défaut. Un parent doit aussi l’autoriser pour son enfant.	Standardmässig aus. Ein Elternteil muss es für das Kind ebenfalls erlauben.
+Vidéo mixte	Gemischtes Video
+Fermée par défaut. Tant qu’elle est fermée, l’appel de la classe reste en audio.	Standardmässig aus. Solange es aus ist, bleibt der Klassenanruf nur Audio.
+La vidéo est ouverte par l’enseignant.	Das Video wurde von der Lehrperson geöffnet.
+La vidéo de cette classe est fermée. L’enseignant peut l’ouvrir.	Das Video dieser Klasse ist geschlossen. Die Lehrperson kann es öffnen.
+Leçons	Lektionen
+Rejoindre l’appel de la leçon	Dem Lektionsanruf beitreten
+Titre de la leçon	Titel der Lektion
+Début (AAAA-MM-JJ HH:MM)	Beginn (JJJJ-MM-TT HH:MM)
+2026-11-12 18:00	2026-11-12 18:00
+Du verset	Von Vers
+Au verset	Bis Vers
+Programmer la leçon	Lektion planen
+Indiquez un titre, une date AAAA-MM-JJ HH:MM et un passage valide.	Geben Sie einen Titel, ein Datum JJJJ-MM-TT HH:MM und eine gültige Stelle an.
+Consigne (facultatif)	Hinweis (optional)
+Donner ce passage à réciter	Diese Stelle zum Rezitieren geben
+Ce passage ne correspond pas à la sourate.	Diese Stelle passt nicht zur Sure.
+Récitations à préparer	Rezitationen zum Vorbereiten
+Aucune récitation pour l’instant.	Noch keine Rezitation.
+J’ai récité	Ich habe rezitiert
+Le rôle d’enseignant est accordé par Bissabi, pas dans l’application.	Die Lehrrolle vergibt Bissabi, nicht die App.
+Autoriser les classes	Klassen erlauben
+Fermé par défaut. L’enfant ne rejoint une classe que si vous l’autorisez et si l’enseignant a ouvert sa classe aux mineurs.	Standardmässig aus. Ein Kind tritt einer Klasse nur bei, wenn Sie es erlauben und die Lehrperson die Klasse für Minderjährige geöffnet hat.
+Les enfants ne rejoignent aucun cercle de proches. Une classe n’est possible qu’avec votre accord.	Kinder treten keinem Kreis der Angehörigen bei. Eine Klasse ist nur mit Ihrer Zustimmung möglich.

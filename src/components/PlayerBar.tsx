@@ -1,6 +1,7 @@
 import { setAudioModeAsync, type AudioPlayer, type AudioStatus } from 'expo-audio';
 import { useState } from 'react';
-import { Platform, Pressable, View, type LayoutChangeEvent } from 'react-native';
+import { Platform, View, type LayoutChangeEvent } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { IconButton, Ionicons, Muted, Row } from '@/ui/kit';
 import { L } from '@/lib/l10n';
@@ -15,7 +16,7 @@ export async function enableBackgroundAudio() {
   if (Platform.OS === 'web' || audioMode === 'quran') return;
   audioMode = 'quran';
   try {
-    await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' });
+    await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: !Platform.isTV, interruptionMode: 'doNotMix' });
   } catch {
     audioMode = 'none';
   }

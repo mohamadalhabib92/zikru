@@ -12,7 +12,7 @@ Supabase → Project Settings → Edge Functions → **Secrets** :
 
 | Secret | Valeur |
 | --- | --- |
-| `AI_API_KEY` | votre clé (Anthropic ou OpenAI), ex. `YOUR_AI_API_KEY` |
+| `BILAL_AI_API_KEY` | votre clé (Anthropic ou OpenAI), ex. `YOUR_BILAL_AI_API_KEY` — l'ancien nom `AI_API_KEY` reste accepté |
 | `AI_PROVIDER` | optionnel : `anthropic` (défaut) ou `openai` |
 | `AI_MODEL` | optionnel : défaut `claude-sonnet-4-5` (Anthropic) / `gpt-4o-mini` (OpenAI) |
 

@@ -13,24 +13,33 @@ import {
   candidateChars,
   ClickDecoder,
   DEFAULT_HID_KEYS,
+  HID_ON_BY_DEFAULT,
   defaultMapping,
   detectCounterField,
   detectProfile,
-  likelyCounter,
   isCounterKey,
   isValidUuid,
   autoConnectAllowed,
   classifyDevice,
+  gattIsHidOnly,
+  RECALL_SERVICES,
   COUNTER_NAME_PREFIXES,
   COUNTER_SERVICES,
   isDeviceVisible,
   connectRetryDelay,
+  adoptAbsoluteFrame,
+  clickCursor,
   keeperDelay,
   keeperPlan,
   matchKnown,
+  reconnectDecision,
+  frameOutcome,
+  type FrameDest,
   normUuid,
   profileById,
   sameUuid,
+  shortUuid,
+  shouldRearmNotify,
   servicesToRequest,
   STD,
   toHex,
@@ -91,9 +100,11 @@ export type BleState = {
   hiddenCount: number;
   /** « Afficher tous les appareils » (écran Diagnostic seulement, non mémorisé : revient à la liste stricte au redémarrage). */
   showAllDevices: boolean;
+  /** Bague HID déjà prise par le système : pas de notification BLE, compter les touches. */
+  hidOnly: boolean;
 };
 
-const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: Platform.OS === 'web', hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
+const DEFAULT_PREFS: Prefs = { profileId: 'auto', customService: '', hidEnabled: HID_ON_BY_DEFAULT, hidKeys: DEFAULT_HID_KEYS, sound: true, haptics: true, autoReconnect: true };
 const KEY = 'ble-counter';
 
 /** cursor : valeur absolue de l'appareil après ces appuis (compteur « absolu ») — enregistrée AVEC le compte. */
@@ -135,6 +146,7 @@ class BleCounterManager {
     similar: null,
     hiddenCount: 0,
     showAllDevices: false,
+    hidOnly: false,
   };
   private lastValues: Record<string, number> = {};
   /** Identifiants refusés (« ce n'est pas mon compteur ») : jamais proposés ni connectés automatiquement. */
@@ -152,7 +164,17 @@ class BleCounterManager {
   private clickSubs = new Set<ClickListener>();
   private cursors: CursorStore | null = null;
   private link: BleLink | null = null;
-  private unsub: (() => void)[] = [];
+  /** Désabonnements des notifications (réarmables sans couper le lien). */
+  private notifyStops: (() => void)[] = [];
+  /** Déconnexion du lien GATT. */
+  private linkStops: (() => void)[] = [];
+  /** Horodatage du dernier abonnement notify réussi. */
+  private armedAt = 0;
+  /** Incrémenté à chaque (ré)abonnement : une tentative plus ancienne s’arrête. */
+  private subGen = 0;
+  private rearmTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Horodatages des réarmements récents (évite une boucle si l’abonnement échoue tout de suite). */
+  private rearmTimes: number[] = [];
   private decoder: ClickDecoder | null = null;
   private learnSamples: LearnSample[] = [];
   private manualDisconnect = false;
@@ -201,18 +223,22 @@ class BleCounterManager {
   setCursorStore(c: CursorStore | null) {
     this.cursors = c;
   }
+  /**
+   * Compteur affiché à l’écran (le même objet que le doigt). Sert au journal :
+   * zikr ouvert, identifiant de la séance en cours, valeur avant / après.
+   */
+  private counterSnap: (() => { zikrId: string; count: number; session: string }) | null = null;
+  setCounterSnap(fn: (() => { zikrId: string; count: number; session: string }) | null) {
+    this.counterSnap = fn;
+  }
   /** Dernière valeur comptée pour un appareil : celle du magasin durable d'abord, sinon l'ancienne mémoire locale. */
   private storedValue(id: string): number | null {
     return this.cursors?.get(id) ?? this.lastValues[id] ?? null;
   }
-  private currentCursor(): BleCursor | undefined {
-    const id = this.s.device?.id;
-    const v = this.decoder?.lastValue;
-    return id && v != null && this.s.mapping?.mode === 'absolute' ? { id, value: v } : undefined;
-  }
   private emitClicks(n: number, source: ClickSourceBle, cursor?: BleCursor) {
     if (n <= 0) return;
     if (source === 'bluetooth') this.set({ clicksThisConnection: this.s.clicksThisConnection + n });
+    if (this.clickSubs.size === 0) diag.log('frame', `+${n} non remis au compteur : aucun auditeur`, 'warn');
     this.clickSubs.forEach((f) => f(n, source, cursor));
   }
   private persist() {
@@ -272,11 +298,11 @@ class BleCounterManager {
       this.set({ status: 'erreur', error: friendlyBleError(e) });
     }
   }
-  /** Liste affichée = appareils autorisés (compteurs, écouteurs, déjà associés), ou tous en mode diagnostic. */
+  /** Liste affichée = compteurs, bagues possibles, écouteurs, déjà associés, ou tous en mode diagnostic. */
   private publishScan() {
     const all = [...this.scanSeen.values()];
     const vis = all.filter((r) => isDeviceVisible(r.kind ?? 'other', { known: this.s.devices.some((d) => d.id === r.id), showAll: this.s.showAllDevices }));
-    const rank = (r: ScanResult) => (r.likely ? 0 : r.kind === 'audio' ? 1 : 2);
+    const rank = (r: ScanResult) => (r.kind === 'counter' || r.likely ? 0 : r.kind === 'maybe' ? 1 : r.kind === 'audio' ? 2 : 3);
     vis.sort((a, b) => rank(a) - rank(b) || Number(!!b.name) - Number(!!a.name) || (b.rssi ?? -999) - (a.rssi ?? -999));
     this.set({ scanResults: vis.slice(0, 60), hiddenCount: all.length - vis.length });
   }
@@ -295,25 +321,15 @@ class BleCounterManager {
       return;
     }
     this.stopScanning();
-    this.set({ scanning: true, scanResults: [], hiddenCount: 0, error: null });
+    this.set({ scanning: true, scanResults: [], hiddenCount: 0, error: null, hidOnly: false });
     const seen = new Map<string, ScanResult>();
     this.scanSeen = seen;
     try {
+      const recalled = (await transport.recall?.(RECALL_SERVICES, this.s.devices.map((d) => d.id)).catch(() => [])) ?? [];
+      for (const r of recalled) this.noteScan(r);
       this.stopScan = await transport.scan(
         (r) => {
-          const prev = seen.get(r.id);
-          const name = r.name ?? prev?.name ?? null;
-          const services = [...new Set([...(prev?.services ?? []), ...(r.services ?? [])])];
-          const appearance = r.appearance ?? prev?.appearance ?? null;
-          const manufacturerId = r.manufacturerId ?? prev?.manufacturerId ?? null;
-          const manufacturerData = r.manufacturerData ?? prev?.manufacturerData ?? null;
-          const c0 = classifyDevice({ name, services, appearance, manufacturerId, manufacturerData });
-          const cl = c0.kind === 'other' && prev?.kind && prev.kind !== 'other' ? { kind: prev.kind, reason: prev.reason ?? null } : c0;
-          const lk = likelyCounter(name, services);
-          const known = this.s.devices.some((d) => d.id === r.id);
-          const likely = cl.kind === 'counter' || known;
-          seen.set(r.id, { ...prev, ...r, name, services, appearance, manufacturerId, manufacturerData, kind: cl.kind, likely, reason: known ? 'déjà associé' : (cl.reason ?? lk.reason) });
-          this.publishScan();
+          this.noteScan(r);
         },
         (e) => {
           this.stopScanning();
@@ -327,6 +343,26 @@ class BleCounterManager {
       diag.error('scan', e);
       this.set({ scanning: false, error: bleMsg('scanFailed', { m: friendlyBleError(e) }) });
     }
+  }
+  /** Mémorise un appareil vu (scan, système ou identifiant) et rafraîchit la liste. */
+  private noteScan(r: ScanResult) {
+    const prev = this.scanSeen.get(r.id);
+    const name = r.name ?? prev?.name ?? null;
+    const services = [...new Set([...(prev?.services ?? []), ...(r.services ?? [])])];
+    const appearance = r.appearance ?? prev?.appearance ?? null;
+    const manufacturerId = r.manufacturerId ?? prev?.manufacturerId ?? null;
+    const manufacturerData = r.manufacturerData ?? prev?.manufacturerData ?? null;
+    const c0 = classifyDevice({ name, services, appearance, manufacturerId, manufacturerData });
+    const cl = c0.kind === 'other' && prev?.kind && prev.kind !== 'other' ? { kind: prev.kind, reason: prev.reason ?? c0.reason } : c0.kind === 'maybe' && prev?.kind === 'counter' ? { kind: prev.kind, reason: prev.reason ?? c0.reason } : c0;
+    const known = this.s.devices.some((d) => d.id === r.id);
+    const likely = cl.kind === 'counter' || known;
+    this.scanSeen.set(r.id, { ...prev, ...r, name, services, appearance, manufacturerId, manufacturerData, kind: cl.kind, likely, reason: known ? 'déjà associé' : cl.reason, via: r.via ?? prev?.via ?? 'scan' });
+    this.publishScan();
+  }
+  /** Connexion d’essai : on branche l’appareil et on attend les appuis pour confirmer que c’est la bague. */
+  async tryDevice(id: string) {
+    const ok = await this.connectTo(id);
+    if (ok && !this.s.hidOnly) this.startLearn(3);
   }
   stopScanning() {
     if (this.scanTimer) clearTimeout(this.scanTimer);
@@ -375,7 +411,7 @@ class BleCounterManager {
         return false;
       }
       this.link = link;
-      this.unsub.push(link.onDisconnect(() => this.handleDisconnect(link)));
+      this.linkStops.push(link.onDisconnect(() => this.handleDisconnect(link)));
       const chosen = profileById(this.s.prefs.profileId);
       const profile = chosen.id === 'auto' ? detectProfile(link.name, link.chars) : chosen;
       const mapping = this.mappings[link.id] ?? defaultMapping(profile, link.chars);
@@ -394,7 +430,7 @@ class BleCounterManager {
       this.persist();
       this.decoder = mapping ? this.makeDecoder(mapping, profile, link.id) : null;
       // Réabonnement immédiat à la caractéristique apprise (et aux autres candidates).
-      await this.subscribeAll(link, profile);
+      await this.subscribeAll(link, profile, 'connexion');
       await this.readBattery(link);
       // Synchronisation : lit le total stocké dans l'appareil (si lisible) et n'ajoute que la différence.
       const mc = mapping && link.chars.find((c) => sameUuid(c.service, mapping.service) && sameUuid(c.uuid, mapping.characteristic));
@@ -426,7 +462,8 @@ class BleCounterManager {
         return false;
       }
       const f = friendlyBleError(e);
-      this.set({ status: 'erreur', error: f === msg ? bleMsg('connectFailed', { m: msg }) : f });
+      const hid = this.scanSeen.get(id)?.services?.some((s) => sameUuid(s, STD.hid));
+      this.set({ status: 'erreur', error: hid ? bleMsg('hidOnly') : f === msg ? bleMsg('connectFailed', { m: msg }) : f, hidOnly: !!hid });
       this.scheduleKeeper();
       return false;
     } finally {
@@ -448,8 +485,22 @@ class BleCounterManager {
     if (this.persistTimer) clearTimeout(this.persistTimer);
     this.persistTimer = setTimeout(() => this.persist(), 200);
   }
-  private async subscribeAll(link: BleLink, profile: DeviceProfile) {
-    // Une seule fois par caractéristique (une double inscription — restauration iOS + reconnexion — doublerait les appuis).
+  private stopList(list: (() => void)[]) {
+    list.splice(0).forEach((f) => {
+      try {
+        f();
+      } catch {
+        /* ignoré */
+      }
+    });
+  }
+  /**
+   * (Ré)abonne toutes les caractéristiques notify. N’appelle pas disconnect :
+   * au verrouillage iOS le lien reste souvent ouvert alors que l’abonnement est mort.
+   */
+  private async subscribeAll(link: BleLink, profile: DeviceProfile, reason: string) {
+    const gen = ++this.subGen;
+    this.stopList(this.notifyStops);
     const seen = new Set<string>();
     const targets = candidateChars(link.chars).filter((c) => {
       const k = normUuid(c.service) + '|' + normUuid(c.uuid);
@@ -457,19 +508,82 @@ class BleCounterManager {
       seen.add(k);
       return true;
     });
+    let ok = 0;
     let failed = 0;
+    const lost = (info: { service: string; characteristic: string; code: number; reason: string }) => {
+      if (gen !== this.subGen || this.link !== link) return;
+      diag.log('frame', `notification perdue ${shortUuid(info.characteristic)} (${info.reason})`, 'warn');
+      // 201 : l’appareil n’est plus là. Le reste : l’abonnement est tombé, le lien peut être encore ouvert.
+      if (info.code === 201) this.handleDisconnect(link);
+      else this.scheduleRearm('perte abonnement');
+    };
     for (const c of targets) {
+      if (gen !== this.subGen || this.link !== link) return;
       try {
-        const off = await link.subscribe(c.service, c.uuid, (b) => this.onNotify(c.service, c.uuid, b, profile));
-        this.unsub.push(off);
+        const off = await link.subscribe(
+          c.service,
+          c.uuid,
+          (b) => {
+            if (gen !== this.subGen || this.link !== link) return;
+            this.onNotify(c.service, c.uuid, b, profile);
+          },
+          lost,
+        );
+        if (gen !== this.subGen || this.link !== link) {
+          off();
+          return;
+        }
+        this.notifyStops.push(off);
+        ok++;
       } catch (e) {
-        // caractéristique refusée (liste de blocage web, chiffrement/appairage…) : signalée dans le diagnostic
         failed++;
-        diag.log('notify', `${c.service} / ${c.uuid} refusée : ${errMsg(e)}`, 'warn');
+        diag.log('notify', `${shortUuid(c.uuid)} refusée : ${errMsg(e)}`, 'warn');
       }
     }
-    if (targets.length === 0) this.set({ error: bleMsg('noNotify') });
-    else if (failed === targets.length) this.set({ error: bleMsg('subFailed', { n: failed }) });
+    this.armedAt = Date.now();
+    const line = `abonnement ${ok}/${targets.length}${failed ? `, ${failed} refus` : ''} (${reason})`;
+    diag.log('notify', line, failed > 0 && ok === 0 ? 'error' : 'info');
+    diag.log('frame', line, failed > 0 && ok === 0 ? 'warn' : 'info');
+    if (gattIsHidOnly(link.chars) && ok === 0) this.set({ hidOnly: true, error: bleMsg('hidOnly') });
+    else if (targets.length === 0) this.set({ error: bleMsg('noNotify'), hidOnly: false });
+    else if (failed === targets.length) this.set({ error: bleMsg('subFailed', { n: failed }), hidOnly: false });
+    else this.set({ hidOnly: false });
+  }
+  /** Retour au premier plan, restauration iOS, ou abonnement tombé : vérifier le lien puis réarmer. */
+  private scheduleRearm(reason: string) {
+    if (this.rearmTimer) clearTimeout(this.rearmTimer);
+    this.rearmTimer = setTimeout(() => {
+      this.rearmTimer = null;
+      void this.recheckLink(reason);
+    }, 400);
+  }
+  private async recheckLink(reason: string) {
+    const link = this.link;
+    if (!link || !this.s.profile) return;
+    const event = reason === 'perte abonnement' ? 'subscription-lost' : reason === 'restauration iOS' ? 'ios-restore' : 'foreground';
+    const still = transport.connected ? await transport.connected(link.id).catch(() => true) : true;
+    if (this.link !== link) return;
+    if (!still) {
+      diag.log('frame', `lien coupé sans événement (${reason}) → reconnexion`, 'warn');
+      this.handleDisconnect(link);
+      return;
+    }
+    const ago = this.armedAt ? Date.now() - this.armedAt : Number.POSITIVE_INFINITY;
+    if (!shouldRearmNotify(event, { linked: true, armedAgoMs: ago })) {
+      diag.log('frame', `abonnement conservé (${reason}, armé il y a ${Math.max(0, Math.round(ago))} ms)`);
+      return;
+    }
+    const now = Date.now();
+    this.rearmTimes = this.rearmTimes.filter((t) => now - t < 30000);
+    if (event !== 'foreground' && this.rearmTimes.length >= 4) {
+      diag.log('frame', `abonnement en échec répété (${reason}) → nouvelle connexion`, 'warn');
+      this.rearmTimes = [];
+      this.handleDisconnect(link);
+      return;
+    }
+    if (event !== 'foreground') this.rearmTimes.push(now);
+    await this.subscribeAll(link, this.s.profile, reason);
+    if (this.link === link) await this.readBattery(link);
   }
   private async readBattery(link: BleLink) {
     const c = link.chars.find((x) => sameUuid(x.service, STD.battery) && sameUuid(x.uuid, STD.batteryLevel));
@@ -478,26 +592,40 @@ class BleCounterManager {
     if (b && b.length) this.set({ battery: b[0] });
     if (c.notify) {
       try {
-        this.unsub.push(await link.subscribe(c.service, c.uuid, (v) => v.length && this.set({ battery: v[0] })));
+        this.notifyStops.push(await link.subscribe(c.service, c.uuid, (v) => v.length && this.set({ battery: v[0] })));
       } catch {
         /* lecture seule */
       }
     }
+  }
+  private noteFrame(characteristic: string, b: Bytes, applied: number, reason: string, dest?: FrameDest | null) {
+    diag.log('frame', frameOutcome(shortUuid(characteristic), toHex(b), applied, reason, dest), applied > 0 ? 'info' : 'warn');
   }
   private onNotify(service: string, characteristic: string, b: Bytes, profile: DeviceProfile) {
     this.set({ notifyCount: this.s.notifyCount + 1, lastHex: `${characteristic.slice(4, 8)} · ${toHex(b)}`, lastAt: Date.now() });
     if (this.s.learn.active) {
       this.learnSamples.push({ service, characteristic, bytes: b });
       this.set({ learn: { ...this.s.learn, received: this.learnSamples.length } });
+      this.noteFrame(characteristic, b, 0, 'apprentissage, pas encore compté');
       // Confirmation automatique dès que N trames d'un compteur absolu ont été reçues.
       const r = analyzeLearn(this.learnSamples, this.s.learn.presses, profile.parse);
       if (r.ok && r.mapping.mode === 'absolute' && r.confidence === 'haute') this.finishLearn();
       return;
     }
     let m = this.s.mapping;
+    const adopted = adoptAbsoluteFrame(m, service, characteristic, b, profile.parse, this.s.clicksThisConnection);
+    if (adopted) {
+      m = adopted;
+      const devId = this.s.device?.id;
+      this.decoder = new ClickDecoder(m, profile.parse, 0, devId ? this.storedValue(devId) : null);
+      if (devId) this.mappings[devId] = m;
+      this.set({ mapping: m });
+      this.persist();
+    }
     if (!m) {
       // Aucune correspondance : on cherche automatiquement un champ compteur (profil connu, entier 1–4 octets ou nombre ASCII).
       const p = profile.parse(b);
+      let detected = 0;
       if (p && p.kind === 'absolute') {
         m = { service: normUuid(service), characteristic: normUuid(characteristic), mode: 'absolute', byteIndex: -1, auto: true };
       } else {
@@ -505,10 +633,14 @@ class BleCounterManager {
         const frames = [...(this.autoFrames.get(key) ?? []), b].slice(-4);
         this.autoFrames.set(key, frames);
         const field = frames.length >= 3 ? detectCounterField(frames) : null;
-        if (!field) return;
+        if (!field) {
+          this.noteFrame(characteristic, b, 0, 'détection en cours, champ pas encore reconnu');
+          return;
+        }
         m = { service: normUuid(service), characteristic: normUuid(characteristic), mode: 'absolute', field, auto: true };
         // les appuis ayant servi à la détection sont comptés (sauf la première trame, qui sert de référence)
-        this.emitClicks(frames.length - 1, 'bluetooth');
+        detected = Math.max(0, frames.length - 1);
+        this.emitClicks(detected, 'bluetooth');
       }
       const devId = this.s.device?.id;
       this.decoder = new ClickDecoder(m, profile.parse, 0, devId && !m.field ? this.storedValue(devId) : null);
@@ -516,17 +648,55 @@ class BleCounterManager {
       this.set({ mapping: m, needsConfirm: true });
       this.persist();
       if (m.field) {
-        this.decoder.feed(b);
+        // Le décodeur prend la dernière trame comme référence. Les appuis sont déjà émis.
+        this.decoder.feedPacket(b);
+        this.noteFrame(characteristic, b, detected, 'champ détecté');
         this.rememberValue();
         return;
       }
     }
-    if (!sameUuid(m.characteristic, characteristic) || !sameUuid(m.service, service) || !this.decoder) return;
-    const n = this.decoder.feed(b);
+    const onMapped = sameUuid(m.characteristic, characteristic) && sameUuid(m.service, service);
+    // La bague peut notifier le total sur une autre caractéristique que celle retenue : une trame connue (BSTWSH, iQibla) est quand même comptée.
+    const foreignAbsolute = !onMapped && m.mode === 'absolute' && profile.parse(b)?.kind === 'absolute';
+    if (!this.decoder) {
+      this.noteFrame(characteristic, b, 0, 'pas de décodeur');
+      return;
+    }
+    if (!onMapped && !foreignAbsolute) {
+      this.noteFrame(characteristic, b, 0, 'autre caractéristique');
+      return;
+    }
+    const n = this.decoder.feedPacket(b);
     const ev = this.decoder.lastEvent;
-    if (ev) diag.log('decode', ev === 'attente' ? `valeur inattendue ${toHex(b)} : en attente de confirmation` : ev === 'confirmé' ? `valeur confirmée : +${n}` : ev === 'parasite' ? 'trame parasite ignorée' : 'double livraison ignorée', ev === 'confirmé' ? 'info' : 'warn');
+    const reason = n > 0
+      ? ev === 'impulsion'
+        ? this.decoder.lastValue == null
+          ? 'trame sans compteur, comptée comme un appui'
+          : 'valeur fixe, comptée comme un appui'
+        : this.decoder.lastWasSync
+          ? 'rattrapage hors connexion'
+          : ev === 'confirmé'
+            ? 'valeur confirmée'
+            : 'compté'
+      : ev === 'attente'
+        ? 'en attente de confirmation'
+        : ev === 'parasite'
+          ? 'trame parasite'
+          : ev === 'doublon'
+            ? 'double livraison'
+            : 'valeur inchangée';
+    if (ev && ev !== 'impulsion') diag.log('decode', ev === 'attente' ? `valeur inattendue ${toHex(b)} : en attente de confirmation` : ev === 'confirmé' ? `valeur confirmée : +${n}` : ev === 'parasite' ? 'trame parasite ignorée' : 'double livraison ignorée', ev === 'confirmé' ? 'info' : 'warn');
     if (this.decoder.lastWasSync && n > 0) this.set({ lastSync: { added: n, at: Date.now() } });
-    this.emitClicks(n, 'bluetooth', this.currentCursor());
+    const before = this.counterSnap?.() ?? null;
+    // Même chemin que le doigt (addClicks → magasin du tasbih), sans curseur quand
+    // la trame est une impulsion : le curseur de la valeur figée jetterait l’appui.
+    const cursor = clickCursor(this.s.mapping?.mode, ev, this.s.device?.id, this.decoder.lastValue);
+    this.emitClicks(n, 'bluetooth', cursor);
+    const after = this.counterSnap?.() ?? null;
+    const landed = before && after ? Math.max(0, after.count - before.count) : n;
+    const why = n > 0 && before && after && landed === 0 ? `${reason}, non écrit sur le compteur affiché` : reason;
+    const dest: FrameDest | null = before && after && n > 0 ? { zikrId: after.zikrId, session: after.session, before: before.count, after: after.count } : null;
+    this.noteFrame(characteristic, b, landed, why, dest);
     this.rememberValue();
   }
   private handleDisconnect(link: BleLink) {
@@ -535,24 +705,23 @@ class BleCounterManager {
     void this.teardown();
     this.set({ battery: null });
     if (this.manualDisconnect || !this.isAuto(id)) {
-      this.set({ status: 'déconnecté' });
+      this.set({ status: 'déconnecté', hidOnly: false });
       this.refreshAutoIdle();
       return;
     }
     // Hors de portée / éteint : on continue de chercher (sans limite), y compris en arrière-plan.
     this.set({ status: 'reconnexion', auto: 'recherche', autoTarget: link.name ?? this.s.device?.name ?? null });
     this.keeperAttempt = 0;
-    if (this.inBackground()) this.waitFor(id);
+    const action = reconnectDecision('link-loss', { remembered: true, linked: false, background: this.inBackground() });
+    if (action === 'wait-system') this.waitFor(id);
     else this.kick();
   }
   private async teardown() {
-    this.unsub.splice(0).forEach((f) => {
-      try {
-        f();
-      } catch {
-        /* ignoré */
-      }
-    });
+    if (this.rearmTimer) clearTimeout(this.rearmTimer);
+    this.rearmTimer = null;
+    this.subGen++;
+    this.stopList(this.notifyStops);
+    this.stopList(this.linkStops);
     const l = this.link;
     this.link = null;
     this.decoder = null;
@@ -575,7 +744,7 @@ class BleCounterManager {
     this.cancelPending();
     this.connectSeq++;
     await this.teardown();
-    this.set({ status: 'déconnecté', battery: null, attempt: 0, auto: 'inactif', autoTarget: null });
+    this.set({ status: 'déconnecté', battery: null, attempt: 0, auto: 'inactif', autoTarget: null, hidOnly: false });
   }
   /** Oublie un appareil mémorisé (par défaut l'appareil courant). */
   forget(id?: string) {
@@ -628,14 +797,29 @@ class BleCounterManager {
     this.keeperOffs.push(() => app.remove());
     if (transport.onStateChange) {
       this.keeperOffs.push(
-        transport.onStateChange((on) => {
+        transport.onStateChange((st) => {
+          if (st === 'resetting') {
+            this.set({ availability: { ok: false, kind: 'disabled', reason: bleMsg('resetting') } });
+            return;
+          }
+          if (st === 'denied') {
+            this.clearKeeperTimer();
+            this.set({ availability: { ok: false, kind: 'denied', reason: Platform.OS === 'android' ? bleMsg('deniedAndroid') : bleMsg('deniedIos') }, auto: 'indisponible' });
+            return;
+          }
+          const on = st === 'on';
+          const action = reconnectDecision(on ? 'bluetooth-on' : 'bluetooth-off', { remembered: this.autoDevices().length > 0, linked: !!this.link, background: this.inBackground() });
           if (on) {
             this.set({ availability: { ok: true } });
             this.keeperAttempt = 0;
-            this.kick();
-          } else if (!this.link) {
+            if (action === 'search-now') this.kick();
+            else if (action === 'wait-system') {
+              const top = this.autoDevices()[0];
+              if (top) this.waitFor(top.id);
+            }
+          } else if (action === 'pause') {
             this.clearKeeperTimer();
-            this.set({ availability: { ok: false, kind: 'disabled', reason: 'Bluetooth désactivé' }, auto: this.autoDevices().length ? 'bt-off' : 'inactif' });
+            this.set({ availability: { ok: false, kind: 'disabled', reason: bleMsg('off') }, auto: this.autoDevices().length ? 'bt-off' : 'inactif' });
           }
         }),
       );
@@ -647,7 +831,8 @@ class BleCounterManager {
           if (!ids.length) return;
           ids.forEach((i) => this.restored.add(i));
           // reprise de l'appareil déjà connecté par iOS (pas de nouvelle connexion) : annule une attente éventuelle
-          if (!this.link) {
+          if (this.link && ids.includes(this.link.id)) void this.recheckLink('restauration iOS');
+          if (reconnectDecision('ios-restore', { remembered: ids.length > 0, linked: !!this.link, background: this.inBackground() }) === 'search-now') {
             this.cancelPending();
             this.keeperAttempt = 0;
             this.kick();
@@ -660,8 +845,13 @@ class BleCounterManager {
     const prev = this.appState;
     this.appState = st;
     if (st === 'active' && prev !== 'active') {
+      // Le lien peut être encore ouvert alors que l’abonnement notify ne délivre plus (verrouillage iOS).
+      if (this.link) {
+        void this.recheckLink('premier plan');
+        return;
+      }
       // retour au premier plan : nouvelle recherche immédiate
-      if (this.link) return;
+      if (reconnectDecision('foreground', { remembered: this.autoDevices().length > 0, linked: !!this.link, background: false }) !== 'search-now') return;
       this.cancelPending();
       this.keeperAttempt = 0;
       this.kick();
@@ -670,7 +860,7 @@ class BleCounterManager {
         clearTimeout(this.persistTimer);
         this.persist();
       }
-      if (Platform.OS !== 'web' && !this.link && !this.ensuring) {
+      if (Platform.OS !== 'web' && !this.ensuring && reconnectDecision('background', { remembered: this.autoDevices().length > 0, linked: !!this.link, background: true }) === 'wait-system') {
         // les minuteries JS sont suspendues en arrière-plan : connexion en attente gérée par le système
         this.clearKeeperTimer();
         const top = this.autoDevices()[0];
@@ -766,6 +956,7 @@ class BleCounterManager {
       usable.sort((a, b) => Number(this.restored.has(b.id)) - Number(this.restored.has(a.id)));
       for (const c of usable) {
         if (stale()) return;
+        await transport.retrieve?.(c.id).catch(() => false);
         if (await this.connectTo(c.id, true, { timeoutMs: 8000 })) return;
       }
       if (stale()) return;

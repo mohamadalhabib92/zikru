@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { type TextStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import type { HideMode } from '@/lib/quran-store';
 import { alpha, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 /** Jeton qui n’est pas un mot : signes de pause, ۞ (début de hizb), ۩ (prosternation), numéro de verset. */
 const MARK = /^[\u06D6-\u06ED\u06DE\u06E9\u0660-\u0669\u06DD]+$/;
@@ -22,20 +23,25 @@ export function hiddenAt(mode: HideMode, k: number) {
  * Toucher un mot le révèle ; `revealAll` révèle tout le verset.
  */
 export function HideText({ text, mode, revealAll, size, lineH, color, suffix, style, onRevealWord }: { text: string; mode: HideMode; revealAll?: boolean; size: number; lineH: number; color: string; suffix?: string; style?: TextStyle; onRevealWord?: () => void }) {
+  const sig = `${mode}\n${text}`;
+  const [shownFor, setShownFor] = useState(sig);
   const [shown, setShown] = useState<Set<number>>(new Set());
-  useEffect(() => setShown(new Set()), [text, mode]);
+  if (shownFor !== sig) {
+    setShownFor(sig);
+    setShown(new Set());
+  }
   const words = text.split(/\s+/).filter(Boolean);
   let k = -1;
   const base: TextStyle = { fontFamily: fonts.quran, fontSize: size, lineHeight: Math.round(size * lineH), color, textAlign: 'right', writingDirection: 'rtl', ...style };
   if (mode === 'none' || revealAll)
     return (
-      <Text style={base}>
+      <Text {...arLang} style={base}>
         {text}
         {suffix ? ` ${suffix}` : ''}
       </Text>
     );
   return (
-    <Text style={base} accessibilityHint={L("Touchez un mot masqué pour le révéler")}>
+    <Text {...arLang} style={base} accessibilityHint={L("Touchez un mot masqué pour le révéler")}>
       {words.map((w, i) => {
         const mark = isMark(w);
         if (!mark) k++;

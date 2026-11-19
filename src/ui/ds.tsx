@@ -1,18 +1,41 @@
-import * as Haptics from 'expo-haptics';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Easing, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import Svg, { Circle } from 'react-native-svg';
+import { useVisualEffects } from './effects';
 import { Ionicons, type IconName } from './kit';
 import { alpha, brand as b, elevation } from './theme';
 import { L } from '@/lib/l10n';
+import { isIosAppOnMac } from '@/lib/mac';
 
 /** Composants du système de design 1.0.19 (au-dessus de kit/light). */
 
 const native = Platform.OS !== 'web';
-/** Retour haptique léger (silencieux sur le web). */
+type HapticModule = typeof import('expo-haptics');
+// Apple TV n’a pas de retour haptique. Sur iPhone, Platform.isTV est faux : le module est chargé au démarrage, comme avant.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Haptics: HapticModule | null = Platform.isTV ? null : (require('expo-haptics') as HapticModule);
+
+/** Préférence système « Réduire les animations » (iOS, Android, navigateur), suivie en direct. */
+export function useReduceMotion(): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void AccessibilityInfo.isReduceMotionEnabled()
+      .then((v) => alive && setOn(!!v))
+      .catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', (v) => setOn(!!v));
+    return () => {
+      alive = false;
+      sub?.remove?.();
+    };
+  }, []);
+  return on;
+}
+/** Retour haptique léger (silencieux sur le web et sur Mac, qui n’a pas ce moteur). */
 export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'light') {
-  if (!native) return;
+  if (!native || !Haptics || isIosAppOnMac()) return;
   try {
     if (kind === 'success') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     else if (kind === 'select') void Haptics.selectionAsync();
@@ -24,7 +47,7 @@ export function tapHaptic(kind: 'light' | 'medium' | 'success' | 'select' = 'lig
 export const SIDEBAR_MIN_WINDOW = 1024;
 export const SIDEBAR_WIDTH = 232;
 export function hasSidebar(windowWidth: number) {
-  return windowWidth >= SIDEBAR_MIN_WINDOW;
+  return windowWidth >= (isIosAppOnMac() ? 900 : SIDEBAR_MIN_WINDOW);
 }
 
 /**
@@ -140,7 +163,9 @@ export function ProgressBar({ progress, color = b.green, height = 6 }: { progres
 /** Bloc squelette animé (chargement). */
 export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `${number}%`; h?: number; r?: number; style?: StyleProp<ViewStyle> }) {
   const [o] = useState(() => new Animated.Value(0.45));
+  const reduce = useReduceMotion();
   useEffect(() => {
+    if (reduce) return o.setValue(0.7); // passe 6 : pas de pulsation si « Réduire les animations »
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(o, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: native }),
@@ -149,16 +174,21 @@ export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `$
     );
     loop.start();
     return () => loop.stop();
-  }, [o]);
+  }, [o, reduce]);
   return <Animated.View accessibilityLabel={L("Chargement")} style={[{ width: w, height: h, borderRadius: r, backgroundColor: b.line, opacity: o }, style]} />;
 }
 
 /** Apparition douce (fondu + léger glissement). */
 export function FadeIn({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: StyleProp<ViewStyle> }) {
+  const reduce = useReduceMotion();
   const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
+    if (reduce) {
+      v.setValue(1);
+      return;
+    }
     Animated.timing(v, { toValue: 1, duration: 320, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
-  }, [v, delay]);
+  }, [v, delay, reduce]);
   return <Animated.View style={[{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }, style]}>{children}</Animated.View>;
 }
 

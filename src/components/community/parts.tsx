@@ -1,12 +1,15 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Share, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { PWA_URL } from '@/lib/backend';
+import { callRights, callStatus } from '@/lib/calls/api';
+import { availability, LABEL_TRANSIT, type CallAvailability } from '@/lib/calls/core';
+import { callsSupported } from '@/lib/calls/support';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
-import { Badge, Button, Card, Chip, Field, H2, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Field, H2, Ionicons, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
@@ -26,26 +29,45 @@ export function confirmAsk(title: string, text: string, ok: string, onOk: () => 
 
 /** Chargement simple avec erreur lisible et rechargement. */
 export function useLoad<T>(fn: () => Promise<T>, deps: unknown[]) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const run = useCallback(fn, deps);
+  const key = JSON.stringify(deps);
+  const fnRef = useRef(fn);
+  useLayoutEffect(() => {
+    fnRef.current = fn;
+  });
+  const [slot, setSlot] = useState<{ key: string; data: T | null; error: string | null } | null>(null);
+  const [pending, setPending] = useState(false);
+  const current = slot && slot.key === key ? slot : null;
   const reload = useCallback(async () => {
-    setLoading(true);
+    setPending(true);
     try {
-      setData(await run());
-      setError(null);
+      const data = await fnRef.current();
+      setSlot({ key, data, error: null });
     } catch (e) {
-      setError(api.frError(e));
+      setSlot({ key, data: null, error: api.frError(e) });
     } finally {
-      setLoading(false);
+      setPending(false);
     }
-  }, [run]);
+  }, [key]);
   useEffect(() => {
-    void reload();
-  }, [reload]);
-  return { data, error, loading, reload, setData };
+    let alive = true;
+    void fnRef.current()
+      .then((data) => {
+        if (alive) setSlot({ key, data, error: null });
+      })
+      .catch((e) => {
+        if (alive) setSlot({ key, data: null, error: api.frError(e) });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [key]);
+  const setData = useCallback(
+    (data: T | null) => {
+      setSlot({ key, data, error: null });
+    },
+    [key],
+  );
+  return { data: current?.data ?? null, error: current?.error ?? null, loading: current == null || pending, reload, setData };
 }
 
 export function ProgressBar({ value, target }: { value: number; target: number }) {
@@ -78,10 +100,12 @@ export function GoalCard({
   canAdmin,
   gentle,
   managedChildren = [],
+  onMove,
 }: {
   goal: api.Goal;
   scopeName: string;
   canAdmin: boolean;
+  onMove?: (dir: -1 | 1) => Promise<void>;
   /** Mode enfant : pas de comparaison entre membres. */
   gentle?: boolean;
   managedChildren?: { id: string; name: string }[];
@@ -90,24 +114,26 @@ export function GoalCard({
   const [p, setP] = useState<api.GoalProgress | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [custom, setCustom] = useState('');
+  const [targetTxt, setTargetTxt] = useState(String(goal.target));
+  const [moveErr, setMoveErr] = useState<string | null>(null);
   const [forMember, setForMember] = useState<string | null>(null);
   const scopeId = (goal.family_id ?? goal.circle_id) as string;
-  const load = useCallback(async () => {
-    try {
-      setP(await api.goalProgress(goal.id));
-      setErr(null);
-    } catch (e) {
-      setErr(api.frError(e));
-    }
+  const load = useCallback(() => {
+    void api
+      .goalProgress(goal.id)
+      .then((next) => {
+        setP(next);
+        setErr(null);
+      })
+      .catch((e) => setErr(api.frError(e)));
   }, [goal.id]);
   useEffect(() => {
-    void load();
-    const i = setInterval(() => void load(), 15000);
+    load();
+    const i = setInterval(() => load(), 15000);
     return () => clearInterval(i);
   }, [load]);
-  // Recharge après chaque envoi réussi.
   useEffect(() => {
-    if (c.lastSync) void load();
+    if (c.lastSync) load();
   }, [c.lastSync, load]);
 
   const total = p?.total ?? 0;
@@ -181,13 +207,30 @@ export function GoalCard({
         </View>
       ) : null}
       {canAdmin ? (
-        <Button
-          small
-          variant="ghost"
-          icon="archive-outline"
-          title="Archiver l’objectif"
-          onPress={() => confirmAsk('Archiver cet objectif ?', 'Il ne sera plus affiché.', 'Archiver', () => void api.archiveGoal(goal.id).then(load).catch(() => {}))}
-        />
+        <View style={{ marginTop: 8, gap: 8 }}>
+          <Field label={L('Nombre cible')} keyboardType="number-pad" value={targetTxt} onChangeText={setTargetTxt} />
+          <Row gap={8}>
+            <Button
+              small
+              title={L('Enregistrer le nombre')}
+              onPress={() => {
+                const n = parseInt(targetTxt, 10);
+                if (!(n > 0)) return;
+                void api.updateGoalComposition(goal.id, { target: n }).then(load).catch((e) => setMoveErr(api.frError(e)));
+              }}
+            />
+            {onMove ? <Button small variant="ghost" title={L('Monter')} onPress={() => void onMove(-1).catch((e) => setMoveErr(api.frError(e)))} /> : null}
+            {onMove ? <Button small variant="ghost" title={L('Descendre')} onPress={() => void onMove(1).catch((e) => setMoveErr(api.frError(e)))} /> : null}
+          </Row>
+          {moveErr ? <Muted style={{ color: t.danger }}>{moveErr}</Muted> : null}
+          <Button
+            small
+            variant="ghost"
+            icon="archive-outline"
+            title="Archiver l’objectif"
+            onPress={() => confirmAsk('Archiver cet objectif ?', 'Il ne sera plus affiché.', 'Archiver', () => void api.archiveGoal(goal.id).then(load).catch(() => {}))}
+          />
+        </View>
       ) : null}
     </Card>
   );
@@ -357,7 +400,126 @@ export function SharingPicker({ scope, scopeId }: { scope: api.ScopeType; scopeI
 }
 
 /** Sessions de zikr en direct du lieu. */
-export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: string }) {
+/** Non lus des discussions de groupe (pastilles) ; vide si serveur indisponible, jamais bloquant. */
+export function useGroupUnread() {
+  const { userId } = useAuth();
+  const [rows, setRows] = useState<api.GroupUnread[]>([]);
+  const [available, setAvailable] = useState<boolean | null>(api.groupChatAvailable());
+  const [tick, setTick] = useState(0);
+  const reload = useCallback(() => setTick((n) => n + 1), []);
+  useEffect(() => {
+    let on = true;
+    void (userId ? api.groupUnread() : Promise.resolve([] as api.GroupUnread[])).then((r) => {
+      if (!on) return;
+      setRows(r);
+      setAvailable(api.groupChatAvailable());
+    });
+    return () => {
+      on = false;
+    };
+  }, [userId, tick]);
+  const of = (scope: api.ScopeType, id: string) => rows.find((r) => r.scope_type === scope && r.scope_id === id);
+  return { rows, of, reload, available };
+}
+
+/** Pastille ronde « non lus » (99+), discrète si la discussion est en sourdine. */
+export function UnreadBadge({ n, muted }: { n: number; muted?: boolean }) {
+  if (!n) return null;
+  const label = n > 99 ? '99+' : String(n);
+  return (
+    <View accessibilityLabel={L('{n} messages non lus', { n: label })} style={{ minWidth: 24, height: 24, borderRadius: 12, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: muted ? t.surfaceAlt : t.primary }}>
+      <Text style={{ color: muted ? t.muted : t.onPrimary, fontSize: 12, fontWeight: '700' }}>{label}</Text>
+    </View>
+  );
+}
+
+/** Accès à la discussion de groupe (écran chargé à la demande). */
+export function DiscussionCard({ scope, scopeId, name }: { scope: api.ScopeType; scopeId: string; name: string }) {
+  const u = useGroupUnread();
+  const r = u.of(scope, scopeId);
+  if (u.available === null) return null;
+  if (!u.available)
+    return (
+      <Card>
+        <Row gap={10} style={{ alignItems: 'center' }}>
+          <Ionicons name="chatbubbles-outline" size={22} color={t.muted} />
+          <View style={{ flex: 1 }}>
+            <H2>Discussion</H2>
+            <Muted style={{ fontSize: 12 }}>Bientôt disponible pour vos groupes.</Muted>
+          </View>
+        </Row>
+      </Card>
+    );
+  return (
+    <Card
+      accessibilityLabel={L('Ouvrir la discussion du groupe') + (r?.unread ? ' · ' + L('{n} messages non lus', { n: r.unread > 99 ? '99+' : r.unread }) : '')}
+      onPress={() => router.push({ pathname: '/discussion', params: { scope, id: scopeId, name } })}
+    >
+      <Row gap={10} style={{ alignItems: 'center' }}>
+        <Ionicons name="chatbubbles-outline" size={22} color={t.primary} />
+        <View style={{ flex: 1 }}>
+          <H2>Discussion</H2>
+          <Muted style={{ fontSize: 12 }}>chiffré en transit, pas encore de bout en bout</Muted>
+        </View>
+        {r?.muted ? <Ionicons name="notifications-off-outline" size={16} color={t.muted} accessibilityLabel={L('En sourdine')} /> : null}
+        <UnreadBadge n={r?.unread ?? 0} muted={r?.muted} />
+        <Ionicons name="chevron-forward" size={18} color={t.muted} />
+      </Row>
+    </Card>
+  );
+}
+
+/**
+ * Accès à l'appel de groupe (écran et WebRTC chargés à la demande). Kill-switch serveur : tant que la migration
+ * « appels » n'est pas appliquée, que calls.enabled est faux, ou que ce binaire n'a pas le module d'appel,
+ * la carte affiche « Bientôt disponible ». Ne bloque jamais le reste de l'écran.
+ */
+export function CallCard({ scope, scopeId, name }: { scope: api.ScopeType; scopeId: string; name: string }) {
+  const [av, setAv] = useState<CallAvailability | null>(null);
+  const [live, setLive] = useState(0);
+  useEffect(() => {
+    let on = true;
+    void callRights(scope, scopeId).then((r) => {
+      if (!on) return;
+      const a = r.offline ? ({ kind: 'hidden' } as const) : availability(r.rights, { missing: r.missing, nativeOk: callsSupported() });
+      setAv(a);
+      if (a.kind === 'ready') void callStatus(scope, scopeId).then((s) => on && setLive(s.count)).catch(() => {});
+    });
+    return () => {
+      on = false;
+    };
+  }, [scope, scopeId]);
+  if (!av || av.kind === 'hidden') return null;
+  if (av.kind !== 'ready')
+    return (
+      <Card>
+        <Row gap={10} style={{ alignItems: 'center' }}>
+          <Ionicons name="call-outline" size={22} color={t.muted} />
+          <View style={{ flex: 1 }}>
+            <H2>Appel de groupe</H2>
+            <Muted style={{ fontSize: 12 }}>{av.kind === 'soon' ? 'Bientôt disponible' : 'Indisponible avec vos réglages actuels.'}</Muted>
+          </View>
+        </Row>
+      </Card>
+    );
+  return (
+    <Card accessibilityLabel={L('Ouvrir l’appel du groupe')} onPress={() => router.push({ pathname: '/call', params: { scope, id: scopeId, name } })}>
+      <Row gap={10} style={{ alignItems: 'center' }}>
+        <Ionicons name={live ? 'call' : 'call-outline'} size={22} color={t.primary} />
+        <View style={{ flex: 1 }}>
+          <H2>Appel de groupe</H2>
+          <Muted style={{ fontSize: 12 }}>
+            {live ? L('Appel en cours · {n} personne(s)', { n: live }) + ' · ' : ''}
+            {L(av.video ? 'Audio ou vidéo' : 'Audio')} · {L(LABEL_TRANSIT)}
+          </Muted>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={t.muted} />
+      </Row>
+    </Card>
+  );
+}
+
+export function LivePanel({ scope, scopeId, canCompose = false }: { scope: api.ScopeType; scopeId: string; canCompose?: boolean }) {
   const { userId } = useAuth();
   const list = useLoad(() => api.liveSessions(scope, scopeId), [scope, scopeId]);
   const [title, setTitle] = useState('Zikr du soir');
@@ -371,6 +533,7 @@ export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: s
       {list.data?.map((s) => (
         <Button key={s.id} icon="radio-outline" title={L('Rejoindre : {x}', { x: s.title })} onPress={() => router.push(`/live/${s.id}`)} style={{ marginBottom: 8 }} />
       ))}
+      {canCompose ? (
       <Row gap={8}>
         <View style={{ flex: 1 }}>
           <Field label="Nouvelle session" value={title} onChangeText={setTitle} />
@@ -394,12 +557,13 @@ export function LivePanel({ scope, scopeId }: { scope: api.ScopeType; scopeId: s
           }}
         />
       </Row>
+      ) : null}
       {err ? <Muted style={{ color: t.danger }}>{err}</Muted> : null}
     </Card>
   );
 }
 
-const KINDS = [
+export const KINDS = [
   { value: 'bravo', label: 'Bravo', text: 'Bravo, machā’Allāh ! Continue ainsi.' },
   { value: 'dua', label: 'Du‘a', text: 'Qu’Allah te bénisse et facilite tes affaires.' },
   { value: 'rappel', label: 'Rappel', text: 'Petit rappel affectueux pour ton wird du jour.' },

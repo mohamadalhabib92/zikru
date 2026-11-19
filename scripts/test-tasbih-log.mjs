@@ -18,14 +18,15 @@ function emit(rel) {
   writeFileSync(out, ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
   return out;
 }
-for (const r of ['tasbih-core', 'tasbih-log', 'durable', 'tasbih-store', 'ble/core', 'community/queue', 'shared-state']) emit(r);
+for (const r of ['tasbih-core', 'tasbih-log', 'watch-sync', 'durable', 'preserve', 'tasbih-store', 'ble/core', 'community/queue', 'shared-state']) emit(r);
 // stockage simulé pour shared-state.ts
 writeFileSync(
   join(dir, 'storage.mjs'),
   `export const mem = new Map(); export const writes = [];
-export async function loadJSON(k, fb) { await new Promise((r) => setTimeout(r, 5)); return mem.has(k) ? JSON.parse(mem.get(k)) : fb; }
+export async function loadJSON(k, fb) { const snap = mem.has(k) ? mem.get(k) : null; await new Promise((r) => setTimeout(r, 20)); return snap != null ? JSON.parse(snap) : fb; }
 export async function saveJSON(k, v) { writes.push(k); mem.set(k, JSON.stringify(v)); return true; }
-const subs = new Set(); export function onStorageCleared(f) { subs.add(f); return () => subs.delete(f); }`,
+const subs = new Set(); export function onStorageCleared(f) { subs.add(f); return () => subs.delete(f); }
+export function fireClear() { subs.forEach((f) => f()); }`,
 );
 const imp = (r) => import(join(dir, r + '.mjs'));
 const L = await imp('tasbih-log');
@@ -371,7 +372,7 @@ test('saut de valeur en cours de connexion : accepté s’il est physiquement po
 // ------------------------------------------------------------------ file des contributions (M3)
 test('file des contributions : regroupement sans perte, envois en cours intacts', () => {
   const rows = [];
-  for (let k = 0; k < 1500; k++) rows.push({ goal_id: k % 2 ? 'g1' : 'g2', count: 1, source: 'manuel', client_id: 'c' + k, member_id: null });
+  for (let k = 0; k < 1500; k++) rows.push({ goal_id: k % 2 ? 'g1' : 'g2', count: 1, source: 'manuel', client_id: 'c' + k, member_id: null, attempt: 0 });
   let id = 0;
   const out = coalesceQueue(rows, new Set(['c0', 'c1']), () => 'n' + id++);
   assert.equal(out.reduce((a, r) => a + r.count, 0), 1500, 'aucun appui perdu');
@@ -380,6 +381,34 @@ test('file des contributions : regroupement sans perte, envois en cours intacts'
 });
 
 // ------------------------------------------------------------------ état partagé (H2 dans shared-state)
+test('effacement : un chargement encore en cours ne remet pas les anciennes données', async () => {
+  const old = L.recordClicks(L.newDoc('A'), 40, 'manuel', 1).doc;
+  const kv = new FakeKV({ [KEY]: JSON.stringify(old) });
+  kv.delay = 40;
+  const { store } = mk(kv);
+  const loading = store.load();
+  await sleep(5);
+  store.reset();
+  assert.equal(store.get().total, 0);
+  assert.equal(store.holdingNewer(), false);
+  store.addClicks(3, 'manuel');
+  await loading;
+  assert.equal(store.get().total, 3, 'le chargement périmé n’écrase pas l’effacement');
+  await store.flush();
+  await sleep(50);
+  assert.equal(stored(kv).t.total, 3);
+});
+test('shared() : un effacement pendant la lecture ne ressuscite pas les données', async () => {
+  stor.mem.set('marks2', JSON.stringify({ bookmarks: ['2:255'], notes: {} }));
+  const s = S.shared('marks2', { bookmarks: [], notes: {} });
+  const p = s.load();
+  stor.fireClear();
+  await p;
+  assert.deepEqual(s.get().bookmarks, [], 'la lecture commencée avant l’effacement est ignorée');
+  s.set((m) => ({ ...m, bookmarks: ['1:1'] }));
+  assert.deepEqual(JSON.parse(stor.mem.get('marks2')).bookmarks, ['1:1']);
+  assert.equal(JSON.parse(stor.mem.get('marks2')).bookmarks.includes('2:255'), false);
+});
 test('shared() : une modification avant chargement est rejouée sur la valeur enregistrée', async () => {
   stor.mem.set('marks', JSON.stringify({ bookmarks: ['2:255'], notes: {} }));
   const s = S.shared('marks', { bookmarks: [], notes: {} });

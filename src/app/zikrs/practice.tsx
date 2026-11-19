@@ -1,13 +1,14 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { LBtn, fmt } from '@/components/zikr/parts';
 import { useData } from '@/lib/data';
 import { uid } from '@/lib/storage';
 import { closeSession, type Tasbih } from '@/lib/tasbih-core';
-import { advance, dayKey, itemAbjad, markDone, progress, type PracticeState, type Zikr } from '@/lib/zikr';
+import { applyPracticeTaps, countOf, dayKey, itemAbjad, markDone, progress, resumePractice, type PracticeLedger, type PracticeState, type Zikr } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
 import { FATIHA_EN, isFatiha, withFatiha } from '@/lib/fatiha';
 import { useSettings } from '@/lib/settings';
@@ -49,6 +50,7 @@ export default function Practice() {
   // Al-Fatiha 1× en première étape (réglage, actif par défaut) ; la composition enregistrée n’est pas modifiée.
   const z = useMemo(() => (stored ? { ...stored, items: withFatiha(stored.items, fatihaOn) } : undefined), [stored, fatihaOn]);
   const [st, setSt] = useState<PracticeState>({ step: 0, count: 0 });
+  const ledgerRef = useRef<PracticeLedger>({ counts: {} });
   const [finished, setFinished] = useState(false);
   const zRef = useRef<Zikr | undefined>(z);
   useEffect(() => {
@@ -100,7 +102,19 @@ export default function Practice() {
     const known = content.some((c) => c.id === tasbih.dhikrId);
     prev.current = known ? { dhikrId: tasbih.dhikrId, target: tasbih.target } : { dhikrId: 'subhanallah', target: 33 };
     lastTotal.current = tasbih.total;
-    setTasbih((t) => aim(closeSession(t, uid('s'), now()), 0));
+    const led = resumePractice(z.items, z.practice);
+    ledgerRef.current = led;
+    const step = Math.max(0, z.items.findIndex((it) => it.id === led.focus));
+    const count = led.focus ? countOf(led, led.focus) : 0;
+    const view = { step: z.items.length ? step : 0, count };
+    stRef.current = view;
+    setSt(view);
+    const allDone = z.items.length > 0 && z.items.every((it) => countOf(led, it.id) >= it.reps);
+    finishedRef.current = allDone;
+    setFinished(allDone);
+    setTasbih((t) => aim(closeSession(t, uid('s'), now()), view.step, view.count));
+    // Une seule fois à l’ouverture : dépendre du tasbih refermerait la séance à chaque appui.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [z?.id, dr]);
 
   // Sortie : enregistre l’étape entamée et rétablit le dhikr précédent.
@@ -113,6 +127,8 @@ export default function Practice() {
         target: prev.current.target,
       }));
     },
+    // Nettoyage au démontage seulement : le dhikr précédent ne doit pas être rétabli à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -123,53 +139,52 @@ export default function Practice() {
     lastTotal.current = tasbih.total;
     const zz = zRef.current;
     if (d <= 0 || finishedRef.current || !zz) return;
-    const r = advance(zz.items, stRef.current, d);
-    stRef.current = r.state;
-    setSt(r.state);
-    if (r.completed.length) {
-      setTasbih((t) => {
-        let x = t;
-        let dev = t.deviceCount ?? 0;
-        const at = now();
-        for (const k of r.completed) {
-          const reps = zz.items[k].reps;
-          const dk = Math.min(dev, reps);
-          dev -= dk;
-          x = closeSession(
-            {
-              ...x,
-              count: reps,
-              deviceCount: dk,
-              dhikrId: label(k),
-              target: reps,
-            },
-            uid('s'),
-            at,
-          );
-        }
-        return aim({ ...x, deviceCount: dev }, r.state.step, r.state.count);
-      });
+    const r = applyPracticeTaps(zz.items, ledgerRef.current, d);
+    ledgerRef.current = r.ledger;
+    const step = Math.max(0, zz.items.findIndex((it) => it.id === r.ledger.focus));
+    const view = { step: zz.items.length ? step : 0, count: r.ledger.focus ? countOf(r.ledger, r.ledger.focus) : 0 };
+    stRef.current = view;
+    setSt(view);
+    update(zz.id, (y) => ({ ...y, practice: r.ledger }));
+    if (r.completedId) {
+      const k = zz.items.findIndex((it) => it.id === r.completedId);
+      setTasbih((t) => aim(closeSession({ ...t, count: countOf(r.ledger, r.completedId!), dhikrId: label(k), target: zz.items[k]?.reps ?? t.target }, uid('s'), now()), view.step, view.count));
     }
-    if (r.finished) {
+    const allDone = zz.items.length > 0 && zz.items.every((it) => countOf(r.ledger, it.id) >= it.reps);
+    if (allDone && !finishedRef.current) {
       finishedRef.current = true;
       setFinished(true);
-      update(zz.id, (y) => markDone(y));
+      update(zz.id, (y) => markDone({ ...y, practice: r.ledger }));
     }
+    // Seul le total déclenche les appuis : aim et update sont lus au moment de l’appui.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasbih.total]);
 
   const skip = () => {
     const zz = zRef.current;
     if (!zz) return;
     const next = Math.min(zz.items.length - 1, stRef.current.step + 1);
-    stRef.current = { step: next, count: 0 };
+    const id = zz.items[next]?.id;
+    if (!id) return;
+    ledgerRef.current = { counts: ledgerRef.current.counts, focus: id };
+    const count = countOf(ledgerRef.current, id);
+    stRef.current = { step: next, count };
     setSt(stRef.current);
-    setTasbih((t) => aim(closeSession(t, uid('s'), now()), next));
+    update(zz.id, (y) => ({ ...y, practice: ledgerRef.current }));
+    setTasbih((t) => aim(closeSession(t, uid('s'), now()), next, count));
   };
   const back = () => {
+    const zz = zRef.current;
+    if (!zz) return;
     const p = Math.max(0, stRef.current.step - 1);
-    stRef.current = { step: p, count: 0 };
+    const id = zz.items[p]?.id;
+    if (!id) return;
+    ledgerRef.current = { counts: ledgerRef.current.counts, focus: id };
+    const count = countOf(ledgerRef.current, id);
+    stRef.current = { step: p, count };
     setSt(stRef.current);
-    setTasbih((t) => aim(closeSession(t, uid('s'), now()), p));
+    update(zz.id, (y) => ({ ...y, practice: ledgerRef.current }));
+    setTasbih((t) => aim(closeSession(t, uid('s'), now()), p, count));
   };
   const restart = () => {
     finishedRef.current = false;
@@ -272,6 +287,13 @@ export default function Practice() {
                 {cur.tr}
               </Text>
             ) : null}
+            {cur.dedication ? (
+              <View style={{ marginTop: 8 }} accessibilityLabel={L('Dédicace : {t}', { t: cur.dedication })}>
+                <LMuted style={{ fontSize: 12 }}>{L('Dédicace')}</LMuted>
+                {/[\u0600-\u06FF]/.test(cur.dedication) ? <Arabic size={20}>{cur.dedication}</Arabic> : <Text style={{ color: b.ink, textAlign: 'center' }}>{cur.dedication}</Text>}
+              </View>
+            ) : null}
+            {cur.optional ? <LMuted style={{ marginTop: 4 }}>{L('Prérequis : vous pouvez passer cette étape.')}</LMuted> : null}
             {meaning ? <LMuted style={{ marginTop: 4 }}>{meaning}</LMuted> : null}
             <LMuted style={{ fontSize: 11, marginTop: 6 }}>{systems.map((s) => `abjad ${s} ${fmt(itemAbjad(cur, s, opts))}`).join(' · ')}</LMuted>
           </LCard>
@@ -296,8 +318,8 @@ export default function Practice() {
               elevation: 4,
             })}
           >
-            <Text style={{ color: '#fff', fontSize: 58, fontWeight: '900' }}>{st.count}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '800' }}>{`/ ${fmt(cur.reps)}`}</Text>
+            <Text style={{ color: b.onGreen, fontSize: 58, fontWeight: '900' }}>{st.count}</Text>
+            <Text style={{ color: b.onGreen, fontWeight: '800' }}>{`/ ${fmt(cur.reps)}`}</Text>
           </Pressable>
           <View style={{ marginTop: 14 }}>
             <Bar ratio={cur.reps ? st.count / cur.reps : 0} color={b.green} h={6} />
@@ -346,7 +368,7 @@ export default function Practice() {
                 }}
                 numberOfLines={1}
               >
-                {it.label}
+                {it.label}{it.dedication ? ` · ${it.dedication}` : ''}
               </Text>
               <Text style={{ color: b.inkMuted, fontWeight: '700' }}>{isCur ? `${st.count}/${it.reps}` : `× ${fmt(it.reps)}`}</Text>
             </View>

@@ -1,0 +1,33 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+Automatique (recommandé)	Automatisch (empfohlen)
+Milieu de la nuit	Mitte der Nacht
+Septième de la nuit	Siebtel der Nacht
+Angle du crépuscule	Dämmerungswinkel
+Latitudes élevées (Fajr et Isha quand la nuit est courte)	Hohe Breiten (Fajr und Isha bei kurzen Nächten)
+Ajustements (minutes, ±{n} max)	Anpassungen (Minuten, max. ±{n})
+{p} : {n} minutes	{p}: {n} Minuten
+Horaires de ma mosquée	Zeiten meiner Moschee
+Horaire de ma mosquée	Zeit meiner Moschee
+Remplace le calcul par les horaires affichés par ta mosquée (format 05:42). Une case vide garde l’horaire calculé.	Ersetzt die Berechnung durch die von Ihrer Moschee ausgehängten Zeiten (Format 05:42). Ein leeres Feld behält die berechnete Zeit.
+Nom de la mosquée (facultatif)	Name der Moschee (optional)
+Format attendu : 05:42	Erwartetes Format: 05:42
+Ces horaires sont répétés chaque jour : pense à les mettre à jour quand ta mosquée change d’horaires.	Diese Zeiten wiederholen sich jeden Tag: Denken Sie daran, sie zu aktualisieren, wenn Ihre Moschee ihren Zeitplan ändert.
+Horaires calculés : vérifie avec ta mosquée locale.	Berechnete Zeiten: Prüfen Sie sie bei Ihrer örtlichen Moschee.
+Ajuster les horaires	Zeiten anpassen
+Pause des rappels	Erinnerungen pausieren
+Met en pause les rappels de prière et gèle tes séries sans les casser. Reste uniquement sur cet appareil : jamais synchronisé ni partagé.	Pausiert die Gebetserinnerungen und friert Ihre Serien ein, ohne sie zu unterbrechen. Bleibt nur auf diesem Gerät: nie synchronisiert oder geteilt.
+Mettre aussi en pause les autres rappels	Auch andere Erinnerungen pausieren
+Adhkar, wird, Coran, al-Kahf.	Adhkar, Wird, Koran, al-Kahf.
+En pause depuis le {a}, reprise automatique le {b}.	Pausiert seit {a}, wird am {b} automatisch fortgesetzt.
+En pause depuis le {a}.	Pausiert seit {a}.
+Reprendre maintenant	Jetzt fortsetzen
+Reprise automatique après (jours, facultatif)	Automatisch fortsetzen nach (Tage, optional)
+Laisse vide pour reprendre toi-même.	Leer lassen, um selbst fortzusetzen.
+Entre un nombre entre 1 et {n}.	Geben Sie eine Zahl zwischen 1 und {n} ein.
+Mettre en pause	Pausieren
+Effacer l’historique des pauses	Pausenverlauf löschen
+Les séries passées pourront alors être recalculées sans ces jours neutres.	Frühere Serien können dann ohne diese neutralen Tage neu berechnet werden.
+Règle hautes latitudes choisie dans les réglages : elle remplace la règle recommandée.	In den Einstellungen gewählte Regel für hohe Breiten: Sie ersetzt die empfohlene Regel.
+UOIF : Fajr 12°, Isha 12° (angles de la méthode « Union des organisations islamiques de France », repris par AlAdhan et PrayTimes). Ces angles sont débattus : vérifie avec ta mosquée locale.	UOIF: Fajr 12°, Isha 12° (Winkel der Methode der „Union des organisations islamiques de France“, wie von AlAdhan und PrayTimes verwendet). Diese Winkel sind umstritten: Prüfen Sie sie bei Ihrer örtlichen Moschee.
+Ajustements (±30 min) et « Horaires de ma mosquée » : appliqués uniquement sur cet appareil, prioritaires sur le calcul.	Anpassungen (±30 Min.) und „Zeiten meiner Moschee“: nur auf diesem Gerät angewandt, mit Vorrang vor der Berechnung.

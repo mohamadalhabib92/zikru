@@ -1,11 +1,31 @@
-import type { ReactNode } from 'react';
-import { Pressable, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { useSyncExternalStore, type ReactNode } from 'react';
+import { View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
-import { brand as b, elevation, fonts } from './theme';
+import { GlassLayers, useGlassLook } from './glass';
+import { brand as b, elevation, fonts, onColor } from './theme';
+import { arLang } from './ar-lang';
+import { fontsAreReady, subscribeFonts } from './fonts-ready';
 import { L } from "@/lib/l10n";
 
 /** Composants « cartes claires » de la palette Zikru originale. */
 export function LCard({ children, style, onPress, label }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; label?: string }) {
+  const glass = useGlassLook();
+  const pad: ViewStyle = { padding: 16 };
+  if (glass) {
+    const inner = <View style={[pad, style]}>{children}</View>;
+    if (onPress)
+      return (
+        <Pressable accessibilityRole="button" accessibilityLabel={typeof label === "string" ? L(label) : label} onPress={onPress} style={({ pressed }) => [{ marginBottom: 12, borderRadius: 18 }, pressed && { opacity: 0.92, transform: [{ scale: 0.985 }] }]}>
+          <GlassLayers radius={18}>{inner}</GlassLayers>
+        </Pressable>
+      );
+    return (
+      <GlassLayers radius={18} style={{ marginBottom: 12 }}>
+        {inner}
+      </GlassLayers>
+    );
+  }
   const base: ViewStyle = { backgroundColor: b.paper, borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: b.line, ...elevation(1) };
   if (onPress)
     return (
@@ -34,10 +54,12 @@ export function LMuted({ children, style, numberOfLines }: { children: ReactNode
 }
 /** Texte arabe : police Amiri (ou Amiri Quran pour les versets), RTL, interligne généreux. */
 export function Arabic({ children, size = 24, style, quran, numberOfLines }: { children: ReactNode; size?: number; style?: StyleProp<TextStyle>; quran?: boolean; numberOfLines?: number }) {
+  const ready = useSyncExternalStore(subscribeFonts, fontsAreReady, () => false);
   return (
     <Text
+      {...arLang}
       numberOfLines={numberOfLines}
-      style={[{ color: b.ink, fontSize: size, lineHeight: Math.round(size * (quran ? 2.1 : 1.85)), textAlign: 'right', writingDirection: 'rtl', fontFamily: quran ? fonts.quran : fonts.arabic }, style]}
+      style={[{ color: b.ink, fontSize: size, lineHeight: Math.round(size * (quran ? 2.2 : 2)), textAlign: 'right', writingDirection: 'rtl', fontFamily: ready ? (quran ? fonts.quran : fonts.arabic) : undefined }, style]}
     >
       {children}
     </Text>
@@ -57,9 +79,9 @@ export function Pill({ label, active, onPress, color = b.green }: { label: strin
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      style={{ paddingHorizontal: 14, paddingVertical: 6, minHeight: 40, maxWidth: '100%', justifyContent: 'center', borderRadius: 19, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
+      style={{ paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, maxWidth: '100%', justifyContent: 'center', borderRadius: 22, backgroundColor: active ? color : b.paper, borderWidth: 1, borderColor: active ? color : b.line }}
     >
-      <Text maxFontSizeMultiplier={1.35} style={{ color: active ? '#FFFFFF' : b.ink, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.35} style={{ color: active ? onColor(color) : b.ink, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{label}</Text>
     </Pressable>
   );
 }

@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { Sheet, QStepper } from '@/components/quran/Sheet';
 import { readerPalette } from '@/components/quran/palette';
@@ -14,6 +15,7 @@ import { Container, FadeIn, HeroHeader, SectionHeader, useLayout } from '@/ui/ds
 import { Button, Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 const statusColor = (s: Status) => (s === 'memorised' ? b.green : s === 'review' ? '#D98A2B' : s === 'learning' ? b.gold : b.line);
 const STATUS_LABEL: Record<Status, string> = { none: 'Pas commencé', learning: 'En cours', review: 'À réviser', memorised: 'Mémorisé' };
@@ -40,11 +42,11 @@ export default function HifzHub() {
   }, [s, cards, meta]);
   const [from, setFrom] = useState(firstNew);
   const [to, setTo] = useState(Math.min(meta[4], firstNew + 4));
+  const [placed, setPlaced] = useState(false);
   const [pick, setPick] = useState(false);
   const [view, setView] = useState<'surah' | 'juz'>('surah');
   const pal = readerPalette('auto');
-  useEffect(() => {
-    if (!ready || !keys.length) return;
+  if (ready && keys.length && !placed) {
     const lastK = keys.map(Number).sort((a, z) => z - a)[0];
     const n = fromIndex(lastK)[0];
     let f = 1;
@@ -53,11 +55,11 @@ export default function HifzHub() {
         f = a;
         break;
       }
+    setPlaced(true);
     setS(n);
     setFrom(f);
     setTo(Math.min(SURAHS[n - 1][4], f + 4));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+  }
   const chooseSurah = (n: number) => {
     setS(n);
     let f = 1;
@@ -95,7 +97,7 @@ export default function HifzHub() {
       <Container max={980} style={{ padding: 16, gap: 16 }}>
         <FadeIn>
           <HeroHeader>
-            <Text style={{ color: b.gold, fontFamily: fonts.quran, fontSize: 22, lineHeight: 48 }}>حِفْظُ القُرْآنِ</Text>
+            <Text {...arLang} style={{ color: b.gold, fontFamily: fonts.quran, fontSize: 22, lineHeight: 48 }}>حِفْظُ القُرْآنِ</Text>
             <Text style={{ color: b.heroText, fontSize: 22, fontWeight: '900' }}>Mémorisation</Text>
             <Text style={{ color: b.heroMuted, marginTop: 2 }}>Écouter, répéter, masquer, réviser au bon moment (sabaq · sabqi · manzil).</Text>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
@@ -143,7 +145,7 @@ export default function HifzHub() {
                 <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{meta[2]}</Text>
                 <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('{m} · {n} versets', { m: meta[3], n: meta[4] })}</Text>
               </View>
-              <Text style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18, lineHeight: 36 }}>{meta[1].replace(/^سُورَةُ\s*/, '')}</Text>
+              <Text {...arLang} style={{ color: b.green, fontFamily: fonts.quran, fontSize: 18, lineHeight: 36 }}>{meta[1].replace(/^سُورَةُ\s*/, '')}</Text>
               <Ionicons name="chevron-down" size={18} color={b.inkMuted} />
             </Pressable>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>

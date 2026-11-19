@@ -7,13 +7,14 @@ import { DUAS_LIST } from './duas';
 import { GRADINGS_CHECKED_AT, HADITH_CHECKS } from './gradings.gen';
 import { HADITHS } from './knowledge';
 import { NAMES_REF } from './names';
-import type { GradeClass, ProvenanceItem, ProvenanceSet, SourceRef, VerifiedGrading } from './provenance-types';
+import type { ProvenanceItem, ProvenanceSet, SourceRef, VerifiedGrading } from './provenance-types';
 import { QURAN_DUAS } from './quran-duas';
 import { reviewFor } from './reviews';
 import { SALAWAT } from './salawat';
 import { ADILLA, FORMULAS } from './tijani';
 
 export { GRADINGS_CHECKED_AT };
+export { dorarSearchUrl, GRADE_LABEL, gradeTone, REPORT_EMAIL, reportUrl, SET_LABEL } from './provenance-lite';
 
 /** Nombre de versets par sourate (édition de Médine, 6236 versets). */
 export const AYAH_COUNTS = [
@@ -58,12 +59,6 @@ export function quranRef(surah: number, ayah: number, ayahEnd?: number): SourceR
     ayahEnd,
     url: `https://quran.com/${surah}/${ayah}${ayahEnd ? '-' + ayahEnd : ''}`,
   };
-}
-
-/** Lien de recherche dorar.net (encyclopédie des hadiths) pour un texte arabe. */
-export function dorarSearchUrl(arabic: string): string {
-  const q = arabic.replace(/[\u064B-\u0652\u0670]/g, '').split(/\s+/).slice(0, 6).join(' ');
-  return `https://dorar.net/hadith/search?q=${encodeURIComponent(q)}`;
 }
 
 function build(set: ProvenanceSet, id: string, title: string, refText: string, extra: Partial<ProvenanceItem>, sources = parseRef(refText)): ProvenanceItem {
@@ -121,42 +116,4 @@ export function allProvenance(): ProvenanceItem[] {
 
 export function provenanceFor(set: ProvenanceSet, id: string): ProvenanceItem | undefined {
   return allProvenance().find((x) => x.set === set && x.id === id);
-}
-
-export const GRADE_LABEL: Record<GradeClass, string> = {
-  sahih: 'Ṣaḥīḥ',
-  hasan_sahih: 'Ḥasan ṣaḥīḥ',
-  hasan: 'Ḥasan',
-  hasan_li_ghayrihi: 'Ḥasan li-ghayrihi',
-  sahih_isnad: 'Isnad ṣaḥīḥ',
-  hasan_isnad: 'Isnad ḥasan',
-  daif_isnad: 'Isnad ḍa‘īf',
-  daif: 'Ḍa‘īf',
-  mawdu: 'Mawḍū‘',
-  autre: 'Autre',
-};
-
-export function gradeTone(g: GradeClass): 'success' | 'info' | 'warning' | 'danger' | 'neutral' {
-  if (g === 'sahih' || g === 'hasan_sahih' || g === 'sahih_isnad') return 'success';
-  if (g === 'hasan' || g === 'hasan_li_ghayrihi' || g === 'hasan_isnad') return 'info';
-  if (g === 'daif' || g === 'daif_isnad') return 'warning';
-  if (g === 'mawdu') return 'danger';
-  return 'neutral';
-}
-
-export const SET_LABEL: Record<ProvenanceSet, string> = {
-  duas: 'Du‘as & adhkar',
-  hadiths: 'Hadiths',
-  salawat: 'Salawat',
-  adilla: 'Preuves (Tijaniyya)',
-  tijani: 'Formules tijanies',
-  names: 'Noms d’Allah',
-  'quran-duas': 'Du‘as coraniques',
-};
-
-export const REPORT_EMAIL = 'mohamadalhabib@live.com';
-export function reportUrl(uid: string, title: string, version: string): string {
-  const subject = `[Zikru] Erreur – ${uid}`;
-  const body = `Élément : ${title} (${uid})\nVersion : ${version}\n\nErreur constatée (texte, traduction, source ou jugement) :\n\nSource à l’appui (livre, numéro, lien) :\n`;
-  return `mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

@@ -10,6 +10,7 @@ import { HeroHeader, IconBadge, tapHaptic, useLayout } from '@/ui/ds';
 import { Button, Card, Muted, Notice, Screen, Spacer } from '@/ui/kit';
 import { alpha, brand as b, elevation, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { isIosAppOnMac } from '@/lib/mac';
 
 /** Cap de l'appareil : natif via expo-location, web via DeviceOrientationEvent (si disponible). */
 type Heading = { deg: number; poor: boolean };
@@ -32,6 +33,7 @@ function useHeading(): Heading | null {
         window.removeEventListener('deviceorientation', on as EventListener);
       };
     }
+    if (isIosAppOnMac()) return;
     (async () => {
       try {
         const perm = await Location.requestForegroundPermissionsAsync();

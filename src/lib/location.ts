@@ -1,8 +1,14 @@
-import * as Location from 'expo-location';
+import { Platform } from 'react-native';
 import type { Place } from './prayer';
+
+type LocationMod = typeof import('expo-location');
+// iPhone : chargé à l’évaluation, comme l’import précédent. Apple TV n’a pas ce pod.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Location: LocationMod | null = Platform.isTV ? null : (require('expo-location') as LocationMod);
 
 /** Position GPS (avec permission). Renvoie null en cas de refus : l'app garde la dernière position connue. */
 export async function getGpsPlace(): Promise<Place | null> {
+  if (!Location) return null;
   try {
     const perm = await Location.requestForegroundPermissionsAsync();
     if (perm.status !== 'granted') return null;

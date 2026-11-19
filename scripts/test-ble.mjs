@@ -83,15 +83,37 @@ test('ClickDecoder absolu : base, deltas, perte, remise à zéro', () => {
   const f = (n, now = 10_000) => d.feed(B(0xaa, 3, 0, n), now);
   assert.equal(d.feed(B(0xaa, 3, 0, 40), 1200), 0, 'valeur initiale = base');
   assert.equal(f(41), 1);
-  assert.equal(f(41), 0, 'doublon');
+  assert.equal(f(41), 0, 'même total : pas un nouvel appui');
   assert.equal(f(44), 3, 'notifications perdues rattrapées');
-  assert.equal(f(200), 0, 'saut aberrant : en attente, rien compté');
+  assert.equal(f(200), 156, 'écart entier, pas +1');
   assert.equal(f(0), 0, 'remise à zéro : en attente');
   assert.equal(f(1), 1, 'remise à zéro confirmée par la trame suivante : +1');
-  assert.equal(f(0xff, 10_000) + 0, 0, 'saut impossible : en attente');
+  assert.equal(f(0xff), 254, '1 → 255 : écart entier');
   assert.equal(d.feed(B(1, 2), 10_000), 0, 'trame non reconnue ignorée');
   const late = new c.ClickDecoder(m, c.parseBstwsh, 0);
   assert.equal(late.feed(B(0xaa, 3, 0, 7), 5000), 1, 'premier appui après la période de base');
+});
+test('valeur figée ou trame sans total : chaque notification est un appui, y compris en rafale', () => {
+  const m = { service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: -1 };
+  const stuck = new c.ClickDecoder(m, c.parseBstwsh, 0);
+  const fr = (n) => B(0xaa, 3, 0, n);
+  assert.equal(stuck.feed(fr(1), 100), 0, 'lecture de connexion : référence, pas un appui');
+  assert.equal(stuck.feed(fr(1), 400), 0, 'même total pendant la fenêtre de référence');
+  assert.equal(stuck.feed(fr(1), c.BASELINE_GRACE_MS + 50), 1, 'la valeur ne bouge jamais : l’appui compte');
+  assert.equal(stuck.lastEvent, 'impulsion');
+  let n = 0;
+  for (let i = 0; i < 20; i++) n += stuck.feed(fr(1), c.BASELINE_GRACE_MS + 60 + i * 10);
+  assert.equal(n, 20, 'rafale : +1 par notification, même octet');
+  assert.equal(c.clickCursor('absolute', stuck.lastEvent, 'ring-1', stuck.lastValue), undefined, 'pas de curseur : il rejetterait l’appui');
+  const at = c.BASELINE_GRACE_MS + 5000;
+  assert.equal(stuck.feed(fr(2), at), 1, 'le compteur se met à avancer : +1');
+  assert.equal(stuck.feed(fr(2), at + 30), 0, 'répétition d’un vrai total : doublon');
+  const blind = new c.ClickDecoder(m, c.parseIqibla, 0);
+  assert.equal(blind.feed(B(1), 50), 1, 'profil absolu, trame sans total : un appui');
+  assert.equal(blind.feed(B(1), 60), 1, 'rafale sans total');
+  assert.equal(blind.lastEvent, 'impulsion');
+  assert.equal(c.clickCursor('absolute', 'impulsion', 'ring-1', 1), undefined);
+  assert.deepEqual(c.clickCursor('absolute', null, 'ring-1', 12), { id: 'ring-1', value: 12 });
 });
 test('ClickDecoder octet compteur + débordement', () => {
   const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: 1 }, c.parseGeneric, 0);
@@ -182,6 +204,7 @@ test('apprentissage : échecs explicites', () => {
   assert.equal(c.analyzeLearn([], 1).ok, false);
 });
 test('touches HID', () => {
+  assert.equal(c.HID_ON_BY_DEFAULT, false, 'le clavier ne compte pas tout seul : Espace ne doit pas bloquer la page');
   const k = c.DEFAULT_HID_KEYS;
   assert.ok(c.isCounterKey({ key: 'Enter' }, k));
   assert.ok(c.isCounterKey({ key: 'AudioVolumeUp' }, k));
@@ -235,19 +258,16 @@ test('P4 trame parasite (ex. 65535) : ignorée, la référence est conservée (p
   assert.equal(d.hasPending, false);
   assert.equal(d.feed(fr(43), 10_400), 1);
 });
-test('P4 saut > 10 confirmé par la trame suivante : rattrapé dans la limite physique', () => {
+test('P4 écart de total : ajouté en entier, y compris s’il dépasse 10', () => {
   const d = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
   d.feed(fr(100), 0);
-  // notifications bloquées 20 s (iOS en arrière-plan) puis 150 appuis d'un coup : > 100 → à confirmer
-  assert.equal(d.feed(fr(250), 20_000), 0);
-  assert.equal(d.feed(fr(251), 20_500), 151, '150 confirmés + 1');
-  assert.equal(d.lastEvent, 'confirmé');
+  assert.equal(d.feed(fr(250), 20_000), 150, '150 appuis manqués : le total entier');
+  assert.equal(d.feed(fr(251), 20_500), 1);
   assert.equal(d.lastValue, 251);
-  // saut impossible physiquement (500 en 1 s) même confirmé : plafonné à ce qu'un doigt peut faire
   const e = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
   e.feed(fr(10), 0);
-  assert.equal(e.feed(fr(510), 1000), 0);
-  assert.equal(e.feed(fr(511), 1100), c.physicalCap(1000) + 1);
+  assert.equal(e.feed(fr(510), 1000), 500, '500 d’un coup : pas plafonné à +1');
+  assert.equal(e.feed(fr(511), 1100), 1);
 });
 test('P4 sauts plausibles comptés tout de suite ; deux parasites de suite : aucun compte', () => {
   const d = new c.ClickDecoder({ ...ABS, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
@@ -256,20 +276,21 @@ test('P4 sauts plausibles comptés tout de suite ; deux parasites de suite : auc
   assert.equal(d.feed(fr(9000), 5100), 0);
   assert.equal(d.feed(fr(3000), 5200), 0, 'autre parasite : remplace l’attente');
   assert.equal(d.feed(fr(31), 5300), 1, 'retour à la normale : +1');
-  assert.ok(c.jumpAcceptable(10, 0) && !c.jumpAcceptable(11, 0) && c.jumpAcceptable(40, 3000) && !c.jumpAcceptable(150, 1e6));
+  assert.ok(c.jumpAcceptable(10, 0) && c.jumpAcceptable(11, 0) && c.jumpAcceptable(150, 0) && !c.jumpAcceptable(c.ABSOLUTE_ACCEPT + 1, 0));
 });
 test('P4 débordement du champ toujours immédiat', () => {
   const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: 1 }, c.parseGeneric, 0);
   d.feed(B(0, 254), 10_000);
   assert.equal(d.feed(B(0, 1), 10_100), 3);
 });
-test('P4 impulsions : double livraison (< 25 ms) ignorée, appuis rapides réels comptés', () => {
+test('P4 impulsions : trames identiques comptées (bague delta), 20 appuis en 1 s', () => {
   const d = new c.ClickDecoder({ service: 'x', characteristic: 'y', mode: 'pulse' }, c.parseGeneric, 0);
-  assert.equal(d.feed(B(1), 1000), 1);
-  assert.equal(d.feed(B(1), 1005), 0, 'même trame 5 ms après : doublon');
-  assert.equal(d.lastEvent, 'doublon');
-  assert.equal(d.feed(B(1), 1070), 1, 'appui 70 ms après : compté');
-  assert.equal(d.feed(B(2), 1075), 1, 'trame différente : comptée');
+  let n = 0;
+  for (let i = 0; i < 20; i++) n += d.feed(B(1), 1000 + i * 50);
+  assert.equal(n, 20, '20 trames identiques en 1 s');
+  assert.equal(d.feed(B(1), 3000), 1);
+  assert.equal(d.feed(B(1), 3010), 1, 'même octet 10 ms après : un autre appui, pas un doublon jeté');
+  assert.equal(d.feedPacket(B(1, 1, 1), 4000), 3, 'trois octets identiques dans une notification');
 });
 test('P4 appairage par nom (H8) : jamais de connexion automatique sans identifiant', () => {
   const known = [{ id: 'AA', name: 'BW-Ring' }];
@@ -375,7 +396,7 @@ test('P4 liste autorisée : compteurs de dhikr reconnus (nom, service, ZKR-R1)',
 test('P4 liste autorisée : écouteurs par apparence, service LE Audio, AirPods, nom', () => {
   const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
   for (const a of [0x0941, 0x0942, 0x0943, 0x0944, 0x0940, 0x0841, 0x0a41]) assert.equal(k(null, [], { appearance: a }), 'audio', `apparence 0x${a.toString(16)}`);
-  assert.equal(k(null, [], { appearance: 0x03c1 }), 'other', 'clavier HID');
+  assert.equal(k(null, [], { appearance: 0x03c1 }), 'maybe', 'clavier HID : bague possible, pas masqué');
   assert.equal(k(null, [], { appearance: 0x00c1 }), 'other', 'montre');
   for (const u of ['184e', '1850', '1844', 'fe2c']) assert.equal(k(null, [c.normUuid(u)]), 'audio', u);
   assert.equal(k(null, [], { manufacturerId: 0x004c, manufacturerData: new Uint8Array([0x07, 0x19, 0x01]) }), 'audio', 'AirPods');
@@ -384,18 +405,39 @@ test('P4 liste autorisée : écouteurs par apparence, service LE Audio, AirPods,
   assert.equal(k('WH-1000XM5'), 'audio');
   assert.equal(k('AirPods Pro'), 'audio');
 });
-test('P4 liste autorisée : tout le reste est ignoré (sans nom, inconnus, montres, TV, HID)', () => {
+test('P4 : une bague incertaine est montrée, pas jetée ; le reste reste masqué', () => {
   const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
-  assert.equal(k(null, []), 'other');
-  assert.equal(k(''), 'other');
+  const why = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).reason;
+  assert.equal(k(null, []), 'maybe', 'sans nom : peut-être une bague');
+  assert.equal(k(''), 'maybe');
+  assert.equal(k('Ring'), 'maybe');
+  assert.equal(k('iRing'), 'maybe');
+  assert.equal(k('BLE'), 'maybe');
+  assert.equal(k('Smart'), 'maybe');
+  assert.equal(k('HM-10'), 'maybe', 'code modèle');
+  assert.equal(k('Oura Ring'), 'maybe', 'nom « ring » : essai, pas un compteur certain');
+  assert.equal(k(null, [c.HM10_SERVICE]), 'maybe', 'service FFE0 sans nom');
+  assert.equal(k(null, [], { manufacturerId: 0x1234, manufacturerData: new Uint8Array([1, 2]) }), 'maybe', 'données fabricant seules');
+  assert.equal(k('BLE Remote', ['00001812-0000-1000-8000-00805f9b34fb']), 'maybe', 'HID montré pour essai');
+  assert.match(why('JBL Flip 5'), /écarté/);
   assert.equal(k('JBL Flip 5'), 'other', 'enceinte sans apparence annoncée : non reconnue');
-  assert.equal(k('Oura Ring'), 'other', '« ring » seul ne suffit plus');
   assert.equal(k('Presenter Clicker'), 'other');
   assert.equal(k('[TV] Samsung'), 'other');
   assert.equal(k('Mi Smart Band 8', ['0000fee0-0000-1000-8000-00805f9b34fb']), 'other');
-  assert.equal(k('BLE Remote', ['00001812-0000-1000-8000-00805f9b34fb']), 'other', 'télécommande HID masquée par défaut');
   assert.equal(k('Bowers Speaker'), 'other', '« Bo… » ne ressemble pas à BW-xxxx');
   assert.equal(c.likelyCounter('Oura Ring').likely, false);
+  assert.equal(c.isDeviceVisible('maybe'), true);
+  assert.equal(c.isCounterConnectable('maybe'), true);
+  assert.equal(c.isCounterConnectable('audio'), false);
+  const line = c.discoveryLine({ id: 'abc', name: null, rssi: -40, services: ['1812'], manufacturerId: 0x1234, manufacturerData: new Uint8Array([1]) }, { kind: 'maybe', reason: 'HID' });
+  assert.match(line, /sans nom/);
+  assert.match(line, /abc/);
+  assert.match(line, /-40/);
+  assert.match(line, /affiché/);
+  assert.match(line, /HID/);
+  assert.match(line, /1234/);
+  assert.equal(c.gattIsHidOnly([{ service: c.STD.hid, uuid: '2a4d', notify: true }]), true);
+  assert.equal(c.gattIsHidOnly([{ service: c.STD.hid, uuid: '2a4d', notify: true }, { service: c.HM10_SERVICE, uuid: c.HM10_SERIAL, notify: true }]), false);
 });
 test('P4 liste autorisée : visibilité et connexion', () => {
   assert.equal(c.isDeviceVisible('counter'), true);
@@ -422,6 +464,102 @@ test('P4 annonce brute : apparence, services 16 bits, fabricant', () => {
   // trame tronquée / vide : pas d'exception
   assert.equal(c.parseAdvertising(new Uint8Array([9, 0x19, 0x41])).appearance, null);
   assert.equal(c.parseAdvertising(new Uint8Array(0)).manufacturer, null);
+});
+
+test('profils documentés : iQibla par écriture 0xD004, UART publiée, noms arabes', () => {
+  const k = (name, services, extra = {}) => c.classifyDevice({ name, services, ...extra }).kind;
+  assert.equal(k('سبحة ذكية'), 'counter');
+  assert.equal(k('تسبيح'), 'counter');
+  assert.equal(k('Noor N01'), 'counter');
+  assert.equal(k(null, [c.HM10_SERVICE]), 'maybe', 'HM-10 sans nom : bague possible, pas un compteur certain');
+  assert.equal(k(null, [], { manufacturerId: 0x1234, manufacturerData: new Uint8Array([1, 2]) }), 'maybe', 'données fabricant seules : essai, pas une certitude');
+  const d004 = [{ service: c.normUuid('fff0'), uuid: c.IQIBLA_WRITE, notify: false, read: false }];
+  assert.equal(c.detectProfile('Noor', d004).id, 'iqibla');
+  assert.equal(c.detectProfile('Noor', []).id, 'generic', 'Noor sans 0xD004 : pas le parseur iQibla');
+  const one = [{ service: c.normUuid('fff0'), uuid: c.normUuid('fff1'), notify: true, read: false }];
+  assert.equal(c.defaultMapping(c.profileById('iqibla'), one).mode, 'absolute');
+  const uart = [
+    { service: c.HM10_SERVICE, uuid: c.HM10_SERIAL, notify: true, read: false },
+    { service: c.normUuid('fff0'), uuid: c.normUuid('fff2'), notify: true, read: false },
+  ];
+  const g = c.defaultMapping(c.profileById('generic'), uart);
+  assert.equal(g.characteristic, c.HM10_SERIAL);
+  assert.equal(g.mode, 'pulse', 'format HM-10 non publié : impulsion, puis apprentissage');
+  const nus = [{ service: c.NUS_SERVICE, uuid: c.NUS_TX, notify: true, read: false }, uart[1]];
+  assert.equal(c.defaultMapping(c.profileById('generic'), nus).characteristic, c.NUS_TX);
+  assert.equal(c.defaultMapping(c.profileById('iqibla'), uart), null, 'deux canaux et le profil iQibla n’utilise pas FFE1 : apprentissage');
+});
+
+test('simulation iQibla : hors connexion rattrapé, même total ignoré, impulsion sans rattrapage', () => {
+  const frame = (n) => A(`Q07,${String(n).padStart(4, '0')},0,0,0`);
+  const abs = { service: 's', characteristic: 'c', mode: 'absolute', byteIndex: -1 };
+  const live = new c.ClickDecoder(abs, c.parseIqibla, 0, null);
+  assert.equal(live.feed(frame(12), 200), 0, 'première trame = référence');
+  assert.equal(live.feed(frame(13), 400), 1);
+  const back = new c.ClickDecoder(abs, c.parseIqibla, 0, live.lastValue);
+  assert.equal(back.feed(frame(16), 100), 3, '13 → 16 pendant la coupure');
+  assert.equal(back.lastWasSync, true);
+  assert.equal(back.feed(frame(16), 200), 0, 'même total : pas de doublon');
+  assert.equal(back.feed(frame(17), 400), 1);
+  const pulse = { ...abs, mode: 'pulse' };
+  assert.equal(c.adoptAbsoluteFrame(pulse, 'fff0', 'fff1', frame(16), c.parseGeneric, 0).mode, 'absolute');
+  assert.equal(c.adoptAbsoluteFrame(pulse, 'fff0', 'fff1', frame(16), c.parseGeneric, 2), null, 'déjà des appuis comptés : on ne recommence pas');
+  assert.equal(c.adoptAbsoluteFrame({ ...pulse, learnedAt: 'x' }, 'fff0', 'fff1', frame(16), c.parseGeneric, 0), null);
+  const blind = new c.ClickDecoder(pulse, c.parseGeneric, 0, 10);
+  assert.equal(blind.feed(new Uint8Array([1]), 100), 1, 'trame sans total : un appui, rien à rattraper');
+});
+
+test('reconnexion : lancement, premier plan, perte, Bluetooth, restauration iOS', () => {
+  const d = (event, opts) => c.reconnectDecision(event, opts);
+  const on = { remembered: true, linked: false, background: false };
+  assert.equal(d('launch', on), 'search-now');
+  assert.equal(d('foreground', on), 'search-now');
+  assert.equal(d('link-loss', on), 'search-now');
+  assert.equal(d('bluetooth-on', on), 'search-now');
+  assert.equal(d('foreground', { ...on, linked: true }), 'idle');
+  assert.equal(d('launch', { ...on, remembered: false }), 'idle');
+  assert.equal(d('bluetooth-off', on), 'pause');
+  assert.equal(d('bluetooth-off', { ...on, linked: true }), 'idle');
+  assert.equal(d('link-loss', { ...on, background: true }), 'wait-system');
+  assert.equal(d('bluetooth-on', { ...on, background: true }), 'wait-system', 'radio revenue en arrière-plan : pas de scan');
+  assert.equal(d('background', on), 'wait-system');
+  assert.equal(d('ios-restore', { ...on, background: true }), 'search-now', 'iOS réveille l’app : reprise immédiate');
+  assert.equal(d('ios-restore', { ...on, linked: true }), 'idle');
+  assert.equal(c.shouldRearmNotify('foreground', { linked: false, armedAgoMs: 5000 }), false);
+  assert.equal(c.shouldRearmNotify('foreground', { linked: true, armedAgoMs: 100 }), false, 'abonnement tout neuf : on ne le coupe pas');
+  assert.equal(c.shouldRearmNotify('foreground', { linked: true, armedAgoMs: c.REARM_MIN_MS }), true, 'retour au premier plan : on réarme');
+  assert.equal(c.shouldRearmNotify('subscription-lost', { linked: true, armedAgoMs: 50 }), true);
+  assert.equal(c.shouldRearmNotify('ios-restore', { linked: true, armedAgoMs: 0 }), true);
+  assert.equal(c.frameOutcome('ae02', 'aa 03 00 0c', 1, 'compté'), 'ae02 aa 03 00 0c → appliqué +1 (compté)');
+  assert.equal(c.frameOutcome('ae02', 'aa 03 00 0c', 0, 'autre caractéristique'), 'ae02 aa 03 00 0c → écarté (autre caractéristique)');
+  assert.equal(
+    c.frameOutcome('fff1', '01', 1, 'valeur fixe, comptée comme un appui', { zikrId: 'subhanallah', session: 'ouverte:subhanallah', before: 4, after: 5 }),
+    'fff1 01 → appliqué +1 (valeur fixe, comptée comme un appui) · zikr subhanallah · séance ouverte:subhanallah · 4 → 5',
+  );
+});
+
+test('trames collées, coupées, écart énorme confirmé, reconnexion', () => {
+  const m = { service: 'x', characteristic: 'y', mode: 'absolute', byteIndex: -1 };
+  const d = new c.ClickDecoder(m, c.parseBstwsh, 0);
+  const packet = new Uint8Array([0xaa, 3, 0, 1, 0xaa, 3, 0, 2, 0xaa, 3, 0, 4]);
+  assert.equal(d.feedPacket(packet, 5000), 4, 'trois trames dans une notification : 0→1→2→4');
+  assert.equal(d.lastValue, 4);
+  const split = new c.ClickDecoder(m, c.parseBstwsh, 0);
+  assert.equal(split.feedPacket(new Uint8Array([0xaa, 3]), 5000), 0, 'moitié de trame : rien encore');
+  assert.equal(split.feedPacket(new Uint8Array([0, 9]), 5100), 1, 'l’autre moitié complète le premier total');
+  assert.equal(split.lastValue, 9);
+  const iq = new Uint8Array([...A('Q07,0012,0,0,0'), ...A('Q07,0015,0,0,0')]);
+  const iqD = new c.ClickDecoder(m, c.parseIqibla, 0);
+  assert.equal(iqD.feedPacket(iq, 100), 3, 'deux textes iQibla : base 12 puis +3');
+  assert.equal(iqD.lastValue, 15);
+  const huge = new c.ClickDecoder({ ...m, field: { offset: 2, len: 2, endian: 'be' } }, c.parseGeneric, 0);
+  const fr = (n) => B(0xaa, 3, n >> 8, n & 255);
+  huge.feed(fr(10), 0);
+  assert.equal(huge.feed(fr(20000), 100), 0, 'écart au-delà du seuil : en attente');
+  assert.equal(huge.feed(fr(20001), 200), 19991, 'confirmé : écart entier, pas +1');
+  const back = new c.ClickDecoder(m, c.parseBstwsh, 0, 4);
+  assert.equal(back.feed(B(0xaa, 3, 0, 9), 100), 5, 'reconnexion : 4 → 9');
+  assert.equal(back.feed(B(0xaa, 3, 0, 9), 120), 0, 'même total relu : pas de doublon');
 });
 
 if (fail) {

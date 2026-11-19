@@ -1,0 +1,35 @@
+# Classes d’enseignement (Premium + validation Bissabi). Le texte du Coran n’est pas modifié.
+Classes	Classes	صفوف
+Un enseignant validé par Bissabi, avec Zikru Premium, ouvre une classe. Personne ne s’accorde ce rôle soi-même. Rejoindre reste gratuit.	A teacher validated by Bissabi, with Zikru Premium, opens a class. No one assigns this role to themselves. Joining stays free.	يفتح معلّم معتمد من بيسّابي، مع Zikru Premium، صفًا. لا يمنح أحد هذا الدور لنفسه. والالتحاق يبقى مجانيًا.
+Classe de Coran	Quran class	صف القرآن
+Nom de la classe	Class name	اسم الصف
+Créer une classe	Create a class	إنشاء صف
+Enseignant	Teacher	معلّم
+Bissabi doit d’abord valider votre rôle. Ce n’est pas une case dans l’application.	Bissabi must validate your role first. It is not a switch in the app.	يجب أن يعتمد بيسّابي دورك أولًا. ليست خانة في التطبيق.
+Classe	Class	صف
+La leçon en direct utilise l’appel du groupe. Le micro et la caméra restent éteints tant que chacun ne les ouvre pas. Zikru n’écoute pas et ne note pas la récitation.	The live lesson uses the group call. Microphone and camera stay off until each person turns them on. Zikru does not listen to or grade the recitation.	يستخدم الدرس المباشر مكالمة المجموعة. يبقى الميكروفون والكاميرا مغلقين حتى يفتحهما كل شخص. لا يستمع Zikru إلى التلاوة ولا يقيّمها.
+Accueillir des mineurs	Welcome minors	استقبال القاصرين
+Fermé par défaut. Un parent doit aussi l’autoriser pour son enfant.	Off by default. A parent must also allow it for their child.	مغلق افتراضيًا. يجب أن يأذن به أحد الوالدين لطفله أيضًا.
+Vidéo mixte	Mixed video	فيديو مختلط
+Fermée par défaut. Tant qu’elle est fermée, l’appel de la classe reste en audio.	Off by default. While it is off, the class call stays audio only.	مغلق افتراضيًا. ما دام مغلقًا تبقى مكالمة الصف صوتية فقط.
+La vidéo est ouverte par l’enseignant.	Video has been opened by the teacher.	فتح المعلّم الفيديو.
+La vidéo de cette classe est fermée. L’enseignant peut l’ouvrir.	Video for this class is closed. The teacher can open it.	فيديو هذا الصف مغلق. يمكن للمعلّم فتحه.
+Leçons	Lessons	دروس
+Rejoindre l’appel de la leçon	Join the lesson call	الانضمام إلى مكالمة الدرس
+Titre de la leçon	Lesson title	عنوان الدرس
+Début (AAAA-MM-JJ HH:MM)	Start (YYYY-MM-DD HH:MM)	البداية (سنة-شهر-يوم ساعة:دقيقة)
+2026-11-12 18:00	2026-11-12 18:00	٢٠٢٦-١١-١٢ ١٨:٠٠
+Du verset	From verse	من الآية
+Au verset	To verse	إلى الآية
+Programmer la leçon	Schedule the lesson	جدولة الدرس
+Indiquez un titre, une date AAAA-MM-JJ HH:MM et un passage valide.	Enter a title, a date YYYY-MM-DD HH:MM and a valid passage.	أدخل عنوانًا وتاريخًا سنة-شهر-يوم ساعة:دقيقة ومقطعًا صحيحًا.
+Consigne (facultatif)	Note (optional)	توجيه (اختياري)
+Donner ce passage à réciter	Assign this passage to recite	إسناد هذا المقطع للتلاوة
+Ce passage ne correspond pas à la sourate.	This passage does not match the surah.	هذا المقطع لا يطابق السورة.
+Récitations à préparer	Recitations to prepare	تلاوات للتحضير
+Aucune récitation pour l’instant.	No recitation yet.	لا تلاوة حاليًا.
+J’ai récité	I have recited	تلوث
+Le rôle d’enseignant est accordé par Bissabi, pas dans l’application.	The teacher role is granted by Bissabi, not in the app.	يمنح بيسّابي دور المعلّم، وليس من داخل التطبيق.
+Autoriser les classes	Allow classes	السماح بالصفوف
+Fermé par défaut. L’enfant ne rejoint une classe que si vous l’autorisez et si l’enseignant a ouvert sa classe aux mineurs.	Off by default. A child joins a class only if you allow it and the teacher has opened the class to minors.	مغلق افتراضيًا. لا يلتحق الطفل بصف إلا إذا أذنت وإذا فتح المعلّم صفه للقاصرين.
+Les enfants ne rejoignent aucun cercle de proches. Une classe n’est possible qu’avec votre accord.	Children do not join any circle of relatives. A class is possible only with your consent.	لا ينضم الأطفال إلى أي حلقة من الأقرباء. والصف لا يكون إلا بإذنك.
