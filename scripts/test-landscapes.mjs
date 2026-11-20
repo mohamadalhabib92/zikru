@@ -45,6 +45,7 @@ assert.ok(scrim >= 0.9 && scrim < 1, 'le voile de l’application laisse voir le
 
 function decode(file) {
   const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', file], { encoding: 'utf8' });
+  assert.equal(probe.error, undefined, probe.error ? `ffprobe introuvable : ${probe.error.message}` : '');
   assert.equal(probe.status, 0, probe.stderr);
   const [w, h] = probe.stdout.trim().split(',').map(Number);
   const raw = spawnSync('ffmpeg', ['-v', 'error', '-i', file, '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1'], { maxBuffer: 20_000_000 });

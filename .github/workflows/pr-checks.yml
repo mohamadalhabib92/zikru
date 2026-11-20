@@ -24,6 +24,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: ffmpeg (contraste des paysages)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npx tsc --noEmit
       - run: npm test
       - name: expo export (web)
