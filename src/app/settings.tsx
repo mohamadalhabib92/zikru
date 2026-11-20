@@ -1,23 +1,36 @@
 import { useRouter } from 'expo-router';
+import { umalquraAvailable } from '@/lib/hijri';
 import { useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
-import { LANGS, isReview } from '@/lib/i18n';
+import { needsReview, pickableLangs } from '@/lib/i18n';
 import { getGpsPlace } from '@/lib/location';
 import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
 import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
-import { AdhanVoicePicker } from '@/components/AudioPlayer';
 import { NotifSettings } from '@/components/NotifSettings';
+import { AudioOfflineCard } from '@/components/AudioOffline';
+import { DataExportItem, GroupPushToggle, ModerationLink } from '@/components/AccountExtras';
+import { WidgetSettings } from '@/components/WidgetSettings';
+import { DispenseSettings } from '@/components/DispenseSettings';
+import { PrayerOptions } from '@/components/PrayerOptions';
 import { useSettings } from '@/lib/settings';
+import { LANDSCAPE_THEMES_REQUIRE_PREMIUM, sanitizeLandscape, type LandscapeChoice } from '@/lib/landscapes';
+import { useFeatureFlags } from '@/lib/use-premium';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
 import { DEFAULT_CONSENT } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
-import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { Badge, Button, Card, Chip, Divider, Eyebrow, H2, ListItem, Muted, Notice, Row, Screen, Segmented, Spacer } from '@/ui/kit';
+import { isIosAppOnMac } from '@/lib/mac';
 import { L } from '@/lib/l10n';
+import { usePremium } from '@/lib/premium';
+import { isPremiumActive } from '@/lib/premium-logic';
+import { readerPrefs } from '@/lib/quran-store';
+import { RECITERS, applyReciterChoice } from '@/lib/recitation';
+import { useShared } from '@/lib/shared-state';
 
 export default function SettingsScreen() {
   const { s, set, t: tr } = useSettings();
@@ -31,6 +44,16 @@ export default function SettingsScreen() {
   };
   const [consent, choose] = useConsent();
   const pt = privacyText(s.lang);
+  const premium = usePremium();
+  const [rp, setRp] = useShared(readerPrefs);
+  const landscape = sanitizeLandscape(s.landscape);
+  const pickLandscape = (id: LandscapeChoice) => {
+    if (id !== 'none' && LANDSCAPE_THEMES_REQUIRE_PREMIUM) {
+      if (!premium.ready) return;
+      if (!premium.canCreate) return router.push('/premium');
+    }
+    set({ landscape: id });
+  };
   return (
     <Screen>
       <Eyebrow>{tr.settings_title}</Eyebrow>
@@ -49,20 +72,59 @@ export default function SettingsScreen() {
           setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
         }}
       />
+      {isIosAppOnMac() ? (
+        <>
+          <Notice tone="info" title={L('Sur Mac')} text={L('Sur Mac, la montre, les widgets, l’appareil photo et les vibrations ne sont pas disponibles. Le Coran, l’adhan, le tasbih et le reste de Zikru restent ici.')} />
+          <Spacer />
+        </>
+      ) : null}
+      {Platform.OS === 'web' ? (
+        <>
+          <Notice
+            tone="info"
+            title={L('Dans le navigateur')}
+            text={L('L’Apple Watch, l’app Santé (HealthKit) et les vibrations du téléphone ne sont pas disponibles dans le navigateur. Le compteur de la montre reste gratuit sur l’iPhone. Ici, le tasbih se compte au clic ou au clavier.')}
+          />
+          <Spacer />
+        </>
+      ) : null}
+      <H2>Paysages</H2>
+      <Muted>Fond calme pour toute l’application. Le choix reste enregistré sur cet appareil.</Muted>
+      <Spacer h={8} />
+      <Row wrap>
+        <Chip label="Aucun" active={landscape === 'none'} onPress={() => pickLandscape('none')} />
+        <Chip label="Lagon clair" active={landscape === 'lagoon'} onPress={() => pickLandscape('lagoon')} />
+        <Chip label="Dunes à l’aube" active={landscape === 'dunes'} onPress={() => pickLandscape('dunes')} />
+        <Chip label="Forêt dans la brume" active={landscape === 'mist'} onPress={() => pickLandscape('mist')} />
+        <Chip label="Désert sous les étoiles" active={landscape === 'stars'} onPress={() => pickLandscape('stars')} />
+        <Chip label="Oasis" active={landscape === 'oasis'} onPress={() => pickLandscape('oasis')} />
+        <Chip label="Couché de soleil sur la mer" active={landscape === 'sunset'} onPress={() => pickLandscape('sunset')} />
+        <Chip label="Jardin andalou" active={landscape === 'garden'} onPress={() => pickLandscape('garden')} />
+        <Chip label="Brume sur les montagnes" active={landscape === 'peaks'} onPress={() => pickLandscape('peaks')} />
+        <Chip label="Crème et or" active={landscape === 'cream'} onPress={() => pickLandscape('cream')} />
+        <Chip label="Émeraude et or" active={landscape === 'emerald'} onPress={() => pickLandscape('emerald')} />
+      </Row>
+      <Muted>Images créées pour Zikru, libres d’usage dans l’application. Pas de photo tierce.</Muted>
+      <H2>{L('Thème')}</H2>
+      <Muted>{L('Le thème classique reste celui qui est déjà le vôtre. Verre et Verre or sont translucides.')}</Muted>
+      <ThemeFinishPicker />
+      <Spacer h={8} />
       <H2>{tr.language}</H2>
       <Row wrap>
-        {LANGS.map((l) => (
-          <Chip key={l.code} label={l.pending ? `${l.label} · ⏳` : l.review ? `${l.label} · ✎` : l.label} active={s.lang === l.code} onPress={() => set({ lang: l.code })} />
+        {pickableLangs(s.lang).map((l) => (
+          <Chip key={l.code} label={l.pending ? `${l.label} · ⏳` : l.review ? `${l.label} · β` : l.label} active={s.lang === l.code} onPress={() => set({ lang: l.code })} />
         ))}
       </Row>
-      {LANGS.some((l) => l.pending) ? <Muted>⏳ = {tr.translation_pending} {L('(repli : français).')}</Muted> : null}
-      <Muted>✎ = {tr.translation_review}</Muted>
-      {isReview(s.lang) ? <Muted>{tr.translation_review}</Muted> : null}
+      <Muted>β = {tr.translation_review}</Muted>
+      {needsReview(s.lang) ? <Muted>{tr.translation_review}</Muted> : null}
+      {pickableLangs(s.lang).some((l) => l.pending) ? <Muted>⏳ = {tr.translation_pending} (repli : français).</Muted> : null}
       <Spacer h={20} />
 
       <NotifSettings />
-      <AdhanVoicePicker />
-      <Spacer h={20} />
+      <AudioOfflineCard />
+      <GroupPushToggle lang={s.lang} />
+      <WidgetSettings />
+      <DispenseSettings />
       <H2>{tr.location}</H2>
       <Muted>
         {s.place.label}
@@ -97,6 +159,7 @@ export default function SettingsScreen() {
           <ListItem key={k} title={METHODS[k]} icon={s.method === k ? 'radio-button-on' : 'radio-button-off'} onPress={() => set({ method: k })} />
         ))}
       </Card>
+      <PrayerOptions />
       <Spacer />
       <Segmented
         label={tr.onb_madhab}
@@ -113,14 +176,51 @@ export default function SettingsScreen() {
         onChange={(v) => set({ madhab: v, asrManual: v !== asrForSchool(fiqh) })}
       />
       <Muted>
-        {s.lang === 'fr' || s.lang === 'en' || s.lang === 'ar'
+        {s.lang === 'fr' || s.lang === 'en' || s.lang === 'ar' || s.lang === 'de' || s.lang === 'de-CH'
           ? `${L('Réglage distinct de l’école : ombre ×1 (majorité) ou ×2 (hanafite).')} ${L(s.asrManual ? 'Choisi manuellement.' : 'Suit l’école choisie ci-dessus.')}`
           : `Separate from the school: shadow ×1 (majority) or ×2 (Hanafi). ${s.asrManual ? 'Set manually.' : 'Follows the school above.'}`}
       </Muted>
       <Spacer />
       <Segmented label={tr.hijri_offset} options={[-2, -1, 0, 1, 2].map((n) => ({ label: n > 0 ? `+${n}` : String(n), value: n }))} value={s.hijriOffset} onChange={(v) => set({ hijriOffset: v })} />
+      <Segmented
+        label={L('Calendrier hégirien')}
+        options={[
+          { label: L('Tabulaire (hors ligne)'), value: 'tabular' as const },
+          ...(umalquraAvailable() ? [{ label: L('Umm al-Qura'), value: 'umalqura' as const }] : []),
+        ]}
+        value={umalquraAvailable() ? (s.hijriCalendar ?? 'tabular') : 'tabular'}
+        onChange={(v) => set({ hijriCalendar: v })}
+      />
+      <Muted>
+        {umalquraAvailable()
+          ? L('Umm al-Qura : tables officielles saoudiennes intégrées à l’appareil (hors ligne). Les deux restent des estimations : la mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).')
+          : L('Umm al-Qura indisponible sur cet appareil : calendrier tabulaire utilisé. La mosquée ou l’observation locale font foi (mode Ramadan : confirmation du 1er jour).')}
+      </Muted>
+      <ListItem title={L('Mode Ramadan')} subtitle={L('Suhur et iftar, jeûne, tarawih, dix dernières nuits')} icon="moon-outline" onPress={() => router.push('/ramadan')} />
       <Spacer h={20} />
 
+      <H2>{L('Récitateur du Coran')}</H2>
+      <Muted>{L('Le téléchargement automatique ne concerne que ce récitateur, en Wi-Fi, en laissant au moins 200 Mo libres. Les fichiers déjà téléchargés restent.')}</Muted>
+      <Spacer h={8} />
+      <Row wrap>
+        {RECITERS.map((r) => (
+          <Chip key={r.id} label={r.name} active={rp.reciter === r.id} onPress={() => setRp((p) => ({ ...p, reciter: applyReciterChoice(null, p.reciter, r.id).selected }))} />
+        ))}
+      </Row>
+      <Spacer h={8} />
+      <ListItem title={L('Crédits et licences des sons')} icon="document-text-outline" onPress={() => router.push('/sound-credits')} />
+      <Spacer h={20} />
+
+      <H2>{L('Zikru Premium')}</H2>
+      <Card>
+        <ListItem
+          title={L('Zikru Premium')}
+          subtitle={premium.canCreate ? L('Premium est actif sur cet appareil.') : L('Achat unique à vie')}
+          icon="star-outline"
+          onPress={() => router.push('/premium')}
+        />
+      </Card>
+      <Spacer h={20} />
       <H2>Mes zikrs</H2>
       <Segmented
         label="Commencer par Al-Fatiha"
@@ -157,6 +257,8 @@ export default function SettingsScreen() {
       <Card>
         <ListItem title={pt.policy_link} icon="shield-checkmark-outline" onPress={() => router.push('/privacy')} />
         <Divider />
+        <DataExportItem />
+        <Divider />
         <ListItem title={pt.delete_account} subtitle={pt.delete_account_hint} icon="person-remove-outline" onPress={() => router.push('/community')} />
         <Divider />
         <ListItem
@@ -174,7 +276,7 @@ export default function SettingsScreen() {
       <Card>
         <ListItem title={tr.sources_title} icon="library-outline" onPress={() => router.push('/sources')} />
         <Divider />
-        <ListItem title={tr.ring} subtitle="Tasbih électronique, anneau de dhikr, télécommande" icon="bluetooth-outline" onPress={() => router.push('/ring')} />
+        <ListItem title={tr.ring} subtitle={L('Compteur, journal des trames')} icon="bluetooth-outline" onPress={() => router.push('/ring')} />
         <Divider />
         <ListItem title="Synchronisation (Supabase)" icon="cloud-outline" right={<Badge label={backendConfigured ? 'Configuré' : tr.config_missing} tone={backendConfigured ? 'success' : 'warning'} />} onPress={() => router.push('/config')} />
         <Divider />
@@ -183,6 +285,7 @@ export default function SettingsScreen() {
         <ListItem title={tr.audit} icon="clipboard-outline" onPress={() => router.push('/audit')} />
         <Divider />
         <ListItem title="Validation savante" subtitle="Pour les relecteurs : contenus par statut, fiche exportable" icon="ribbon-outline" onPress={() => router.push('/validation')} />
+        <ModerationLink />
       </Card>
       <Spacer h={20} />
       <Button
@@ -204,5 +307,54 @@ export default function SettingsScreen() {
       <Spacer />
       <Muted>Zikru {Constants.expoConfig?.version ?? '1.0.19'} · {pt.local_footer}</Muted>
     </Screen>
+  );
+}
+
+function ThemeFinishPicker() {
+  const { s, set } = useSettings();
+  const flags = useFeatureFlags();
+  const premium = usePremium();
+  const themesOn = flags.themes || isPremiumActive(premium.record);
+  const [locked, setLocked] = useState(false);
+  const current = s.themeFinish === 'verre' || s.themeFinish === 'verre-or' ? s.themeFinish : 'classic';
+  const options: { id: 'classic' | 'verre' | 'verre-or'; label: string; swatch: string }[] = [
+    { id: 'classic', label: L('Classique'), swatch: '#0E6B4F' },
+    { id: 'verre', label: L('Verre'), swatch: 'rgba(14,107,79,0.45)' },
+    { id: 'verre-or', label: L('Verre or'), swatch: 'rgba(217,182,92,0.7)' },
+  ];
+  return (
+    <>
+      <Row wrap>
+        {options.map((o) => {
+          const premiumOnly = o.id !== 'classic';
+          const on = current === o.id;
+          return (
+            <Chip
+              key={o.id}
+              label={premiumOnly && !themesOn ? `${o.label} · ${L('Premium')}` : o.label}
+              active={on}
+              onPress={() => {
+                if (premiumOnly && !themesOn) {
+                  setLocked(true);
+                  return;
+                }
+                setLocked(false);
+                if (o.id === current) return;
+                setPendingRoute('/settings');
+                set({ themeFinish: o.id });
+                setTimeout(() => takePendingRoute(), 2000);
+              }}
+            />
+          );
+        })}
+      </Row>
+      <Row wrap>
+        {options.map((o) => (
+          <View key={o.id} style={{ width: 36, height: 28, borderRadius: 8, backgroundColor: o.swatch, borderWidth: 1, borderColor: '#E5DFD3' }} />
+        ))}
+      </Row>
+      {locked ? <Muted>{L('Thème Premium. Votre thème actuel est conservé.')}</Muted> : null}
+      {current !== 'classic' && themesOn ? <Muted>{L('Fond dépoli et boutons en relief. Réduire la transparence du système revient à un fond plein.')}</Muted> : null}
+    </>
   );
 }

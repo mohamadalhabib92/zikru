@@ -47,3 +47,12 @@ Fonctions `SECURITY DEFINER` uniquement dans le schéma `private` (non exposé) 
 - Sécurité de la messagerie (lot A/B, 30.10.2026) : contrôle parental « Aucun » bloque envoi et réception, défaut « Parents seulement » ; invités ↔ enfants interdits ; débits limités (messages, sessions, invitations, essais de code) ; codes d'invitation stockés hachés ; signalement avec motif, blocage réciproque, filtre de base (liens, termes), purge automatique (pg_cron `zikru-purge-expired`). Voir `docs/moderation.md` et `docs/dpia-communautes.md`.
 - Limite de temps parentale : affichée à l'enfant, pas encore bloquante.
 - Niveaux 3 Locale, 4 Régionale, 5 Oumma : les colonnes `scope_type` (`family`/`circle`, déjà `community`/`network`/`global` pour `aggregated_counters`) des objectifs, sessions, invitations et préférences sont prévues pour s'étendre à `community`/`network`/`global`.
+
+## Passe 5 — communautés sûres : discussion de groupe (01.11.2026, branche `pass-5`)
+
+- Migration `20261101100000_passe5_discussion_groupe.sql` (additive, **non appliquée** en production — approbation de Mohamed requise) : `group_messages`, RPC `group_chat_rights`, `post_group_message` (idempotent par `client_id`), `mark_group_read`, `set_group_muted`, `group_unread`, `delete_group_message` ; signalement `group_message` ; purge 365 jours ; publication realtime.
+- Cercles gratuits : 4 membres maximum (contrôle serveur existant, inchangé). Familles : pas de plafond.
+- Enfants : réglage parental `messaging` par défaut **« Parents »** (l'enfant n'échange qu'avec ses parents) ; « Famille » (toute la famille, jamais les invités) ; « Aucune » (pas de discussion). Appliqué côté serveur (RLS + RPC), pas seulement dans l'app.
+- Libellé obligatoire : « chiffré en transit, pas encore de bout en bout ». Pas de chiffrement de bout en bout avant la Phase 3 (Signal / OpenMLS).
+- App : écran `/discussion` chargé à la demande (bulles, regroupement par auteur et par jour, réponse citée, copier, supprimer pour tous, signaler, bloquer, sourdine, brouillons, file d'envoi hors ligne avec reprise, accusés « envoi en cours / échec »), cartes « Discussion » avec pastilles de non-lus dans cercle, famille et liste Communauté. Code d'invitation gardé pendant la connexion.
+- Hors périmètre (Passe 6 ou plus tard) : notifications push (envoi serveur + jetons + build natif), réactions, pièces jointes, E2EE.

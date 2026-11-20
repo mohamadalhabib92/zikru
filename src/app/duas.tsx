@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
@@ -30,7 +31,7 @@ function Action({ icon, label, onPress, active, color = COLOR }: { icon: IconNam
       accessibilityRole="button"
       accessibilityLabel={L(label)}
       onPress={onPress}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: active ? color : b.line, backgroundColor: active ? color + '18' : b.paper, opacity: pressed ? 0.8 : 1 })}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: active ? color : b.line, backgroundColor: active ? color + '18' : b.paper, opacity: pressed ? 0.8 : 1 })}
     >
       <Ionicons name={icon} size={16} color={active ? color : b.inkMuted} />
       <Text style={{ color: active ? color : b.ink, fontWeight: '700', fontSize: 13 }}>{label}</Text>
@@ -47,7 +48,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
     <LCard>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: COLOR, fontWeight: '800', fontSize: 11, letterSpacing: 0.6 }}>{L(duaCatLabel(d.cat)).toUpperCase()}</Text>
+          <Text style={{ color: b.blue, fontWeight: '800', fontSize: 11, letterSpacing: 0.6 }}>{L(duaCatLabel(d.cat)).toUpperCase()}</Text>
           <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16, marginTop: 2 }}>{v.title}</Text>
           {v.when ? <LMuted style={{ fontSize: 12, marginTop: 2 }}>{v.when}</LMuted> : null}
         </View>
@@ -77,7 +78,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
               accessibilityLabel={L('Compter : {n} sur {r}', { n, r: reps })}
               onPress={() => setN((x) => (x >= reps ? 1 : x + 1))}
               onLongPress={() => setN(0)}
-              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: done ? b.green : COLOR, opacity: pressed ? 0.85 : 1 })}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 14, borderRadius: 18, backgroundColor: done ? b.green : COLOR, opacity: pressed ? 0.85 : 1 })}
             >
               <Ionicons name={done ? 'checkmark-circle' : 'add-circle-outline'} size={16} color="#fff" />
               <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>

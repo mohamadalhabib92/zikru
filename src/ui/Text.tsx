@@ -1,11 +1,12 @@
 /**
- * Remplace `Text` de react-native : traduit automatiquement les morceaux de texte
+ * Remplace `Text` de react-native : traduit automatiquement (en, ar, de / de-CH) les morceaux de texte
  * présents dans le catalogue d'interface. Le français source, le texte arabe coranique
  * et toute chaîne absente du catalogue sont rendus tels quels.
  */
-import { Children, type ComponentProps, type ReactNode } from 'react';
+import { Children, useContext, type ComponentProps, type ReactNode } from 'react';
 import { Text as RNText, type TextProps } from 'react-native';
 import { translatePiece, useUiLang } from '@/lib/l10n';
+import { TvFocusContext } from '@/ui/tv-pressable';
 
 function tr(children: ReactNode, lang: ReturnType<typeof useUiLang>): ReactNode {
   if (lang === 'fr') return children;
@@ -19,10 +20,11 @@ function tr(children: ReactNode, lang: ReturnType<typeof useUiLang>): ReactNode 
 
 export function Text(props: ComponentProps<typeof RNText>) {
   const lang = useUiLang();
-  const { children, accessibilityLabel, ...rest } = props;
+  const focused = useContext(TvFocusContext);
+  const { children, accessibilityLabel, style, allowFontScaling, ...rest } = props;
   const label = typeof accessibilityLabel === 'string' ? translatePiece(accessibilityLabel, lang) : accessibilityLabel;
   return (
-    <RNText accessibilityLabel={label} {...rest}>
+    <RNText allowFontScaling={allowFontScaling !== false} accessibilityLabel={label} style={[style, focused ? { color: '#141311' } : null]} {...rest}>
       {tr(children, lang)}
     </RNText>
   );

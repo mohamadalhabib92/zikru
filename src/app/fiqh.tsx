@@ -1,18 +1,22 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { RulingSource } from '@/components/zikru/RulingSource';
 import { FIQH, FIQH_GAPS, SCHOOLS, SCHOOL_LABEL } from '@/lib/fiqh';
 import { useMadhab } from '@/lib/madhab';
 import { fiqhTopicTitle, rulingView, schoolLabel } from '@/lib/i18n-content';
+import { rulingLocales } from '@/lib/fiqh-locales';
+import { CONTENT_LOCALES, resolveSlot, type ContentLocale } from '@/lib/religious-locale';
 import { L, useUiLang } from '@/lib/l10n';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
 import { LCard, LMuted, LText, Pill } from '@/ui/light';
 import { brand as b } from '@/ui/theme';
 
 const COLOR = '#A0522D';
+const asLocale = (l: string): ContentLocale => ((CONTENT_LOCALES as readonly string[]).includes(l) ? (l as ContentLocale) : 'fr');
 export default function Fiqh() {
   const router = useRouter();
   const [m, setM] = useMadhab();
@@ -67,11 +71,11 @@ export default function Fiqh() {
                     const v = rulingView(l, lang);
                     return (
                       <View key={l.id} style={{ marginTop: 10 }}>
-                        <Text style={{ color: COLOR, fontWeight: '800', marginBottom: 4 }}>{v.title}</Text>
+                        <Text style={{ color: b.rust, fontWeight: '800', marginBottom: 4 }}>{v.title}</Text>
                         {v.items ? (
                           v.items.map((it, i) => (
                             <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
-                              <Text style={{ color: COLOR, fontWeight: '800', width: 22 }}>{i + 1}.</Text>
+                              <Text style={{ color: b.rust, fontWeight: '800', width: 22 }}>{i + 1}.</Text>
                               <LText style={{ flex: 1 }}>{it}</LText>
                             </View>
                           ))
@@ -80,6 +84,9 @@ export default function Fiqh() {
                           <Text style={{ color: b.ink, fontSize: 17, lineHeight: 30, writingDirection: 'rtl', textAlign: 'right' }}>{l.textAr}</Text>
                         )}
                         {v.toReview ? <Text style={{ alignSelf: 'flex-start', marginTop: 2, fontSize: 11, fontWeight: '700', color: b.brown, backgroundColor: b.gold + '22', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>{L('Traduction Zikru — à relire')}</Text> : null}
+                        <Text style={{ alignSelf: 'flex-start', marginTop: 2, fontSize: 11, fontWeight: '700', color: b.brown, backgroundColor: b.gold + '22', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
+                          {L(resolveSlot(lang === 'ar' ? rulingLocales(l).matn : rulingLocales(l).explanation, lang === 'ar' ? 'ar' : asLocale(lang)).flag)}
+                        </Text>
                         <RulingSource r={l} />
                       </View>
                     );
@@ -89,6 +96,34 @@ export default function Fiqh() {
             </LCard>
           );
         })}
+        {m === 'maliki' ? (
+          <>
+            <LCard onPress={() => router.push('/fiqh-aqida')} label={L('Ce que l’on doit croire d’Allah')}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Ionicons name="book" size={22} color={COLOR} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Ce que l’on doit croire d’Allah')}</Text>
+                  <LMuted>{L('ʿAqīda ashʿarite, selon le matn d’Ibn ʿĀshir')}</LMuted>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+              </View>
+            </LCard>
+            <LCard onPress={() => router.push('/fiqh-akhdari')} label={L('Matn d’al-Akhdarī')}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Ionicons name="book" size={22} color={COLOR} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Matn d’al-Akhdarī')}</Text>
+                  <LMuted>{L('Abū Zayd ʿAbd al-Raḥmān al-Akhdarī')}</LMuted>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+              </View>
+            </LCard>
+            <LCard>
+              <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Mukhtaṣar Khalīl — bientôt')}</Text>
+              <LMuted>{L('Aucun texte de Khalīl n’est inclus.')}</LMuted>
+            </LCard>
+          </>
+        ) : null}
         <LCard onPress={() => router.push('/sahw')} label="Sujud as-sahw">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Ionicons name="construct" size={22} color={COLOR} />

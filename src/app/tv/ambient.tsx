@@ -1,0 +1,65 @@
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { LandscapeBackdrop } from '@/components/landscape-backdrop';
+import { useTvKeepAwake } from '@/components/tv/keep-awake';
+import { TvBack, TvButton, TvFocusable, TvPremiumGate, TvRow, TvScroll } from '@/components/tv/ui';
+import { L } from '@/lib/l10n';
+import { LANDSCAPE_IDS, type LandscapeId } from '@/lib/landscapes';
+import { AR_NAMES, computeDay, hhmm, withStates } from '@/lib/prayer';
+import { useSettings } from '@/lib/settings';
+import { Text } from '@/ui/Text';
+import { fonts } from '@/ui/theme';
+import { fontsAreReady } from '@/ui/fonts-ready';
+
+const DHIKR = 'سُبْحَانَ ٱللَّهِ وَٱلْحَمْدُ لِلَّهِ وَلَا إِلَٰهَ إِلَّا ٱللَّهُ وَٱللَّهُ أَكْبَرُ';
+
+export default function TvAmbient() {
+  return (
+    <TvPremiumGate feature="ambient">
+      <AmbientBody />
+    </TvPremiumGate>
+  );
+}
+
+function AmbientBody() {
+  useTvKeepAwake('zikru-tv-ambient');
+  const { s, t: tr } = useSettings();
+  const [i, setI] = useState(0);
+  const [now, setNow] = useState(() => new Date());
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    const clock = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(clock);
+  }, []);
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setI((n) => (n + 1) % LANDSCAPE_IDS.length), 45000);
+    return () => clearInterval(id);
+  }, [paused]);
+  const id: LandscapeId = LANDSCAPE_IDS[i] ?? 'stars';
+  const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
+  const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
+  const { next } = withStates(today, now, tomorrow[0].time);
+  return (
+    <View style={{ flex: 1, backgroundColor: '#000' }}>
+      <LandscapeBackdrop id={id} />
+      <TvScroll pinEnd transparent>
+        <View style={{ backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 28, padding: 28 }}>
+          <TvFocusable block minHeight={140} label={DHIKR}>
+            {(on) => (
+              <Text style={{ color: on ? '#141311' : '#F7F4EE', fontSize: 56, lineHeight: 96, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{DHIKR}</Text>
+            )}
+          </TvFocusable>
+          <Text style={{ color: '#D9B65C', fontSize: 32, marginTop: 18 }}>
+            {tr[next.key]} · {hhmm(next.time)} · {AR_NAMES[next.key]}
+          </Text>
+          <TvRow>
+            <TvButton label={paused ? L('Lecture') : L('Pause')} onPress={() => setPaused((v) => !v)} preferred />
+            <TvButton label={L('Paysage suivant')} onPress={() => setI((n) => (n + 1) % LANDSCAPE_IDS.length)} />
+            <TvBack />
+          </TvRow>
+        </View>
+      </TvScroll>
+    </View>
+  );
+}

@@ -1,0 +1,57 @@
+# Traduction allemande (de) — NON RELUE par un humain : à faire relire par un·e germanophone avant publication.
+# Colonnes : fr (clé exacte) \t de. de-CH est dérivé automatiquement (ß → ss).
+Programme de groupe	Gruppenprogramm
+Programmes du groupe	Programme der Gruppe
+Ouvrir le programme {t}	Programm {t} öffnen
+Tasbih de groupe : les étapes s’enchaînent, chacun voit l’avancée commune.	Gruppen-Tasbih: Die Schritte folgen aufeinander, alle sehen den gemeinsamen Fortschritt.
+Programme de la famille	Programm der Familie
+Programme du cercle	Programm des Kreises
+{n} étape(s) · version {v}	{n} Schritt(e) · Version {v}
+Programme archivé	Archiviertes Programm
+Étape {i} / {n}	Schritt {i} / {n}
+Passage du Coran reconnu par l’app	Von der App erkannte Koranstelle
+Formule du catalogue Zikru	Formel aus dem Zikru-Katalog
+Texte non vérifié (lu sur un document)	Ungeprüfter Text (aus einem Dokument gelesen)
+Source : {s}	Quelle: {s}
+Compter (+1)	Zählen (+1)
+{n} sur {max}	{n} von {max}
+Étape terminée	Schritt abgeschlossen
+Touchez pour compter	Zum Zählen tippen
+Annuler 1	1 rückgängig
+Étape précédente	Vorheriger Schritt
+Étape suivante	Nächster Schritt
+Programme terminé.	Programm abgeschlossen.
+Pas encore envoyé : {e}	Noch nicht gesendet: {e}
+Envoi…	Wird gesendet…
+Ce programme n’a pas d’étape.	Dieses Programm hat keine Schritte.
+Aller à l’étape {i}	Zu Schritt {i}
+Groupe : {total} au total · {n} membre(s) ont terminé	Gruppe: insgesamt {total} · {n} Mitglied(er) fertig
+Avancée des membres	Fortschritt der Mitglieder
+Chacun choisit ce qu’il partage (rien, participation ou compteur) dans les préférences de partage du groupe.	Alle wählen in den Freigabe-Einstellungen der Gruppe, was sie teilen (nichts, Teilnahme oder Zähler).
+{d} / {n} étape(s)	{d} / {n} Schritt(e)
+A participé	Hat teilgenommen
+Pas encore commencé	Noch nicht begonnen
+Archiver ce programme	Dieses Programm archivieren
+Archiver ce programme ?	Dieses Programm archivieren?
+Il ne sera plus proposé aux membres. Les avancées ne pourront plus être modifiées.	Es wird den Mitgliedern nicht mehr angeboten. Der Fortschritt kann nicht mehr geändert werden.
+Archiver	Archivieren
+Connectez-vous pour compter avec le groupe.	Melde dich an, um mit der Gruppe zu zählen.
+Importé depuis un document	Aus einem Dokument importiert
+Le serveur n’a pas encore les programmes de groupe : vérifiez l’aperçu (objectifs communs), puis confirmez à nouveau.	Der Server unterstützt noch keine Gruppenprogramme: Prüfe die Vorschau (gemeinsame Ziele) und bestätige erneut.
+Le groupe recevra un programme : les étapes s’enchaînent dans l’ordre et chacun compte avec le tasbih de groupe. Seul le texte validé est partagé : la photo reste sur votre appareil.	Die Gruppe erhält ein Programm: Die Schritte folgen der Reihe nach, alle zählen mit dem Gruppen-Tasbih. Nur der bestätigte Text wird geteilt: Das Foto bleibt auf deinem Gerät.
+Aperçu : programme de {n} étape(s) pour « {g} »	Vorschau: Programm mit {n} Schritt(en) für „{g}“
+Tous les membres de « {g} » verront ce programme (titre, textes, nombres) et pourront le suivre étape par étape. La photo n’est pas envoyée.	Alle Mitglieder von „{g}“ sehen dieses Programm (Titel, Texte, Anzahlen) und können ihm Schritt für Schritt folgen. Das Foto wird nicht gesendet.
+Titre coupé à {n} caractères.	Titel auf {n} Zeichen gekürzt.
+Nombre : {n}	Anzahl: {n}
+Texte trop long : coupé à {n} caractères (« … »).	Text zu lang: auf {n} Zeichen gekürzt („…“).
+Seules les {n} premières étapes seront partagées.	Nur die ersten {n} Schritte werden geteilt.
+Les programmes de groupe ne sont pas encore disponibles sur le serveur.	Gruppenprogramme sind auf dem Server noch nicht verfügbar.
+Programme introuvable	Programm nicht gefunden
+Étape introuvable	Schritt nicht gefunden
+Le programme a été modifié entre-temps. Rechargez-le.	Das Programm wurde inzwischen geändert. Lade es neu.
+Statut invalide	Ungültiger Status
+Un compte enfant ne peut pas créer de programme de groupe.	Ein Kinderkonto kann kein Gruppenprogramm erstellen.
+Un programme contient de 1 à 100 étapes.	Ein Programm hat 1 bis 100 Schritte.
+Identifiant déjà utilisé	Kennung bereits verwendet
+Groupe invalide	Ungültige Gruppe
+Compte suspendu par la modération.	Konto von der Moderation gesperrt.

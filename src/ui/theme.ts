@@ -18,7 +18,8 @@ const LIGHT = {
   muted: '#5C6A63',
   primary: '#0E6B4F',
   onPrimary: '#FFFFFF',
-  accent: '#8F6F1E',
+  // Or foncé pour le TEXTE sur fond clair (≥ 4,5:1 ; l’or #D9B65C ne sert qu’aux bordures/icônes/fonds sombres).
+  accent: '#7A5C12',
   border: '#E5DFD3',
   danger: '#B42318',
   dangerBg: '#FDECEA',
@@ -67,8 +68,10 @@ const BRAND_LIGHT = {
   ink: LIGHT.text,
   inkMuted: LIGHT.muted,
   line: LIGHT.border,
-  gold: '#E3BE5A',
-  goldDeep: '#9C7A22',
+  /** Or d’identité #D9B65C : bordures, icônes, et texte UNIQUEMENT sur fond sombre (hero ≥ 6:1). Interdit en texte sur fond clair (≈ 1,8:1). */
+  gold: '#D9B65C',
+  /** Or « texte » : sur fond clair (≥ 5:1 sur cream/paper/goldSoft) ; en sombre = or d’identité. */
+  goldDeep: '#7A5C12',
   goldSoft: '#FBF3DC',
   green: '#0E6B4F',
   greenDeep: '#0A3F30',
@@ -84,14 +87,17 @@ const BRAND_LIGHT = {
   rust: '#A3501E',
   wazifa: '#B88A22',
   hailala: '#6B3FB5',
-  wirdGreen: '#2F7D4F',
+  wirdGreen: '#287048', // passe 6 : 5,2:1 sur greenTint (était 4,4)
   hero: '#0F3D30',
   heroText: '#FBF7EE',
   heroMuted: '#BFD3C9',
+  /** Texte/icône posé sur un fond `green` (blanc en clair, encre sombre en sombre : ≥ 4,5:1 dans les deux). */
+  onGreen: '#FFFFFF',
 };
 const BRAND_DARK: typeof BRAND_LIGHT = {
   ...BRAND_LIGHT,
-  brown: '#123A2E',
+  // « brown » sert de couleur de TEXTE/icône (références, liens) : clair en sombre (≥ 8:1).
+  brown: '#9CC2B2',
   brownDark: '#0B241C',
   brownSoft: '#8DB0A2',
   cream: DARK.bg,
@@ -101,32 +107,45 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
   line: DARK.border,
   goldDeep: '#D9B65C',
   goldSoft: '#2A2414',
-  green: '#23946B',
+  green: '#2EAC7E', // passe 6 : texte vert ≥ 5:1 sur fonds sombres (était 4,4)
   greenDeep: '#0F3A2C',
   greenSoft: '#3E9A78',
   greenTint: '#13291F',
-  purple: '#4C42A6',
+  purple: '#A49BF5',
+  indigo: '#8B83F0',
   blue: '#4D8FD6',
   blueSoft: '#13243A',
   teal: '#3FA88B',
   violet: '#9B7BE0',
   rust: '#D07A45',
-  wirdGreen: '#3C9A62',
+  wirdGreen: '#45A86C', // passe 6 : 5,2:1 sur greenTint sombre (était 4,4)
   hero: '#103428',
   heroText: '#F4EFE4',
   heroMuted: '#A9C3B7',
+  onGreen: '#03140D',
 };
 export const brand = { ...BRAND_LIGHT };
 
 let current: Scheme = 'light';
+export type ThemeFinish = 'classic' | 'verre' | 'verre-or';
+let finish: ThemeFinish = 'classic';
 export const currentScheme = () => current;
+export const currentFinish = () => finish;
 export const isDark = () => current === 'dark';
+/** Thème translucide demandé. Le rendu peut retomber sur du plein (réduire la transparence, montre). */
+export const isGlass = () => finish !== 'classic';
 /** Réécrit les jetons en place (idempotent). */
 export function applyScheme(s: Scheme) {
   if (s === current) return;
   current = s;
   Object.assign(theme, s === 'dark' ? DARK : LIGHT);
   Object.assign(brand, s === 'dark' ? BRAND_DARK : BRAND_LIGHT);
+}
+
+/** Clair/sombre inchangé. Le fini (classique ou verre) est lu par les cartes et les boutons. */
+export function applyVisual(s: Scheme, next: ThemeFinish = 'classic') {
+  applyScheme(s);
+  finish = next;
 }
 
 /** Espacements (grille de 4). */
@@ -139,14 +158,32 @@ export const fonts = {
   arabicBold: 'Amiri_700Bold',
   quran: 'AmiriQuran_400Regular',
 } as const;
+/** Cible tactile minimale (44 pt). */
+export const hit = 44;
 export const type = {
-  display: { fontSize: 32, fontWeight: '800' as const, letterSpacing: -0.6 },
-  title: { fontSize: 22, fontWeight: '800' as const, letterSpacing: -0.3 },
-  headline: { fontSize: 17, fontWeight: '700' as const },
+  display: { fontSize: 30, fontWeight: '800' as const, letterSpacing: -0.6, lineHeight: 36 },
+  title: { fontSize: 22, fontWeight: '800' as const, letterSpacing: -0.3, lineHeight: 28 },
+  headline: { fontSize: 18, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 24 },
   body: { fontSize: 16, lineHeight: 23 },
+  sub: { fontSize: 15, lineHeight: 21 },
   caption: { fontSize: 13, lineHeight: 18 },
-  overline: { fontSize: 11, fontWeight: '800' as const, letterSpacing: 1.4 },
+  overline: { fontSize: 12, fontWeight: '800' as const, letterSpacing: 1.4 },
 };
+/**
+ * Fonds pleins du thème Verre. Le flou est un effet ; le texte se pose sur ces couleurs
+ * (ou sur un voile ≥ 0,88 qui s’en rapproche) pour rester AA. Montre et « Réduire la transparence » : ces fonds, sans flou.
+ */
+export const GLASS_SOLID = {
+  light: '#F4F7F5',
+  lightGold: '#FBF6E8',
+  dark: '#121D19',
+  darkGold: '#1A1710',
+} as const;
+export function glassSolidColor(): string {
+  const gold = finish === 'verre-or';
+  if (current === 'dark') return gold ? GLASS_SOLID.darkGold : GLASS_SOLID.dark;
+  return gold ? GLASS_SOLID.lightGold : GLASS_SOLID.light;
+}
 /** Ombres douces (aucune en mode sombre : on s'appuie sur les surfaces). */
 export function elevation(level: 0 | 1 | 2 | 3 = 1): ViewStyle {
   if (!level || current === 'dark') return {};
@@ -155,3 +192,24 @@ export function elevation(level: 0 | 1 | 2 | 3 = 1): ViewStyle {
 }
 /** Couleur + alpha (hex 6 chiffres). */
 export const alpha = (hex: string, a: number) => hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+
+/** Identité Zikru (référence) : splash, primaire clair, primaire sombre, or. */
+export const identity = { splash: '#0F3D30', primaryLight: '#0E6B4F', primaryDark: '#3DBE8B', gold: '#D9B65C' } as const;
+/** Palettes brutes, exposées pour les tests de contraste (scripts/test-contrast.mjs). */
+export const palettes = { LIGHT, DARK, BRAND_LIGHT, BRAND_DARK };
+const lum = (hex: string) => {
+  const h = hex.replace('#', '');
+  const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+/** Rapport de contraste WCAG 2.x entre deux couleurs hex à 6 chiffres. */
+export function contrast(a: string, b: string): number {
+  const x = lum(a);
+  const y = lum(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+/** Couleur de texte lisible sur un fond donné (blanc ou encre sombre, le meilleur contraste). */
+export function onColor(bg: string): string {
+  if (!/^#[0-9a-f]{6}$/i.test(bg)) return '#FFFFFF';
+  return contrast('#FFFFFF', bg) >= contrast('#03140D', bg) ? '#FFFFFF' : '#03140D';
+}

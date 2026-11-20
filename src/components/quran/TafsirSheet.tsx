@@ -13,21 +13,22 @@ const tafsirChoice = shared<string>('qr-tafsir', 'muyassar');
 /** Tafsir du verset, à la demande (mis en cache après la première lecture). */
 export function TafsirSheet({ verse, onClose, pal, arabic }: { verse: { s: number; a: number } | null; onClose: () => void; pal: Pal; arabic?: string }) {
   const [id, setId] = useShared(tafsirChoice);
-  const [txt, setTxt] = useState<string | null>(null);
-  const [err, setErr] = useState(false);
+  const [txtSlot, setTxtSlot] = useState<{ key: string; txt: string | null; err: boolean } | null>(null);
   const [n, setN] = useState(0);
+  const verseKey = verse ? `${verse.s}:${verse.a}:${id}:${n}` : '';
+  const txt = txtSlot && txtSlot.key === verseKey ? txtSlot.txt : null;
+  const err = !!(txtSlot && txtSlot.key === verseKey && txtSlot.err);
   useEffect(() => {
     if (!verse) return;
     let alive = true;
-    setTxt(null);
-    setErr(false);
+    const key = `${verse.s}:${verse.a}:${id}:${n}`;
     getTafsir(id, verse.s, verse.a)
-      .then((t) => alive && setTxt(t))
-      .catch(() => alive && setErr(true));
+      .then((t) => alive && setTxtSlot({ key, txt: t, err: false }))
+      .catch(() => alive && setTxtSlot({ key, txt: null, err: true }));
     return () => {
       alive = false;
     };
-  }, [verse?.s, verse?.a, id, n]);
+  }, [verse, id, n]);
   if (!verse) return null;
   const t = TAFSIRS.find((x) => x.id === id) ?? TAFSIRS[0];
   const rtl = t.lang === 'ar';

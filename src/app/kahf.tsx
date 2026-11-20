@@ -32,7 +32,7 @@ export default function Kahf() {
   const [reminder, setReminder] = usePersistentState('kahf-reminder', true);
   const [readWeeks, setReadWeeks] = usePersistentState<string[]>('kahf-read', []);
   const now = new Date();
-  const maghrib = useMemo(() => computeDay(now, s.place, s.method, s.madhab).find((x) => x.key === 'maghrib')?.time, [s.place, s.method, s.madhab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const maghrib = useMemo(() => computeDay(now, s.place, s.method, s.madhab, s.prayer).find((x) => x.key === 'maghrib')?.time, [s.place, s.method, s.madhab, s.prayer]); // eslint-disable-line react-hooks/exhaustive-deps
   const week = fridayKey(now);
   const done = readWeeks.includes(week);
 
@@ -97,7 +97,19 @@ export default function Kahf() {
       .then((r) => setAyahs(r.ayahs))
       .catch(() => setErr(L('Texte indisponible : vérifiez la connexion internet (il sera ensuite gardé hors ligne).')));
   };
-  useEffect(() => load(), []);
+  useEffect(() => {
+    let alive = true;
+    getKahfText(false)
+      .then((r) => {
+        if (!alive) return;
+        setAyahs(r.ayahs);
+        setErr(null);
+      })
+      .catch(() => alive && setErr(L('Texte indisponible : vérifiez la connexion internet (il sera ensuite gardé hors ligne).')));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <Screen>

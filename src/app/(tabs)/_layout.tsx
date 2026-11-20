@@ -1,19 +1,34 @@
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Platform, useWindowDimensions, View } from 'react-native';
+import { TVPressable, type TVPressableProps } from '@/ui/tv-pressable';
 import { hasSidebar, SIDEBAR_WIDTH } from '@/ui/ds';
 import { Ionicons, type IconName } from '@/ui/kit';
-import { useData } from '@/lib/data';
+import { useDataReady } from '@/lib/data';
 import { usePrayerReminders } from '@/lib/reminders';
+import { useWidgetSync } from '@/lib/widget-sync';
+import { useShortcuts } from '@/lib/use-shortcuts';
+import { isRTL } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
-import { theme as t } from '@/ui/theme';
+import { GlassFill } from '@/ui/glass';
+import { useVisualEffects } from '@/ui/effects';
+import { glassSolidColor, isGlass, theme as t } from '@/ui/theme';
+import { sanitizeLandscape } from '@/lib/landscapes';
 
 export default function TabsLayout() {
   const { s, t: tr, ready } = useSettings();
-  const { ready: dataReady } = useData();
+  const dataReady = useDataReady();
   usePrayerReminders();
+  useWidgetSync();
+  useShortcuts({ prayers: tr.w_next, wird: tr.sc_wird, tasbih: tr.sc_tasbih });
   const { width } = useWindowDimensions();
+  const fx = useVisualEffects();
+  const glass = isGlass();
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
+  const rtl = isRTL(s.lang);
+  const landscape = sanitizeLandscape(s.landscape);
+  // Avant l’onboarding : sur Apple TV cet arbre ne doit jamais dessiner la barre d’onglets ni l’assistant iPhone.
+  if (Platform.isTV) return <Redirect href="/tv" />;
   if (!ready || !dataReady)
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
@@ -28,22 +43,24 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: t.bg },
+        headerStyle: { backgroundColor: glass ? glassSolidColor() : t.bg },
         headerTintColor: t.text,
         headerTitleStyle: { fontWeight: '700', fontSize: 17 },
         headerShadowVisible: false,
-        tabBarPosition: sidebar ? 'left' : 'bottom',
+        tabBarPosition: sidebar ? (rtl ? 'right' : 'left') : 'bottom',
         tabBarLabelPosition: sidebar ? 'beside-icon' : undefined,
+        tabBarBackground: glass ? () => <GlassFill /> : undefined,
         tabBarStyle: sidebar
-          ? { backgroundColor: t.surface, borderColor: t.border, minWidth: SIDEBAR_WIDTH, width: SIDEBAR_WIDTH, paddingTop: 24 }
-          : { backgroundColor: t.surface, borderTopColor: t.border, minHeight: 60 },
+          ? { backgroundColor: glass ? 'transparent' : t.surface, borderColor: glass && fx.blur ? 'rgba(255,255,255,0.35)' : t.border, minWidth: SIDEBAR_WIDTH, width: SIDEBAR_WIDTH, paddingTop: 24 }
+          : { backgroundColor: glass ? 'transparent' : t.surface, borderTopColor: glass && fx.blur ? 'rgba(255,255,255,0.35)' : t.border, minHeight: 60 },
         tabBarActiveTintColor: sidebar ? t.onPrimary : t.primary,
         tabBarActiveBackgroundColor: sidebar ? t.primary : undefined,
         tabBarInactiveTintColor: t.muted,
         // Les libellés d'onglets ne grossissent pas au-delà de la barre (iOS affiche la grande vignette d'accessibilité à l'appui long).
         tabBarAllowFontScaling: false,
         tabBarLabelStyle: sidebar ? { fontSize: 15, fontWeight: '600' } : { fontSize: 11, fontWeight: '700' },
-        sceneStyle: { backgroundColor: t.bg },
+        sceneStyle: { backgroundColor: landscape === 'none' ? t.bg : 'transparent' },
+        ...(Platform.isTV ? { tabBarButton: (props) => <TVPressable {...(props as unknown as TVPressableProps)} /> } : {}),
       }}
     >
       <Tabs.Screen name="index" options={{ headerShown: false, title: tr.tab_home, tabBarIcon: icon('home-outline', 'home') }} />

@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { APP_VERSION } from '@/components/zikru/Provenance';
 import type { ReviewStatus } from '@/lib/provenance-types';
 import { REVIEW_LABEL } from '@/lib/reviews';
-import { reviewCsv, reviewMarkdown, reviewRows, type ReviewRow } from '@/lib/review-sheet';
+import type { ReviewRow } from '@/lib/review-sheet';
 import { Badge, Button, Card, Eyebrow, H1, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+
+type Sheet = typeof import('@/lib/review-sheet');
 
 type Kind = 'all' | ReviewRow['kind'];
 const STATUSES: ReviewStatus[] = ['a_valider', 'source_a_completer', 'a_corriger', 'valide'];
@@ -24,7 +26,18 @@ function download(name: string, text: string, type: string) {
 
 /** Écran discret pour les relecteurs : tout le contenu religieux par statut de validation, avec export. */
 export default function Validation() {
-  const rows = useMemo(() => reviewRows(), []);
+  const [extra, setExtra] = useState<ReviewRow[]>([]);
+  // Feuille de validation (provenance + jugements, ≈ 300 Ko de données) chargée à la demande : hors chargement initial.
+  const [sheet, setSheet] = useState<Sheet | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void import('@/lib/review-sheet').then((m) => alive && setSheet(m));
+    void Promise.all([import('@/components/bien-etre/module'), import('@/components/ramadan/module')]).then(([m, r]) => alive && setExtra([...m.bienEtreRows(), ...r.ramadanRows()]));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const rows = useMemo(() => (sheet ? sheet.reviewRows(extra) : []), [sheet, extra]);
   const [kind, setKind] = useState<Kind>('all');
   const [status, setStatus] = useState<ReviewStatus>('a_valider');
   const [limit, setLimit] = useState(40);
@@ -56,8 +69,8 @@ export default function Validation() {
         </Row>
         {Platform.OS === 'web' ? (
           <Row gap={8} style={{ flexWrap: 'wrap', marginTop: 12 }}>
-            <Button title="Exporter CSV" variant="secondary" icon="download-outline" onPress={() => download('zikru-validation-savante.csv', reviewCsv(rows), 'text/csv;charset=utf-8')} />
-            <Button title="Exporter Markdown" variant="secondary" icon="document-text-outline" onPress={() => download('zikru-validation-savante.md', reviewMarkdown(rows, APP_VERSION), 'text/markdown;charset=utf-8')} />
+            <Button title="Exporter CSV" variant="secondary" icon="download-outline" onPress={() => sheet && download('zikru-validation-savante.csv', sheet.reviewCsv(rows), 'text/csv;charset=utf-8')} />
+            <Button title="Exporter Markdown" variant="secondary" icon="document-text-outline" onPress={() => sheet && download('zikru-validation-savante.md', sheet.reviewMarkdown(rows, APP_VERSION), 'text/markdown;charset=utf-8')} />
           </Row>
         ) : (
           <Muted style={{ marginTop: 8 }}>L’export CSV / Markdown est disponible sur la version web.</Muted>

@@ -34,6 +34,18 @@ t('avance simple', () => {
   assert.equal(Q.advance(fat, -1, false), null);
   assert.equal(Q.advance(fat, 99, true), null);
 });
+t('préchargement : 3 versets distincts, répétition ignorée, échange si le fichier est prêt', () => {
+  assert.equal(Q.PREFETCH_AHEAD, 3);
+  assert.deepEqual(Q.prefetchWindow(fat, 0, false), [1, 2, 3]);
+  assert.deepEqual(Q.prefetchWindow(fat, 5, false), [6]);
+  assert.deepEqual(Q.prefetchWindow(fat, 6, false), []);
+  assert.deepEqual(Q.prefetchWindow(fat, 6, true), [0, 1, 2]);
+  const reps = buildQueue([[2, 1], [2, 2], [2, 3]], 3, 1);
+  assert.deepEqual(Q.prefetchWindow(reps, 0, false).map((i) => reps[i].a), [2, 3]);
+  assert.equal(Q.handoff('file://2.mp3', 'file://2.mp3'), 'swap');
+  assert.equal(Q.handoff(null, 'https://everyayah.com/a.mp3'), 'load');
+  assert.equal(Q.handoff('file://1.mp3', 'file://2.mp3'), 'load');
+});
 t('répétitions : même verset sans rechargement', () => {
   const q = buildQueue([[2, 1], [2, 2]], 3, 1);
   assert.equal(q.length, 6);

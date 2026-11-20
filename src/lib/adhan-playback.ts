@@ -4,6 +4,7 @@
  * partagent la même lecture, sans se superposer.
  */
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer, type AudioStatus } from 'expo-audio';
+import { Platform } from 'react-native';
 import type { AdhanSource } from './adhan-voices';
 
 export type AdhanSnap = {
@@ -38,13 +39,7 @@ function applyStatus(status: AudioStatus) {
     loaded: !!status.isLoaded,
     failed: !status.isLoaded && status.playbackState === 'failed',
   };
-  if (status.didJustFinish) {
-    try {
-      player?.setActiveForLockScreen(false);
-    } catch {
-      // le verrou n’existe pas sur le web
-    }
-  }
+  if (status.didJustFinish) lockScreen(false);
   emit();
 }
 
@@ -74,10 +69,20 @@ export function getAdhanSnap(): AdhanSnap {
   return snap;
 }
 
+function lockScreen(active: boolean, meta?: AdhanMeta) {
+  if (Platform.isTV || !player) return;
+  try {
+    if (active) player.setActiveForLockScreen(true, { title: meta?.title || 'Adhan', artist: meta?.artist || '' });
+    else player.setActiveForLockScreen(false);
+  } catch {
+    // pas d’écran verrouillé sur le web ni sur Apple TV
+  }
+}
+
 export function pauseAdhan() {
   try {
     player?.pause();
-    player?.setActiveForLockScreen(false);
+    lockScreen(false);
   } catch {
     // jamais de crash si le lecteur n’est pas prêt
   }
@@ -85,11 +90,15 @@ export function pauseAdhan() {
 
 /** Joue une voix déjà publiée ou un fichier local. `restart` reprend au début. */
 export async function playAdhanSource(source: AdhanSource, meta?: AdhanMeta, opts?: { restart?: boolean }): Promise<void> {
-  await setAudioModeAsync({
-    playsInSilentMode: true,
-    interruptionMode: 'doNotMix',
-    shouldPlayInBackground: true,
-  });
+  try {
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      interruptionMode: 'doNotMix',
+      shouldPlayInBackground: !Platform.isTV,
+    });
+  } catch (e) {
+    if (!Platform.isTV) throw e;
+  }
   const p = ensure(source);
   if (opts?.restart) {
     try {
@@ -99,9 +108,5 @@ export async function playAdhanSource(source: AdhanSource, meta?: AdhanMeta, opt
     }
   }
   p.play();
-  try {
-    p.setActiveForLockScreen(true, { title: meta?.title || 'Adhan', artist: meta?.artist || '' });
-  } catch {
-    // pas d’écran verrouillé dans le navigateur
-  }
+  lockScreen(true, meta);
 }

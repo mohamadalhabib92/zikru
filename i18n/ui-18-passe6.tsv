@@ -1,0 +1,55 @@
+# Passe 6 : file de modération (équipe), export local des données, notifications des discussions de groupe (ar : traduction à relire)
+Message de groupe	Group message	رسالة جماعية
+Message privé	Private message	رسالة خاصة
+Séance	Session	جلسة
+Nouveau	New	جديد
+En cours d’examen	Under review	قيد المراجعة
+Traité	Handled	تمت المعالجة
+Classé sans suite	Dismissed	حُفظ دون إجراء
+Modération	Moderation	الإشراف
+Réservé à l’équipe de modération	Reserved for the moderation team	مخصص لفريق الإشراف
+Cet écran n’est accessible qu’aux comptes désignés par l’équipe Zikru.	This screen is only available to accounts designated by the Zikru team.	هذه الشاشة متاحة فقط للحسابات التي يحددها فريق ذِكرُو.
+Démonstration : exemples fictifs, rien n’est envoyé.	Demo: fictional examples, nothing is sent.	عرض توضيحي: أمثلة وهمية، ولا يُرسل أي شيء.
+Signalements de toute la plateforme. L’identité de la personne qui signale n’est jamais affichée. Chaque décision est enregistrée au journal de l’équipe.	Reports from the whole platform. The identity of the person who reported is never shown. Every decision is recorded in the team log.	بلاغات المنصة كلها. لا تُعرض أبدًا هوية الشخص المُبلِّغ. يُسجَّل كل قرار في سجل الفريق.
+Afficher	Show	عرض
+En attente	Pending	قيد الانتظار
+Traités	Handled	المُعالَجة
+Classés	Dismissed	المحفوظة
+Aucun signalement ici.	No reports here.	لا توجد بلاغات هنا.
+Signalé le {d}	Reported on {d}	أُبلغ عنه في {d}
+{n} signalements visant ce compte	{n} reports about this account	{n} بلاغات بشأن هذا الحساب
+Prioritaire	Priority	أولوية
+Danger possible pour une personne : traiter sans attendre et, si nécessaire, contacter les secours (112 / 144 en Suisse).	A person may be in danger: handle this right away and, if needed, contact emergency services (112 / 144 in Switzerland).	قد يكون شخص في خطر: عالِج البلاغ فورًا، واتصل بخدمات الطوارئ عند الحاجة (112 / 144 في سويسرا).
+Contenu signalé : {t}	Reported content: {t}	المحتوى المُبلَّغ عنه: {t}
+(effacé)	(deleted)	(محذوف)
+Contenu signalé (auteur : {n})	Reported content (author: {n})	المحتوى المُبلَّغ عنه (الكاتب: {n})
+Contenu signalé	Reported content	المحتوى المُبلَّغ عنه
+Précision : {t}	Details: {t}	تفاصيل: {t}
+Note de décision (facultatif)	Decision note (optional)	ملاحظة القرار (اختيارية)
+Examiner	Review	مراجعة
+Supprimer le message	Delete the message	حذف الرسالة
+Supprimer ce message pour tout le groupe ?	Delete this message for the whole group?	حذف هذه الرسالة للمجموعة كلها؟
+Une copie reste au journal de l’équipe.	A copy stays in the team log.	تبقى نسخة في سجل الفريق.
+Marquer traité	Mark as handled	وضع علامة «تمت المعالجة»
+Classer sans suite	Dismiss	حفظ دون إجراء
+Décision : {t}	Decision: {t}	القرار: {t}
+Message supprimé	Message deleted	رسالة محذوفة
+Exporter mes données (fichier JSON)	Export my data (JSON file)	تصدير بياناتي (ملف JSON)
+Préparation…	Preparing…	جارٍ التحضير…
+Tout ce qui est enregistré sur cet appareil. Rien n’est envoyé.	Everything stored on this device. Nothing is sent.	كل ما هو محفوظ على هذا الجهاز. لا يُرسل أي شيء.
+Données de cet appareil uniquement (pas celles du serveur).	Data from this device only (not the server’s).	بيانات هذا الجهاز فقط (وليس بيانات الخادم).
+Export impossible	Export failed	تعذّر التصدير
+File des signalements (équipe)	Report queue (team)	قائمة البلاغات (الفريق)
+Nouveaux messages de mes groupes	New messages in my groups	الرسائل الجديدة في مجموعاتي
+Notification avec le nom du groupe seulement, jamais le texte du message. Les groupes en sourdine ne notifient pas.	Notification shows the group name only, never the message text. Muted groups do not notify.	يظهر في الإشعار اسم المجموعة فقط، ولا يظهر نص الرسالة أبدًا. المجموعات المكتومة لا تُرسل إشعارات.
+Notifications refusées : autorisez-les dans les Réglages du téléphone.	Notifications are blocked: allow them in the phone’s Settings.	الإشعارات مرفوضة: اسمح بها من إعدادات الهاتف.
+Notifications indisponibles sur cet appareil.	Notifications are not available on this device.	الإشعارات غير متاحة على هذا الجهاز.
+Chargement…	Loading…	جارٍ التحميل…
+Annuler	Cancel	إلغاء
+Supprimer	Delete	حذف
+Marque-pages	Bookmarks	العلامات
+jour	day	يوم
+jours	days	أيام
+Bientôt disponible pour vos groupes.	Coming soon for your groups.	قريبًا لمجموعاتك.
+Bientôt disponible	Coming soon	قريبًا
+La discussion de groupe arrive bientôt. Vos groupes, objectifs et encouragements fonctionnent déjà.	Group chat is coming soon. Your groups, goals and encouragements already work.	المحادثة الجماعية قادمة قريبًا. مجموعاتك وأهدافك وتشجيعاتك تعمل بالفعل.

@@ -1,0 +1,56 @@
+# Programme de groupe : tasbih de groupe, étapes enchaînées, avancée par membre (02.11.2026) (ar : traduction à relire)
+Programme de groupe	Group programme	برنامج جماعي
+Programmes du groupe	Group programmes	برامج المجموعة
+Ouvrir le programme {t}	Open the programme {t}	فتح البرنامج {t}
+Tasbih de groupe : les étapes s’enchaînent, chacun voit l’avancée commune.	Group tasbih: the steps follow one another, everyone sees the shared progress.	تسبيح جماعي: تتوالى المراحل، ويرى كل واحد التقدّم المشترك.
+Programme de la famille	Family programme	برنامج العائلة
+Programme du cercle	Circle programme	برنامج الحلقة
+{n} étape(s) · version {v}	{n} step(s) · version {v}	{n} مرحلة · الإصدار {v}
+Programme archivé	Archived programme	برنامج مؤرشف
+Étape {i} / {n}	Step {i} / {n}	المرحلة {i} / {n}
+Passage du Coran reconnu par l’app	Qur’an passage recognised by the app	مقطع قرآني تعرّف عليه التطبيق
+Formule du catalogue Zikru	Formula from the Zikru catalogue	صيغة من فهرس Zikru
+Texte non vérifié (lu sur un document)	Unverified text (read from a document)	نص غير متحقَّق منه (مقروء من وثيقة)
+Source : {s}	Source: {s}	المصدر: {s}
+Compter (+1)	Count (+1)	عُدّ (+1)
+{n} sur {max}	{n} of {max}	{n} من {max}
+Étape terminée	Step completed	اكتملت المرحلة
+Touchez pour compter	Tap to count	المس للعدّ
+Annuler 1	Undo 1	تراجع عن 1
+Étape précédente	Previous step	المرحلة السابقة
+Étape suivante	Next step	المرحلة التالية
+Programme terminé.	Programme completed.	اكتمل البرنامج.
+Pas encore envoyé : {e}	Not sent yet: {e}	لم يُرسَل بعد: {e}
+Envoi…	Sending…	جارٍ الإرسال…
+Ce programme n’a pas d’étape.	This programme has no steps.	لا يحتوي هذا البرنامج على أي مرحلة.
+Aller à l’étape {i}	Go to step {i}	الانتقال إلى المرحلة {i}
+Groupe : {total} au total · {n} membre(s) ont terminé	Group: {total} in total · {n} member(s) finished	المجموعة: {total} إجمالاً · {n} عضو أتمّوا
+Avancée des membres	Members’ progress	تقدّم الأعضاء
+Chacun choisit ce qu’il partage (rien, participation ou compteur) dans les préférences de partage du groupe.	Everyone chooses what they share (nothing, participation or counter) in the group’s sharing preferences.	يختار كل واحد ما يشاركه (لا شيء، أو المشاركة، أو العدّاد) في تفضيلات المشاركة الخاصة بالمجموعة.
+{d} / {n} étape(s)	{d} / {n} step(s)	{d} / {n} مرحلة
+A participé	Took part	شارك
+Pas encore commencé	Not started yet	لم يبدأ بعد
+Archiver ce programme	Archive this programme	أرشفة هذا البرنامج
+Archiver ce programme ?	Archive this programme?	أرشفة هذا البرنامج؟
+Il ne sera plus proposé aux membres. Les avancées ne pourront plus être modifiées.	It will no longer be offered to members. Progress can no longer be changed.	لن يُعرض بعد الآن على الأعضاء، ولن يمكن تعديل التقدّم.
+Archiver	Archive	أرشفة
+Connectez-vous pour compter avec le groupe.	Sign in to count with the group.	سجّل الدخول للعدّ مع المجموعة.
+Importé depuis un document	Imported from a document	مستورد من وثيقة
+Le serveur n’a pas encore les programmes de groupe : vérifiez l’aperçu (objectifs communs), puis confirmez à nouveau.	The server does not have group programmes yet: check the preview (shared goals), then confirm again.	لا يدعم الخادم البرامج الجماعية بعد: راجع المعاينة (الأهداف المشتركة)، ثم أكّد من جديد.
+Le groupe recevra un programme : les étapes s’enchaînent dans l’ordre et chacun compte avec le tasbih de groupe. Seul le texte validé est partagé : la photo reste sur votre appareil.	The group will receive a programme: the steps follow one another in order and everyone counts with the group tasbih. Only the confirmed text is shared: the photo stays on your device.	ستتلقى المجموعة برنامجًا: تتوالى المراحل بالترتيب ويعدّ كل واحد بالتسبيح الجماعي. لا يُشارَك إلا النص المؤكَّد: تبقى الصورة على جهازك.
+Aperçu : programme de {n} étape(s) pour « {g} »	Preview: {n}-step programme for “{g}”	معاينة: برنامج من {n} مرحلة لـ«{g}»
+Tous les membres de « {g} » verront ce programme (titre, textes, nombres) et pourront le suivre étape par étape. La photo n’est pas envoyée.	All members of “{g}” will see this programme (title, texts, counts) and can follow it step by step. The photo is not sent.	سيرى جميع أعضاء «{g}» هذا البرنامج (العنوان والنصوص والأعداد) ويمكنهم اتباعه مرحلة بمرحلة. لا تُرسَل الصورة.
+Titre coupé à {n} caractères.	Title shortened to {n} characters.	اختُصر العنوان إلى {n} حرفًا.
+Nombre : {n}	Count: {n}	العدد: {n}
+Texte trop long : coupé à {n} caractères (« … »).	Text too long: shortened to {n} characters (“…”).	النص طويل جدًا: اختُصر إلى {n} حرفًا («…»).
+Seules les {n} premières étapes seront partagées.	Only the first {n} steps will be shared.	ستُشارَك أول {n} مرحلة فقط.
+Les programmes de groupe ne sont pas encore disponibles sur le serveur.	Group programmes are not available on the server yet.	البرامج الجماعية غير متاحة على الخادم بعد.
+Programme introuvable	Programme not found	البرنامج غير موجود
+Étape introuvable	Step not found	المرحلة غير موجودة
+Le programme a été modifié entre-temps. Rechargez-le.	The programme was changed in the meantime. Reload it.	عُدّل البرنامج في الأثناء. أعد تحميله.
+Statut invalide	Invalid status	حالة غير صالحة
+Un compte enfant ne peut pas créer de programme de groupe.	A child account cannot create a group programme.	لا يمكن لحساب طفل إنشاء برنامج جماعي.
+Un programme contient de 1 à 100 étapes.	A programme has 1 to 100 steps.	يحتوي البرنامج على ما بين 1 و100 مرحلة.
+Identifiant déjà utilisé	Identifier already in use	المعرّف مستخدم من قبل
+Groupe invalide	Invalid group	مجموعة غير صالحة
+Compte suspendu par la modération.	Account suspended by moderation.	الحساب موقوف من قِبل الإشراف.

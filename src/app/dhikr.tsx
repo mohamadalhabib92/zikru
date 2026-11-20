@@ -26,7 +26,7 @@ export default function Dhikr() {
       <Spacer h={8} />
       {items.length === 0 ? <Empty icon="book-outline" title={tr.no_content} /> : null}
       {items.map((i) => {
-        const translation = tl !== 'ar' ? i.translations[tl] : undefined;
+        const translation = i.translations[tl];
         return (
           <Card key={i.id} style={{ marginBottom: 12 }}>
             <Text style={{ color: t.text, fontSize: 32, lineHeight: 56, textAlign: 'center', writingDirection: 'rtl' }} accessibilityLanguage="ar">
@@ -34,7 +34,7 @@ export default function Dhikr() {
             </Text>
             {i.transliteration ? <Text style={{ color: t.primary, textAlign: 'center', fontSize: 16 }}>{i.transliteration}</Text> : null}
             <Spacer h={8} />
-            {tl === 'ar' ? null : translation ? <Text style={{ color: t.text, textAlign: 'center' }}>{translation}</Text> : <Muted style={{ textAlign: 'center' }}>{tr.translation_pending}</Muted>}
+            {translation ? <Text style={{ color: t.text, textAlign: 'center' }}>{translation}</Text> : tl === 'ar' ? null : <Muted style={{ textAlign: 'center' }}>{tr.translation_pending}</Muted>}
             <Spacer h={8} />
             <Row style={{ justifyContent: 'space-between' }} wrap>
               <Muted style={{ flex: 1 }}>

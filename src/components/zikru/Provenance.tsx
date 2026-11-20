@@ -1,8 +1,9 @@
 import Constants from 'expo-constants';
-import { useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Linking, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
-import { GRADE_LABEL, GRADINGS_CHECKED_AT, dorarSearchUrl, gradeTone, provenanceFor, reportUrl } from '@/lib/provenance';
+import { GRADE_LABEL, dorarSearchUrl, gradeTone, reportUrl } from '@/lib/provenance-lite';
 import type { ProvenanceItem, ProvenanceSet } from '@/lib/provenance-types';
 import { REVIEW_LABEL } from '@/lib/reviews';
 import { Badge, Ionicons } from '@/ui/kit';
@@ -24,16 +25,37 @@ export function gradingSummary(p: ProvenanceItem) {
 
 function Link({ label, url, icon = 'open-outline' }: { label: string; url: string; icon?: 'open-outline' | 'mail-outline' | 'search-outline' }) {
   return (
-    <Pressable accessibilityRole="link" accessibilityLabel={label} onPress={() => Linking.openURL(url)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, minHeight: 32 }}>
+    <Pressable accessibilityRole="link" accessibilityLabel={label} onPress={() => Linking.openURL(url)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, minHeight: 44 }}>
       <Ionicons name={icon} size={15} color={b.brown} />
       <Text style={{ color: b.brown, fontWeight: '700', fontSize: 13, textDecorationLine: 'underline', flexShrink: 1 }}>{label}</Text>
     </Pressable>
   );
 }
 
+type ProvMod = typeof import('@/lib/review-sheet');
+let provMod: ProvMod | null = null;
+let provLoad: Promise<ProvMod> | null = null;
+/** Index de provenance (du‘as, hadiths, jugements vérifiés…) chargé à la demande, une fois, hors chargement initial. */
+function useProvenanceIndex(need: boolean): ProvMod | null {
+  const [m, setM] = useState<ProvMod | null>(provMod);
+  useEffect(() => {
+    if (!need || m) return;
+    let alive = true;
+    void (provLoad ??= import('@/lib/review-sheet').then((x) => (provMod = x))).then((x) => alive && setM(x)).catch(() => {
+      provLoad = null;
+    });
+    return () => {
+      alive = false;
+    };
+  }, [need, m]);
+  return m;
+}
+
 /** Badges de provenance (jugement + statut de validation) et détail dépliable avec « Signaler une erreur ». */
 export function ProvenanceBadges({ set, id, item }: { set?: ProvenanceSet; id?: string; item?: ProvenanceItem }) {
-  const p = item ?? (set && id !== undefined ? provenanceFor(set, id) : undefined);
+  const mod = useProvenanceIndex(true);
+  const p = item ?? (set && id !== undefined ? mod?.provenanceFor(set, id) : undefined);
+  const GRADINGS_CHECKED_AT = mod?.GRADINGS_CHECKED_AT ?? '…';
   const [open, setOpen] = useState(false);
   if (!p) return null;
   const sum = gradingSummary(p);
@@ -54,7 +76,7 @@ export function ProvenanceBadges({ set, id, item }: { set?: ProvenanceSet; id?: 
         {p.divergence ? <Badge label="Jugements divergents" tone="warning" /> : null}
         <Badge label={REVIEW_LABEL[p.review.status]} tone={p.review.status === 'valide' ? 'success' : p.review.status === 'a_corriger' ? 'danger' : 'neutral'} />
       </View>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={L("Sources et jugements")} onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, minHeight: 32 }}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={L("Sources et jugements")} onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, minHeight: 44 }}>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={b.inkMuted} />
         <Text style={{ color: b.inkMuted, fontSize: 12, fontWeight: '700' }}>Sources, jugements et signalement</Text>
       </Pressable>

@@ -6,7 +6,8 @@
  */
 import { L } from '../l10n';
 import { loadJSON, saveJSON } from '../storage';
-import { supabase } from '../supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabase, supabaseConfigured } from '../supabase';
 
 export type ScopeType = 'family' | 'circle';
 export type FamilyRole = 'parent' | 'adult' | 'child' | 'guest';
@@ -15,7 +16,19 @@ export type SharingMode = 'nothing' | 'participation' | 'counter';
 
 export type Family = { id: string; name: string; wird: string | null; created_at: string };
 export type FamilyMember = { id: string; family_id: string; user_id: string | null; display_name: string; role: FamilyRole; managed_by: string | null };
-export type Circle = { id: string; name: string; description: string | null; rules: string | null; max_members: number | null; created_at: string };
+export type Circle = {
+  id: string;
+  name: string;
+  description: string | null;
+  rules: string | null;
+  max_members: number | null;
+  created_at: string;
+  kind?: 'circle' | 'class';
+  allow_minors?: boolean;
+  allow_mixed_video?: boolean;
+};
+export type ClassLesson = { id: string; circle_id: string; title: string; starts_at: string; surah: number; ayah_from: number; ayah_to: number; cancelled_at: string | null };
+export type ClassAssignment = { id: string; circle_id: string; surah: number; ayah_from: number; ayah_to: number; note: string | null; created_at: string };
 export type CircleMember = { circle_id: string; user_id: string; display_name: string; role: CircleRole; rules_accepted_at: string | null };
 export type Goal = {
   id: string;
@@ -28,6 +41,8 @@ export type Goal = {
   status: 'active' | 'done' | 'archived';
   ends_on: string | null;
   created_at: string;
+  /** null tant que l’administrateur n’a pas choisi d’ordre, ou si la colonne n’est pas encore en base. */
+  position: number | null;
 };
 export type GoalProgress = {
   goal_id: string;
@@ -45,7 +60,7 @@ export type SessionCount = { session_id: string; user_id: string; display_name: 
 export type InvitePreview = { valid: boolean; scope_type?: ScopeType; name?: string; role?: string; rules?: string | null; members?: number; max_members?: number | null; full?: boolean; expires_at?: string; reason?: string };
 export type GroupCapacity = { limit: number; members: number; full: boolean; over_limit: boolean };
 export type ReportReason = 'spam' | 'harassment' | 'hate' | 'sexual' | 'violence' | 'self_harm' | 'impersonation' | 'child_safety' | 'other';
-export type ReportTarget = 'message' | 'member' | 'circle' | 'session';
+export type ReportTarget = 'message' | 'member' | 'circle' | 'session' | 'group_message';
 export type Block = { blocked_id: string; blocked_name: string; created_at: string };
 
 /** Erreur déjà traduite pour l'affichage ; `code` = SQLSTATE serveur (ZKG01 groupe complet, ZKR01 débit, ZKF01 filtre…). */
@@ -57,9 +72,11 @@ export class CommunityError extends Error {
   }
 }
 
-function sb() {
-  if (!supabase) throw new CommunityError(L('Serveur non configuré.'));
-  return supabase;
+/** Client Supabase (chargé à la demande) ; rejette si le serveur n'est pas configuré. */
+async function sb(): Promise<SupabaseClient> {
+  const c = await getSupabase();
+  if (!c) throw new CommunityError(supabaseConfigured ? L('Pas de connexion. Réessayez quand vous serez en ligne.') : L('Serveur non configuré.'));
+  return c;
 }
 
 type PgError = { message?: string; code?: string; details?: string | null };
@@ -83,6 +100,12 @@ export function frError(e: unknown): string {
       return L('Ce groupe est complet ({n} personnes maximum, créateur inclus).', { n: Number(d.limit) || 4 });
     case 'ZKG02':
       return L('Vous avez atteint la limite de {n} groupes créés.', { n: Number(d.limit) || 0 });
+    case 'ZKP01':
+      return L('Créer un groupe est réservé à Zikru Premium.');
+    case 'ZKT01':
+      return L('Le rôle d’enseignant est accordé par Bissabi, pas dans l’application.');
+    case 'ZKL01':
+      return L('La lecture partagée n’est pas ouverte.');
     case 'ZKR01':
       return L('Trop de tentatives. Réessayez dans {t}.', { t: waitText(Number(d.retry_after_s) || 60) });
     case 'ZKF01':
@@ -104,29 +127,94 @@ async function q<T>(p: PromiseLike<{ data: T | null; error: PgError | null }>): 
 }
 
 const scopeCol = (s: ScopeType) => (s === 'family' ? 'family_id' : 'circle_id');
+const CIRCLE_COLS = 'id,name,description,rules,max_members,created_at';
+const CIRCLE_FULL = `${CIRCLE_COLS},kind,allow_minors,allow_mixed_video`;
+const isMissing = (e: unknown) => {
+  const code = e instanceof CommunityError ? e.code : undefined;
+  return code === '42703' || code === '42883' || code === 'PGRST202' || code === 'PGRST204' || code === 'PGRST205';
+};
 
 // ---------- Lieux ----------
-export const listFamilies = () => q<Family[]>(sb().from('families').select('id,name,wird,created_at').order('created_at'));
-export const listCircles = () => q<Circle[]>(sb().from('circles').select('id,name,description,rules,max_members,created_at').order('created_at'));
-export const getFamily = (id: string) => q<Family>(sb().from('families').select('id,name,wird,created_at').eq('id', id).single());
-export const getCircle = (id: string) => q<Circle>(sb().from('circles').select('id,name,description,rules,max_members,created_at').eq('id', id).single());
+export const listFamilies = () => q<Family[]>(sb().then((c) => c.from('families').select('id,name,wird,created_at').order('created_at')));
+export async function listCircles(): Promise<Circle[]> {
+  try {
+    const rows = await q<Circle[]>(sb().then((c) => c.from('circles').select(CIRCLE_FULL).order('created_at')));
+    return rows.filter((c) => (c.kind ?? 'circle') === 'circle');
+  } catch (e) {
+    if (!isMissing(e)) throw e;
+    return q<Circle[]>(sb().then((c) => c.from('circles').select(CIRCLE_COLS).order('created_at')));
+  }
+}
+export async function listClasses(): Promise<Circle[]> {
+  try {
+    return await q<Circle[]>(sb().then((c) => c.from('circles').select(CIRCLE_FULL).eq('kind', 'class').order('created_at')));
+  } catch (e) {
+    if (isMissing(e)) return [];
+    throw e;
+  }
+}
+export const getFamily = (id: string) => q<Family>(sb().then((c) => c.from('families').select('id,name,wird,created_at').eq('id', id).single()));
+export async function getCircle(id: string): Promise<Circle> {
+  try {
+    return await q<Circle>(sb().then((c) => c.from('circles').select(CIRCLE_FULL).eq('id', id).single()));
+  } catch (e) {
+    if (!isMissing(e)) throw e;
+    return q<Circle>(sb().then((c) => c.from('circles').select(CIRCLE_COLS).eq('id', id).single()));
+  }
+}
 export const familyMembers = (id: string) =>
-  q<FamilyMember[]>(sb().from('family_members').select('id,family_id,user_id,display_name,role,managed_by').eq('family_id', id).order('joined_at'));
+  q<FamilyMember[]>(sb().then((c) => c.from('family_members').select('id,family_id,user_id,display_name,role,managed_by').eq('family_id', id).order('joined_at')));
 export const circleMembers = (id: string) =>
-  q<CircleMember[]>(sb().from('circle_members').select('circle_id,user_id,display_name,role,rules_accepted_at').eq('circle_id', id).order('joined_at'));
+  q<CircleMember[]>(sb().then((c) => c.from('circle_members').select('circle_id,user_id,display_name,role,rules_accepted_at').eq('circle_id', id).order('joined_at')));
 
-export const createFamily = (name: string, displayName: string) => q<string>(sb().rpc('create_family', { p_name: name, p_display_name: displayName }));
+export const createFamily = (name: string, displayName: string) => q<string>(sb().then((c) => c.rpc('create_family', { p_name: name, p_display_name: displayName })));
 export const createCircle = (name: string, description: string, rules: string, displayName: string) =>
-  q<string>(sb().rpc('create_circle', { p_name: name, p_description: description || null, p_rules: rules || null, p_display_name: displayName }));
-export const updateFamily = (id: string, patch: { name?: string; wird?: string | null }) => q(sb().from('families').update(patch).eq('id', id));
-export const updateCircle = (id: string, patch: { name?: string; description?: string | null; rules?: string | null }) => q(sb().from('circles').update(patch).eq('id', id));
-export const leaveFamily = (familyId: string, userId: string) => q(sb().from('family_members').delete().eq('family_id', familyId).eq('user_id', userId));
-export const removeFamilyMember = (memberId: string) => q(sb().from('family_members').delete().eq('id', memberId));
-export const leaveCircle = (circleId: string, userId: string) => q(sb().from('circle_members').delete().eq('circle_id', circleId).eq('user_id', userId));
-export const removeCircleMember = (circleId: string, userId: string) => q(sb().from('circle_members').delete().eq('circle_id', circleId).eq('user_id', userId));
-export const setMemberRole = (memberId: string, role: FamilyRole) => q(sb().rpc('set_member_role', { p_member: memberId, p_role: role }));
-export const setCircleRole = (circleId: string, userId: string, role: CircleRole) => q(sb().rpc('set_circle_role', { p_circle: circleId, p_user: userId, p_role: role }));
-export const addManagedChild = (familyId: string, name: string) => q<string>(sb().rpc('add_managed_child', { p_family: familyId, p_display_name: name }));
+  q<string>(sb().then((c) => c.rpc('create_circle', { p_name: name, p_description: description || null, p_rules: rules || null, p_display_name: displayName })));
+
+/** null = la migration classes n’est pas sur ce serveur. */
+export async function amITeacher(): Promise<boolean | null> {
+  try {
+    return await q<boolean>(sb().then((c) => c.rpc('am_i_teacher')));
+  } catch (e) {
+    if (isMissing(e)) return null;
+    throw e;
+  }
+}
+export const createClass = (name: string, description: string, displayName: string) =>
+  q<string>(sb().then((c) => c.rpc('create_class', { p_name: name, p_description: description || null, p_display_name: displayName })));
+export const setClassOptions = (id: string, allowMinors: boolean, allowMixedVideo: boolean) =>
+  q(sb().then((c) => c.rpc('set_class_options', { p_id: id, p_allow_minors: allowMinors, p_allow_mixed_video: allowMixedVideo })));
+export const listClassLessons = (id: string) =>
+  q<ClassLesson[]>(sb().then((c) => c.from('class_lessons').select('id,circle_id,title,starts_at,surah,ayah_from,ayah_to,cancelled_at').eq('circle_id', id).order('starts_at')));
+export const listClassAssignments = (id: string) =>
+  q<ClassAssignment[]>(sb().then((c) => c.from('class_assignments').select('id,circle_id,surah,ayah_from,ayah_to,note,created_at').eq('circle_id', id).order('created_at', { ascending: false })));
+export const scheduleClassLesson = (id: string, title: string, startsAt: string, surah: number, from: number, to: number) =>
+  q<string>(sb().then((c) => c.rpc('schedule_class_lesson', { p_class: id, p_title: title, p_starts_at: startsAt, p_surah: surah, p_from: from, p_to: to })));
+export const assignRecitation = (id: string, surah: number, from: number, to: number, note: string) =>
+  q<string>(sb().then((c) => c.rpc('assign_recitation', { p_class: id, p_surah: surah, p_from: from, p_to: to, p_note: note || null })));
+export const markRecitationDone = (assignmentId: string) => q(sb().then((c) => c.rpc('mark_recitation_done', { p_assignment: assignmentId })));
+export async function classConsents(familyId: string): Promise<Record<string, boolean> | null> {
+  try {
+    const rows = await q<{ child_member_id: string; allow_classes: boolean }[]>(
+      sb().then((c) => c.from('parental_controls').select('child_member_id,allow_classes').eq('family_id', familyId)),
+    );
+    return Object.fromEntries(rows.map((r) => [r.child_member_id, !!r.allow_classes]));
+  } catch (e) {
+    if (isMissing(e)) return null;
+    throw e;
+  }
+}
+export const setClassConsent = (familyId: string, childMemberId: string, allow: boolean) =>
+  q(sb().then((c) => c.from('parental_controls').upsert({ child_member_id: childMemberId, family_id: familyId, allow_classes: allow }, { onConflict: 'child_member_id' })));
+export const updateFamily = (id: string, patch: { name?: string; wird?: string | null }) => q(sb().then((c) => c.from('families').update(patch).eq('id', id)));
+export const updateCircle = (id: string, patch: { name?: string; description?: string | null; rules?: string | null }) => q(sb().then((c) => c.from('circles').update(patch).eq('id', id)));
+export const leaveFamily = (familyId: string, userId: string) => q(sb().then((c) => c.from('family_members').delete().eq('family_id', familyId).eq('user_id', userId)));
+export const removeFamilyMember = (memberId: string) => q(sb().then((c) => c.from('family_members').delete().eq('id', memberId)));
+export const leaveCircle = (circleId: string, userId: string) => q(sb().then((c) => c.from('circle_members').delete().eq('circle_id', circleId).eq('user_id', userId)));
+export const removeCircleMember = (circleId: string, userId: string) => q(sb().then((c) => c.from('circle_members').delete().eq('circle_id', circleId).eq('user_id', userId)));
+export const setMemberRole = (memberId: string, role: FamilyRole) => q(sb().then((c) => c.rpc('set_member_role', { p_member: memberId, p_role: role })));
+export const setCircleRole = (circleId: string, userId: string, role: CircleRole) => q(sb().then((c) => c.rpc('set_circle_role', { p_circle: circleId, p_user: userId, p_role: role })));
+export const addManagedChild = (familyId: string, name: string) => q<string>(sb().then((c) => c.rpc('add_managed_child', { p_family: familyId, p_display_name: name })));
 
 // ---------- Invitations ----------
 // Le serveur ne garde que l'empreinte (hash) des codes : le code en clair n'est connu qu'au moment de la création.
@@ -140,17 +228,17 @@ async function localCodes(): Promise<Record<string, LocalCode>> {
 }
 export async function createInvitation(scope: ScopeType, scopeId: string, role: string, maxUses = 1, days = 7) {
   const rows = await q<{ id: string; code: string; expires_at: string }[]>(
-    sb().rpc('create_invitation', { p_scope: scope, p_scope_id: scopeId, p_role: role, p_max_uses: maxUses, p_days: days }),
+    sb().then((c) => c.rpc('create_invitation', { p_scope: scope, p_scope_id: scopeId, p_role: role, p_max_uses: maxUses, p_days: days })),
   );
   const r = rows[0];
   if (r) await saveJSON(INVITE_CODES, { ...(await localCodes()), [r.id]: { code: r.code, expires_at: r.expires_at } });
   return r;
 }
 const normCode = (code: string) => code.trim().toUpperCase();
-export const previewInvitation = (code: string) => q<InvitePreview>(sb().rpc('preview_invitation', { p_code: normCode(code) }));
+export const previewInvitation = (code: string) => q<InvitePreview>(sb().then((c) => c.rpc('preview_invitation', { p_code: normCode(code) })));
 export async function acceptInvitation(code: string, displayName: string, acceptRules: boolean) {
   const r = await q<{ scope_type: ScopeType; id: string } | { error: string }>(
-    sb().rpc('accept_invitation', { p_code: normCode(code), p_display_name: displayName, p_accept_rules: acceptRules }),
+    sb().then((c) => c.rpc('accept_invitation', { p_code: normCode(code), p_display_name: displayName, p_accept_rules: acceptRules })),
   );
   if ('error' in r) throw new CommunityError(L('Code invalide.'));
   return r;
@@ -158,22 +246,22 @@ export async function acceptInvitation(code: string, displayName: string, accept
 export type Invitation = { id: string; code: string | null; role: string; uses: number; max_uses: number; expires_at: string; revoked_at: string | null };
 export async function listInvitations(scope: ScopeType, id: string): Promise<Invitation[]> {
   const rows = await q<Omit<Invitation, 'code'>[]>(
-    sb().from('invitations').select('id,role,uses,max_uses,expires_at,revoked_at').eq(scopeCol(scope), id).is('revoked_at', null).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }),
+    sb().then((c) => c.from('invitations').select('id,role,uses,max_uses,expires_at,revoked_at').eq(scopeCol(scope), id).is('revoked_at', null).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false })),
   );
   const codes = await localCodes();
   return rows.map((r) => ({ ...r, code: codes[r.id]?.code ?? null }));
 }
-export const revokeInvitation = (id: string) => q(sb().from('invitations').update({ revoked_at: new Date().toISOString() }).eq('id', id));
+export const revokeInvitation = (id: string) => q(sb().then((c) => c.from('invitations').update({ revoked_at: new Date().toISOString() }).eq('id', id)));
 /** Places du cercle (limite décidée par le serveur ; 4 personnes, créateur inclus, en version gratuite). */
 /** Droits du compte (plan, limites lues dans la base). */
 export type MyEntitlements = { plan: string; limits: Record<string, unknown>; payments_enabled: boolean };
-export const myEntitlements = () => q<MyEntitlements>(sb().rpc('get_my_entitlements'));
+export const myEntitlements = () => q<MyEntitlements>(sb().then((c) => c.rpc('get_my_entitlements')));
 /** Personnes maximum dans un cercle créé par ce compte (créateur inclus), ou null si inconnu. */
 export const myGroupCap = async () => {
   const n = Number((await myEntitlements()).limits?.max_group_members_created);
   return Number.isFinite(n) && n > 0 ? n : null;
 };
-export const groupCapacity = (circleId: string) => q<GroupCapacity>(sb().rpc('group_capacity', { p_circle: circleId }));
+export const groupCapacity = (circleId: string) => q<GroupCapacity>(sb().then((c) => c.rpc('group_capacity', { p_circle: circleId })));
 
 // ---------- Modération ----------
 export const reportContent = (
@@ -183,7 +271,7 @@ export const reportContent = (
   o: { details?: string; scope?: ScopeType; scopeId?: string; block?: boolean } = {},
 ) =>
   q<string>(
-    sb().rpc('report_content', {
+    sb().then((c) => c.rpc('report_content', {
       p_target_type: target,
       p_target_id: targetId,
       p_reason: reason,
@@ -191,15 +279,15 @@ export const reportContent = (
       p_scope_type: o.scope ?? null,
       p_scope_id: o.scopeId ?? null,
       p_block: !!o.block,
-    }),
+    })),
   );
-export const blockUser = (userId: string) => q(sb().rpc('block_user', { p_user: userId }));
-export const unblockUser = (myId: string, userId: string) => q(sb().from('blocks').delete().eq('blocker_id', myId).eq('blocked_id', userId));
-export const listBlocks = () => q<Block[]>(sb().from('blocks').select('blocked_id,blocked_name,created_at').order('created_at', { ascending: false }));
+export const blockUser = (userId: string) => q(sb().then((c) => c.rpc('block_user', { p_user: userId })));
+export const unblockUser = (myId: string, userId: string) => q(sb().then((c) => c.from('blocks').delete().eq('blocker_id', myId).eq('blocked_id', userId)));
+export const listBlocks = () => q<Block[]>(sb().then((c) => c.from('blocks').select('blocked_id,blocked_name,created_at').order('created_at', { ascending: false })));
 export const MODERATION_EMAIL_FALLBACK = 'mohamadalhabib@live.com';
 export async function moderationContact(): Promise<string> {
   try {
-    const r = await q<{ email?: string }>(sb().rpc('moderation_contact'));
+    const r = await q<{ email?: string }>(sb().then((c) => c.rpc('moderation_contact')));
     return r?.email || MODERATION_EMAIL_FALLBACK;
   } catch {
     return MODERATION_EMAIL_FALLBACK;
@@ -208,68 +296,280 @@ export async function moderationContact(): Promise<string> {
 
 // ---------- Contrôle parental ----------
 export const parentalControls = (familyId: string) =>
-  q<ParentalControl[]>(sb().from('parental_controls').select('child_member_id,family_id,daily_minutes_limit,messaging,content_level').eq('family_id', familyId));
-export const saveParentalControl = (pc: ParentalControl) => q(sb().from('parental_controls').upsert(pc, { onConflict: 'child_member_id' }));
+  q<ParentalControl[]>(sb().then((c) => c.from('parental_controls').select('child_member_id,family_id,daily_minutes_limit,messaging,content_level').eq('family_id', familyId)));
+export const saveParentalControl = (pc: ParentalControl) => q(sb().then((c) => c.from('parental_controls').upsert(pc, { onConflict: 'child_member_id' })));
 
 // ---------- Partage ----------
 export async function sharingMode(scope: ScopeType, id: string, userId: string): Promise<SharingMode> {
-  const rows = await q<{ mode: SharingMode }[]>(sb().from('sharing_preferences').select('mode').eq('user_id', userId).eq(scopeCol(scope), id));
+  const rows = await q<{ mode: SharingMode }[]>(sb().then((c) => c.from('sharing_preferences').select('mode').eq('user_id', userId).eq(scopeCol(scope), id)));
   return rows[0]?.mode ?? (scope === 'family' ? 'counter' : 'participation');
 }
 export async function setSharingMode(scope: ScopeType, id: string, userId: string, mode: SharingMode) {
-  const rows = await q<{ id: string }[]>(sb().from('sharing_preferences').update({ mode, updated_at: new Date().toISOString() }).eq('user_id', userId).eq(scopeCol(scope), id).select('id'));
-  if (!rows.length) await q(sb().from('sharing_preferences').insert({ user_id: userId, scope_type: scope, [scopeCol(scope)]: id, mode }));
+  const rows = await q<{ id: string }[]>(sb().then((c) => c.from('sharing_preferences').update({ mode, updated_at: new Date().toISOString() }).eq('user_id', userId).eq(scopeCol(scope), id).select('id')));
+  if (!rows.length) await q(sb().then((c) => c.from('sharing_preferences').insert({ user_id: userId, scope_type: scope, [scopeCol(scope)]: id, mode })));
 }
 export async function allSharingModes(userId: string) {
-  return q<{ family_id: string | null; circle_id: string | null; mode: SharingMode }[]>(sb().from('sharing_preferences').select('family_id,circle_id,mode').eq('user_id', userId));
+  return q<{ family_id: string | null; circle_id: string | null; mode: SharingMode }[]>(sb().then((c) => c.from('sharing_preferences').select('family_id,circle_id,mode').eq('user_id', userId)));
 }
 
 // ---------- Objectifs ----------
-export const listGoals = (scope: ScopeType, id: string) =>
-  q<Goal[]>(sb().from('shared_goals').select('id,scope_type,family_id,circle_id,title,formula,target,status,ends_on,created_at').eq(scopeCol(scope), id).neq('status', 'archived').order('created_at', { ascending: false }));
+const GOAL_COLS = 'id,scope_type,family_id,circle_id,title,formula,target,status,ends_on,created_at';
+export async function listGoals(scope: ScopeType, id: string): Promise<Goal[]> {
+  const c = await sb();
+  const withPos = await c.from('shared_goals').select(`${GOAL_COLS},position`).eq(scopeCol(scope), id).neq('status', 'archived').order('created_at', { ascending: false });
+  if (withPos.error && /position|schema cache|column/i.test(withPos.error.message ?? '')) {
+    const rows = await q<Omit<Goal, 'position'>[]>(c.from('shared_goals').select(GOAL_COLS).eq(scopeCol(scope), id).neq('status', 'archived').order('created_at', { ascending: false }));
+    return rows.map((g) => ({ ...g, position: null }));
+  }
+  if (withPos.error) throw new CommunityError(frError(withPos.error), withPos.error.code);
+  return ((withPos.data ?? []) as Goal[]).map((g) => ({ ...g, position: g.position ?? null }));
+}
 export const createGoal = (scope: ScopeType, id: string, userId: string, g: { title: string; formula?: string; target: number; ends_on?: string | null }) =>
-  q(sb().from('shared_goals').insert({ scope_type: scope, [scopeCol(scope)]: id, created_by: userId, title: g.title, formula: g.formula || null, target: g.target, ends_on: g.ends_on || null }));
-export const archiveGoal = (id: string) => q(sb().from('shared_goals').update({ status: 'archived' }).eq('id', id));
-export const goalProgress = (goalId: string) => q<GoalProgress>(sb().rpc('goal_progress', { p_goal: goalId }));
+  q(sb().then((c) => c.from('shared_goals').insert({ scope_type: scope, [scopeCol(scope)]: id, created_by: userId, title: g.title, formula: g.formula || null, target: g.target, ends_on: g.ends_on || null })));
+/** Change le nombre (et éventuellement l’ordre) d’un objectif. N’écrit pas les compteurs. */
+export async function updateGoalComposition(id: string, patch: { target?: number; position?: number | null }): Promise<void> {
+  const c = await sb();
+  const res = await c.from('shared_goals').update(patch).eq('id', id);
+  if (res.error && patch.position != null && /position|schema cache|column/i.test(res.error.message ?? '')) {
+    if (patch.target == null) throw new CommunityError(L('Le serveur n’a pas encore cette mise à jour : l’ordre sera modifiable dès qu’elle est appliquée. Rien n’a été effacé.'));
+    const retry = await c.from('shared_goals').update({ target: patch.target }).eq('id', id);
+    if (retry.error) throw new CommunityError(frError(retry.error), retry.error.code);
+    return;
+  }
+  if (res.error) throw new CommunityError(frError(res.error), res.error.code);
+}
+/** Rôles de l’utilisateur dans ses familles et cercles (pour savoir où il peut créer des objectifs communs). */
+export async function myGroupRoles(userId: string): Promise<{ family: Record<string, string>; circle: Record<string, string> }> {
+  const [f, c] = await Promise.all([
+    q<{ family_id: string; role: string }[]>(sb().then((x) => x.from('family_members').select('family_id,role').eq('user_id', userId))),
+    q<{ circle_id: string; role: string }[]>(sb().then((x) => x.from('circle_members').select('circle_id,role').eq('user_id', userId))),
+  ]);
+  return { family: Object.fromEntries((f ?? []).map((r) => [r.family_id, r.role])), circle: Object.fromEntries((c ?? []).map((r) => [r.circle_id, r.role])) };
+}
+/**
+ * Objectif commun avec identifiant choisi par l’app : un nouvel essai (double appui, réseau coupé) ne crée jamais
+ * de doublon — si l’objectif existe déjà (clé primaire, 23505), il est considéré comme créé.
+ */
+export async function insertGoalOnce(scope: ScopeType, id: string, userId: string, g: { id: string; title: string; formula: string | null; target: number }): Promise<'created' | 'exists'> {
+  const c = await sb();
+  const { error } = await c.from('shared_goals').insert({ id: g.id, scope_type: scope, [scopeCol(scope)]: id, created_by: userId, title: g.title, formula: g.formula, target: g.target });
+  if (!error) return 'created';
+  if (error.code === '23505') return 'exists';
+  throw new CommunityError(frError(error), error.code);
+}
+export const archiveGoal = (id: string) => q(sb().then((c) => c.from('shared_goals').update({ status: 'archived' }).eq('id', id)));
+export const goalProgress = (goalId: string) => q<GoalProgress>(sb().then((c) => c.rpc('goal_progress', { p_goal: goalId })));
 export type ContributionRow = { goal_id: string; count: number; source: string; client_id: string; member_id?: string | null };
 export async function insertContributions(userId: string, rows: ContributionRow[]) {
   if (!rows.length) return;
-  const { error } = await sb()
+  const { error } = await sb().then((c) => c
     .from('goal_contributions')
-    .upsert(rows.map((r) => ({ ...r, user_id: userId, member_id: r.member_id ?? null })), { onConflict: 'client_id', ignoreDuplicates: true });
+    .upsert(rows.map((r) => ({ ...r, user_id: userId, member_id: r.member_id ?? null })), { onConflict: 'client_id', ignoreDuplicates: true }));
   if (error) throw new CommunityError(frError(error), error.code);
 }
 
 // ---------- Calendrier ----------
 export const listEvents = (familyId: string) =>
-  q<CalendarEvent[]>(sb().from('family_calendar_events').select('id,family_id,title,kind,starts_at,all_day,notes').eq('family_id', familyId).gte('starts_at', new Date(Date.now() - 86400000).toISOString()).order('starts_at').limit(50));
+  q<CalendarEvent[]>(sb().then((c) => c.from('family_calendar_events').select('id,family_id,title,kind,starts_at,all_day,notes').eq('family_id', familyId).gte('starts_at', new Date(Date.now() - 86400000).toISOString()).order('starts_at').limit(50)));
 export const createEvent = (familyId: string, userId: string, e: { title: string; kind: string; starts_at: string; all_day: boolean; notes?: string }) =>
-  q(sb().from('family_calendar_events').insert({ family_id: familyId, created_by: userId, ...e, notes: e.notes || null }));
-export const deleteEvent = (id: string) => q(sb().from('family_calendar_events').delete().eq('id', id));
+  q(sb().then((c) => c.from('family_calendar_events').insert({ family_id: familyId, created_by: userId, ...e, notes: e.notes || null })));
+export const deleteEvent = (id: string) => q(sb().then((c) => c.from('family_calendar_events').delete().eq('id', id)));
+
+// Code d'invitation gardé pendant la connexion (24 h, sur cet appareil) : après le code e-mail ou le lien magique,
+// on revient sur l'invitation au lieu de devoir ressaisir le code.
+const PENDING_JOIN = 'community/pending-join';
+export const rememberPendingJoin = (code: string) => saveJSON(PENDING_JOIN, { code: code.toUpperCase().slice(0, 32), at: Date.now() });
+/** Où aller après la connexion : l'invitation en attente (puis oubliée), sinon Communauté. */
+export async function afterLoginRoute(): Promise<string> {
+  const p = await loadJSON<{ code?: string; at?: number } | null>(PENDING_JOIN, null);
+  if (p?.code && /^[A-Z0-9-]{4,32}$/.test(p.code) && Date.now() - (p.at ?? 0) < 86_400_000) {
+    await saveJSON(PENDING_JOIN, null);
+    return `/join?code=${encodeURIComponent(p.code)}`;
+  }
+  return '/community';
+}
 
 // ---------- Encouragements ----------
 export const listEncouragements = (scope: ScopeType, id: string) =>
-  q<Encouragement[]>(sb().from('encouragements').select('id,scope_type,family_id,circle_id,sender_id,recipient_id,kind,body,created_at,read_at').eq(scopeCol(scope), id).order('created_at', { ascending: false }).limit(50));
+  q<Encouragement[]>(sb().then((c) => c.from('encouragements').select('id,scope_type,family_id,circle_id,sender_id,recipient_id,kind,body,created_at,read_at').eq(scopeCol(scope), id).order('created_at', { ascending: false }).limit(50)));
 export const sendEncouragement = (scope: ScopeType, id: string, senderId: string, recipientId: string, kind: string, body: string) =>
-  q(sb().from('encouragements').insert({ scope_type: scope, [scopeCol(scope)]: id, sender_id: senderId, recipient_id: recipientId, kind, body }));
-export const markRead = (id: string) => q(sb().from('encouragements').update({ read_at: new Date().toISOString() }).eq('id', id));
+  q(sb().then((c) => c.from('encouragements').insert({ scope_type: scope, [scopeCol(scope)]: id, sender_id: senderId, recipient_id: recipientId, kind, body })));
+export const markRead = (id: string) => q(sb().then((c) => c.from('encouragements').update({ read_at: new Date().toISOString() }).eq('id', id)));
+
+// ---------- Discussion de groupe (Passe 5) : seulement les pastilles « non lus » ici ; le fil est chargé à la demande ----------
+export type GroupUnread = { scope_type: ScopeType; scope_id: string; unread: number; last_at: string | null; muted: boolean };
+/** Code d'erreur PostgREST / Postgres signalant que la discussion n'existe pas encore sur le serveur (migration passe 5 non appliquée). */
+export function isMissingFeature(e: { code?: string | null; message?: string | null } | null | undefined): boolean {
+  if (!e) return false;
+  if (e.code && ['PGRST202', 'PGRST205', '42883', '42P01'].includes(e.code)) return true;
+  return /could not find the (function|table)|does not exist/i.test(e.message ?? '');
+}
+const CHAT_AVAIL_KEY = 'group-chat-available';
+let chatAvailable: boolean | null = null;
+/** La discussion de groupe est-elle disponible sur le serveur ? Mis en cache ; hors ligne, on garde la dernière réponse connue (défaut : non). */
+export function groupChatAvailable(): boolean | null {
+  return chatAvailable;
+}
+async function rememberChat(v: boolean) {
+  chatAvailable = v;
+  await saveJSON(CHAT_AVAIL_KEY, v);
+}
+/** Non lus par groupe (plafonné à 99). En cas d'erreur ou sans serveur : liste vide, jamais bloquant. */
+export async function groupUnread(): Promise<GroupUnread[]> {
+  const c = await getSupabase();
+  if (!c) {
+    chatAvailable = false;
+    return [];
+  }
+  try {
+    const { data, error } = await c.rpc('group_unread');
+    if (error) {
+      if (isMissingFeature(error)) await rememberChat(false);
+      else if (chatAvailable === null) chatAvailable = await loadJSON<boolean>(CHAT_AVAIL_KEY, false);
+      return [];
+    }
+    await rememberChat(true);
+    return Array.isArray(data) ? (data as GroupUnread[]) : [];
+  } catch {
+    if (chatAvailable === null) chatAvailable = await loadJSON<boolean>(CHAT_AVAIL_KEY, false);
+    return [];
+  }
+}
 
 // ---------- Zikr en direct ----------
 export const liveSessions = (scope: ScopeType, id: string) =>
-  q<ZikrSession[]>(sb().from('zikr_sessions').select('id,scope_type,family_id,circle_id,title,formula,target,status,started_by,started_at').eq(scopeCol(scope), id).eq('status', 'live').order('started_at', { ascending: false }));
-export const getSession = (id: string) => q<ZikrSession>(sb().from('zikr_sessions').select('id,scope_type,family_id,circle_id,title,formula,target,status,started_by,started_at').eq('id', id).single());
+  q<ZikrSession[]>(sb().then((c) => c.from('zikr_sessions').select('id,scope_type,family_id,circle_id,title,formula,target,status,started_by,started_at').eq(scopeCol(scope), id).eq('status', 'live').order('started_at', { ascending: false })));
+export const getSession = (id: string) => q<ZikrSession>(sb().then((c) => c.from('zikr_sessions').select('id,scope_type,family_id,circle_id,title,formula,target,status,started_by,started_at').eq('id', id).single()));
 export async function startSession(scope: ScopeType, id: string, userId: string, s: { title: string; formula?: string; target?: number | null }) {
   const row = await q<{ id: string }>(
-    sb().from('zikr_sessions').insert({ scope_type: scope, [scopeCol(scope)]: id, started_by: userId, title: s.title, formula: s.formula || null, target: s.target || null }).select('id').single(),
+    sb().then((c) => c.from('zikr_sessions').insert({ scope_type: scope, [scopeCol(scope)]: id, started_by: userId, title: s.title, formula: s.formula || null, target: s.target || null }).select('id').single()),
   );
   return row.id;
 }
-export const endSession = (id: string) => q(sb().from('zikr_sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', id));
-export const sessionCounts = (id: string) => q<SessionCount[]>(sb().from('zikr_session_counts').select('session_id,user_id,display_name,count').eq('session_id', id).order('count', { ascending: false }));
+export const endSession = (id: string) => q(sb().then((c) => c.from('zikr_sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', id)));
+export const sessionCounts = (id: string) => q<SessionCount[]>(sb().then((c) => c.from('zikr_session_counts').select('session_id,user_id,display_name,count').eq('session_id', id).order('count', { ascending: false })));
 export const setSessionCount = (sessionId: string, userId: string, displayName: string, count: number) =>
-  q(sb().from('zikr_session_counts').upsert({ session_id: sessionId, user_id: userId, display_name: displayName, count, updated_at: new Date().toISOString() }, { onConflict: 'session_id,user_id' }));
+  q(sb().then((c) => c.from('zikr_session_counts').upsert({ session_id: sessionId, user_id: userId, display_name: displayName, count, updated_at: new Date().toISOString() }, { onConflict: 'session_id,user_id' })));
 
 // ---------- Profil / compte ----------
-export const getProfile = (id: string) => q<{ id: string; display_name: string; is_minor: boolean } | null>(sb().from('profiles').select('id,display_name,is_minor').eq('id', id).maybeSingle());
-export const updateProfile = (id: string, display_name: string) => q(sb().from('profiles').update({ display_name }).eq('id', id));
-export const deleteMyAccount = () => q(sb().rpc('delete_my_account'));
+export const getProfile = (id: string) => q<{ id: string; display_name: string; is_minor: boolean } | null>(sb().then((c) => c.from('profiles').select('id,display_name,is_minor').eq('id', id).maybeSingle()));
+export const updateProfile = (id: string, display_name: string) => q(sb().then((c) => c.from('profiles').update({ display_name }).eq('id', id)));
+export const deleteMyAccount = () => q(sb().then((c) => c.rpc('delete_my_account')));
+
+// ---------- Programmes de groupe (migration 20261102152251, appliquée en prod le 02.11.2026) ----------
+// Toutes les écritures passent par des RPC ; si la migration n'est pas appliquée (PGRST202 / 42P01…), les appelants
+// reçoivent `ProgramsMissing` et retombent sur les objectifs communs.
+export type ProgramVerification = 'unverified' | 'catalogue' | 'quran';
+export type ProgramStepInput = { label: string; arabic?: string | null; translit?: string | null; translation?: string | null; target: number; verification?: ProgramVerification; source_ref?: string | null };
+export type GroupProgram = { id: string; scope_type: ScopeType; family_id: string | null; circle_id: string | null; title: string; description: string | null; version: number; status: 'active' | 'archived'; created_at: string };
+export type ProgramStepView = { id: string; position: number; label: string; arabic: string | null; translit: string | null; translation: string | null; target: number; verification: ProgramVerification; source_ref: string | null; total: number; done_by: number; mine: number | null };
+export type ProgramMemberView = { user_id: string; name: string; me: boolean; participated: boolean; steps_done: number | null; counts: Record<string, number> | null };
+export type GroupProgramView = {
+  id: string;
+  scope_type: ScopeType;
+  scope_id: string;
+  title: string;
+  description: string | null;
+  source_note: string | null;
+  version: number;
+  status: 'active' | 'archived';
+  created_by: string | null;
+  created_at: string;
+  can_admin: boolean;
+  steps: ProgramStepView[];
+  members: ProgramMemberView[];
+};
+/** Le serveur n’a pas (encore) les programmes de groupe. */
+export class ProgramsMissing extends CommunityError {
+  constructor() {
+    super(L('Les programmes de groupe ne sont pas encore disponibles sur le serveur.'), 'MISSING');
+  }
+}
+async function pq<T>(p: PromiseLike<{ data: T | null; error: PgError | null }>): Promise<T> {
+  const { data, error } = await p;
+  if (error) {
+    if (isMissingFeature(error)) throw new ProgramsMissing();
+    throw new CommunityError(frError(error), error.code);
+  }
+  return data as T;
+}
+export const listGroupPrograms = (scope: ScopeType, id: string) =>
+  pq<GroupProgram[]>(sb().then((c) => c.from('group_programs').select('id,scope_type,family_id,circle_id,title,description,version,status,created_at').eq(scopeCol(scope), id).eq('status', 'active').order('created_at', { ascending: false })));
+/** Création idempotente : même `id` (choisi par l’app) = même programme, jamais de doublon. */
+export const createGroupProgram = (p: { id: string; scope: ScopeType; scopeId: string; title: string; steps: ProgramStepInput[]; description?: string | null; sourceNote?: string | null }) =>
+  pq<{ id: string; created: boolean; version: number }>(sb().then((c) => c.rpc('create_group_program', {
+    p_id: p.id, p_scope: p.scope, p_scope_id: p.scopeId, p_title: p.title, p_steps: p.steps, p_description: p.description ?? null, p_source_note: p.sourceNote ?? null,
+  })));
+export const updateGroupProgram = (id: string, expectedVersion: number, title: string, steps: ProgramStepInput[], description?: string | null) =>
+  pq<number>(sb().then((c) => c.rpc('update_group_program', { p_id: id, p_expected_version: expectedVersion, p_title: title, p_steps: steps, p_description: description ?? null })));
+export const setGroupProgramStatus = (id: string, status: 'active' | 'archived') => pq(sb().then((c) => c.rpc('set_group_program_status', { p_id: id, p_status: status })));
+/** Avancée personnelle (valeur absolue) sur une étape ; le serveur la borne au nombre de l’étape et renvoie la valeur gardée. */
+export const setProgramProgress = (stepId: string, count: number) => pq<number>(sb().then((c) => c.rpc('set_program_progress', { p_step: stepId, p_count: count })));
+export const groupProgramView = (id: string) => pq<GroupProgramView>(sb().then((c) => c.rpc('group_program_view', { p_id: id })));
+
+const orderMissing = (message: string) => /schema cache|does not exist|could not find|PGRST202|move_program_step|set_program_step_target/i.test(message);
+
+export async function setProgramStepTarget(stepId: string, target: number): Promise<void> {
+  const c = await sb();
+  const res = await c.rpc('set_program_step_target', { p_step: stepId, p_target: target });
+  if (res.error) {
+    if (orderMissing(res.error.message ?? '')) throw new CommunityError(L('Le serveur n’a pas encore cette mise à jour : l’ordre sera modifiable dès qu’elle est appliquée. Rien n’a été effacé.'));
+    throw new CommunityError(frError(res.error), res.error.code);
+  }
+}
+export async function moveProgramStep(stepId: string, direction: -1 | 1): Promise<void> {
+  const c = await sb();
+  const res = await c.rpc('move_program_step', { p_step: stepId, p_direction: direction });
+  if (res.error) {
+    if (orderMissing(res.error.message ?? '')) throw new CommunityError(L('Le serveur n’a pas encore cette mise à jour : l’ordre sera modifiable dès qu’elle est appliquée. Rien n’a été effacé.'));
+    throw new CommunityError(frError(res.error), res.error.code);
+  }
+}
+
+export type JoinRequest = {
+  id: string;
+  scope_type: ScopeType;
+  family_id: string | null;
+  circle_id: string | null;
+  user_id: string;
+  display_name: string;
+  message: string | null;
+  status: 'pending' | 'approved' | 'refused';
+  created_at: string;
+};
+
+export async function listJoinRequests(scope: ScopeType, id: string): Promise<JoinRequest[]> {
+  const c = await sb();
+  const res = await c.from('group_join_requests').select('id,scope_type,family_id,circle_id,user_id,display_name,message,status,created_at').eq(scopeCol(scope), id).eq('status', 'pending').order('created_at');
+  if (res.error && /schema cache|does not exist|group_join_requests/i.test(res.error.message ?? '')) return [];
+  if (res.error) throw new CommunityError(frError(res.error), res.error.code);
+  return (res.data ?? []) as JoinRequest[];
+}
+export const requestGroupJoin = (scope: ScopeType, id: string, displayName: string, message?: string) =>
+  q<string>(sb().then((c) => c.rpc('request_group_join', { p_scope: scope, p_scope_id: id, p_display_name: displayName, p_message: message ?? null })));
+export const reviewJoinRequest = (id: string, approve: boolean) => q(sb().then((c) => c.rpc('review_group_join_request', { p_id: id, p_approve: approve })));
+export const deleteGroup = (scope: ScopeType, id: string) => q(sb().then((c) => c.rpc('delete_group', { p_scope: scope, p_scope_id: id })));
+
+/** true si ce compte a déjà créé une famille, un cercle ou un programme. null si on ne peut pas le savoir (hors ligne). */
+export async function createdAnyServerGroup(): Promise<boolean | null> {
+  try {
+    const c = await getSupabase();
+    if (!c) return null;
+    const uid = (await c.auth.getUser()).data.user?.id;
+    if (!uid) return false;
+    const fam = await c.from('families').select('id').eq('created_by', uid).limit(1);
+    if (fam.error) return null;
+    if ((fam.data ?? []).length > 0) return true;
+    const cir = await c.from('circles').select('id').eq('created_by', uid).limit(1);
+    if (cir.error) return null;
+    if ((cir.data ?? []).length > 0) return true;
+    const prog = await c.from('group_programs').select('id').eq('created_by', uid).limit(1);
+    if (prog.error) {
+      if (/does not exist|schema cache|PGRST|column/i.test(prog.error.message ?? '')) return false;
+      return null;
+    }
+    return (prog.data ?? []).length > 0;
+  } catch {
+    return null;
+  }
+}

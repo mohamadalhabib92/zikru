@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { TextInput, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { AbjadBadge, AddToZikrSheet, nameItem, type DraftItem } from '@/components/zikr/parts';
 import { PatternBg } from '@/components/zikru/Pattern';
@@ -10,10 +11,9 @@ import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, Screen } from '@/ui/kit';
 import { Arabic, LCard, LMuted, Pill } from '@/ui/light';
 import { useLayout } from '@/ui/ds';
-import { alpha, brand as b, isDark } from '@/ui/theme';
+import { alpha, brand as b } from '@/ui/theme';
 import { ProvenanceBadges } from '@/components/zikru/Provenance';
 import { L, useUiLang } from '@/lib/l10n';
-import { NAMES_EN } from '@/lib/i18n-content/names';
 
 const norm = (s: string) =>
   s
@@ -29,13 +29,23 @@ export default function Names() {
   const [draft, setDraft] = useState<DraftItem | null>(null);
   const { cols } = useLayout();
   const lang = useUiLang();
-  const goldFill = isDark() ? '#A8841F' : b.goldDeep;
+  // Sens anglais chargés à la demande (morceau séparé, partagé avec les cartes du module bien-être).
+  const [NAMES_EN, setNamesEn] = useState<string[]>([]);
+  useEffect(() => {
+    let alive = true;
+    void import('@/lib/i18n-content/names').then((m) => alive && setNamesEn(m.NAMES_EN));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const goldFill = b.goldDeep;
   const list = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return NAMES;
     const num = parseInt(nq, 10);
-    return NAMES.filter((x) => (Number.isFinite(num) ? x.n === num || String(computeAbjad(nameBare(x.ar), repSys, opts).total) === nq : norm(`${x.tr} ${x.fr} ${NAMES_EN[x.n - 1] ?? ''} ${x.ar}`).includes(nq)));
-  }, [q, repSys, opts.taMarbuta, opts.hamza]);
+    const o = { taMarbuta: opts.taMarbuta, hamza: opts.hamza };
+    return NAMES.filter((x) => (Number.isFinite(num) ? x.n === num || String(computeAbjad(nameBare(x.ar), repSys, o).total) === nq : norm(`${x.tr} ${x.fr} ${NAMES_EN[x.n - 1] ?? ''} ${x.ar}`).includes(nq)));
+  }, [q, repSys, opts.taMarbuta, opts.hamza, NAMES_EN]);
 
   return (
     <Screen padded={false} bg={b.cream}>
@@ -145,7 +155,7 @@ export default function Names() {
                       alignItems: 'center',
                       gap: 4,
                       paddingHorizontal: 10,
-                      minHeight: 34,
+                      minHeight: 44,
                       borderRadius: 17,
                       borderWidth: 1,
                       borderColor: b.line,
@@ -166,16 +176,16 @@ export default function Names() {
                         alignItems: 'center',
                         gap: 4,
                         paddingHorizontal: 10,
-                        minHeight: 34,
+                        minHeight: 44,
                         borderRadius: 17,
                         backgroundColor: b.green,
                         opacity: pressed ? 0.8 : 1,
                       })}
                     >
-                      <Ionicons name="add" size={15} color="#fff" />
+                      <Ionicons name="add" size={15} color={b.onGreen} />
                       <Text
                         style={{
-                          color: '#fff',
+                          color: b.onGreen,
                           fontWeight: '800',
                           fontSize: 12,
                         }}

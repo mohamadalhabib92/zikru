@@ -83,7 +83,7 @@ for k, v in checks.items():
         for o in x.get('also', []): classes.add('w' if o in WEAK else 's')
     v['divergence'] = len(classes) > 1
 
-hdr = '''/* eslint-disable */
+hdr = '''
 // FICHIER GÉNÉRÉ par scripts/verify-hadith/build.py — ne pas modifier à la main.
 // Jugements recopiés tels qu'affichés par sunnah.com et dorar.net (consultés le %s).
 // Aucun jugement n'est déduit ni deviné : absence = « grading non vérifié ».

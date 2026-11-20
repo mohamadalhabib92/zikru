@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, type IconName } from '@/ui/kit';
@@ -14,8 +15,8 @@ export function Sheet({ visible, onClose, title, subtitle, pal, children, footer
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Pressable accessibilityLabel={L("Fermer")} onPress={onClose} style={{ flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 640, maxHeight: '88%', backgroundColor: pal.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: Math.max(insets.bottom, 12) }}>
+        <Pressable tvPlain accessibilityLabel={L("Fermer")} onPress={onClose} style={{ flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <Pressable tvPlain onPress={() => {}} style={{ width: '100%', maxWidth: 640, maxHeight: '88%', backgroundColor: pal.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: Math.max(insets.bottom, 12) }}>
             <View style={{ alignItems: 'center', paddingTop: 8 }}>
               <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: alpha(pal.muted, 0.4) }} />
             </View>
@@ -26,7 +27,7 @@ export function Sheet({ visible, onClose, title, subtitle, pal, children, footer
                 </Text>
                 {subtitle ? <Text style={{ color: pal.muted, fontSize: 13, marginTop: 2 }}>{subtitle}</Text> : null}
               </View>
-              <Pressable accessibilityRole="button" accessibilityLabel={L("Fermer")} onPress={onClose} hitSlop={10} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.muted, 0.15) }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={L("Fermer")} onPress={onClose} hitSlop={10} style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.muted, 0.15) }}>
                 <Ionicons name="close" size={20} color={pal.ink} />
               </Pressable>
             </View>
@@ -56,8 +57,8 @@ export function QBtn({ icon, label, onPress, pal, active, solid, small, disabled
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        minHeight: small ? 32 : 40,
-        minWidth: label ? undefined : small ? 32 : 40,
+        minHeight: small ? 36 : 44,
+        minWidth: label ? undefined : small ? 36 : 44,
         paddingHorizontal: label ? (small ? 10 : 14) : 0,
         borderRadius: 20,
         borderWidth: 1,

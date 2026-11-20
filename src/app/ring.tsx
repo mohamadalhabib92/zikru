@@ -4,6 +4,7 @@ import { Platform, TextInput, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { BleStatusChip } from '@/components/BleStatusChip';
 import { bleCounter, useBleCounter } from '@/lib/ble/manager';
+import { diag } from '@/lib/ble/diag';
 import { fieldLabel, isValidUuid, keyLabel, PROFILES, shortUuid } from '@/lib/ble/core';
 import { bleMsg } from '@/lib/ble/messages';
 import { useData } from '@/lib/data';
@@ -12,6 +13,7 @@ import { Badge, Body, Button, Card, Chip, Divider, Eyebrow, Field, H2, ListItem,
 import { theme as t } from '@/ui/theme';
 import { UI_LOCALE } from '@/lib/i18n';
 import { L, uiLang } from '@/lib/l10n';
+import { isIosAppOnMac } from '@/lib/mac';
 
 const STATUS_TONE = { connecté: 'success', connexion: 'info', reconnexion: 'warning', déconnecté: 'neutral', erreur: 'danger' } as const;
 const STATUS_HELP = {
@@ -27,12 +29,24 @@ export default function BluetoothCounterScreen() {
   const { t: tr } = useSettings();
   const { tasbih } = useData();
   const s = useBleCounter();
+  const ringLog = () => diag.snapshot().entries.filter((e) => e.tag === 'frame' || e.tag === 'notify' || e.tag === 'scan' || e.tag === 'recall' || e.tag === 'state').slice(-40);
+  const [journal, setJournal] = useState(ringLog);
+  const [seen, setSeen] = useState(() => diag.snapshot().seen);
+  useEffect(() => diag.subscribe(() => {
+    setJournal(ringLog());
+    setSeen(diag.snapshot().seen);
+  }), []);
   const web = Platform.OS === 'web';
   const connected = s.status === 'connecté';
   const busy = s.status === 'connexion' || s.status === 'reconnexion';
   const av = s.availability;
   const custom = s.prefs.customService.trim();
   const [capture, setCapture] = useState('');
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
   // Ouverture de l'écran : état du Bluetooth (et autorisations Android, demandées ici seulement).
   useEffect(() => {
     void bleCounter.refreshAvailability();
@@ -46,11 +60,18 @@ export default function BluetoothCounterScreen() {
         <Button title="Diagnostic" icon="pulse-outline" small variant="ghost" onPress={() => router.push('/ble-diag')} />
       </Row>
       <Muted>Tasbih électronique, anneau de dhikr ou télécommande : chaque appui ajoute +1 au compteur de session ({tasbih.count}{tasbih.target ? ` / ${tasbih.target}` : ''}).</Muted>
+      {web ? (
+        <>
+          <Spacer h={8} />
+          <Notice tone="info" title={L('Dans le navigateur')} text={L('La bague est facultative. Le Bluetooth web ne s’ouvre que si vous appuyez sur Rechercher, dans Chrome ou Edge. Safari ne le propose pas. Rien n’est scanné en arrière-plan.')} />
+        </>
+      ) : null}
+      {isIosAppOnMac() ? <Muted>{L('Sur Mac, le Bluetooth peut ne pas voir toutes les bagues. Le journal plus bas indique chaque appareil et pourquoi il est affiché ou masqué.')}</Muted> : null}
       <Muted>{STATUS_HELP[s.status]}</Muted>
       <Spacer h={8} />
       <BleStatusChip />
       <Spacer />
-      {s.lastSync && Date.now() - s.lastSync.at < 10 * 60 * 1000 ? (
+      {s.lastSync && nowMs - s.lastSync.at < 10 * 60 * 1000 ? (
         <>
           <Notice tone="success" icon="sync-outline" title={L('Synchronisé : +{n}', { n: s.lastSync.added })} text="Appuis faits pendant que l’appareil était déconnecté, ajoutés une seule fois à la session et à l’historique." />
           <Spacer />
@@ -94,10 +115,20 @@ export default function BluetoothCounterScreen() {
         <>
           <Notice
             tone={av.kind === 'disabled' ? 'info' : av.kind === 'unsupported' ? 'warning' : 'danger'}
-            title={av.kind === 'expo-go' ? 'Build natif requis' : av.kind === 'disabled' ? (av.reason === bleMsg('notReady') ? 'Bluetooth pas encore prêt' : 'Bluetooth désactivé') : av.kind === 'denied' ? 'Autorisation Bluetooth requise' : 'Bluetooth indisponible'}
-            text={av.kind === 'disabled' && s.devices.length && av.reason !== bleMsg('notReady') ? 'Activez le Bluetooth : vos compteurs mémorisés se reconnecteront automatiquement.' : av.reason}
+            title={av.kind === 'expo-go' ? 'Build natif requis' : av.kind === 'denied' ? 'Autorisation Bluetooth requise' : av.reason === bleMsg('resetting') ? L('Bluetooth en cours de redémarrage') : av.kind === 'disabled' ? (av.reason === bleMsg('notReady') ? 'Bluetooth pas encore prêt' : 'Bluetooth désactivé') : 'Bluetooth indisponible'}
+            text={av.kind === 'disabled' && s.devices.length && av.reason !== bleMsg('notReady') && av.reason !== bleMsg('resetting') ? 'Activez le Bluetooth : vos compteurs mémorisés se reconnecteront automatiquement.' : av.reason}
             icon="bluetooth-outline"
           />
+          <Spacer h={8} />
+          <Button title={L('Réessayer le Bluetooth')} icon="refresh" onPress={() => void bleCounter.refreshAvailability().then((a) => { if (a.ok) void bleCounter.startScan(); })} />
+          <Spacer />
+        </>
+      ) : null}
+      {s.hidOnly ? (
+        <>
+          <Notice tone="warning" icon="keypad-outline" title={L('Bague clavier')} text={s.error ?? L('Cette bague est un clavier Bluetooth. Activez le mode clavier : les touches comptent ici et sur le compteur.')} />
+          <Spacer h={8} />
+          <Button title={L('Activer le mode clavier')} icon="keypad-outline" onPress={() => bleCounter.setPrefs({ hidEnabled: true })} />
           <Spacer />
         </>
       ) : null}
@@ -121,6 +152,12 @@ export default function BluetoothCounterScreen() {
               Appuis reçus : {s.clicksThisConnection} · signaux : {s.notifyCount}
             </Muted>
             {s.lastHex ? <Text style={{ color: t.muted, fontFamily: mono, fontSize: 12 }}>Dernier signal : {s.lastHex}</Text> : null}
+            <Spacer h={8} />
+            <Eyebrow>{L('Journal')}</Eyebrow>
+            <Muted>{L('Trames reçues et appuis comptés. Rien n’est envoyé.')}</Muted>
+            {journal.length ? journal.map((e, i) => (
+              <Text key={`${e.t}-${i}`} style={{ color: t.muted, fontFamily: mono, fontSize: 11 }}>{e.msg}</Text>
+            )) : <Muted>{L('Aucune trame pour l’instant.')}</Muted>}
           </>
         ) : null}
         {s.error ? (
@@ -153,27 +190,53 @@ export default function BluetoothCounterScreen() {
         <>
           <Spacer />
           <H2>Appareils à proximité</H2>
-          <Muted>Seuls les compteurs de dhikr (tasbih, zikr, iQibla, BW…, bague ZKR-R1) et les écouteurs sont listés ; les autres appareils Bluetooth sont ignorés. Appuyez une fois sur le bouton du compteur pour le réveiller.</Muted>
+          <Muted>{L('Les compteurs reconnus sont en haut. Une bague sans nom, au nom générique ou déjà reliée au téléphone est sous « Peut-être une bague ». Appuyez une fois sur son bouton pour la réveiller.')}</Muted>
           {s.hiddenCount > 0 ? <Muted>{L('{n} appareil(s) non reconnu(s) masqué(s). Votre compteur n’apparaît pas ? Bouton « Diagnostic » › « Afficher tous les appareils ».', { n: s.hiddenCount })}</Muted> : null}
           <Spacer h={8} />
-          {s.scanResults.map((r) =>
-            r.kind === 'audio' ? (
-              <ListItem
-                key={r.id}
-                title={r.name ?? 'Écouteurs'}
-                subtitle={`${L('Écouteurs — gérés par le système, pas un compteur. La récitation passe par la sortie audio choisie dans les réglages du téléphone.')}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
-                icon="headset-outline"
-              />
-            ) : (
-              <ListItem
-                key={r.id}
-                title={`${r.likely ? '★ ' : ''}${r.name ?? 'Sans nom'}`}
-                subtitle={`${r.likely ? `${L('Compteur ({r})', { r: r.reason })} · ` : `${L('Hors liste (mode diagnostic)')} · `}${r.id}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
-                icon={r.likely ? 'radio-button-on-outline' : 'bluetooth-outline'}
-                onPress={() => void bleCounter.connectTo(r.id)}
-              />
-            ),
-          )}
+          {s.scanResults.filter((r) => r.kind !== 'maybe' && r.kind !== 'audio').map((r) => (
+            <ListItem
+              key={r.id}
+              title={`${r.likely ? '★ ' : ''}${r.name ?? 'Sans nom'}`}
+              subtitle={`${r.likely ? `${L('Compteur ({r})', { r: r.reason })} · ` : `${L('Hors liste (mode diagnostic)')} · `}${r.via === 'system' ? `${L('Déjà reliée au téléphone')} · ` : ''}${r.id}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
+              icon={r.likely ? 'radio-button-on-outline' : 'bluetooth-outline'}
+              onPress={() => void bleCounter.connectTo(r.id)}
+            />
+          ))}
+          {s.scanResults.some((r) => r.kind === 'maybe') ? (
+            <>
+              <Eyebrow>{L('Peut-être une bague')}</Eyebrow>
+              {s.scanResults.filter((r) => r.kind === 'maybe').map((r) => (
+                <ListItem
+                  key={r.id}
+                  title={r.name ?? L('Sans nom')}
+                  subtitle={`${r.via === 'system' ? L('Déjà reliée au téléphone') : r.via === 'saved' ? L('Bague enregistrée') : (r.reason ?? '')}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
+                  icon="help-circle-outline"
+                  onPress={() => void bleCounter.tryDevice(r.id)}
+                />
+              ))}
+              <Muted>{L('Appuyez sur la bague. Si le compteur bouge, c’est cet appareil.')}</Muted>
+            </>
+          ) : null}
+          {s.scanResults.filter((r) => r.kind === 'audio').map((r) => (
+            <ListItem
+              key={r.id}
+              title={r.name ?? 'Écouteurs'}
+              subtitle={`${L('Écouteurs — gérés par le système, pas un compteur. La récitation passe par la sortie audio choisie dans les réglages du téléphone.')}${r.rssi != null ? ` · ${r.rssi} dBm` : ''}`}
+              icon="headset-outline"
+            />
+          ))}
+          {seen.length ? (
+            <>
+              <Spacer />
+              <Eyebrow>{L('Appareils vus')}</Eyebrow>
+              <Muted>{L('Chaque appareil découvert, y compris ceux qui restent masqués. Rien n’est envoyé.')}</Muted>
+              {seen.slice(0, 12).map((d) => (
+                <Text key={d.id} style={{ color: t.muted, fontFamily: mono, fontSize: 11 }}>
+                  {[d.rssi ?? '?', 'dBm', d.name ?? L('Sans nom'), d.kind, d.via, d.reason, d.manufacturer ?? ''].filter(Boolean).join(' ')}
+                </Text>
+              ))}
+            </>
+          ) : null}
         </>
       ) : null}
 

@@ -12,8 +12,10 @@ export type ScanResult = {
   appearance?: number | null;
   manufacturerId?: number | null;
   manufacturerData?: Bytes | null;
-  /** Liste autorisée : compteur de dhikr, écouteurs, ou autre (masqué par défaut). */
-  kind?: 'counter' | 'audio' | 'other';
+  /** Liste autorisée : compteur, bague possible, écouteurs, ou autre (masqué). */
+  kind?: 'counter' | 'maybe' | 'audio' | 'other';
+  /** D’où vient cette ligne : scan radio, périphérique déjà connecté au système, identifiant mémorisé. */
+  via?: 'scan' | 'system' | 'saved';
 };
 
 /** Liaison active avec un appareil (identique sur web et natif). */
@@ -23,7 +25,7 @@ export interface BleLink {
   chars: GattChar[];
   /** MTU négocié (Android ; iOS le négocie seul). */
   mtu?: number | null;
-  subscribe(service: string, characteristic: string, cb: (b: Bytes) => void): Promise<() => void>;
+  subscribe(service: string, characteristic: string, cb: (b: Bytes) => void, onLost?: (info: { service: string; characteristic: string; code: number; reason: string }) => void): Promise<() => void>;
   read(service: string, characteristic: string): Promise<Bytes | null>;
   write?(service: string, characteristic: string, data: Bytes): Promise<void>;
   onDisconnect(cb: () => void): () => void;
@@ -61,10 +63,19 @@ export interface BleTransport {
   canReconnect(id: string): Promise<boolean>;
   /** Le transport sait-il reconnecter sans geste utilisateur ? (web : navigator.bluetooth.getDevices) */
   silentReconnectSupported(): boolean;
-  /** Bluetooth activé / désactivé (natif : état CoreBluetooth / Android ; web : availabilitychanged). */
-  onStateChange?(cb: (on: boolean) => void): () => void;
+  /** Bluetooth : on, off, redémarrage (Resetting/Unknown) ou autorisation refusée. */
+  onStateChange?(cb: (state: 'on' | 'off' | 'resetting' | 'denied') => void): () => void;
+  /**
+   * Périphériques que le scan ne voit pas : déjà connectés au système (HID) et identifiants mémorisés.
+   * iOS : retrieveConnectedPeripherals + retrievePeripherals.
+   */
+  recall?(services: string[], ids: string[]): Promise<ScanResult[]>;
   /** Recherche courte d'un appareil mémorisé (natif : scan ; web : watchAdvertisements). */
   findKnown?(match: (r: ScanResult) => boolean, ms: number): Promise<ScanResult | null>;
   /** iOS : appareils restaurés par CoreBluetooth (restauration d'état) au relancement en arrière-plan. */
   onRestore?(cb: (ids: string[]) => void): () => void;
+  /** Le lien GATT est-il encore ouvert ? (iOS peut le garder sans plus délivrer les notifications.) */
+  connected?(id: string): Promise<boolean>;
+  /** Périphérique déjà appairé, retrouvé par son identifiant (CoreBluetooth), avant toute recherche radio. */
+  retrieve?(id: string): Promise<boolean>;
 }

@@ -1,15 +1,22 @@
 {
   "name": "Zikru",
   "short_name": "Zikru",
-  "description": "Zikru — prière, qibla, tasbih et dhikr, hors-ligne.",
+  "description": "Zikru — prière, Coran, qibla, tasbih et dhikr, hors-ligne.",
   "lang": "fr",
+  "dir": "auto",
   "id": "/zikru/",
   "start_url": "/zikru/",
   "scope": "/zikru/",
   "display": "standalone",
-  "orientation": "portrait",
-  "theme_color": "#0E1A17",
-  "background_color": "#0E1A17",
+  "orientation": "any",
+  "categories": ["lifestyle", "education"],
+  "shortcuts": [
+    { "name": "Prières", "short_name": "Prières", "url": "/zikru/prayers", "description": "Horaires de prière" },
+    { "name": "Coran", "short_name": "Coran", "url": "/zikru/quran", "description": "Lecture du Coran" },
+    { "name": "Tasbih", "short_name": "Tasbih", "url": "/zikru/tasbih", "description": "Compteur" }
+  ],
+  "theme_color": "#181818",
+  "background_color": "#181818",
   "icons": [
     {
       "src": "/zikru/icons/icon-192.png",

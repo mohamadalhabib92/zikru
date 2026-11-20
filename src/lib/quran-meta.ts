@@ -1,4 +1,3 @@
-/* eslint-disable */
 // GÉNÉRÉ par scripts/gen-quran-uthmani.mjs — ne pas modifier.
 // Dérivé de « Tanzil Quran Metadata » v1.0 — Copyright (C) 2008-2026 Tanzil.net — Licence : Creative Commons Attribution 3.0.
 // Index globaux (0..6235) du premier verset de chaque page (Mushaf de Médine, 604 p.), juz’, quart de hizb (rub‘), manzil ; sajdas [index, obligatoire].

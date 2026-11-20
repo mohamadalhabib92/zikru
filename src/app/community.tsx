@@ -2,10 +2,12 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/ui/Text';
+import { ClassesHome } from '@/components/community/classes';
 import { LocalGroups } from '@/components/LocalGroups';
-import { BlockedList, confirmAsk, ErrorNote, ModerationContact, useLoad } from '@/components/community/parts';
+import { BlockedList, confirmAsk, ErrorNote, ModerationContact, UnreadBadge, useGroupUnread, useLoad } from '@/components/community/parts';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
+import { usePremium } from '@/lib/premium';
 import { useCommunity } from '@/lib/community/sync';
 import { HeroHeader } from '@/ui/ds';
 import { Button, Card, Field, H2, Ionicons, ListItem, Muted, Notice, Row, Screen, Spacer, type IconName } from '@/ui/kit';
@@ -49,6 +51,7 @@ export default function Community() {
       <Spacer />
       <MyCircles />
       <Spacer />
+      <ClassesHome />
       <JoinWithCode />
       <Spacer />
       <Account />
@@ -108,10 +111,13 @@ function SyncStatus() {
 
 function MyFamilies() {
   const { displayName, profile } = useAuth();
+  const premium = usePremium();
   const fams = useLoad(() => api.listFamilies(), []);
+  const unread = useGroupUnread();
   useFocusEffect(
     useCallback(() => {
       void fams.reload();
+      unread.reload();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
@@ -125,7 +131,14 @@ function MyFamilies() {
       <H2>Ma famille</H2>
       <ErrorNote error={fams.error} onRetry={fams.reload} />
       {fams.data?.map((f) => (
-        <ListItem key={f.id} icon="home-outline" title={f.name} subtitle={f.wird ? L('Wird : {w}', { w: f.wird }) : 'Famille privée'} onPress={() => router.push(`/family/${f.id}`)} />
+        <ListItem
+          key={f.id}
+          icon="home-outline"
+          title={f.name}
+          subtitle={f.wird ? L('Wird : {w}', { w: f.wird }) : 'Famille privée'}
+          right={<UnreadBadge n={unread.of('family', f.id)?.unread ?? 0} muted={unread.of('family', f.id)?.muted} />}
+          onPress={() => router.push(`/family/${f.id}`)}
+        />
       ))}
       {fams.data && !fams.data.length && !creating ? <Muted>Créez votre famille ou rejoignez-la avec le code reçu d’un parent.</Muted> : null}
       {profile?.is_minor ? null : creating ? (
@@ -141,6 +154,8 @@ function MyFamilies() {
               loading={busy}
               onPress={async () => {
                 if (!name.trim() || !me.trim()) return setErr('Nom requis.');
+                if (!premium.ready) return;
+                if (!premium.canCreate) return router.push('/premium');
                 setBusy(true);
                 try {
                   const id = await api.createFamily(name.trim(), me.trim());
@@ -157,7 +172,7 @@ function MyFamilies() {
           </Row>
         </Card>
       ) : (
-        <Button small variant="secondary" icon="home-outline" title="Créer une famille" onPress={() => setCreating(true)} />
+        <Button small variant="secondary" icon="home-outline" title="Créer une famille" onPress={() => { if (!premium.ready) return; if (!premium.canCreate) return router.push('/premium'); setCreating(true); }} />
       )}
     </View>
   );
@@ -165,10 +180,13 @@ function MyFamilies() {
 
 function MyCircles() {
   const { displayName, profile } = useAuth();
+  const premium = usePremium();
   const list = useLoad(() => api.listCircles(), []);
+  const unread = useGroupUnread();
   useFocusEffect(
     useCallback(() => {
       void list.reload();
+      unread.reload();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
@@ -186,7 +204,14 @@ function MyCircles() {
       <Muted>{cap.data ? L('Vos proches (Ahbab) : {n} personnes maximum par cercle, créateur inclus, sur invitation uniquement.', { n: cap.data }) : 'Vos proches (Ahbab) : petits cercles, sur invitation uniquement.'}</Muted>
       <ErrorNote error={list.error} onRetry={list.reload} />
       {list.data?.map((c) => (
-        <ListItem key={c.id} icon="people-outline" title={c.name} subtitle={c.description ?? 'Cercle privé'} onPress={() => router.push(`/circle/${c.id}`)} />
+        <ListItem
+          key={c.id}
+          icon="people-outline"
+          title={c.name}
+          subtitle={c.description ?? 'Cercle privé'}
+          right={<UnreadBadge n={unread.of('circle', c.id)?.unread ?? 0} muted={unread.of('circle', c.id)?.muted} />}
+          onPress={() => router.push(`/circle/${c.id}`)}
+        />
       ))}
       {creating ? (
         <Card>
@@ -200,6 +225,8 @@ function MyCircles() {
               loading={busy}
               onPress={async () => {
                 if (!name.trim()) return setErr('Nom requis.');
+                if (!premium.ready) return;
+                if (!premium.canCreate) return router.push('/premium');
                 setBusy(true);
                 try {
                   const id = await api.createCircle(name.trim(), desc.trim(), rules.trim(), displayName);
@@ -216,7 +243,7 @@ function MyCircles() {
           </Row>
         </Card>
       ) : (
-        <Button small variant="secondary" icon="people-outline" title="Créer un cercle" onPress={() => setCreating(true)} />
+        <Button small variant="secondary" icon="people-outline" title="Créer un cercle" onPress={() => { if (!premium.ready) return; if (!premium.canCreate) return router.push('/premium'); setCreating(true); }} />
       )}
     </View>
   );

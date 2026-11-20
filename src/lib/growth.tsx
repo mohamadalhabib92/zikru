@@ -7,7 +7,8 @@ import { uid, usePersistentState } from './storage';
  * Plateforme de progression (100 % locale, hors-ligne) :
  * dhikr par jour (parcours spirituel), prières cochées, jardin d'habitudes, planificateur.
  */
-export const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+import { dayKey } from './streak';
+export { dayKey };
 
 export type Habit = { id: string; title: string; anchor: string; tiny: string; icon: string; done: string[]; createdAt: string };
 export type Block = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -38,30 +39,7 @@ export function levelFor(total: number) {
   return { index: i + 1, ...LEVELS[i], next, progress: next ? (total - LEVELS[i].min) / (next.min - LEVELS[i].min) : 1 };
 }
 
-/** Série de jours consécutifs (aujourd'hui ou hier inclus) où `active(day)` est vrai. */
-export function streak(active: (k: string) => boolean, today = new Date()): number {
-  const d = new Date(today);
-  if (!active(dayKey(d))) d.setDate(d.getDate() - 1);
-  let n = 0;
-  while (active(dayKey(d)) && n < 3650) {
-    n++;
-    d.setDate(d.getDate() - 1);
-  }
-  return n;
-}
-export function bestStreak(days: string[]): number {
-  const set = [...new Set(days)].sort();
-  let best = 0;
-  let cur = 0;
-  let prev: number | null = null;
-  for (const k of set) {
-    const t = new Date(k + 'T12:00:00').getTime();
-    cur = prev != null && Math.round((t - prev) / 86400000) === 1 ? cur + 1 : 1;
-    best = Math.max(best, cur);
-    prev = t;
-  }
-  return best;
-}
+export { streak, bestStreak, type NeutralFn } from './streak';
 
 type Ctx = {
   days: Record<string, number>;

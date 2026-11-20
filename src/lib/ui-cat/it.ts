@@ -1408,7 +1408,7 @@ export const cat: Record<string, string> = {
   "Zikru a rencontré une erreur": "Zikru ha riscontrato un errore",
   "Zikru est un outil d’aide. Les horaires et la date hégirienne sont des calculs ; en cas de doute, référez-vous à votre mosquée ou à une autorité religieuse locale. Les contenus marqués « Exemple » doivent être validés par un référent avant publication.": "Zikru è uno strumento di aiuto. Gli orari e la data egiriana sono calcoli; in caso di dubbio, rivolgiti alla tua moschea o a un’autorità religiosa locale. I contenuti segnati «Esempio» devono essere convalidati da un referente prima della pubblicazione.",
   "Zikru ne fournit aucun enregistrement : ajoutez uniquement des fichiers que vous avez le droit d’écouter. Rien n’est envoyé sur internet.": "Zikru non fornisce alcuna registrazione: aggiungi solo file che hai il diritto di ascoltare. Nulla è inviato su internet.",
-  "Zikru · Chants soufis": "Zikru · Canti sufi",
+  "Zikru · Musique spirituelle": "Zikru · Musica spirituale",
   "Zikru – modération": "Zikru – moderazione",
   "Zone de capture : touchez ici, puis utilisez la télécommande": "Zona di cattura: tocca qui, poi usa il telecomando",
   "Zurich": "Zurigo",

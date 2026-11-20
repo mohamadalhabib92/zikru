@@ -1,6 +1,7 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, Pressable, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { enableBackgroundAudio, NowPlaying, PlayerBar } from '@/components/PlayerBar';
 import { useSettings } from '@/lib/settings';
@@ -42,7 +43,7 @@ export default function Songs() {
       setCur(i);
       autoNext.current = true;
       player.play();
-      if (Platform.OS !== 'web') player.setActiveForLockScreen(true, { title: tk.title, artist: L('Zikru · Chants soufis') });
+      if (Platform.OS !== 'web') player.setActiveForLockScreen(true, { title: tk.title, artist: L('Zikru · Musique spirituelle') });
     } catch {
       setErr('Lecture impossible pour ce fichier.');
     }

@@ -117,8 +117,20 @@ export function parseGeneric(b: Bytes): Parsed {
 }
 
 export const NUS_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'; // Nordic UART Service (spécification Nordic publique)
+/** Canal TX (notify) du Nordic UART Service — nRF5 SDK, ble_nus.h, base 6e400000-b5a3-f393-e0a9-e50e24dcca9e. */
+export const NUS_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+/**
+ * Module série HM-10 (Jinan Huamao, fiche publique) : service 0xFFE0, caractéristique 0xFFE1 (notify/write).
+ * Beaucoup de compteurs bon marché passent par ce canal, mais le format des octets n'est pas publié :
+ * on s'y abonne de préférence, puis impulsion ou apprentissage. Le service seul n'ouvre PAS la liste du scan
+ * (un module HM-10 peut être une lampe).
+ */
+export const HM10_SERVICE = normUuid('ffe0');
+export const HM10_SERIAL = normUuid('ffe1');
+/** Écriture iQibla publiée (N. Enggaliano, 2025). Le service et la notification ne le sont pas. */
+export const IQIBLA_WRITE = normUuid('d004');
 /** Services fréquents sur les accessoires BLE bon marché, demandés en mode générique (Web Bluetooth exige une liste). */
-export const GENERIC_SERVICES = [NUS_SERVICE, normUuid('fff0'), normUuid('ffe0'), normUuid('ff00'), normUuid('ae30'), normUuid('fee7')];
+export const GENERIC_SERVICES = [NUS_SERVICE, normUuid('fff0'), HM10_SERVICE, normUuid('ff00'), normUuid('ae30'), normUuid('fee7')];
 
 export const PROFILES: DeviceProfile[] = [
   {
@@ -178,7 +190,7 @@ export function detectProfile(name: string | null | undefined, chars: GattChar[]
     if (p.namePrefixes.some((x) => n.toUpperCase().startsWith(x.toUpperCase()))) return p;
     if (p.notify && chars.some((c) => sameUuid(c.service, p.notify!.service) && sameUuid(c.uuid, p.notify!.characteristic))) return p;
   }
-  if (/iqibla|zikr/i.test(n)) return profileById('iqibla');
+  if (/iqibla|zikr/i.test(n) || chars.some((c) => sameUuid(c.uuid, IQIBLA_WRITE))) return profileById('iqibla');
   return profileById('generic');
 }
 
@@ -212,6 +224,16 @@ export function candidateChars(chars: GattChar[]): GattChar[] {
   return chars.filter((c) => c.notify && !isIgnoredChar(c.uuid));
 }
 
+/** Caractéristique de notification documentée (HM-10 FFE1, Nordic UART TX), s'il y en a une parmi les candidates. */
+export function preferDocumentedNotify(chars: GattChar[]): GattChar | null {
+  const cands = candidateChars(chars);
+  for (const u of [HM10_SERIAL, NUS_TX]) {
+    const hit = cands.find((c) => sameUuid(c.uuid, u));
+    if (hit) return hit;
+  }
+  return null;
+}
+
 /** Correspondance par défaut sans apprentissage, ou null s'il faut apprendre (ambigu). */
 export function defaultMapping(profile: DeviceProfile, chars: GattChar[]): Mapping | null {
   if (profile.notify) {
@@ -219,16 +241,37 @@ export function defaultMapping(profile: DeviceProfile, chars: GattChar[]): Mappi
     if (ok) return { service: normUuid(profile.notify.service), characteristic: normUuid(profile.notify.characteristic), mode: 'absolute', byteIndex: -1 };
   }
   const cands = candidateChars(chars);
-  if (cands.length === 1) return { service: normUuid(cands[0].service), characteristic: normUuid(cands[0].uuid), mode: 'pulse', byteIndex: -1 };
-  return null;
+  // Le canal UART documenté ne sert que le profil générique : un iQibla n'annonce pas FFE1.
+  const chosen = (profile.doc === 'aucun' ? preferDocumentedNotify(chars) : null) ?? (cands.length === 1 ? cands[0] : null);
+  if (!chosen) return null;
+  // Profil dont le format de trame est publié : compteur absolu (rattrapage hors connexion). Sinon une impulsion.
+  const absolute = profile.doc === 'documenté' || profile.doc === 'partiel';
+  return { service: normUuid(chosen.service), characteristic: normUuid(chosen.uuid), mode: absolute ? 'absolute' : 'pulse', byteIndex: -1 };
+}
+
+/**
+ * Première trame d'un format publié (BSTWSH ou iQibla) alors que la correspondance est encore une impulsion
+ * non apprise : on passe en absolu avant d'avoir compté, pour rattraper le hors-connexion sans doublon.
+ * Retourne null s'il ne faut rien changer.
+ */
+export function adoptAbsoluteFrame(mapping: Mapping | null, service: string, characteristic: string, frame: Bytes, parse: (b: Bytes) => Parsed, clicksSoFar: number): Mapping | null {
+  if (!mapping || mapping.mode !== 'pulse' || mapping.learnedAt || mapping.pressSignature || clicksSoFar > 0) return null;
+  const p = parse(frame);
+  if (!p || p.kind !== 'absolute') return null;
+  return { service: normUuid(service), characteristic: normUuid(characteristic), mode: 'absolute', byteIndex: -1, auto: true };
 }
 
 // ---------------------------------------------------------------- Décodage des appuis
 export const MAX_JUMP = 10;
-/** Cadence maximale plausible d'un doigt sur un compteur (≈ 16 appuis/s). */
+/** Cadence maximale plausible d'un doigt sur un compteur (≈ 16 appuis/s). Conservé pour l'historique du tasbih. */
 export const MIN_TAP_MS = 60;
-/** Plafond absolu d'un saut accepté en cours de connexion (au-delà : valeur aberrante, compté 1). */
+/** Plafond historique d'un saut « plausible » (historique du tasbih). Le décodeur BLE ne s'en sert plus pour rogner un total. */
 export const JUMP_PLAUSIBLE_MAX = 100;
+/**
+ * Écart de compteur absolu compté tout de suite, quel que soit le temps écoulé.
+ * Au-delà : une seule trame aberrante (souvent 65535) est mise en attente ; si la suivante la confirme, l'écart entier est ajouté.
+ */
+export const ABSOLUTE_ACCEPT = 2000;
 /**
  * Appuis retenus pour un saut d de la valeur absolue en cours de connexion.
  * Avant : tout saut > MAX_JUMP comptait 1 (trames perdues = appuis perdus). Maintenant le saut est accepté
@@ -244,13 +287,11 @@ export const BASELINE_GRACE_MS = 1500;
 /** Deux trames identiques d'impulsion reçues à moins de DUP_WINDOW_MS sont une double livraison (pas deux appuis). */
 export const DUP_WINDOW_MS = 25;
 /**
- * Saut immédiatement acceptable en cours de connexion (sans attendre de confirmation) :
- * ≤ MAX_JUMP, ou ≤ JUMP_PLAUSIBLE_MAX et physiquement possible vu le temps écoulé.
+ * Saut immédiatement acceptable : tout écart positif jusqu'à ABSOLUTE_ACCEPT.
+ * Le temps d'arrivée ne compte pas : une notification en retard porte déjà le total de la bague.
  */
-export function jumpAcceptable(d: number, elapsedMs: number): boolean {
-  if (d <= 0) return false;
-  if (d <= MAX_JUMP) return true;
-  return d <= JUMP_PLAUSIBLE_MAX && d <= MAX_JUMP + Math.floor(Math.max(0, elapsedMs) / MIN_TAP_MS);
+export function jumpAcceptable(d: number, _elapsedMs = 0): boolean {
+  return d > 0 && d <= ABSOLUTE_ACCEPT;
 }
 /** Plafond physique d'appuis possibles en elapsedMs (au moins MAX_JUMP). */
 export function physicalCap(elapsedMs: number): number {
@@ -274,8 +315,13 @@ export class ClickDecoder {
   private lastPulse: { hex: string; at: number } | null = null;
   /** true si le dernier appel à feed() a rattrapé des appuis faits hors connexion. */
   lastWasSync = false;
+  /**
+   * Vrai dès qu’un total absolu a vraiment changé (pas la simple référence de connexion).
+   * Tant que la valeur ne bouge jamais, chaque notification est un appui, comme un doigt.
+   */
+  private sawDelta = false;
   /** Diagnostic : dernière décision du décodeur pour une valeur inattendue. */
-  lastEvent: 'attente' | 'confirmé' | 'parasite' | 'doublon' | null = null;
+  lastEvent: 'attente' | 'confirmé' | 'parasite' | 'doublon' | 'impulsion' | null = null;
   constructor(
     private mapping: Mapping,
     private parse: (b: Bytes) => Parsed,
@@ -323,7 +369,14 @@ export class ClickDecoder {
     this.lastEvent = null;
     if (this.mapping.mode === 'absolute') {
       const v = this.absoluteValue(b);
-      if (v == null) return 0;
+      if (v == null) {
+        // Caractéristique du compteur, mais aucun total dans la trame (bague à impulsions
+        // classée à tort comme compteur absolu, souvent parce que son nom contient « zikr »).
+        // Une trame illisible au milieu d’un vrai compteur reste ignorée.
+        if (this.last != null) return 0;
+        this.lastEvent = 'impulsion';
+        return 1;
+      }
       const prev = this.last;
       if (prev == null) {
         // Première valeur de la connexion : synchronisation avec le total mémorisé (sans double comptage).
@@ -331,9 +384,19 @@ export class ClickDecoder {
           const d = syncDelta(this.stored, v);
           this.stored = null;
           this.lastWasSync = d > 0;
+          if (d > 0) this.sawDelta = true;
           return this.accept(v, now, d);
         }
         return this.accept(v, now, now - this.subscribedAt < BASELINE_GRACE_MS ? 0 : v === 0 ? 0 : 1);
+      }
+      // Valeur figée depuis la connexion : la bague notifie à chaque appui sans faire avancer
+      // un compteur. Après la référence (lecture GATT à la connexion), chaque notification
+      // est un appui. Dès que le total a bougé une fois, une répétition redevient un doublon.
+      if (v === prev && !this.sawDelta && this.pending == null) {
+        if (now - this.subscribedAt < BASELINE_GRACE_MS) return 0;
+        this.lastEvent = 'impulsion';
+        this.lastAt = now;
+        return 1;
       }
       const p = this.pending;
       if (p) {
@@ -341,13 +404,15 @@ export class ClickDecoder {
         const dp = v - p.v;
         if (dp >= 0 && dp <= MAX_JUMP) {
           this.lastEvent = 'confirmé';
-          // saut réel : borné par ce qu'un doigt peut faire dans le temps écoulé ; remise à zéro : 0
-          const jump = p.v > prev ? Math.min(p.v - prev, physicalCap(p.at - this.lastAt)) : 0;
+          // Écart entier jusqu'à la valeur confirmée (pas de plafond « un doigt ne peut pas » : la bague a déjà compté).
+          const jump = p.v > prev ? p.v - prev : 0;
+          if (jump + dp > 0) this.sawDelta = true;
           return this.accept(v, now, jump + dp);
         }
         const n = this.step(prev, v, now - this.lastAt);
         if (n != null) {
           this.lastEvent = 'parasite';
+          if (n > 0) this.sawDelta = true;
           return this.accept(v, now, n);
         }
         this.pending = { v, at: now };
@@ -355,16 +420,17 @@ export class ClickDecoder {
         return 0;
       }
       const n = this.step(prev, v, now - this.lastAt);
-      if (n != null) return this.accept(v, now, n);
+      if (n != null) {
+        if (n > 0) this.sawDelta = true;
+        return this.accept(v, now, n);
+      }
       this.pending = { v, at: now };
       this.lastEvent = 'attente';
       return 0;
     }
+    // Une bague « delta » renvoie la même trame à chaque appui. Chaque notification compte.
+    // (Une double inscription GATT est évitée à l'abonnement, pas en jetant des appuis.)
     const hex = toHex(b);
-    if (this.lastPulse && this.lastPulse.hex === hex && now - this.lastPulse.at < DUP_WINDOW_MS) {
-      this.lastEvent = 'doublon';
-      return 0;
-    }
     this.lastPulse = { hex, at: now };
     if (this.mapping.pressSignature) return hex === this.mapping.pressSignature ? 1 : 0;
     const per = Math.max(1, this.mapping.notifsPerClick ?? 1);
@@ -375,6 +441,90 @@ export class ClickDecoder {
     }
     return 0;
   }
+  private pendingBytes: Bytes = new Uint8Array(0);
+  /**
+   * Une notification peut contenir plusieurs trames, ou la fin d'une trame coupée en deux.
+   * Chaque trame est comptée. Le morceau incomplet attend la notification suivante (32 octets max).
+   */
+  feedPacket(chunk: Bytes, now = Date.now()): number {
+    const buf = concatBytes(this.pendingBytes, chunk);
+    const { frames, rest } = splitNotifyPayload(buf, this.mapping.mode);
+    this.pendingBytes = rest.length > 32 ? copyBytes(rest.subarray(rest.length - 32)) : rest;
+    let n = 0;
+    for (const f of frames) n += this.feed(f, now);
+    return n;
+  }
+}
+
+function concatBytes(a: Bytes, b: Bytes): Bytes {
+  if (!a.length) return b;
+  if (!b.length) return a;
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a, 0);
+  out.set(b, a.length);
+  return out;
+}
+
+/**
+ * Découpe une notification : trames BSTWSH `AA 03 xx xx`, textes iQibla « Q07,0012,… »,
+ * ou octets identiques répétés (bague delta). Un préfixe incomplet est rendu dans `rest`.
+ */
+const copyBytes = (b: Uint8Array): Bytes => new Uint8Array(b);
+
+export function splitNotifyPayload(buf: Bytes, mode: 'absolute' | 'pulse'): { frames: Bytes[]; rest: Bytes } {
+  const frames: Bytes[] = [];
+  const empty = new Uint8Array(0);
+  let i = 0;
+  let structured = false;
+  let rest: Bytes = empty;
+  while (i < buf.length) {
+    if (buf[i] === 0xaa && i + 1 < buf.length && buf[i + 1] === 0x03) {
+      if (i + 4 > buf.length) {
+        rest = copyBytes(buf.subarray(i));
+        break;
+      }
+      if (buf[i + 2] === 0xaa && i + 3 < buf.length && buf[i + 3] === 0x03) {
+        i++;
+        continue;
+      }
+      frames.push(copyBytes(buf.subarray(i, i + 4)));
+      i += 4;
+      structured = true;
+      continue;
+    }
+    if (buf[i] === 0xaa && i + 1 >= buf.length) {
+      rest = copyBytes(buf.subarray(i));
+      break;
+    }
+    if (buf[i] === 0x51) {
+      const s = ascii(buf.subarray(i));
+      if (/^Q\d{1,3},\d{1,6},/.test(s)) {
+        const nxt = s.slice(1).search(/Q\d/);
+        const len = nxt === -1 ? s.length : nxt + 1;
+        frames.push(copyBytes(buf.subarray(i, i + len)));
+        i += len;
+        structured = true;
+        continue;
+      }
+      if (/^Q[\d,]{0,8}$/.test(s)) {
+        rest = copyBytes(buf.subarray(i));
+        break;
+      }
+    }
+    if (structured) {
+      i++;
+      continue;
+    }
+    break;
+  }
+  if (!structured) {
+    if (rest.length) return { frames: [], rest };
+    if (mode === 'pulse' && buf.length > 1 && buf.every((x) => x === buf[0])) {
+      return { frames: Array.from(buf, (x) => Uint8Array.of(x)), rest: empty };
+    }
+    return { frames: buf.length ? [copyBytes(buf)] : [], rest: empty };
+  }
+  return { frames, rest };
 }
 
 /** Plafond de rattrapage (appuis hors connexion) : au-delà, on considère la valeur aberrante. */
@@ -460,7 +610,7 @@ export function fieldLabel(f: CounterField | undefined): string {
  * Noms de compteurs de dhikr. Resserré en P4 : « ring » et « clicker » seuls retirés (bagues connectées, sonnettes,
  * télécommandes quelconques) — une bague de dhikr porte presque toujours zikr/tasbih/zkr/BW… dans son nom.
  */
-export const COUNTER_NAME_RE = /tasbi|tasbe|tesbi|tesbe|zikr|zkr|dhikr|thikr|zekr|subha|misbaha|masbaha|iqibla|qibla|bstwsh|counter|compteur|tally|noor|jood|^bw[-_ ]?\w/i;
+export const COUNTER_NAME_RE = /tasbi|tasbe|tesbi|tesbe|zikr|zkr|dhikr|thikr|zekr|subha|misbaha|masbaha|iqibla|qibla|bstwsh|counter|compteur|tally|noor|jood|^bw[-_ ]?\w|سبحة|مسبحة|تسبيح/i;
 /** Services de profils connus (documentés) et services génériques fréquents sur ces accessoires. */
 export function likelyCounter(name: string | null | undefined, services: string[] = []): { likely: boolean; reason: string | null } {
   const n = (name ?? '').trim();
@@ -535,6 +685,11 @@ export function analyzeLearn(samples: LearnSample[], presses: number, parse: (b:
 // ---------------------------------------------------------------- Clavier HID (anneaux télécommande)
 /** Touches envoyées par les anneaux-télécommandes / cliqueurs Bluetooth appairés comme clavier. */
 export const DEFAULT_HID_KEYS = ['Enter', ' ', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'PageDown', 'PageUp', 'AudioVolumeUp', 'AudioVolumeDown', 'VolumeUp', 'VolumeDown', 'MediaPlayPause', 'MediaTrackNext'];
+/**
+ * Le clavier ne compte pas tout seul. Sur le web, Espace et les flèches sinon bloquent
+ * le défilement et les boutons. L’utilisateur l’active dans l’écran du compteur.
+ */
+export const HID_ON_BY_DEFAULT = false;
 export function keyLabel(k: string): string {
   const m: Record<string, string> = { ' ': 'Espace', Enter: 'Entrée', ArrowRight: 'Flèche droite', ArrowLeft: 'Flèche gauche', ArrowUp: 'Flèche haut', ArrowDown: 'Flèche bas', PageDown: 'Page suivante', PageUp: 'Page précédente', AudioVolumeUp: 'Volume +', AudioVolumeDown: 'Volume −', VolumeUp: 'Volume +', VolumeDown: 'Volume −', MediaPlayPause: 'Lecture/Pause', MediaTrackNext: 'Piste suivante' };
   return m[k] ?? k;
@@ -568,6 +723,67 @@ export const KEEPER_SLOW_MS = 120000;
  * - wait : iOS, un seul appareil mémorisé, après un premier cycle raté → demande de connexion « en attente »
  *   CoreBluetooth (aucun scan, aucune minuterie : connexion dès le retour à portée).
  */
+export type ReconnectEvent = 'launch' | 'foreground' | 'background' | 'link-loss' | 'bluetooth-on' | 'bluetooth-off' | 'ios-restore';
+export type ReconnectAction = 'search-now' | 'wait-system' | 'pause' | 'idle';
+/**
+ * Décision de reconnexion pour un appareil mémorisé (pur, testé).
+ * - search-now : cycle immédiat au premier plan (connexion par identifiant, scan radio seulement selon keeperPlan).
+ * - wait-system : app en arrière-plan ou Bluetooth revenu pendant que l'app est suspendue. Pas de scan.
+ *   iOS : demande en attente CoreBluetooth, qui exige le mode d'arrière-plan bluetooth-central
+ *   (plugin react-native-ble-plx, modes: ['central']) et restoreStateIdentifier. Android : autoConnect.
+ * - pause : radio éteinte ; on reprend sur bluetooth-on.
+ * - idle : rien à faire (déjà lié, ou aucun appareil mémorisé).
+ * ios-restore réveille l'app : on reprend tout de suite, y compris si iOS a déjà rouvert le lien.
+ */
+/**
+ * Réarmer les notifications alors que le lien semble encore là.
+ * iOS garde souvent la connexion GATT au verrouillage ou au retour au premier plan,
+ * mais l’abonnement « notify » (react-native-ble-plx) ne délivre plus rien.
+ * Une perte d’abonnement ou une restauration iOS réarme tout de suite.
+ * Un simple retour au premier plan attend REARM_MIN_MS pour ne pas couper un abonnement tout neuf.
+ */
+export const REARM_MIN_MS = 800;
+export function shouldRearmNotify(event: 'foreground' | 'subscription-lost' | 'ios-restore', opts: { linked: boolean; armedAgoMs: number }): boolean {
+  if (!opts.linked) return false;
+  if (event === 'subscription-lost' || event === 'ios-restore') return true;
+  return opts.armedAgoMs >= REARM_MIN_MS;
+}
+
+/**
+ * Curseur absolu à enregistrer avec l’appui, ou rien.
+ * Une impulsion (valeur fixe ou trame sans total) ne doit pas porter la valeur déjà mémorisée :
+ * le journal la rejetterait comme doublon, et le chiffre affiché ne bougerait pas.
+ */
+export function clickCursor(
+  mode: 'absolute' | 'pulse' | undefined,
+  lastEvent: 'attente' | 'confirmé' | 'parasite' | 'doublon' | 'impulsion' | null,
+  deviceId: string | null | undefined,
+  lastValue: number | null,
+): { id: string; value: number } | undefined {
+  if (lastEvent === 'impulsion') return undefined;
+  if (mode !== 'absolute' || lastValue == null || !deviceId) return undefined;
+  return { id: deviceId, value: lastValue };
+}
+
+/** Où un appui a été écrit : le zikr ouvert à l’écran, et le compte avant / après. */
+export type FrameDest = { zikrId: string; session: string; before: number; after: number };
+
+/** Ligne du journal de la bague : chaque trame est soit appliquée au compteur, soit écartée avec la raison. */
+export function frameOutcome(char: string, hex: string, applied: number, reason: string, dest?: FrameDest | null): string {
+  const base = applied > 0 ? `${char} ${hex} → appliqué +${applied} (${reason})` : `${char} ${hex} → écarté (${reason})`;
+  if (!dest) return base;
+  return `${base} · zikr ${dest.zikrId} · séance ${dest.session} · ${dest.before} → ${dest.after}`;
+}
+
+export function reconnectDecision(event: ReconnectEvent, opts: { remembered: boolean; linked: boolean; background: boolean }): ReconnectAction {
+  if (event === 'bluetooth-off') return opts.linked ? 'idle' : 'pause';
+  if (!opts.remembered) return 'idle';
+  if (event === 'ios-restore') return opts.linked ? 'idle' : 'search-now';
+  if (opts.linked && event !== 'link-loss') return 'idle';
+  if (event === 'background' || opts.background) return 'wait-system';
+  return 'search-now';
+}
+
 export function keeperPlan(attempt: number, opts: { ios?: boolean; devices?: number; scanBlocked?: boolean } = {}): { delay: number; scan: boolean; wait: boolean } {
   const a = Math.max(0, Math.floor(attempt));
   const delay = a >= KEEPER_SLOW_AFTER ? KEEPER_SLOW_MS : keeperDelay(a);
@@ -641,7 +857,7 @@ export const ZKR_R1_SERVICE = 'a5480100-5630-4ce8-b243-aab253eadd56';
 /** Services qui identifient un compteur de dhikr pris en charge. */
 export const COUNTER_SERVICES = [normUuid('ae30'), ZKR_R1_SERVICE];
 /** Préfixes de nom pour le sélecteur Web Bluetooth (sensible à la casse, pas d'expression régulière possible). */
-export const COUNTER_NAME_PREFIXES = ['BW', 'ZKR', 'Zkr', 'zkr', 'Tasbih', 'TASBIH', 'tasbih', 'Smart Tasbih', 'Digital Tasbih', 'Zikr', 'ZIKR', 'zikr', 'Dhikr', 'iQIBLA', 'IQIBLA', 'iQibla', 'Misbaha', 'BSTWSH'];
+export const COUNTER_NAME_PREFIXES = ['BW', 'ZKR', 'Zkr', 'zkr', 'Tasbih', 'TASBIH', 'tasbih', 'Tesbih', 'Subha', 'Smart Tasbih', 'Digital Tasbih', 'Zikr', 'ZIKR', 'zikr', 'Dhikr', 'iQIBLA', 'IQIBLA', 'iQibla', 'Noor', 'NOOR', 'Jood', 'Misbaha', 'BSTWSH', 'سبحة', 'مسبحة', 'تسبيح'];
 /**
  * Services audio Bluetooth LE (LE Audio, Bluetooth SIG) : Volume Control 0x1844, Microphone Control 0x184D,
  * Audio Stream Control 0x184E, Broadcast Audio Scan 0x184F, Published Audio Capabilities 0x1850,
@@ -680,35 +896,71 @@ export function parseAdvertising(raw: Bytes): AdvInfo {
   return out;
 }
 
-export type DeviceKind = 'counter' | 'audio' | 'other';
+export type DeviceKind = 'counter' | 'maybe' | 'audio' | 'other';
 export type AdvLike = { name: string | null; services?: string[]; appearance?: number | null; manufacturerId?: number | null; manufacturerData?: Bytes | null };
 /**
- * Classe un appareil vu en scan. Liste autorisée stricte : seuls « counter » (compteur de dhikr / bague ZKR-R1)
- * et « audio » (écouteurs, casque, appareil auditif) sont affichés par défaut ; tout le reste est ignoré.
- * Le compteur l'emporte sur l'audio (une bague peut annoncer la batterie, jamais un service audio).
+ * Noms trop vagues pour affirmer « compteur », mais trop fréquents sur une bague pour la cacher :
+ * pas de nom, « BLE », « Ring », « iRing », « Smart », un code modèle.
  */
-export function classifyDevice(a: AdvLike): { kind: DeviceKind; reason: string | null } {
+export const GENERIC_RING_RE = /^(ble|ring|iring|smart|smart ring|ble ring)$/i;
+export const MODEL_CODE_RE = /^[A-Za-z]{1,4}[-_ ]?\d{1,4}[A-Za-z]?$/;
+/** Montre, bande, enceinte, téléphone : ne pas les proposer comme bague. */
+export const NON_RING_RE = /iphone|ipad|macbook|apple ?watch|\bgalaxy\b(?! buds)|\bpixel\b(?! buds)|android|television|\btv\b|speaker|printer|fitbit|garmin|laptop|\bpc\b|windows|xbox|playstation|nintendo|carplay|mi band|smart band|flip \d|jbl /i;
+/** Services à demander à iOS pour les périphériques déjà connectés au système (absents du scan). */
+export const RECALL_SERVICES = [STD.hid, STD.battery, normUuid('ffe0'), normUuid('fff0'), normUuid('ae30'), ZKR_R1_SERVICE];
+
+/**
+ * Classe un appareil vu en scan.
+ * « counter » : compteur de dhikr reconnu. « maybe » : bague possible, montrée pour un essai, jamais connectée toute seule.
+ * « audio » : écouteurs. « other » : masqué, avec la raison dans `reason` (journal).
+ * Le compteur l'emporte sur l'audio.
+ */
+export function classifyDevice(a: AdvLike): { kind: DeviceKind; reason: string } {
   const name = (a.name ?? '').trim();
   const svc = (a.services ?? []).map((u) => normUuid(u));
+  const has = (u: string) => svc.includes(normUuid(u));
   if (svc.includes(ZKR_R1_SERVICE)) return { kind: 'counter', reason: 'bague ZKR-R1 (service Zikru)' };
-  if (svc.includes(normUuid('ae30'))) return { kind: 'counter', reason: 'service BSTWSH (0xAE30)' };
+  if (has('ae30')) return { kind: 'counter', reason: 'service BSTWSH (0xAE30)' };
   if (name && COUNTER_NAME_RE.test(name) && !AUDIO_NAME_RE.test(name)) return { kind: 'counter', reason: 'nom de compteur de dhikr' };
   if (a.appearance != null && AUDIO_APPEARANCE_CATEGORIES.includes(a.appearance >> 6)) return { kind: 'audio', reason: `apparence audio 0x${a.appearance.toString(16).padStart(4, '0')}` };
   if (svc.some((u) => AUDIO_SERVICES.includes(u))) return { kind: 'audio', reason: 'service audio Bluetooth LE' };
   // AirPods / Beats : annonce Apple « proximity pairing » (type 0x07) dans les données fabricant
   if (a.manufacturerId === APPLE_COMPANY_ID && a.manufacturerData && a.manufacturerData[0] === 0x07) return { kind: 'audio', reason: 'écouteurs Apple (AirPods / Beats)' };
   if (name && AUDIO_NAME_RE.test(name)) return { kind: 'audio', reason: 'nom d’écouteurs' };
-  return { kind: 'other', reason: null };
+  if (a.manufacturerId === APPLE_COMPANY_ID) return { kind: 'other', reason: 'écarté : annonce Apple (pas une bague)' };
+  if (name && NON_RING_RE.test(name)) return { kind: 'other', reason: 'écarté : nom d’un autre appareil' };
+  if (has('1812') || (a.appearance != null && (a.appearance >> 6) === 0x0f)) return { kind: 'maybe', reason: 'peut-être une bague : HID (0x1812) ou clavier' };
+  if (has('ffe0') || has('fff0')) return { kind: 'maybe', reason: 'peut-être une bague : service fabricant FFE0/FFF0' };
+  if (name && (GENERIC_RING_RE.test(name) || /\bring\b/i.test(name) || MODEL_CODE_RE.test(name))) return { kind: 'maybe', reason: 'peut-être une bague : nom générique' };
+  if (a.appearance != null && (a.appearance >> 6) === 0x03) return { kind: 'other', reason: 'écarté : apparence montre' };
+  if (!name) return { kind: 'maybe', reason: has('180f') || a.manufacturerId != null ? 'peut-être une bague : sans nom, batterie ou données fabricant' : 'peut-être une bague : sans nom' };
+  return { kind: 'other', reason: 'écarté : aucune marque de compteur' };
 }
 /**
- * Visible dans la liste de l'écran Bluetooth ? Compteurs et écouteurs, plus les appareils déjà associés par l'utilisateur.
+ * Visible dans la liste ? Compteurs, bagues possibles et écouteurs, plus les appareils déjà associés.
  * showAll : uniquement depuis l'écran Diagnostic (dépannage).
  */
 export function isDeviceVisible(kind: DeviceKind, opts: { known?: boolean; showAll?: boolean } = {}): boolean {
   return !!opts.showAll || !!opts.known || kind !== 'other';
 }
-/** Connexion de comptage possible ? Jamais pour des écouteurs (gérés par le système) ni un appareil hors liste (sauf associé / mode diagnostic). */
+/** Connexion de comptage possible ? Jamais pour des écouteurs. Une bague « possible » s’essaie à la main, pas toute seule. */
 export function isCounterConnectable(kind: DeviceKind, opts: { known?: boolean; showAll?: boolean } = {}): boolean {
   if (kind === 'audio') return false;
-  return kind === 'counter' || !!opts.known || !!opts.showAll;
+  return kind === 'counter' || kind === 'maybe' || !!opts.known || !!opts.showAll;
+}
+
+/** GATT sans notification utilisable, mais avec le service HID : clavier système, pas un compteur lisible. */
+export function gattIsHidOnly(chars: { service: string; uuid: string; notify?: boolean }[]): boolean {
+  const useful = chars.filter((c) => c.notify && !isIgnoredChar(c.uuid) && normUuid(c.service) !== STD.hid);
+  if (useful.length) return false;
+  return chars.some((c) => normUuid(c.service) === STD.hid);
+}
+
+/** Une ligne de journal : tout appareil vu, y compris ceux qui restent masqués, avec la raison. */
+export function discoveryLine(a: { id: string; name: string | null; rssi: number | null; services?: string[]; manufacturerId?: number | null; manufacturerData?: Bytes | null }, cl: { kind: DeviceKind; reason: string }): string {
+  const svc = (a.services ?? []).map((u) => shortUuid(u)).join(',') || '—';
+  const mfr = a.manufacturerId != null ? ` mfr 0x${a.manufacturerId.toString(16).padStart(4, '0')}` : '';
+  const bytes = a.manufacturerData && a.manufacturerData.length ? ` [${[...a.manufacturerData].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join(' ')}]` : '';
+  const shown = cl.kind === 'other' ? 'masqué' : 'affiché';
+  return `${a.name ?? '(sans nom)'} · ${a.id} · RSSI ${a.rssi ?? '?'} · services ${svc}${mfr}${bytes} · ${cl.kind} · ${shown} · ${cl.reason}`;
 }

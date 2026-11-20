@@ -1,14 +1,17 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BleStatusChip } from '@/components/BleStatusChip';
+import { RamadanBanner } from '@/components/ramadan-banner';
 import { SkyArc } from '@/components/zikru/SkyArc';
 import { askBilal, BilalError } from '@/lib/bilal';
 import { useData } from '@/lib/data';
 import { DUAS_LIST } from '@/lib/duas';
 import { dayKey, streak, useGrowth } from '@/lib/growth';
+import { useDispense } from '@/lib/dispense-context';
 import { formatHijri } from '@/lib/hijri';
 import { isKahfTime } from '@/lib/kahf';
 import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } from '@/lib/prayer';
@@ -20,8 +23,10 @@ import { canFetchWeather, canSendToAI, undecided } from '@/lib/privacy';
 import { privacyText } from '@/lib/privacy-text';
 import { usePersistentState } from '@/lib/storage';
 import { SURAHS } from '@/lib/surahs';
+import { isLocalFriday } from '@/lib/haylala-window';
 import { PRACTICES, practiceDoneKey } from '@/lib/tijani';
 import { getWeather, wmo, type Weather } from '@/lib/weather';
+import { usePremium } from '@/lib/premium';
 import { useZikrs } from '@/lib/zikrs';
 import { khatmaStatus, streak as readStreak } from '@/lib/khatma';
 import { pageOf } from '@/lib/quran-nav';
@@ -45,14 +50,14 @@ export default function Home() {
   const { s, t: tr } = useSettings();
   const uiL = useUiLang();
   const { tasbih, content } = useData();
-  const { zikrs } = useZikrs();
+  const { zikrs, create } = useZikrs();
+  const premium = usePremium();
   const g = useGrowth();
+  const { neutral } = useDispense();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { tablet, wide, width } = useLayout({ inTabs: true });
+  const { tablet, wide } = useLayout({ inTabs: true });
   const [now, setNow] = useState(() => new Date());
-  const [weather, setWeather] = useState<Weather | null>(null);
-  const [wErr, setWErr] = useState(false);
   const [unit] = usePersistentState<'C' | 'F'>('temp-unit', 'C');
   const [kahfReminder] = usePersistentState('kahf-reminder', true);
   const [quranLast] = useShared(lastRead);
@@ -72,28 +77,30 @@ export default function Home() {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+  const weatherKey = weatherOk ? `${s.place.lat},${s.place.lng},${s.place.label}` : '';
+  const [weatherSlot, setWeatherSlot] = useState<{ key: string; w: Weather | null; err: boolean } | null>(null);
+  const weather = weatherKey && weatherSlot?.key === weatherKey ? weatherSlot.w : null;
+  const wErr = weatherKey !== '' && weatherSlot?.key === weatherKey && weatherSlot.err;
   useEffect(() => {
-    let alive = true;
-    setWErr(false);
-    // Météo seulement après consentement explicite ; la position envoyée est arrondie (~10 km).
     if (!weatherOk) {
-      setWeather(null);
       return;
     }
+    let alive = true;
+    const key = weatherKey;
+    // Météo seulement après consentement explicite ; la position envoyée est arrondie (~10 km).
     getWeather(s.place.lat, s.place.lng, s.place.label)
-      .then((w) => alive && setWeather(w))
-      .catch(() => alive && setWErr(true));
+      .then((w) => alive && setWeatherSlot({ key, w, err: false }))
+      .catch(() => alive && setWeatherSlot({ key, w: null, err: true }));
     return () => {
       alive = false;
     };
-  }, [s.place.lat, s.place.lng, s.place.label, weatherOk]);
+  }, [weatherOk, weatherKey, s.place.lat, s.place.lng, s.place.label]);
 
   const { next, list, maghrib } = useMemo(() => {
-    const today = computeDay(now, s.place, s.method, s.madhab);
-    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab);
+    const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
+    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { next: withStates(today, now, tomorrow[0].time).next, list: today, maghrib: today.find((x) => x.key === 'maghrib')?.time };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab]);
+  }, [now, s.place, s.method, s.madhab, s.prayer]);
 
   const period = periodFor(now);
   const pool = REFLECTIONS[period];
@@ -109,16 +116,26 @@ export default function Home() {
       const text = await askBilal({ mode: 'reflection', period });
       setAiText({ key: aiKey, text });
     } catch (e) {
-      if (e instanceof BilalError && (e.code === 'not_configured' || e.code === 'auth')) aiUnavailable = true;
+      if (e instanceof BilalError && (e.code === 'not_configured' || e.code === 'auth' || e.code === 'unavailable' || e.code === 'quota')) aiUnavailable = true;
       if (force) setReflIdx((i) => i + 1);
     } finally {
       setAiBusy(false);
     }
   };
   useEffect(() => {
-    if (aiOk && aiText?.key !== aiKey && !aiUnavailable) void refresh(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiKey, aiOk]);
+    if (!(aiOk && aiText?.key !== aiKey && !aiUnavailable)) return;
+    let alive = true;
+    void askBilal({ mode: 'reflection', period })
+      .then((text) => {
+        if (alive) setAiText({ key: aiKey, text });
+      })
+      .catch((e) => {
+        if (e instanceof BilalError && (e.code === 'not_configured' || e.code === 'auth' || e.code === 'unavailable' || e.code === 'quota')) aiUnavailable = true;
+      });
+    return () => {
+      alive = false;
+    };
+  }, [aiKey, aiOk, aiText?.key, period, setAiText]);
 
   let greg = now.toDateString();
   try {
@@ -129,7 +146,7 @@ export default function Home() {
   const prayedToday = g.prayed[today] ?? [];
   const names = Object.fromEntries(list.map((p) => [p.key, tr[p.key]])) as Record<PrayerKey, string>;
   const dhikrToday = g.days[today] ?? 0;
-  const st = streak((k) => (g.days[k] ?? 0) > 0);
+  const st = streak((k) => (g.days[k] ?? 0) > 0, new Date(), neutral);
   const kahfTime = kahfReminder && isKahfTime(now, maghrib);
   const greet = now.getHours() < 17 ? tr.greet_morning : tr.greet_evening;
   const doy = dayOfYear(now);
@@ -141,7 +158,7 @@ export default function Home() {
   const temp = (c: number) => Math.round(unit === 'C' ? c : (c * 9) / 5 + 32);
 
   // Pratique tijanie du jour (clé `tijani-done` : `${jour}-${id}` → étapes cochées)
-  const practice = PRACTICES.filter((p) => p.id !== 'hailala' || now.getDay() === 5).map((p) => ({ p, done: (tijaniDone[practiceDoneKey(today, p.id)] ?? []).length, total: p.steps.length }));
+  const practice = PRACTICES.filter((p) => p.id !== 'hailala' || isLocalFriday(now)).map((p) => ({ p, done: (tijaniDone[practiceDoneKey(today, p.id)] ?? []).length, total: p.steps.length }));
 
   // Reprendre
   const lastZikr = [...zikrs].filter((z) => z.items.length).sort((a, c) => (a.updatedAt < c.updatedAt ? 1 : -1))[0];
@@ -151,6 +168,16 @@ export default function Home() {
   const go = (h: Href) => () => {
     tapHaptic('select');
     router.push(h);
+  };
+  const composeZikr = () => {
+    tapHaptic('select');
+    if (!premium.ready) return;
+    if (!premium.canCreate) {
+      router.push('/premium');
+      return;
+    }
+    const z = create('Mon zikr');
+    router.push({ pathname: '/zikrs/edit', params: { id: z.id } });
   };
 
   const hero = (
@@ -178,8 +205,8 @@ export default function Home() {
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
               <View style={{ backgroundColor: alpha(b.gold, 0.18), borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
-                <Text style={{ color: b.gold, fontWeight: '800', fontSize: 13 }}>
-                  {tr.in} {countdown(next.time.getTime() - now.getTime())}
+                <Text style={{ color: '#E2C171', fontWeight: '800', fontSize: 13 }}>{/* passe 6 : or éclairci, 5:1 sur le ciel du hero (b.gold = 4,4) */}
+                  {tr.in} {"\u2066" + countdown(next.time.getTime() - now.getTime()) + "\u2069"}
                 </Text>
               </View>
             </View>
@@ -252,6 +279,9 @@ export default function Home() {
           </Text>
         </Pressable>
       </View>
+      <Pressable accessibilityRole="button" accessibilityLabel={L('Constance')} onPress={go('/constance')} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Text style={{ color: b.teal, fontWeight: '800' }}>{L('Constance')} →</Text>
+      </Pressable>
     </FadeIn>
   );
 
@@ -264,7 +294,7 @@ export default function Home() {
   const hq = dailyQueue(qCards, today);
   const hqN = queueSize(hq);
   const tracked = Object.keys(qCards).length;
-  const qStreak = readStreak(qDays, today);
+  const qStreak = readStreak(qDays, today, neutral);
   const lastHref: Href = quranLast ? (quranLast.mode === 'page' ? { pathname: '/quran/mushaf', params: { p: String(quranLast.page ?? pageOf(quranLast.n, quranLast.ayah)) } } : { pathname: '/quran/[n]', params: { n: String(quranLast.n), a: String(quranLast.ayah) } }) : '/quran';
   const quranCard = (
     <FadeIn delay={80}>
@@ -372,7 +402,7 @@ export default function Home() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={L("Composer un zikr")}
-            onPress={go('/zikrs/edit')}
+            onPress={composeZikr}
             style={({ pressed }) => ({ width: 120, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: b.line, alignItems: 'center', justifyContent: 'center', gap: 6, opacity: pressed ? 0.8 : 1 })}
           >
             <Ionicons name="add-circle" size={30} color={b.green} />
@@ -380,7 +410,7 @@ export default function Home() {
           </Pressable>
         </ScrollView>
       ) : (
-        <LCard onPress={go('/zikrs/edit')} label="Composer mon premier zikr" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <LCard onPress={composeZikr} label="Composer mon premier zikr" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <IconBadge icon="add" color={b.green} size={44} />
           <View style={{ flex: 1 }}>
             <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15 }}>Composez votre premier zikr</Text>
@@ -428,7 +458,7 @@ export default function Home() {
     { icon: 'sparkles', label: '99 Noms', href: '/names', color: b.goldDeep },
     { icon: 'compass', label: tr.tab_qibla, href: '/qibla', color: b.teal },
     { icon: 'leaf', label: 'Tijaniyya', href: '/tijani', color: b.wirdGreen },
-    { icon: 'calculator', label: 'Abjad', href: '/abjad', color: b.rust },
+    { icon: 'calculator', label: 'Istikhraj', href: '/abjad', color: b.rust },
     { icon: 'people', label: tr.community, href: '/community', color: b.violet },
     { icon: 'grid', label: tr.tab_more, href: '/more', color: b.inkMuted },
   ];
@@ -487,10 +517,10 @@ export default function Home() {
               <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{pt.weather_title}</Text>
               <LMuted>{pt.weather_text}</LMuted>
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                <Pressable accessibilityRole="button" onPress={() => choose('weather', true)} style={{ backgroundColor: b.green, borderRadius: 18, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
-                  <Text style={{ color: '#fff', fontWeight: '700' }}>{pt.weather_accept}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel={pt.weather_accept} onPress={() => choose('weather', true)} style={{ backgroundColor: b.green, borderRadius: 18, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' }}>
+                  <Text style={{ color: b.onGreen, fontWeight: '700' }}>{pt.weather_accept}</Text>
                 </Pressable>
-                <Pressable accessibilityRole="button" onPress={() => choose('weather', false)} style={{ borderRadius: 18, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
+                <Pressable accessibilityRole="button" accessibilityLabel={pt.weather_decline} onPress={() => choose('weather', false)} style={{ borderRadius: 18, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' }}>
                   <Text style={{ color: b.ink, fontWeight: '600' }}>{pt.weather_decline}</Text>
                 </Pressable>
               </View>
@@ -549,6 +579,7 @@ export default function Home() {
           <View style={{ marginBottom: 12, flexDirection: 'row' }}>
             <BleStatusChip />
           </View>
+          <RamadanBanner />
           {wide ? (
             <View style={{ flexDirection: 'row', gap: 24, alignItems: 'flex-start' }}>
               <View style={{ flex: 1.1 }}>

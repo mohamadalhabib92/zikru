@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { AudioBar } from '@/components/quran/AudioBar';
 import { HideText } from '@/components/quran/HideText';
@@ -19,6 +20,7 @@ import { SURAHS } from '@/lib/surahs';
 import { useRecitation } from '@/lib/use-recitation';
 import { alpha, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { arLang } from '@/ui/ar-lang';
 
 const HIDES: { label: string; value: HideMode; a11y: string }[] = [
   { label: 'Texte', value: 'none', a11y: 'Texte visible' },
@@ -215,11 +217,10 @@ function Review({ pal }: { pal: Pal }) {
   const [i, setI] = useState(0);
   const [reveal, setReveal] = useState(false);
   const [tally, setTally] = useState<Record<Grade, number>>({ easy: 0, medium: 0, hard: 0 });
-  useEffect(() => {
-    if (!ready || items) return;
+  if (ready && items === null) {
     const q = dailyQueue(cards, dayKey());
     setItems([...q.sabaq.map((k) => ({ k, part: 'Sabaq · leçon du jour' })), ...q.sabqi.map((k) => ({ k, part: 'Sabqi · révision récente' })), ...q.manzil.map((k) => ({ k, part: 'Manzil · révision ancienne' }))]);
-  }, [ready, cards, items]);
+  }
   const mode: HideMode = hp.hide === 'none' ? 'all' : hp.hide;
   if (!items || !all) return <ActivityIndicator color={pal.accent} style={{ marginTop: 60 }} />;
   const done = i >= items.length;
@@ -264,7 +265,7 @@ function Review({ pal }: { pal: Pal }) {
           {prev ? (
             <View style={{ gap: 4 }}>
               <Text style={{ color: pal.muted, fontSize: 12 }}>Verset précédent (indice)</Text>
-              <Text style={{ color: pal.muted, fontFamily: fonts.quran, fontSize: size - 8, lineHeight: (size - 8) * 2, textAlign: 'right', writingDirection: 'rtl' }}>{`${prev} ۝${arNum(a - 1)}`}</Text>
+              <Text {...arLang} style={{ color: pal.muted, fontFamily: fonts.quran, fontSize: size - 8, lineHeight: (size - 8) * 2, textAlign: 'right', writingDirection: 'rtl' }}>{`${prev} ۝${arNum(a - 1)}`}</Text>
             </View>
           ) : null}
           <HideText key={it.k} text={all[it.k]} mode={mode} revealAll={reveal} size={size} lineH={rp.lineH} color={pal.ink} suffix={`۝${arNum(a)}`} />

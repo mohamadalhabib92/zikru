@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { policyLang, type PolicyLang } from '@/lib/privacy';
 import { POLICY } from '@/lib/privacy-policy';
@@ -22,7 +23,7 @@ export default function PrivacyScreen() {
       <Stack.Screen options={{ title: pol.title }} />
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         {(Object.keys(LABELS) as PolicyLang[]).map((l) => (
-          <Pressable key={l} accessibilityRole="button" accessibilityState={{ selected: l === lang }} onPress={() => setLang(l)} style={{ paddingHorizontal: 12, minHeight: 36, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: l === lang ? b.green : b.line, backgroundColor: l === lang ? b.green : b.paper }}>
+          <Pressable key={l} accessibilityRole="button" accessibilityState={{ selected: l === lang }} onPress={() => setLang(l)} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: l === lang ? b.green : b.line, backgroundColor: l === lang ? b.green : b.paper }}>
             <Text style={{ color: l === lang ? '#fff' : b.ink, fontWeight: '600' }}>{LABELS[l]}</Text>
           </Pressable>
         ))}

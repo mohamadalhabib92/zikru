@@ -1,0 +1,52 @@
+// Interface web (raccourcis, paiement désactivé, limites du navigateur). de = allemand non relu.
+export const UI_STRINGS_WEB: Record<string, [en: string, ar: string, de: string]> = {
+  'Raccourcis clavier': ['Keyboard shortcuts', 'اختصارات لوحة المفاتيح', 'Tastenkürzel'],
+  'Fermer l’aide': ['Close the help', 'إغلاق المساعدة', 'Hilfe schließen'],
+  'Afficher ou masquer l’aide des raccourcis': ['Show or hide the shortcut help', 'إظهار أو إخفاء مساعدة الاختصارات', 'Tastenkürzel-Hilfe ein- oder ausblenden'],
+  'Revenir à l’écran précédent': ['Go back to the previous screen', 'الرجوع إلى الشاشة السابقة', 'Zum vorherigen Bildschirm zurück'],
+  'Ouvrir la recherche': ['Open search', 'فتح البحث', 'Suche öffnen'],
+  'Aller à l’accueil': ['Go to the home screen', 'الانتقال إلى البداية', 'Zur Startseite'],
+  'Aller aux horaires de prière': ['Go to the prayer times', 'الانتقال إلى مواقيت الصلاة', 'Zu den Gebetszeiten'],
+  'Aller au tasbih': ['Go to the tasbih', 'الانتقال إلى التسبيح', 'Zum Tasbih'],
+  'Aller au Coran': ['Go to the Quran', 'الانتقال إلى القرآن', 'Zum Koran'],
+  'Aller à Plus': ['Go to More', 'الانتقال إلى المزيد', 'Zu Mehr'],
+  'Aller aux adhkar': ['Go to the adhkar', 'الانتقال إلى الأذكار', 'Zu den Adhkar'],
+  'Aller au fiqh': ['Go to fiqh', 'الانتقال إلى الفقه', 'Zum Fiqh'],
+  'Aller à la communauté': ['Go to the community', 'الانتقال إلى المجتمع', 'Zur Gemeinschaft'],
+  'Aller à la discussion': ['Go to the discussion', 'الانتقال إلى النقاش', 'Zur Unterhaltung'],
+  'Verset suivant': ['Next verse', 'الآية التالية', 'Nächster Vers'],
+  'Verset précédent': ['Previous verse', 'الآية السابقة', 'Vorheriger Vers'],
+  'Lecture ou pause de la récitation': ['Play or pause the recitation', 'تشغيل التلاوة أو إيقافها', 'Tilawa abspielen oder pausieren'],
+  'Paiement sur le web': ['Payment on the web', 'الدفع على الويب', 'Zahlung im Web'],
+  'Le paiement web est préparé, mais aucune clé n’est branchée. Aucun montant ne peut être débité depuis le navigateur.': [
+    'Web payment is prepared, but no key is connected. No amount can be charged from the browser.',
+    'الدفع عبر الويب مُعدّ، لكن لا مفتاح موصول. لا يمكن خصم أي مبلغ من المتصفح.',
+    'Die Web-Zahlung ist vorbereitet, aber kein Schlüssel ist angeschlossen. Vom Browser aus kann nichts abgebucht werden.',
+  ],
+  'Sur le web, l’achat Premium n’est pas activé. Il s’achète dans l’application iPhone. La discussion, rejoindre un groupe et le compteur restent gratuits.': [
+    'On the web, buying Premium is not switched on. It is bought in the iPhone app. Discussion, joining a group and the counter stay free.',
+    'على الويب، شراء بريميوم غير مفعّل. يُشترى في تطبيق آيفون. تبقى المناقشة والانضمام إلى مجموعة والعدّاد مجانية.',
+    'Im Web ist der Premium-Kauf nicht aktiviert. Er erfolgt in der iPhone-App. Unterhaltung, Gruppenbeitritt und Zähler bleiben kostenlos.',
+  ],
+  'Dans le navigateur': ['In the browser', 'في المتصفح', 'Im Browser'],
+  'L’Apple Watch, l’app Santé (HealthKit) et les vibrations du téléphone ne sont pas disponibles dans le navigateur. Le compteur de la montre reste gratuit sur l’iPhone. Ici, le tasbih se compte au clic ou au clavier.': [
+    'Apple Watch, the Health app (HealthKit) and phone vibration are not available in the browser. The watch counter stays free on the iPhone. Here, tasbih counts with a click or the keyboard.',
+    'ساعة Apple وتطبيق الصحة (HealthKit) واهتزاز الهاتف غير متاحة في المتصفح. يبقى عدّاد الساعة مجانيًا على آيفون. هنا يُحسب التسبيح بالنقر أو لوحة المفاتيح.',
+    'Apple Watch, die Health-App (HealthKit) und die Vibration des Telefons gibt es im Browser nicht. Der Zähler der Uhr bleibt auf dem iPhone kostenlos. Hier zählt der Tasbih per Klick oder Tastatur.',
+  ],
+  'La bague est facultative. Le Bluetooth web ne s’ouvre que si vous appuyez sur Rechercher, dans Chrome ou Edge. Safari ne le propose pas. Rien n’est scanné en arrière-plan.': [
+    'The ring is optional. Web Bluetooth opens only if you press Search, in Chrome or Edge. Safari does not offer it. Nothing is scanned in the background.',
+    'الخاتم اختياري. لا يُفتح بلوتوث الويب إلا إذا ضغطت بحث، في كروم أو إيدج. سفاري لا يتيحه. لا يوجد مسح في الخلفية.',
+    'Der Ring ist freiwillig. Web-Bluetooth öffnet sich nur, wenn Sie in Chrome oder Edge auf Suchen drücken. Safari bietet es nicht an. Im Hintergrund wird nichts gesucht.',
+  ],
+  'Le texte arabe du Coran est inclus dans l’application et reste lisible hors ligne une fois la page installée.': [
+    'The Arabic text of the Quran is included in the app and stays readable offline once the page is installed.',
+    'نص القرآن العربي مضمّن في التطبيق ويبقى مقروءًا دون اتصال بعد تثبيت الصفحة.',
+    'Der arabische Korantext ist in der App enthalten und bleibt ohne Netz lesbar, sobald die Seite installiert ist.',
+  ],
+  'L’adhan automatique dépend du navigateur : il peut être bloqué tant que la page n’a pas été ouverte par un geste. Le bouton d’écoute, lui, joue la voix choisie.': [
+    'Automatic adhan depends on the browser: it can be blocked until the page was opened by a gesture. The listen button plays the chosen voice.',
+    'الأذان التلقائي يعتمد على المتصفح: قد يُحجب إلى أن تُفتح الصفحة بحركة منك. زر الاستماع يشغّل الصوت المختار.',
+    'Der automatische Adhan hängt vom Browser ab: er kann blockiert sein, bis die Seite durch eine Geste geöffnet wurde. Die Hören-Taste spielt die gewählte Stimme.',
+  ],
+};

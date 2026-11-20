@@ -9,6 +9,7 @@ Faits techniques qui fondent les réponses :
 - Compte (facultatif, uniquement pour Communauté / Famille) : Supabase, hébergement Zurich (eu-central-2). E-mail, nom affiché, identifiant de compte, familles/cercles, messages d’encouragement, objectifs partagés, séances de dhikr partagées, agenda familial, contrôles parentaux. Suppression du compte dans l’app.
 - Bilal (IA, facultatif, consentement explicite) : texte des messages → fonction Supabase (Zurich) → Anthropic (États-Unis). L’identifiant de compte sert au quota et **n’est pas transmis** au fournisseur ; la conversation n’est pas enregistrée sur notre serveur (reste sur l’appareil).
 - Bluetooth : lecture des appuis du compteur, en local. Notifications : planifiées en local, pas de push serveur.
+- Achat Premium à vie : traité par Apple (plus tard Google Play). Zikru ne reçoit pas la carte. L’identifiant de produit et de transaction restent sur l’appareil ; le reçu n’est pas envoyé aux serveurs Zikru dans cette version. Pas de pistage.
 - Aucune publicité, aucun SDK d’analyse ou de crash, aucun IDFA/AAID, aucune revente.
 - Contact pour les demandes liées aux données (accès, rectification, suppression, opposition) : **mohamadalhabib@live.com** (politique section 1 et droits, fr/en/ar ; page d’assistance). Réponse sous 30 jours. À reporter dans Google Play › Data safety / fiche (adresse e-mail de contact) et dans App Store Connect si demandé.
 
@@ -34,13 +35,14 @@ Ne cocher **aucun** autre usage (pas Third-Party Advertising, Developer’s Adve
 | User Content | Photos/Videos, Audio, Gameplay, Customer Support | Non | — | — | |
 | Identifiers | **User ID** | Oui | **Yes** | No | Identifiant du compte Supabase |
 | Identifiers | Device ID | **Non** | — | — | Aucun IDFA/IDFV collecté (l’ID Bluetooth du compteur reste local) |
-| Health & Fitness, Financial Info, Contacts, Browsing History, Search History, Purchases, Usage Data, Diagnostics, Other Data | — | **Non** | — | — | |
+| Purchases | **Purchase History** | Oui | **No** | No | Achat Premium à vie (StoreKit). Identifiant de produit et de transaction gardés sur l’appareil. Pas de carte. Reçu non envoyé aux serveurs Zikru dans cette version. Pas lié au compte Zikru. |
+| Health & Fitness, Financial Info, Contacts, Browsing History, Search History, Usage Data, Diagnostics, Other Data | — | **Non** | — | — | |
 
 Notes :
 - « Linked » = Yes pour tout ce qui passe par le compte (l’e-mail l’identifie). Les messages Bilal sont rattachés au compte côté quota : on déclare donc *Linked* par prudence.
 - « Tracking » = No partout : aucune donnée n’est combinée avec des données de tiers à des fins publicitaires ni partagée avec un courtier. Ne pas afficher la demande ATT.
 - Privacy Policy URL : `https://mohamadalhabib92.github.io/zikru/privacy/`
-- Le manifeste `ios.privacyManifests.NSPrivacyCollectedDataTypes` de `app.json` déclare exactement ces 7 types (EmailAddress, Name, UserID, CoarseLocation, EmailsOrTextMessages, OtherUserContent, SensitiveInfo), Tracking = false, but = AppFunctionality.
+- Le manifeste `ios.privacyManifests.NSPrivacyCollectedDataTypes` de `app.json` déclare ces types (EmailAddress, Name, UserID, CoarseLocation, EmailsOrTextMessages, OtherUserContent, SensitiveInfo, PurchaseHistory), Tracking = false, but = AppFunctionality. PurchaseHistory : Linked = false.
 
 ## 2. Google Play Console → Data safety
 
@@ -63,6 +65,7 @@ Notes :
 | Messages | **Other in-app messages** | No | Encouragements entre membres ; messages à Bilal (ces derniers sont éphémères côté serveur) |
 | App activity | **Other user-generated content** | No | Objectifs, séances partagées, agenda familial |
 | App activity | In-app search history | — **Non collecté** | Recherche Coran locale |
+| Financial info | **Purchase history** | No | Achat Premium à vie. Apple / Google encaissent. Pas de carte chez Zikru. Le reçu n’est pas envoyé à nos serveurs dans cette version. |
 | Device or other IDs | — | — **Non collecté** | |
 | App info and performance (crash logs, diagnostics) | — | — **Non collecté** | Aucun SDK |
 
@@ -87,4 +90,4 @@ Classification attendue : **13+** (messagerie + UGC sans modération complète).
 
 ⚠️ **Guideline 1.2 (UGC)** : Apple exige pour toute app avec UGC/messagerie : (a) un filtre ou une modération, (b) un moyen de **signaler** un contenu, (c) un moyen de **bloquer** un utilisateur abusif, (d) un contact publié. Ces éléments ne sont **pas encore** dans l’app → **P6 obligatoire avant d’activer la Communauté en production**, sinon risque de refus 1.2.
 
-Google Play → IARC : répondre « Users can interact/exchange content » = **Yes** ; « Shares user location with other users » = No ; « Digital purchases » = No.
+Google Play → IARC : répondre « Users can interact/exchange content » = **Yes** ; « Shares user location with other users » = No ; « Digital purchases » = **Yes** (achat unique à vie `ch.mohamadba.zikru.premium.lifetime`, pas encore soumis : le produit Play se crée plus tard, même identifiant).

@@ -1,0 +1,76 @@
+# Coran passe 3 : lecteur, téléchargements, khatma Ramadan, recherche phonétique (31.10.2026) (ar : traduction à relire)
+Arrêt dans {t}	Stops in {t}	يتوقف بعد {t}
+Arrêt en fin de sourate	Stops at end of surah	يتوقف في نهاية السورة
+CHAQUE VERSET	EACH VERSE	كل آية
+Commence dans {n} jour(s) · le {d}	Starts in {n} day(s) · on {d}	تبدأ بعد {n} يوم · في {d}
+Du {a} au {b} ({n} jours), selon le calendrier hégirien tabulaire et votre décalage ({o}). Le début réel dépend de l’observation du croissant : ajustez le décalage hégirien dans Réglages si besoin.	From {a} to {b} ({n} days), based on the tabular Hijri calendar and your offset ({o}). The actual start depends on the sighting of the crescent: adjust the Hijri offset in Settings if needed.	من {a} إلى {b} ({n} يومًا)، وفق التقويم الهجري الحسابي والتعديل الذي اخترته ({o}). يتوقف البدء الفعلي على رؤية الهلال: عدّل التقويم الهجري في الإعدادات عند الحاجة.
+DÉBUT (A)	START (A)	البداية (A)
+Désactiver	Turn off	إيقاف
+En attente	Queued	في الانتظار
+Enchaîne la sourate suivante (le juz’ suivant dans le Mushaf)	Continues to the next surah (the next juz’ in the Mushaf)	ينتقل إلى السورة التالية (الجزء التالي في المصحف)
+Environ {n}. Préférez le Wi-Fi.	About {n}. Wi-Fi recommended.	حوالي {n}. يُفضَّل استخدام Wi-Fi.
+Espace libre : inconnu sur ce navigateur	Free space: unknown in this browser	المساحة الحرة: غير معروفة في هذا المتصفح
+Espace libre sur l’appareil : {n}	Free space on device: {n}	المساحة الحرة على الجهاز: {n}
+Espace utilisé : {n}	Space used: {n}	المساحة المستخدمة: {n}
+FIN (B)	END (B)	النهاية (B)
+Fin de la sourate	End of surah	نهاية السورة
+La récitation se met en pause automatiquement.	The recitation pauses automatically.	تتوقف التلاوة مؤقتًا تلقائيًا.
+Lancer la répétition	Start repeating	بدء التكرار
+Lecture continue	Continuous playback	تشغيل متواصل
+Licences du Coran (texte, traductions, audio)	Quran licences (text, translations, audio)	تراخيص القرآن (النص، الترجمات، الصوت)
+Mesure par requêtes légères (en-têtes uniquement), une par verset.	Measured with lightweight requests (headers only), one per verse.	يتم القياس بطلبات خفيفة (الترويسات فقط)، طلب لكل آية.
+Mesurer les tailles	Measure sizes	قياس الأحجام
+Mesure… {d}/{t}	Measuring… {d}/{t}	جارٍ القياس… {d}/{t}
+Minuterie de sommeil	Sleep timer	مؤقت النوم
+Ouvrir la sourate {n}	Open surah {n}	فتح السورة {n}
+Partager en image	Share as image	مشاركة كصورة
+Phonétique : {t}	Phonetic: {t}	النطق: {t}
+Premier wird	First wird	أول ورد
+Programmer la khatma du Ramadan	Schedule the Ramadan khatma	جدولة ختمة رمضان
+Ramadan {y}	Ramadan {y}	رمضان {y}
+Recherche phonétique (ex. « qul huwa allahu ahad ») : télécharger la translittération, ≈ 1,4 Mo, une fois	Phonetic search (e.g. “qul huwa allahu ahad”): download the transliteration, ≈ 1.4 MB, once	البحث الصوتي (مثل «qul huwa allahu ahad»): تنزيل النقحرة اللاتينية، ≈ 1.4 ميغابايت، مرة واحدة
+Recherche phonétique : la translittération est une aide pour retrouver un verset ; elle peut contenir des irrégularités, le texte arabe reste la référence.	Phonetic search: the transliteration is an aid for finding a verse; it may contain irregularities, the Arabic text remains the reference.	البحث الصوتي: النقحرة اللاتينية وسيلة مساعدة للعثور على آية، وقد تحتوي على أخطاء، والنص العربي هو المرجع.
+Reste à télécharger : au moins {n} ({u} sourates non mesurées)	Left to download: at least {n} ({u} surahs not measured)	المتبقي للتنزيل: {n} على الأقل ({u} سورة غير مقاسة)
+Reste à télécharger : {n}	Left to download: {n}	المتبقي للتنزيل: {n}
+RÉPÉTER LA PLAGE	REPEAT THE RANGE	تكرار المقطع
+Répéter A-B	Repeat A-B	تكرار A-B
+Répétition A-B	A-B repeat	تكرار A-B
+Source audio : {s}. Les fichiers restent sur cet appareil et ne sont pas partagés. Conditions de réutilisation hors ligne : {l}.	Audio source: {s}. Files stay on this device and are not shared. Offline reuse terms: {l}.	مصدر الصوت: {s}. تبقى الملفات على هذا الجهاز ولا تُشارَك. شروط إعادة الاستخدام دون اتصال: {l}.
+Statut de chaque source utilisée par le lecteur. « À confirmer » : consultable avec sa source affichée, mais jamais incrustée dans une image partagée tant que la licence n’est pas confirmée.	Status of each source used by the reader. “To be confirmed”: viewable with its source shown, but never embedded in a shared image until the licence is confirmed.	حالة كل مصدر يستخدمه القارئ. «قيد التأكيد»: يمكن عرضه مع ذكر مصدره، لكنه لا يُدرج أبدًا في صورة مشارَكة حتى يتم تأكيد الترخيص.
+Supprimer la sourate {s}	Delete surah {s}	حذف السورة {s}
+Supprimer les téléchargements ?	Delete downloads?	حذف التنزيلات؟
+Sur le web, l’écoute hors ligne fonctionne dans l’app installée (PWA) ; le navigateur peut libérer cet espace s’il en manque.	On the web, offline listening works in the installed app (PWA); the browser may free this space if it runs low.	على الويب، يعمل الاستماع دون اتصال في التطبيق المثبَّت (PWA)، وقد يحرّر المتصفح هذه المساحة عند نقصها.
+Taille estimée inconnue : mesurez d’abord pour la connaître. Préférez le Wi-Fi.	Estimated size unknown: measure first to find out. Wi-Fi recommended.	الحجم التقديري غير معروف: قم بالقياس أولًا لمعرفته. يُفضَّل استخدام Wi-Fi.
+Taille non mesurée	Size not measured	الحجم غير مقاس
+Tanzil (CC BY 3.0)	Tanzil (CC BY 3.0)	تنزيل (CC BY 3.0)
+Texte : {t}	Text: {t}	النص: {t}
+Tout supprimer	Delete all	حذف الكل
+Tout télécharger	Download all	تنزيل الكل
+Tout télécharger ?	Download all?	تنزيل الكل؟
+Traduction : {t}	Translation: {t}	الترجمة: {t}
+Téléchargement interrompu : {e}	Download interrupted: {e}	توقف التنزيل: {e}
+Téléchargements audio	Audio downloads	التنزيلات الصوتية
+Téléchargements audio (hors ligne)	Audio downloads (offline)	التنزيلات الصوتية (دون اتصال)
+Téléchargements audio hors ligne : copies privées sur votre appareil, jamais partagées ni renvoyées ; supprimables à tout moment (Coran → Téléchargements audio).	Offline audio downloads: private copies on your device, never shared or re-sent; can be deleted at any time (Quran → Audio downloads).	التنزيلات الصوتية دون اتصال: نسخ خاصة على جهازك، لا تُشارَك ولا يُعاد إرسالها أبدًا، ويمكن حذفها في أي وقت (القرآن ← التنزيلات الصوتية).
+Téléchargement… {a}/{t}	Downloading… {a}/{t}	جارٍ التنزيل… {a}/{t}
+Télécharger	Download	تنزيل
+Télécharger la sourate {s}	Download surah {s}	تنزيل السورة {s}
+Téléchargée · {n}	Downloaded · {n}	تم التنزيل · {n}
+Verset A	Verse A	الآية A
+Verset B	Verse B	الآية B
+dès le {d}	from {d}	ابتداءً من {d}
+vérifiée	verified	مُتحقَّق منه
+{c} sourates complètes · {p} en cours · {n}	{c} complete surahs · {p} in progress · {n}	{c} سورة مكتملة · {p} قيد التنزيل · {n}
+{n} fois	{n} times	{n} مرات
+{n} jours restants	{n} days left	{n} يومًا متبقيًا
+{n} sourates en attente	{n} surahs queued	{n} سورة في الانتظار
+{r} : {n} seront libérés.	{r}: {n} will be freed.	{r}: سيتم تحرير {n}.
+{r} · Sourate {s} : verset {a}/{t}	{r} · Surah {s}: verse {a}/{t}	{r} · السورة {s}: الآية {a}/{t}
+{t} versets	{t} verses	{t} آية
+{v} versets × {t} passages = {n} lectures.	{v} verses × {t} passes = {n} plays.	{v} آية × {t} مرات = {n} تلاوة.
+{v} versets, en boucle jusqu’à l’arrêt.	{v} verses, looping until stopped.	{v} آية، بتكرار متواصل حتى الإيقاف.
+{v}/{t} versets · {n}	{v}/{t} verses · {n}	{v}/{t} آية · {n}
+« Fin de la sourate » arrête la lecture continue avant la sourate suivante.	“End of surah” stops continuous playback before the next surah.	«نهاية السورة» يوقف التشغيل المتواصل قبل السورة التالية.
+Échec du téléchargement — réessayer	Download failed — retry	فشل التنزيل — أعد المحاولة
+à confirmer	to be confirmed	قيد التأكيد
+Vous pouvez commencer dès maintenant si vous le souhaitez.	You can start right away if you wish.	يمكنك البدء من الآن إن شئت.

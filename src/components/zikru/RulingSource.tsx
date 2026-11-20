@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Linking, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import type { FiqhRuling } from '@/lib/fiqh-rulings';
-import { reportUrl } from '@/lib/provenance';
+import { reportUrl } from '@/lib/provenance-lite';
 import { REVIEW_LABEL, reviewFor } from '@/lib/reviews';
 import { Badge, Ionicons } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
@@ -17,7 +18,7 @@ export function rulingStatus(r: FiqhRuling) {
 
 function Link({ label, url, icon }: { label: string; url: string; icon: 'open-outline' | 'mail-outline' }) {
   return (
-    <Pressable accessibilityRole="link" accessibilityLabel={label} onPress={() => Linking.openURL(url)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, minHeight: 32 }}>
+    <Pressable accessibilityRole="link" accessibilityLabel={label} onPress={() => Linking.openURL(url)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, minHeight: 44 }}>
       <Ionicons name={icon} size={15} color={b.brown} />
       <Text style={{ color: b.brown, fontWeight: '700', fontSize: 13, textDecorationLine: 'underline', flexShrink: 1 }}>{label}</Text>
     </Pressable>
@@ -40,7 +41,7 @@ export function RulingSource({ r }: { r: FiqhRuling }) {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4, alignItems: 'center' }}>
         <Badge label={REVIEW_LABEL[st]} tone={st === 'valide' ? 'success' : st === 'a_corriger' ? 'danger' : 'warning'} />
         {r.note ? <Badge label="Remarque du relecteur" tone="info" /> : null}
-        <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)} style={{ paddingVertical: 4, minHeight: 32, justifyContent: 'center' }}>
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)} style={{ paddingVertical: 4, minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: b.brown, fontWeight: '700', fontSize: 12 }}>{open ? 'Masquer le texte source' : 'Texte arabe, édition et signalement'}</Text>
         </Pressable>
       </View>

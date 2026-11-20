@@ -54,6 +54,21 @@ eq('racine numérique 1026 → 9', m.digitalRoot(1026), 9);
 eq('racine de 0', m.digitalRoot(0), 0);
 eq('texte latin ignoré', m.computeAbjad('abc', 'mashriqi').total, 0);
 eq('normalisation', m.normalizeArabic('إِبْرَاهِيمُ'), 'ابراهيم');
+eq('رحمن = 298 (mashriqi)', T('رحمن', 'mashriqi'), 298);
+eq('واحد أحد حي = 50', T('واحد أحد حي', 'mashriqi'), 50);
+eq('chiffres arabes ignorés', T('الله١٢٣', 'mashriqi'), 66);
+eq('chiffres latins ignorés', T('الله 66', 'mashriqi'), 66);
+eq('آ = 1 par défaut (آدم = 45)', T('آدم', 'mashriqi', { madda: 'one' }), 45);
+eq('آ = 2 si on le demande (آدم = 46)', T('آدم', 'mashriqi', { madda: 'two' }), 46);
+eq('shadda une fois : محمد = 92', T('مُحَمَّد', 'mashriqi', { shadda: 'once' }), 92);
+eq('shadda deux fois : محمد = 132', T('مُحَمَّد', 'mashriqi', { shadda: 'twice' }), 132);
+eq('alif waslah = 1', T('ٱله', 'mashriqi'), 36);
+eq('alif waslah ignoré', T('ٱله', 'mashriqi', { wasl: 'zero' }), 35);
+eq('lam-alif ligature = 31', T('ﻻ', 'mashriqi'), 31);
+const allah = m.computeAbjad('الله', 'mashriqi');
+eq('réduction 66 → 12', allah.digitSum, 12);
+eq('racine 66 → 3', allah.root, 3);
+eq('saghir de الله (ا 1، ل 3، ل 3، ه 5)', allah.saghir, 12);
 
 if (fail) {
   console.error(`${fail} échec(s)`);

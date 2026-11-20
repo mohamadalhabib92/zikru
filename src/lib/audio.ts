@@ -26,8 +26,9 @@ import {
 
 const LOCAL_ADHAN: Record<string, number | null> = {
   'local-bilal': null,
-  'local-makkah': null,
+  'local-makkah': require('../../assets/audio/adhan-makkah.mp3'),
   'local-madinah': null,
+  'local-konya': require('../../assets/audio/adhan-konya.mp3'),
 };
 
 const REMOTE = env('EXPO_PUBLIC_ADHAN_AUDIO_URL', process.env.EXPO_PUBLIC_ADHAN_AUDIO_URL);

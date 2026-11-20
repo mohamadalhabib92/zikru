@@ -3,21 +3,25 @@
     "name": "Zikru",
     "slug": "zikru",
     "scheme": "zikru",
-    "version": "1.0.26",
+    "version": "1.0.30",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "description": "Zikru — prière, qibla, tasbih et dhikr, hors-ligne.",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0F3D30"
-    },
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": false,
       "bundleIdentifier": "com.vibecode.zikru-76mpdv",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "Zikru utilise le Bluetooth pour se connecter à votre compteur de tasbih ou anneau de dhikr et compter chaque appui.",
+        "UIApplicationSupportsIndirectInputEvents": true,
+        "UIRequiredDeviceCapabilities": ["arm64"],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "fr",
         "NSLocationWhenInUseUsageDescription": "Zikru utilise votre position pour calculer sur l’appareil les horaires de prière et la qibla. Si vous activez la météo, une position arrondie (≈ 10 km) est envoyée à Open-Meteo (Suisse). Aucun suivi publicitaire.",
@@ -25,10 +29,11 @@
         "NSLocationTemporaryUsageDescriptionDictionary": {
           "ExpoLocationFullAccuracy": "La position précise permet un résultat plus exact."
         },
-        "NSCameraUsageDescription": "Zikru utilise l’appareil photo seulement si vous photographiez un zikr : le texte est reconnu sur votre téléphone et la photo reste sur l’appareil, sans envoi.",
-        "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé."
+        "NSCameraUsageDescription": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez vous-même la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre serveur d’appels, sans enregistrement.",
+        "NSPhotoLibraryUsageDescription": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
+        "NSMicrophoneUsageDescription": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
       },
-      "buildNumber": "1",
+      "buildNumber": "86",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -85,6 +90,14 @@
             ]
           },
           {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePurchaseHistory",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
             "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeSensitiveInfo",
             "NSPrivacyCollectedDataTypeLinked": true,
             "NSPrivacyCollectedDataTypeTracking": false,
@@ -124,7 +137,7 @@
     "android": {
       "package": "ch.mohamadba.zikru",
       "adaptiveIcon": {
-        "backgroundColor": "#0F3D30",
+        "backgroundColor": "#181818",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -138,9 +151,17 @@
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET",
+        "android.permission.WAKE_LOCK"
       ],
-      "versionCode": 1
+      "versionCode": 71,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -148,8 +169,8 @@
       "bundler": "metro",
       "name": "Zikru",
       "shortName": "Zikru",
-      "themeColor": "#0F3D30",
-      "backgroundColor": "#0F3D30",
+      "themeColor": "#181818",
+      "backgroundColor": "#181818",
       "lang": "fr"
     },
     "plugins": [
@@ -164,9 +185,9 @@
       [
         "expo-audio",
         {
-          "microphonePermission": false,
+          "microphonePermission": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement.",
           "enableBackgroundPlayback": true,
-          "recordAudioAndroid": false
+          "recordAudioAndroid": true
         }
       ],
       [
@@ -194,8 +215,26 @@
         "expo-image-picker",
         {
           "photosPermission": "Zikru accède à la photo que vous choisissez pour en reconnaître le texte sur l’appareil. Rien n’est envoyé.",
-          "cameraPermission": "Zikru utilise l’appareil photo seulement si vous photographiez un zikr : le texte est reconnu sur votre téléphone et la photo reste sur l’appareil, sans envoi.",
-          "microphonePermission": false
+          "cameraPermission": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez vous-même la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre serveur d’appels, sans enregistrement.",
+          "microphonePermission": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
+        }
+      ],
+      [
+        "@livekit/react-native-expo-plugin",
+        {
+          "android": {
+            "audioType": "communication"
+          },
+          "ios": {
+            "enableMultitaskingCameraAccess": false
+          }
+        }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Zikru utilise l’appareil photo si vous photographiez un zikr (le texte est reconnu sur le téléphone et la photo reste sur l’appareil) ou si vous allumez vous-même la vidéo pendant un appel de groupe : l’image est alors transmise aux participants via notre serveur d’appels, sans enregistrement.",
+          "microphonePermission": "Zikru utilise le micro seulement si vous l’ouvrez pendant un appel de groupe : votre voix est transmise aux participants via notre serveur d’appels, sans enregistrement."
         }
       ]
     ],

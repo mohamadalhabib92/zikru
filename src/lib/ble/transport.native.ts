@@ -3,7 +3,7 @@
  * Nécessite un build de développement ou EAS (le module natif n'existe pas dans Expo Go).
  */
 import { PermissionsAndroid, Platform } from 'react-native';
-import { b64ToBytes, normUuid, parseAdvertising, type Bytes, type GattChar } from './core';
+import { b64ToBytes, normUuid, parseAdvertising, shortUuid, type Bytes, type GattChar } from './core';
 import { diag, errMsg } from './diag';
 import { bleMsg } from './messages';
 import type { Availability, BleLink, BleTransport, ScanResult } from './types';
@@ -146,7 +146,8 @@ export const transport: BleTransport = {
     if (st === 'PoweredOn') return { ok: true };
     if (st === 'Unauthorized') return { ok: false, kind: 'denied', reason: Platform.OS === 'android' ? bleMsg('deniedAndroid') : bleMsg('deniedIos') };
     if (st === 'Unsupported') return { ok: false, kind: 'unsupported', reason: bleMsg('unsupported') };
-    if (st === 'Unknown' || st === 'Resetting') return { ok: false, kind: 'disabled', reason: bleMsg('notReady') };
+    if (st === 'Resetting') return { ok: false, kind: 'disabled', reason: bleMsg('resetting') };
+    if (st === 'Unknown') return { ok: false, kind: 'disabled', reason: bleMsg('notReady') };
     return { ok: false, kind: 'disabled', reason: bleMsg('off') };
   },
   async scan(onResult, onError, opts) {
@@ -183,7 +184,7 @@ export const transport: BleTransport = {
     if (!m) return () => {};
     const sub = m.onStateChange((st) => {
       diag.log('state', `adaptateur : ${st}`);
-      cb(st === 'PoweredOn');
+      cb(st === 'PoweredOn' ? 'on' : st === 'Unauthorized' ? 'denied' : st === 'Resetting' || st === 'Unknown' ? 'resetting' : 'off');
     }, false);
     return () => sub.remove();
   },
@@ -225,6 +226,46 @@ export const transport: BleTransport = {
   async cancel(id) {
     const m = getManager();
     await m?.cancelDeviceConnection(id).catch(() => {});
+  },
+  async connected(id) {
+    const m = getManager();
+    if (!m) return false;
+    return m.isDeviceConnected(id).catch(() => false);
+  },
+  async recall(services, ids) {
+    const m = getManager();
+    if (!m) return [];
+    const out = new Map<string, ScanResult>();
+    const put = (d: PlxDevice, via: 'system' | 'saved') => {
+      const r = toScanResult(d);
+      const prev = out.get(r.id);
+      out.set(r.id, { ...prev, ...r, name: r.name ?? prev?.name ?? null, services: [...new Set([...(prev?.services ?? []), ...(r.services ?? [])])], via: prev?.via ?? via });
+    };
+    if (services.length) {
+      const connected = await m.connectedDevices(services).catch((e: unknown) => {
+        diag.error('recall', e);
+        return [];
+      });
+      for (const d of connected) put(d, 'system');
+    }
+    const missing = ids.filter((id) => id && !out.has(id));
+    if (missing.length) {
+      const saved = await m.devices(missing).catch((e: unknown) => {
+        diag.error('recall', e);
+        return [];
+      });
+      for (const d of saved) put(d, 'saved');
+    }
+    if (out.size) diag.log('recall', `${out.size} appareil(s) hors scan (${[...out.values()].map((d) => `${d.via} ${d.name ?? d.id}`).join(', ')})`);
+    for (const r of out.values()) diag.seen(r);
+    return [...out.values()];
+  },
+  async retrieve(id) {
+    const m = getManager();
+    if (!m) return false;
+    const list = await m.devices([id]).catch(() => []);
+    if (list.length) diag.log('connect', `bague reconnue ${list[0].name ?? list[0].localName ?? id}`);
+    return list.length > 0;
   },
   async connect(id, opts) {
     const m = getManager();
@@ -274,17 +315,25 @@ export const transport: BleTransport = {
       name: d.name ?? d.localName ?? null,
       chars,
       mtu,
-      async subscribe(s, c, cb) {
+      async subscribe(s, c, cb, onLost) {
+        // Nos propres sub.remove() provoquent l’erreur 2 : ce n’est pas une perte d’abonnement.
+        let removed = false;
         const sub = m.monitorCharacteristicForDevice(id, s, c, (err, ch) => {
+          if (removed) return;
           if (err) {
-            // 2 = annulé (déconnexion / désabonnement normal) ; le reste est signalé.
-            if (err.errorCode !== 2 && err.errorCode !== 201) diag.log('notify', `${c} : ${errMsg(err)}`, 'error');
+            if (err.errorCode === 2) return;
+            const reason = errMsg(err);
+            diag.log('notify', `perdu ${shortUuid(c)} : ${reason}`, 'warn');
+            onLost?.({ service: s, characteristic: c, code: err.errorCode ?? 0, reason });
             return;
           }
           if (ch?.value) cb(b64ToBytes(ch.value));
         });
-        diag.log('notify', `abonné ${s} / ${c}`);
-        return () => sub.remove();
+        diag.log('notify', `abonné ${shortUuid(s)} / ${shortUuid(c)}`);
+        return () => {
+          removed = true;
+          sub.remove();
+        };
       },
       async read(s, c) {
         try {

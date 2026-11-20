@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { PatternBg } from '@/components/zikru/Pattern';
@@ -27,13 +28,11 @@ export default function Prayers() {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
-  const day = now.toDateString();
   const { rows, next, list } = useMemo(() => {
-    const today = computeDay(now, s.place, s.method, s.madhab);
-    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab);
+    const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
+    const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { ...withStates(today, now, tomorrow[0].time), list: today };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day, Math.floor(now.getTime() / 60000), s.place, s.method, s.madhab]);
+  }, [now, s.place, s.method, s.madhab, s.prayer]);
 
   let greg = now.toDateString();
   try {
@@ -105,6 +104,11 @@ export default function Prayers() {
             );
           })}
         </View>
+        {Platform.OS === 'web' ? (
+          <Text style={{ color: b.inkMuted, fontSize: 13, marginTop: 12, lineHeight: 19 }}>
+            {L('L’adhan automatique dépend du navigateur : il peut être bloqué tant que la page n’a pas été ouverte par un geste. Le bouton d’écoute, lui, joue la voix choisie.')}
+          </Text>
+        ) : null}
         <Spacer h={16} />
         <LCard>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -129,7 +133,7 @@ export default function Prayers() {
                 ) : (
                   <Pressable
                     accessibilityRole="checkbox"
-                    accessibilityState={{ checked: done }}
+                    accessibilityState={{ checked: done }} aria-checked={done}
                     accessibilityLabel={`${tr[p.key]} ${hhmm(p.time)} — ${done ? L('priée') : L('marquer comme priée')}`}
                     onPress={() => {
                       tapHaptic(done ? 'light' : 'success');
@@ -142,6 +146,7 @@ export default function Prayers() {
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: b.ink, fontSize: 16, fontWeight: hi ? '800' : '600' }}>{tr[p.key]}</Text>
+                  {'source' in p && p.source === 'mosque' ? <Text style={{ color: b.inkMuted, fontSize: 12, fontWeight: '600' }}>{L('Horaire de ma mosquée')}</Text> : null}
                   {p.state === 'current' ? <Text style={{ color: b.wirdGreen, fontSize: 12, fontWeight: '700' }}>{tr.current}</Text> : p.state === 'next' ? <Text style={{ color: b.goldDeep, fontSize: 12, fontWeight: '700' }}>{tr.next_prayer}</Text> : null}
                 </View>
                 <Arabic size={18} style={{ color: b.goldDeep, marginRight: 12, lineHeight: 30 }}>
@@ -154,8 +159,11 @@ export default function Prayers() {
           <LMuted style={{ marginTop: 8 }}>Touchez le cercle pour cocher une prière accomplie (enregistré sur cet appareil).</LMuted>
         </LCard>
         <LMuted>
+          {s.prayer?.mosque?.enabled ? `${L('Horaires de ma mosquée')}${s.prayer.mosque.name ? ` (${s.prayer.mosque.name})` : ''} · ` : ''}
           {METHODS[s.method]} · {s.madhab === 'hanafi' ? tr.hanafi : tr.shafi} · {tr.offline_ready}
         </LMuted>
+        <LMuted style={{ marginTop: 4 }}>{L('Horaires calculés : vérifie avec ta mosquée locale.')}</LMuted>
+        <Button title={L('Ajuster les horaires')} variant="secondary" icon="options-outline" onPress={() => router.push('/settings')} />
         <Spacer h={16} />
         <AudioPlayer />
         <Spacer />
