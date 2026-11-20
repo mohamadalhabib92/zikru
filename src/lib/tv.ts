@@ -1,8 +1,10 @@
 /**
- * Apple TV : ce qui est gratuit, ce qui reste Zikru Premium, et le compteur familial.
- * Aucun StoreKit ici. Le produit est le même achat unique que sur iPhone.
+ * Apple TV : les mêmes fonctions gratuites que l’iPhone, et le compteur familial.
+ * Le produit Premium est le même achat unique que sur iPhone. StoreKit n’est pas appelé ici.
  */
+import { LANDSCAPE_THEMES_REQUIRE_PREMIUM } from './landscapes';
 import { PREMIUM_PRODUCT_ID, isPremiumActive, type PremiumRecord } from './premium-logic';
+import { serverGrantsPremium } from './premium-flags';
 
 export const TV_BUNDLE_ID = 'com.vibecode.zikru-76mpdv';
 /**
@@ -16,27 +18,47 @@ export const TV_PRODUCT_ID = PREMIUM_PRODUCT_ID;
 /** Taille minimale de l’arabe à dix pieds (lisibilité salon). */
 export const TV_ARABIC_MIN = 36;
 
+/**
+ * Même découpage que l’iPhone.
+ * Gratuit : accueil, Coran, horaires, adhan, compteur (dhikr, enfants, montre),
+ * wirds déjà livrés, discussion, rejoindre un groupe.
+ * Le paysage du salon suit le drapeau iPhone (`LANDSCAPE_THEMES_REQUIRE_PREMIUM`, aujourd’hui gratuit).
+ * Premium, et seulement au moment où on ouvre cette fonction : thèmes Verre et récitation guidée des wirds.
+ * Créer un zikr ou un groupe n’a pas d’écran sur le téléviseur.
+ */
 export const TV_FEATURES = {
   home: { premium: false },
   join: { premium: false },
   chat: { premium: false },
-  quran: { premium: true },
-  prayers: { premium: true },
-  adhan: { premium: true },
-  dhikr: { premium: true },
-  ambient: { premium: true },
-  kids: { premium: true },
+  quran: { premium: false },
+  prayers: { premium: false },
+  adhan: { premium: false },
+  dhikr: { premium: false },
+  kids: { premium: false },
+  ambient: { premium: LANDSCAPE_THEMES_REQUIRE_PREMIUM },
+  themes: { premium: true },
+  tijaniGuide: { premium: true },
 } as const;
 
 export type TvFeatureId = keyof typeof TV_FEATURES;
 
-/** Rejoindre un groupe et la discussion sont gratuits. Le reste du salon est Premium. */
-export function tvFeatureAllowed(id: TvFeatureId, premiumActive: boolean): boolean {
-  return TV_FEATURES[id].premium ? premiumActive : true;
+/**
+ * Une fonction gratuite n’est jamais verrouillée, même si le module d’achat manque
+ * ou répond « pas Premium ». Une fonction Premium s’ouvre avec un droit déjà connu
+ * (cache StoreKit, antériorité, ou droit Supabase).
+ */
+export function tvFeatureAllowed(id: TvFeatureId, premiumActive: boolean, _purchasesAvailable = true): boolean {
+  if (!TV_FEATURES[id].premium) return true;
+  return premiumActive;
 }
 
-export function tvPremiumActive(record: PremiumRecord | null): boolean {
-  return isPremiumActive(record);
+/** Le mur d’achat ne s’affiche qu’en ouvrant une fonction qui est Premium sur iPhone, et seulement si le droit manque. */
+export function tvPaywallVisible(id: TvFeatureId, premiumActive: boolean, purchasesAvailable = true): boolean {
+  return !tvFeatureAllowed(id, premiumActive, purchasesAvailable);
+}
+
+export function tvPremiumActive(record: PremiumRecord | null, serverEntitlement?: unknown): boolean {
+  return isPremiumActive(record) || serverGrantsPremium(serverEntitlement);
 }
 
 /** Corps du verset : plus le texte est court, plus le glyphe est grand, jamais sous le plancher. */

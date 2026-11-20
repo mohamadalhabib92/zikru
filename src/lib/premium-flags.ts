@@ -38,3 +38,21 @@ export function glassThemeAllowed(limits: Record<string, unknown> | null | undef
 export function tijaniGuideAllowed(limits: Record<string, unknown> | null | undefined): boolean {
   return featureEnabled(limits, PREMIUM_KEYS.tijaniGuide);
 }
+
+export function planOf(raw: unknown): string | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const plan = (raw as { plan?: unknown }).plan;
+  return typeof plan === 'string' && plan.length > 0 && plan.length <= 40 ? plan : null;
+}
+
+/**
+ * Droit Premium déjà enregistré pour le compte (plan Supabase, ou une limite Premium à true).
+ * Inconnu, absent ou faux : pas de droit inventé. N’ouvre pas les fonctions toujours gratuites :
+ * celles-ci ne consultent pas ce résultat.
+ */
+export function serverGrantsPremium(raw: unknown): boolean {
+  const plan = planOf(raw);
+  if (plan === 'premium' || plan === 'lifetime') return true;
+  const limits = limitsOf(raw);
+  return glassThemeAllowed(limits) || tijaniGuideAllowed(limits);
+}

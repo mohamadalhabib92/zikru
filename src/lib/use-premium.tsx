@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { myEntitlements } from './community/api';
 import { useAuth } from './community/auth';
-import { featureEnabled, limitsOf, PREMIUM_KEYS } from './premium-flags';
+import { featureEnabled, limitsOf, PREMIUM_KEYS, serverGrantsPremium } from './premium-flags';
 import { loadJSON, saveJSON } from './storage';
 
 /**
@@ -11,25 +11,25 @@ import { loadJSON, saveJSON } from './storage';
  */
 export function useFeatureFlags() {
   const { userId } = useAuth();
-  const [limits, setLimits] = useState<Record<string, unknown> | null>(null);
+  const [raw, setRaw] = useState<unknown>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
     let alive = true;
     (async () => {
       if (!userId) {
         if (alive) {
-          setLimits(null);
+          setRaw(null);
           setReady(true);
         }
         return;
       }
-      const cached = limitsOf(await loadJSON<unknown>(`entitlements-${userId}`, null));
-      if (alive && cached) setLimits(cached);
+      const cached = await loadJSON<unknown>(`entitlements-${userId}`, null);
+      if (alive && limitsOf(cached)) setRaw(cached);
       try {
-        const raw = await myEntitlements();
+        const next = await myEntitlements();
         if (!alive) return;
-        setLimits(limitsOf(raw));
-        await saveJSON(`entitlements-${userId}`, raw);
+        setRaw(next);
+        await saveJSON(`entitlements-${userId}`, next);
       } catch {
         // cache déjà appliqué, sinon verrouillé
       } finally {
@@ -40,9 +40,11 @@ export function useFeatureFlags() {
       alive = false;
     };
   }, [userId]);
+  const limits = limitsOf(raw);
   return {
     ready,
     themes: featureEnabled(limits, PREMIUM_KEYS.themes),
     tijaniGuide: featureEnabled(limits, PREMIUM_KEYS.tijaniGuide),
+    serverPremium: serverGrantsPremium(raw),
   };
 }

@@ -118,11 +118,11 @@ function withAppleTv(config) {
   config.version = '1.0.30';
   config.ios = config.ios || {};
   config.ios.bundleIdentifier = 'com.vibecode.zikru-76mpdv';
-  // appVersionSource est « remote » : EAS ignore ce buildNumber et écrit le
-  // compteur du projet zikru-tv. Le profil production-tv a autoIncrement,
-  // donc le CFBundleVersion distant (binaire accepté = 1) passe à 2.
-  // L’iPhone reste sur le projet zikru et son compteur distant (app.json = 86, au-dessus du build TestFlight 85).
-  config.ios.buildNumber = '2';
+  // CFBundleVersion du salon. Le binaire TestFlight interne 1.0.30 est le build 6.
+  // Le profil production-tv garde autoIncrement et appVersionSource « remote » :
+  // EAS n’abaisse pas ce compteur, il poursuit au-dessus du distant. Le tampon
+  // local est 7 pour le prochain binaire. L’iPhone reste sur le projet zikru (app.json = 86).
+  config.ios.buildNumber = '7';
   if (!config.ios.appleTeamId) config.ios.appleTeamId = 'Y9XF9RY2BU';
   // Pas de groupe d’apps, pas de montre, pas de widget : le profil tvOS
   // de cet App ID ne porte pas ces capacités.

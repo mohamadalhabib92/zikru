@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ElementRef, type ReactNode } from 'react';
 import * as ReactNative from 'react-native';
 import { usePremium } from '@/lib/premium';
-import { tvFeatureAllowed, type TvFeatureId } from '@/lib/tv';
+import { useFeatureFlags } from '@/lib/use-premium';
+import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive, type TvFeatureId } from '@/lib/tv';
 import {
   TV_BADGE_ON_CARD,
   TV_CARD_BG,
@@ -386,22 +387,28 @@ export function TvBack({ preferred }: { preferred?: boolean }) {
 
 export function TvPremiumGate({ feature, children }: { feature: TvFeatureId; children: ReactNode }) {
   const premium = usePremium();
-  if (!premium.ready) {
+  const flags = useFeatureFlags();
+  // Gratuit sur iPhone : jamais de mur, même si l’achat n’est pas chargé.
+  if (!TV_FEATURES[feature].premium) return <>{children}</>;
+  const entitled = tvPremiumActive(premium.record, flags.serverPremium ? { plan: 'premium' } : null);
+  if (!premium.ready && !flags.ready) {
     return (
       <TvScroll>
         <TvMuted>{L('Chargement…')}</TvMuted>
       </TvScroll>
     );
   }
-  if (tvFeatureAllowed(feature, premium.canCreate)) return <>{children}</>;
+  if (tvFeatureAllowed(feature, entitled, premium.payments)) return <>{children}</>;
   return (
     <TvScroll>
       <TvTitle>{L('Zikru Premium')}</TvTitle>
       <TvMuted>
         {L('Achat unique à vie')}
         {' — '}
-        {L('Cet écran du salon fait partie de Zikru Premium, le même achat que sur iPhone. Rejoindre une famille et la discussion restent gratuits.')}
+        {L('Il débloque seulement la création de zikrs personnels et la création de groupes. Le reste de l’application reste gratuit.')}
       </TvMuted>
+      <TvMuted>{L('Rejoindre avec une invitation ou une demande acceptée reste gratuit, comme les horaires, la qibla, le Coran, l’adhan, le tasbih et les zikrs déjà inclus.')}</TvMuted>
+      <TvMuted>{L('Vous pouvez restaurer cet achat sur vos appareils avec le même compte Apple, depuis l’écran Premium.')}</TvMuted>
       <TvRow>
         <TvButton preferred label={L('Restaurer les achats')} hint={L('Même identifiant Apple que sur iPhone')} onPress={() => void premium.restore()} />
         <TvButton label={L('Retour')} onPress={() => router.back()} />

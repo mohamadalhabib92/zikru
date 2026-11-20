@@ -1,8 +1,10 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { TvButton, TvMuted, TvRow, TvScroll, TvTitle, useTvGrid } from '@/components/tv/ui';
 import { usePremium } from '@/lib/premium';
-import { tvFeatureAllowed } from '@/lib/tv';
+import { useFeatureFlags } from '@/lib/use-premium';
+import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive } from '@/lib/tv';
 import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
@@ -19,6 +21,9 @@ const TILES: { href: '/tv/quran' | '/tv/prayers' | '/tv/dhikr' | '/tv/ambient' |
 
 export default function TvHome() {
   const premium = usePremium();
+  const flags = useFeatureFlags();
+  const [restored, setRestored] = useState<boolean | null>(null);
+  const entitled = tvPremiumActive(premium.record, flags.serverPremium ? { plan: 'premium' } : null);
   const grid = useTvGrid();
   return (
     <TvScroll>
@@ -27,7 +32,7 @@ export default function TvHome() {
       <TvMuted>{L('Le salon : le Coran, la prière et le dhikr de la famille, sur grand écran.')}</TvMuted>
       <TvRow gap={grid.gap}>
         {TILES.map((tile, i) => {
-          const locked = premium.ready && !tvFeatureAllowed(tile.feature, premium.canCreate);
+          const locked = TV_FEATURES[tile.feature].premium && premium.ready && !tvFeatureAllowed(tile.feature, entitled, premium.payments);
           return (
             <View key={tile.href} style={{ width: grid.tileWidth, flexGrow: 0, flexShrink: 0 }}>
               <TvButton
@@ -42,6 +47,15 @@ export default function TvHome() {
           );
         })}
       </TvRow>
+      {!entitled ? (
+        <>
+          <TvRow>
+            <TvButton label={L('Restaurer les achats')} hint={L('Même identifiant Apple que sur iPhone')} onPress={() => void premium.restore().then(setRestored)} />
+          </TvRow>
+          {restored === false && premium.phase !== 'offline' ? <TvMuted>{L('Aucun achat Premium à restaurer pour ce compte Apple.')}</TvMuted> : null}
+          {premium.phase === 'offline' ? <TvMuted>{L('Pas de connexion. Réessayez quand vous serez en ligne.')}</TvMuted> : null}
+        </>
+      ) : null}
     </TvScroll>
   );
 }

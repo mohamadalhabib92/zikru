@@ -4,7 +4,7 @@
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLatest } from '@/ui/use-latest';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { createdAnyServerGroup } from './community/api';
 import { registerUiStrings } from './l10n';
 import { UI_STRINGS_PREMIUM } from './ui-strings-premium';
@@ -14,6 +14,7 @@ import {
   canCreatePremiumContent,
   emptyPremiumRecord,
   grantServerGrandfather,
+  isPremiumActive,
   isUserCreatedLocalGroup,
   observeLocalPremium,
   parsePremiumRecord,
@@ -118,15 +119,36 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     await apply(check);
   }, [apply]);
 
+  const restore = useCallback(async () => {
+    if (!premiumStore.payments) {
+      setPhase('offline');
+      return false;
+    }
+    setPhase('pending');
+    const check = await premiumStore.restore();
+    await apply(check);
+    if (check.owned == null && !check.online) setPhase('offline');
+    else if (check.owned) setPhase('success');
+    else setPhase('idle');
+    return check.owned === true;
+  }, [apply]);
+
+  const tvStoreBoot = useRef(false);
   useEffect(() => {
     if (!ready) return;
-    void reverify();
+    // Apple TV : le même Apple ID. getAvailablePurchases est souvent vide tant que
+    // StoreKit n’a pas synchronisé l’achat universel. Une seule restauration au démarrage.
+    const syncTvPurchase = Platform.isTV && premiumStore.payments && !tvStoreBoot.current && !isPremiumActive(recordRef.current);
+    if (syncTvPurchase) {
+      tvStoreBoot.current = true;
+      void restore();
+    } else void reverify();
     void premiumStore.loadPrice().then(setPrice);
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') void reverify();
     });
     return () => sub.remove();
-  }, [ready, reverify]);
+  }, [ready, reverify, restore, recordRef]);
 
   const buy = useCallback(async () => {
     if (!premiumStore.payments) return;
@@ -138,17 +160,6 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       /* la phase vient du code store (annulé, hors ligne, échec) */
     }
   }, [reverify]);
-
-  const restore = useCallback(async () => {
-    if (!premiumStore.payments) return false;
-    setPhase('pending');
-    const check = await premiumStore.restore();
-    await apply(check);
-    if (check.owned == null && !check.online) setPhase('offline');
-    else if (check.owned) setPhase('success');
-    else setPhase('idle');
-    return check.owned === true;
-  }, [apply]);
 
   const value: PremiumCtx = {
     ready,
