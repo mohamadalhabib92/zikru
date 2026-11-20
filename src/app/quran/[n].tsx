@@ -115,7 +115,7 @@ const AyahRow = memo(function AyahRow({
         <View style={{ flex: 1 }} />
         {note ? <Ionicons name="document-text" size={16} color={pal.muted} accessibilityLabel={L("Note")} /> : null}
         {bookmark ? <Ionicons name="bookmark" size={16} color={bookmark.color} accessibilityLabel={`Marque-page ${bookmark.name}`} /> : null}
-        <Pressable accessibilityRole="button" accessibilityLabel={playingNow ? L('Pause') : L('Écouter le verset {n}', { n: a })} hitSlop={8} onPress={() => onPlay(a)} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.accent, 0.1) }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={playingNow ? L('Pause') : L('Écouter le verset {n}', { n: a })} hitSlop={8} onPress={() => onPlay(a)} style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(pal.accent, 0.1) }}>
           <Ionicons name={playingNow ? 'pause' : 'play'} size={16} color={pal.accent} />
         </Pressable>
       </View>

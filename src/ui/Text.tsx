@@ -21,10 +21,10 @@ function tr(children: ReactNode, lang: ReturnType<typeof useUiLang>): ReactNode 
 export function Text(props: ComponentProps<typeof RNText>) {
   const lang = useUiLang();
   const focused = useContext(TvFocusContext);
-  const { children, accessibilityLabel, style, ...rest } = props;
+  const { children, accessibilityLabel, style, allowFontScaling, ...rest } = props;
   const label = typeof accessibilityLabel === 'string' ? translatePiece(accessibilityLabel, lang) : accessibilityLabel;
   return (
-    <RNText accessibilityLabel={label} style={[style, focused ? { color: '#141311' } : null]} {...rest}>
+    <RNText allowFontScaling={allowFontScaling !== false} accessibilityLabel={label} style={[style, focused ? { color: '#141311' } : null]} {...rest}>
       {tr(children, lang)}
     </RNText>
   );

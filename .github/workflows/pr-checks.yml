@@ -1,16 +1,22 @@
-# Contrôles sur les pull requests uniquement.
-# Pas de déploiement, pas de secrets, pas d'EAS.
-name: PR checks
+# Typecheck, tests, and a web export. No deploy, no secrets, no EAS.
+# Runs on every push and every pull request. The Pages workflow (web deploy) stays on main only.
+name: Checks
 
 on:
+  push:
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,3 +26,8 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm test
+      - name: expo export (web)
+        run: npx expo export -p web --output-dir dist
+        env:
+          CI: "1"
+          EXPO_NO_TELEMETRY: "1"

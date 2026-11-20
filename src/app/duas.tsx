@@ -31,7 +31,7 @@ function Action({ icon, label, onPress, active, color = COLOR }: { icon: IconNam
       accessibilityRole="button"
       accessibilityLabel={L(label)}
       onPress={onPress}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: active ? color : b.line, backgroundColor: active ? color + '18' : b.paper, opacity: pressed ? 0.8 : 1 })}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: active ? color : b.line, backgroundColor: active ? color + '18' : b.paper, opacity: pressed ? 0.8 : 1 })}
     >
       <Ionicons name={icon} size={16} color={active ? color : b.inkMuted} />
       <Text style={{ color: active ? color : b.ink, fontWeight: '700', fontSize: 13 }}>{label}</Text>
@@ -78,7 +78,7 @@ function DuaCard({ d, fav, onFav, onCopy, copied, onTasbih, onZikr }: { d: Dua; 
               accessibilityLabel={L('Compter : {n} sur {r}', { n, r: reps })}
               onPress={() => setN((x) => (x >= reps ? 1 : x + 1))}
               onLongPress={() => setN(0)}
-              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: done ? b.green : COLOR, opacity: pressed ? 0.85 : 1 })}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 14, borderRadius: 18, backgroundColor: done ? b.green : COLOR, opacity: pressed ? 0.85 : 1 })}
             >
               <Ionicons name={done ? 'checkmark-circle' : 'add-circle-outline'} size={16} color="#fff" />
               <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>

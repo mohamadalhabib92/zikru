@@ -517,10 +517,10 @@ export default function Home() {
               <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{pt.weather_title}</Text>
               <LMuted>{pt.weather_text}</LMuted>
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                <Pressable accessibilityRole="button" onPress={() => choose('weather', true)} style={{ backgroundColor: b.green, borderRadius: 18, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
+                <Pressable accessibilityRole="button" accessibilityLabel={pt.weather_accept} onPress={() => choose('weather', true)} style={{ backgroundColor: b.green, borderRadius: 18, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' }}>
                   <Text style={{ color: b.onGreen, fontWeight: '700' }}>{pt.weather_accept}</Text>
                 </Pressable>
-                <Pressable accessibilityRole="button" onPress={() => choose('weather', false)} style={{ borderRadius: 18, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, minHeight: 36, justifyContent: 'center' }}>
+                <Pressable accessibilityRole="button" accessibilityLabel={pt.weather_decline} onPress={() => choose('weather', false)} style={{ borderRadius: 18, borderWidth: 1, borderColor: b.line, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' }}>
                   <Text style={{ color: b.ink, fontWeight: '600' }}>{pt.weather_decline}</Text>
                 </Pressable>
               </View>

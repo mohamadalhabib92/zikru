@@ -13,7 +13,7 @@ import { LandscapeBackdrop, ReadingPlate } from '@/components/landscape-backdrop
 import { Button, Card, Chip, Eyebrow, H2, Muted, Row, Screen, Segmented, Spacer } from '@/ui/kit';
 import { ProgressRing, useLayout, useReduceMotion } from '@/ui/ds';
 import { Arabic } from '@/ui/light';
-import { brand as b, theme as t } from '@/ui/theme';
+import { brand as b, isGlass, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 import { uid } from '@/lib/storage';
 import { closeSession, groupSessions, resetCount, switchDhikr } from '@/lib/tasbih-core';
@@ -81,6 +81,7 @@ export default function TasbihScreen() {
   const bleOn = ble.status === 'connecté';
   const [scale] = useState(() => new Animated.Value(1));
   const reduceMotion = useReduceMotion();
+  const glass = isGlass();
   const done = tasbih.target > 0 && tasbih.count > 0 && tasbih.count % tasbih.target === 0;
 
   const { width } = useLayout({ inTabs: true });
@@ -127,7 +128,8 @@ export default function TasbihScreen() {
             style={{ width: ring, height: ring, borderRadius: ring / 2, alignItems: 'center', justifyContent: 'center' }}
           >
             <ProgressRing size={ring} stroke={10} progress={progress} color={done ? b.gold : t.primary}>
-              <View style={{ width: ring - 36, height: ring - 36, borderRadius: (ring - 36) / 2, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}>
+              <View style={{ width: ring - 36, height: ring - 36, borderRadius: (ring - 36) / 2, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: glass ? 'rgba(255,255,255,0.7)' : t.border, overflow: 'hidden' }}>
+                {glass ? <View pointerEvents="none" style={{ position: 'absolute', top: 8, left: 28, right: 28, height: 14, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.35)' }} /> : null}
                 <Text maxFontSizeMultiplier={1.2} numberOfLines={1} adjustsFontSizeToFit style={{ color: t.text, fontSize: ring / 3.6, fontWeight: '200', fontVariant: ['tabular-nums'], maxWidth: ring - 72 }}>{tasbih.count}</Text>
                 <Muted>{tasbih.target ? `/ ${tasbih.target}` : '∞'}</Muted>
                 <Muted style={{ marginTop: 6, color: done ? t.accent : t.muted, fontWeight: done ? '700' : '400' }}>{done ? tr.cycle_done : tr.tap_to_count}</Muted>

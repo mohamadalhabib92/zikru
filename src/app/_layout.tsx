@@ -13,7 +13,7 @@ import { DispenseProvider } from '@/lib/dispense-context';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
-import { applyVisual, brand, theme as t, type Scheme, type ThemeFinish } from '@/ui/theme';
+import { applyVisual, brand, glassSolidColor, isGlass, theme as t, type Scheme, type ThemeFinish } from '@/ui/theme';
 import { VisualEffectsProvider } from '@/ui/effects';
 import { takePendingRoute } from '@/ui/appearance';
 import { useFeatureFlags } from '@/lib/use-premium';
@@ -99,7 +99,7 @@ function Root() {
       <VisualEffectsProvider>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: brand.cream },
+          headerStyle: { backgroundColor: isGlass() ? glassSolidColor() : brand.cream },
           headerTintColor: brand.ink,
           headerTitleStyle: { fontWeight: '700', fontSize: 17 },
           headerShadowVisible: false,

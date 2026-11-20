@@ -39,7 +39,7 @@ export function LBtn({ icon, label, onPress, active, color = b.green, solid, dis
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        minHeight: 38,
+        minHeight: 44,
         paddingHorizontal: 12,
         borderRadius: 19,
         borderWidth: 1,

@@ -158,14 +158,32 @@ export const fonts = {
   arabicBold: 'Amiri_700Bold',
   quran: 'AmiriQuran_400Regular',
 } as const;
+/** Cible tactile minimale (44 pt). */
+export const hit = 44;
 export const type = {
-  display: { fontSize: 32, fontWeight: '800' as const, letterSpacing: -0.6 },
-  title: { fontSize: 22, fontWeight: '800' as const, letterSpacing: -0.3 },
-  headline: { fontSize: 17, fontWeight: '700' as const },
+  display: { fontSize: 30, fontWeight: '800' as const, letterSpacing: -0.6, lineHeight: 36 },
+  title: { fontSize: 22, fontWeight: '800' as const, letterSpacing: -0.3, lineHeight: 28 },
+  headline: { fontSize: 18, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 24 },
   body: { fontSize: 16, lineHeight: 23 },
+  sub: { fontSize: 15, lineHeight: 21 },
   caption: { fontSize: 13, lineHeight: 18 },
-  overline: { fontSize: 11, fontWeight: '800' as const, letterSpacing: 1.4 },
+  overline: { fontSize: 12, fontWeight: '800' as const, letterSpacing: 1.4 },
 };
+/**
+ * Fonds pleins du thème Verre. Le flou est un effet ; le texte se pose sur ces couleurs
+ * (ou sur un voile ≥ 0,88 qui s’en rapproche) pour rester AA. Montre et « Réduire la transparence » : ces fonds, sans flou.
+ */
+export const GLASS_SOLID = {
+  light: '#F4F7F5',
+  lightGold: '#FBF6E8',
+  dark: '#121D19',
+  darkGold: '#1A1710',
+} as const;
+export function glassSolidColor(): string {
+  const gold = finish === 'verre-or';
+  if (current === 'dark') return gold ? GLASS_SOLID.darkGold : GLASS_SOLID.dark;
+  return gold ? GLASS_SOLID.lightGold : GLASS_SOLID.light;
+}
 /** Ombres douces (aucune en mode sombre : on s'appuie sur les surfaces). */
 export function elevation(level: 0 | 1 | 2 | 3 = 1): ViewStyle {
   if (!level || current === 'dark') return {};

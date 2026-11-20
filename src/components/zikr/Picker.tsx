@@ -353,7 +353,7 @@ export function ItemPicker({ visible, onAdd, onClose }: { visible: boolean; onAd
             hitSlop={8}
             style={{
               paddingHorizontal: 12,
-              minHeight: 36,
+              minHeight: 44,
               borderRadius: 18,
               backgroundColor: b.gold,
               justifyContent: 'center',

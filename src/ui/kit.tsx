@@ -9,7 +9,7 @@ import { useSettings } from '@/lib/settings';
 import { sanitizeLandscape } from '@/lib/landscapes';
 import { useVisualEffects } from './effects';
 import { GlassLayers, raisedShadow, useGlassLook } from './glass';
-import { currentFinish, currentScheme, elevation, isDark, isGlass, theme as t, type Scheme } from './theme';
+import { currentFinish, currentScheme, elevation, isDark, isGlass, space, theme as t, type as typo, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
 import { isIosAppOnMac } from '@/lib/mac';
 import { KbInput } from './keyboard-done';
@@ -30,14 +30,15 @@ export function Screen({ children, scroll = true, padded = true, bg }: { childre
   const mini = useMiniPlayerInset();
   const { s } = useSettings();
   const openLandscape = !bg && sanitizeLandscape(s.landscape) !== 'none';
+  const fx = useVisualEffects();
   const glass = useGlassLook();
   const wash = currentFinish() === 'verre-or' ? 'rgba(227,190,90,0.28)' : 'rgba(14,107,79,0.16)';
   const inner = (
-    <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom + mini }]}>{children}</View>
+    <View style={[S().inner, padded && { padding: space.xl }, { paddingBottom: space.xxxl + insets.bottom + mini }]}>{children}</View>
   );
   return (
     <View style={[S().screen, bg ? { backgroundColor: bg } : openLandscape ? { backgroundColor: 'transparent' } : null]}>
-      {glass && !openLandscape ? <View pointerEvents="none" style={{ position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: wash, top: -60, right: -70 }} /> : null}
+      {glass && fx.blur && !openLandscape ? <View pointerEvents="none" style={{ position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: wash, top: -60, right: -70 }} /> : null}
       {scroll ? (
         <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
           {inner}
@@ -168,7 +169,8 @@ export function Button({
         return [
           S().btn,
           small && S().btnSmall,
-          { backgroundColor: bg, overflow: 'hidden' },
+          { backgroundColor: bg },
+          !raised && { overflow: 'hidden' },
           variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
           raised && !fx.tv && raisedShadow(pressed && !off, fx.motion),
           !raised && pressed && !off && fx.motion && { opacity: 0.85, transform: [{ scale: 0.98 }] },
@@ -217,6 +219,7 @@ export function Chip({ label, active, onPress, color }: { label: string; active?
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={L(label)}
       accessibilityState={{ selected: !!active }}
       style={(state) => {
         const { pressed, hovered, focused } = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
@@ -344,6 +347,7 @@ export function ListItem({ title, subtitle, right, icon, onPress }: { title: str
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? (subtitle ? `${L(title)}. ${L(subtitle)}` : L(title)) : undefined}
       style={({ pressed }) => [S().li, pressed && { backgroundColor: t.surfaceAlt }]}
     >
       {icon ? (
@@ -372,13 +376,22 @@ export function Divider() {
 }
 
 export function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <View style={[S().card, { flex: 1, minWidth: 140, marginBottom: 0 }]}>
-      <Muted style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</Muted>
-      <Text style={{ color: t.text, fontSize: 22, fontWeight: '700', marginTop: 4 }}>{value}</Text>
-      {sub ? <Muted style={{ fontSize: 12, marginTop: 2 }}>{sub}</Muted> : null}
-    </View>
+  const glass = useGlassLook();
+  const inner = (
+    <>
+      <Muted style={{ fontSize: typo.caption.fontSize, textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</Muted>
+      <Text style={{ color: t.text, fontSize: typo.title.fontSize, fontWeight: '700', marginTop: 4 }}>{value}</Text>
+      {sub ? <Muted style={{ fontSize: typo.caption.fontSize, marginTop: 2 }}>{sub}</Muted> : null}
+    </>
   );
+  if (glass) {
+    return (
+      <GlassLayers radius={18} style={{ flex: 1, minWidth: 140, marginBottom: 0 }}>
+        <View style={{ padding: space.lg }}>{inner}</View>
+      </GlassLayers>
+    );
+  }
+  return <View style={[S().card, { flex: 1, minWidth: 140, marginBottom: 0 }]}>{inner}</View>;
 }
 
 /** Bannière « Données d'exemple » pour toute donnée seed. */
@@ -398,11 +411,11 @@ export function shadow(level = 1): ViewStyle {
 const makeStyles = () => StyleSheet.create({
   screen: { flex: 1, backgroundColor: t.bg },
   inner: { width: '100%', maxWidth: 1040, alignSelf: 'center' },
-  h1: { color: t.text, fontSize: isIosAppOnMac() ? 34 : 30, fontWeight: '800', letterSpacing: -0.6, marginBottom: 4, fontFamily: t.displayFont },
-  h2: { color: t.text, fontSize: isIosAppOnMac() ? 20 : 18, fontWeight: '700', letterSpacing: -0.2, marginBottom: 8 },
-  body: { color: t.text, fontSize: isIosAppOnMac() ? 17 : 16, lineHeight: isIosAppOnMac() ? 25 : 23 },
-  muted: { color: t.muted, fontSize: 15, lineHeight: 21 },
-  eyebrow: { color: t.accent, fontSize: 12, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 6 },
+  h1: { color: t.text, ...typo.display, fontSize: isIosAppOnMac() ? 34 : typo.display.fontSize, marginBottom: space.xs, fontFamily: t.displayFont },
+  h2: { color: t.text, ...typo.headline, fontSize: isIosAppOnMac() ? 20 : typo.headline.fontSize, marginBottom: space.sm },
+  body: { color: t.text, ...typo.body, fontSize: isIosAppOnMac() ? 17 : typo.body.fontSize, lineHeight: isIosAppOnMac() ? 25 : typo.body.lineHeight },
+  muted: { color: t.muted, ...typo.sub },
+  eyebrow: { color: t.accent, ...typo.overline, textTransform: 'uppercase', marginBottom: 6 },
   card: {
     backgroundColor: t.surface,
     borderRadius: 18,

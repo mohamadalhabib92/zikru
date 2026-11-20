@@ -12,7 +12,7 @@ const dir = join(root, 'node_modules', '.cache');
 mkdirSync(dir, { recursive: true });
 const file = join(dir, `zikru-theme-${process.pid}.mjs`);
 writeFileSync(file, out);
-const { palettes, contrast, onColor, identity } = await import(file);
+const { palettes, contrast, onColor, identity, GLASS_SOLID } = await import(file);
 const { LIGHT, DARK, BRAND_LIGHT, BRAND_DARK } = palettes;
 
 const rows = [];
@@ -35,6 +35,12 @@ for (const [scheme, t, b] of [['clair', LIGHT, BRAND_LIGHT], ['sombre', DARK, BR
   for (const fill of ['green', 'goldDeep', 'blue', 'violet', 'rust', 'purple']) check(scheme, onColor(b[fill]), b[fill], `onColor(${fill})`, `brand.${fill} (Pill active)`, 4.5);
   // Icônes de tuiles (graphique ≥ 3:1)
   for (const fg of ['teal', 'blue', 'violet', 'indigo', 'wirdGreen', 'goldDeep', 'rust', 'purple']) check(scheme, b[fg], b.paper, `brand.${fg} (icône)`, 'brand.paper', 3);
+}
+for (const fg of ['text', 'muted']) {
+  check('verre clair', LIGHT[fg], GLASS_SOLID.light, `theme.${fg}`, 'verre', 4.5);
+  check('verre or clair', LIGHT[fg], GLASS_SOLID.lightGold, `theme.${fg}`, 'verre-or', 4.5);
+  check('verre sombre', DARK[fg], GLASS_SOLID.dark, `theme.${fg}`, 'verre', 4.5);
+  check('verre or sombre', DARK[fg], GLASS_SOLID.darkGold, `theme.${fg}`, 'verre-or', 4.5);
 }
 const fails = rows.filter((r) => r.ratio < r.min);
 if (process.argv.includes('--table')) {

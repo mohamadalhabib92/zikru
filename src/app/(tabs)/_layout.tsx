@@ -9,7 +9,9 @@ import { useWidgetSync } from '@/lib/widget-sync';
 import { useShortcuts } from '@/lib/use-shortcuts';
 import { isRTL } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
-import { theme as t } from '@/ui/theme';
+import { GlassFill } from '@/ui/glass';
+import { useVisualEffects } from '@/ui/effects';
+import { glassSolidColor, isGlass, theme as t } from '@/ui/theme';
 import { sanitizeLandscape } from '@/lib/landscapes';
 
 export default function TabsLayout() {
@@ -19,6 +21,8 @@ export default function TabsLayout() {
   useWidgetSync();
   useShortcuts({ prayers: tr.w_next, wird: tr.sc_wird, tasbih: tr.sc_tasbih });
   const { width } = useWindowDimensions();
+  const fx = useVisualEffects();
+  const glass = isGlass();
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
   const rtl = isRTL(s.lang);
@@ -39,15 +43,16 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: t.bg },
+        headerStyle: { backgroundColor: glass ? glassSolidColor() : t.bg },
         headerTintColor: t.text,
         headerTitleStyle: { fontWeight: '700', fontSize: 17 },
         headerShadowVisible: false,
         tabBarPosition: sidebar ? (rtl ? 'right' : 'left') : 'bottom',
         tabBarLabelPosition: sidebar ? 'beside-icon' : undefined,
+        tabBarBackground: glass ? () => <GlassFill /> : undefined,
         tabBarStyle: sidebar
-          ? { backgroundColor: t.surface, borderColor: t.border, minWidth: SIDEBAR_WIDTH, width: SIDEBAR_WIDTH, paddingTop: 24 }
-          : { backgroundColor: t.surface, borderTopColor: t.border, minHeight: 60 },
+          ? { backgroundColor: glass ? 'transparent' : t.surface, borderColor: glass && fx.blur ? 'rgba(255,255,255,0.35)' : t.border, minWidth: SIDEBAR_WIDTH, width: SIDEBAR_WIDTH, paddingTop: 24 }
+          : { backgroundColor: glass ? 'transparent' : t.surface, borderTopColor: glass && fx.blur ? 'rgba(255,255,255,0.35)' : t.border, minHeight: 60 },
         tabBarActiveTintColor: sidebar ? t.onPrimary : t.primary,
         tabBarActiveBackgroundColor: sidebar ? t.primary : undefined,
         tabBarInactiveTintColor: t.muted,

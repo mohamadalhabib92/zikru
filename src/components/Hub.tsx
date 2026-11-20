@@ -5,9 +5,11 @@ import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSettings } from '@/lib/settings';
+import { useVisualEffects } from '@/ui/effects';
 import { Container, FadeIn, IconBadge, SectionHeader, tapHaptic, useLayout } from '@/ui/ds';
+import { GlassLayers, raisedShadow, useGlassLook } from '@/ui/glass';
 import { Ionicons, type IconName } from '@/ui/kit';
-import { brand as b } from '@/ui/theme';
+import { brand as b, type as typo } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
 export type HubItem = { icon: IconName; title: string; sub?: string; href: Href; color: string };
@@ -20,22 +22,39 @@ export function Hub({ title, eyebrow, sections, top }: { title: string; eyebrow?
   const { tablet, desktop } = useLayout({ inTabs: true });
   const { t: tr } = useSettings();
   const cols = desktop ? 3 : tablet ? 2 : 1;
+  const glass = useGlassLook();
+  const fx = useVisualEffects();
   return (
     <View style={{ flex: 1, backgroundColor: b.cream }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 40 + insets.bottom }}>
         <Container max={1100} style={{ paddingHorizontal: tablet ? 28 : 16 }}>
           {eyebrow ? <Text style={{ color: b.goldDeep, fontWeight: '800', fontSize: 12, letterSpacing: 1.4 }}>{L(eyebrow).toUpperCase()}</Text> : null}
-          <Text accessibilityRole="header" style={{ color: b.ink, fontSize: 32, fontWeight: '800', letterSpacing: -0.6, marginBottom: 12 }}>
+          <Text accessibilityRole="header" style={{ color: b.ink, fontSize: typo.display.fontSize + 2, fontWeight: typo.display.fontWeight, letterSpacing: typo.display.letterSpacing, marginBottom: 12 }}>
             {title}
           </Text>
           <Pressable
             accessibilityRole="search"
             accessibilityLabel={tr.search}
             onPress={() => router.push('/search')}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 14, borderRadius: 14, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line, opacity: pressed ? 0.8 : 1 })}
+            style={({ pressed }) => [
+              { borderRadius: 14, opacity: pressed && !fx.motion ? 0.85 : 1 },
+              !glass && { backgroundColor: b.paper, borderWidth: 1, borderColor: b.line },
+              glass && !fx.tv && raisedShadow(pressed, fx.motion),
+            ]}
           >
-            <Ionicons name="search" size={18} color={b.inkMuted} />
-            <Text style={{ color: b.inkMuted, fontSize: 15 }}>{tr.search_ph}</Text>
+            {glass ? (
+              <GlassLayers radius={14}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 14 }}>
+                  <Ionicons name="search" size={18} color={b.inkMuted} />
+                  <Text style={{ color: b.inkMuted, fontSize: typo.sub.fontSize }}>{tr.search_ph}</Text>
+                </View>
+              </GlassLayers>
+            ) : (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 14 }}>
+                <Ionicons name="search" size={18} color={b.inkMuted} />
+                <Text style={{ color: b.inkMuted, fontSize: typo.sub.fontSize }}>{tr.search_ph}</Text>
+              </View>
+            )}
           </Pressable>
           {top}
           {sections.map((sec, si) => (
@@ -51,20 +70,35 @@ export function Hub({ title, eyebrow, sections, top }: { title: string; eyebrow?
                         tapHaptic('select');
                         router.push(it.href);
                       }}
-                      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, padding: 12, borderRadius: 16, backgroundColor: b.paper, borderWidth: 1, borderColor: b.line, transform: [{ scale: pressed ? 0.985 : 1 }] })}
+                      style={({ pressed }) => [
+                        { borderRadius: 16, minHeight: 64 },
+                        !glass && { backgroundColor: b.paper, borderWidth: 1, borderColor: b.line },
+                        glass && !fx.tv && raisedShadow(pressed, fx.motion),
+                        pressed && fx.motion && !glass && { transform: [{ scale: 0.985 }] },
+                        pressed && !fx.motion && { opacity: 0.92 },
+                      ]}
                     >
-                      <IconBadge icon={it.icon} color={it.color} size={40} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ color: b.ink, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
-                          {it.title}
-                        </Text>
-                        {it.sub ? (
-                          <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={1}>
-                            {it.sub}
-                          </Text>
-                        ) : null}
-                      </View>
-                      <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+                      {glass ? (
+                        <GlassLayers radius={16}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, padding: 12 }}>
+                            <IconBadge icon={it.icon} color={it.color} size={40} />
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: b.ink, fontWeight: '700', fontSize: typo.sub.fontSize }} numberOfLines={1}>{it.title}</Text>
+                              {it.sub ? <Text style={{ color: b.inkMuted, fontSize: typo.caption.fontSize }} numberOfLines={1}>{it.sub}</Text> : null}
+                            </View>
+                            <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+                          </View>
+                        </GlassLayers>
+                      ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, padding: 12 }}>
+                          <IconBadge icon={it.icon} color={it.color} size={40} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: b.ink, fontWeight: '700', fontSize: typo.sub.fontSize }} numberOfLines={1}>{it.title}</Text>
+                            {it.sub ? <Text style={{ color: b.inkMuted, fontSize: typo.caption.fontSize }} numberOfLines={1}>{it.sub}</Text> : null}
+                          </View>
+                          <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+                        </View>
+                      )}
                     </Pressable>
                   </View>
                 ))}
