@@ -24,8 +24,10 @@ import { bindRemoteAudio, prepareMedia, releaseMedia, setSpeaker, showRoutePicke
 import { cameraOptions, micCapture, roomOptions } from './room-options';
 import type { DataMode } from '@/lib/calls/quality';
 import { SharedReading } from '@/components/lesson/shared-reading';
+import { TeachLayout } from '@/components/call/teach-panel';
 import { PremiumPaywall } from '@/components/premium/paywall';
 import { READING_TOPIC, decodeReading, readingBytes, readingText } from '@/lib/lessons/reading';
+import { TEACH_TOPIC, acceptTeach, decodeTeach, encodeTeach, teachBytes, teachText, type TeachBoard } from '@/lib/calls/teach';
 
 type Phase = 'loading' | 'lobby' | 'joining' | 'in' | 'ended';
 const KEEP_AWAKE = 'zikru-call';
@@ -60,12 +62,55 @@ export default function CallScreen() {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [remoteReading, setRemoteReading] = useState<string | null>(null);
   const [paywall, setPaywall] = useState(false);
+  const [board, setBoard] = useState<TeachBoard | null>(null);
+  const [teachOn, setTeachOn] = useState(false);
+  const [teachLocked, setTeachLocked] = useState(false);
+  const boardRef = useRef<TeachBoard | null>(null);
+  const adminRef = useRef(false);
   const room = useRef<Room | null>(null);
   const unbind = useRef<() => void>(() => {});
   const hiddenRef = useRef(hidden);
   useEffect(() => {
     hiddenRef.current = hidden;
   }, [hidden]);
+
+  useEffect(() => {
+    boardRef.current = board;
+  }, [board]);
+  useEffect(() => {
+    adminRef.current = admin;
+  }, [admin]);
+
+  const publishBoard = useCallback((next: TeachBoard) => {
+    setBoard(next);
+    const live = room.current;
+    if (!live || !adminRef.current) return;
+    void live.localParticipant.publishData(teachBytes(encodeTeach(next)), { reliable: true, topic: TEACH_TOPIC }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const r = active;
+    if (!r) return;
+    const onTeach = (payload: Uint8Array, who?: { metadata?: string }, _kind?: unknown, topic?: string) => {
+      if (topic !== TEACH_TOPIC || !who || !parseMeta(who.metadata).admin) return;
+      const next = decodeTeach(teachText(payload));
+      if (!next || next.callId !== sid) return;
+      setBoard((prev) => acceptTeach(prev, next) ?? prev);
+      if (next.kind !== 'off') setTeachOn(true);
+    };
+    r.on(RoomEvent.DataReceived, onTeach);
+    const onJoin = () => {
+      const current = boardRef.current;
+      if (adminRef.current && current && current.kind !== 'off') {
+        void r.localParticipant.publishData(teachBytes(encodeTeach(current)), { reliable: true, topic: TEACH_TOPIC }).catch(() => {});
+      }
+    };
+    r.on(RoomEvent.ParticipantConnected, onJoin);
+    return () => {
+      r.off(RoomEvent.DataReceived, onTeach);
+      r.off(RoomEvent.ParticipantConnected, onJoin);
+    };
+  }, [active, sid]);
 
   useEffect(() => {
     const r = active;
@@ -313,9 +358,65 @@ export default function CallScreen() {
   const r = active;
   const remoteOf = (id: string) => r?.remoteParticipants.get(id);
   const camPub = (x: Participant | undefined) => x?.getTrackPublication(Track.Source.Camera);
+  const liveBoard = board && board.kind !== 'off' ? board : null;
+  const showTeach = teachOn || !!liveBoard;
+  const tile = (who: Person, tall: boolean) => {
+    const part = who.local ? r?.localParticipant : remoteOf(who.identity);
+    const pub = camPub(part);
+    const showVideo = who.camOn && pub && (who.local || (videoOk && pub.isSubscribed));
+    return (
+      <Card key={who.identity} onPress={who.local ? undefined : () => setOpen(open === who.identity ? null : who.identity)} accessibilityLabel={who.name}>
+        {showVideo && part && pub ? <VideoTile participant={part} publication={pub} mirror={who.local} style={{ height: tall ? 280 : 120, borderRadius: 12, marginBottom: 8 }} /> : tall ? <Muted>{L('Caméra éteinte')}</Muted> : null}
+        <Row gap={8} style={{ alignItems: 'center' }}>
+          <Ionicons name={who.micOn ? 'mic' : 'mic-off'} size={18} color={who.speaking ? t.primary : who.micOn ? t.text : t.muted} accessibilityLabel={L(who.micOn ? 'Micro ouvert' : 'Micro coupé')} />
+          <Text style={{ color: t.text, fontSize: 16, fontWeight: who.speaking ? '700' : '500', flex: 1 }}>
+            {who.name}
+            {who.local ? ` (${L('moi')})` : ''}
+          </Text>
+          {who.admin ? <Badge label="Hôte" tone="info" /> : null}
+        </Row>
+        {open === who.identity && !who.local ? (
+          <Row wrap gap={6} style={{ marginTop: 8 }}>
+            {canModerate(admin, who) && who.micOn ? <Button small variant="ghost" icon="mic-off-outline" title="Couper son micro" onPress={() => void moderate(who, 'mute')} /> : null}
+            {canModerate(admin, who) ? (
+              <Button
+                small
+                variant="ghost"
+                icon="exit-outline"
+                title="Retirer de l’appel"
+                onPress={() => confirmAsk(L('Retirer {name} de l’appel ?', { name: who.name }), 'Elle pourra rejoindre l’appel à nouveau. Si le problème continue, signalez-la ou retirez-la du groupe.', 'Retirer', () => void moderate(who, 'remove'))}
+              />
+            ) : null}
+            {canReport(who) ? <ReportButton target="member" targetId={who.identity} scope={scope as api.ScopeType} scopeId={sid} canBlock who={who.name} onDone={() => setHidden((h) => new Set(h).add(who.identity))} /> : null}
+            {canReport(who) && userId ? <BlockButton userId={who.identity} name={who.name} onDone={() => setHidden((h) => new Set(h).add(who.identity))} /> : null}
+          </Row>
+        ) : null}
+      </Card>
+    );
+  };
+  const teacher = people.find((who) => who.admin) ?? people.find((who) => who.local);
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Stack.Screen options={{ title }} />
+      {showTeach ? (
+        <View style={{ flex: 1, paddingBottom: 108 }}>
+          <Row style={{ justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 }}>
+            <Muted>{L('{n} dans l’appel', { n: people.length })} · {fmtDuration(now - startedAt)}</Muted>
+            <Badge label={L(LABEL_TRANSIT)} tone="neutral" />
+          </Row>
+          {err ? <Notice tone="warning" title={err} /> : null}
+          {teachLocked ? <Notice tone="info" title={L('Conduire la lecture demande Zikru Premium. Les personnes déjà dans l’appel la voient sans nouvel achat.')} /> : null}
+          <TeachLayout callId={sid} board={board} host={admin} premium={premium.ready && premium.canCreate} video={
+            <ScrollView contentContainerStyle={{ padding: 12, gap: 8 }}>
+              {teacher ? tile(teacher, true) : null}
+              {people.filter((who) => who.identity !== teacher?.identity).map((who) => tile(who, false))}
+            </ScrollView>
+          } onBoard={(next) => {
+            publishBoard(next);
+            if (next.kind === 'off') setTeachOn(false);
+          }} />
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
         <Row style={{ justifyContent: 'space-between' }}>
           <Muted>{L('{n} dans l’appel', { n: people.length })} · {fmtDuration(now - startedAt)}</Muted>
@@ -323,40 +424,7 @@ export default function CallScreen() {
         </Row>
         {err ? <Notice tone="warning" title={err} /> : null}
         <Spacer h={8} />
-        {people.map((who) => {
-          const part = who.local ? r?.localParticipant : remoteOf(who.identity);
-          const pub = camPub(part);
-          const showVideo = who.camOn && pub && (who.local || (videoOk && pub.isSubscribed));
-          return (
-            <Card key={who.identity} onPress={who.local ? undefined : () => setOpen(open === who.identity ? null : who.identity)} accessibilityLabel={who.name}>
-              {showVideo && part && pub ? <VideoTile participant={part} publication={pub} mirror={who.local} style={{ height: 180, borderRadius: 12, marginBottom: 8 }} /> : null}
-              <Row gap={8} style={{ alignItems: 'center' }}>
-                <Ionicons name={who.micOn ? 'mic' : 'mic-off'} size={18} color={who.speaking ? t.primary : who.micOn ? t.text : t.muted} accessibilityLabel={L(who.micOn ? 'Micro ouvert' : 'Micro coupé')} />
-                <Text style={{ color: t.text, fontSize: 16, fontWeight: who.speaking ? '700' : '500', flex: 1 }}>
-                  {who.name}
-                  {who.local ? ` (${L('moi')})` : ''}
-                </Text>
-                {who.admin ? <Badge label="Hôte" tone="info" /> : null}
-              </Row>
-              {open === who.identity && !who.local ? (
-                <Row wrap gap={6} style={{ marginTop: 8 }}>
-                  {canModerate(admin, who) && who.micOn ? <Button small variant="ghost" icon="mic-off-outline" title="Couper son micro" onPress={() => void moderate(who, 'mute')} /> : null}
-                  {canModerate(admin, who) ? (
-                    <Button
-                      small
-                      variant="ghost"
-                      icon="exit-outline"
-                      title="Retirer de l’appel"
-                      onPress={() => confirmAsk(L('Retirer {name} de l’appel ?', { name: who.name }), 'Elle pourra rejoindre l’appel à nouveau. Si le problème continue, signalez-la ou retirez-la du groupe.', 'Retirer', () => void moderate(who, 'remove'))}
-                    />
-                  ) : null}
-                  {canReport(who) ? <ReportButton target="member" targetId={who.identity} scope={scope as api.ScopeType} scopeId={sid} canBlock who={who.name} onDone={() => setHidden((h) => new Set(h).add(who.identity))} /> : null}
-                  {canReport(who) && userId ? <BlockButton userId={who.identity} name={who.name} onDone={() => setHidden((h) => new Set(h).add(who.identity))} /> : null}
-                </Row>
-              ) : null}
-            </Card>
-          );
-        })}
+        {people.map((who) => tile(who, false))}
         {hidden.size ? <Muted style={{ fontSize: 12 }}>Vous n’entendez plus et ne voyez plus les personnes bloquées pendant cet appel.</Muted> : null}
         {lessonId ? (
           <SharedReading
@@ -371,6 +439,7 @@ export default function CallScreen() {
           />
         ) : null}
       </ScrollView>
+      )}
       <Row gap={10} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16, justifyContent: 'center', backgroundColor: t.surface }}>
         <Button small variant={mic ? 'secondary' : 'primary'} icon={mic ? 'mic' : 'mic-off'} title={mic ? 'Couper le micro' : 'Ouvrir le micro'} onPress={() => void toggleMic()} />
         {videoOk ? <Button small variant={cam ? 'secondary' : 'ghost'} icon={cam ? 'videocam' : 'videocam-off'} title={cam ? 'Éteindre la caméra' : 'Allumer la caméra'} onPress={() => void toggleCam()} /> : null}
@@ -398,6 +467,23 @@ export default function CallScreen() {
             }}
           />
         )}
+        {admin ? (
+          <Button
+            small
+            variant={showTeach ? 'secondary' : 'ghost'}
+            icon="book-outline"
+            title={L('Enseigner')}
+            onPress={() => {
+              if (premium.ready && !premium.canCreate) {
+                setTeachLocked(true);
+                setTeachOn(true);
+                return;
+              }
+              setTeachLocked(false);
+              setTeachOn(true);
+            }}
+          />
+        ) : null}
         {admin ? (
           <Button
             small
