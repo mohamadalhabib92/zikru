@@ -13,13 +13,17 @@ function isOn(state: PressState, hot: boolean): boolean {
   return Boolean(state.focused) || hot;
 }
 
-/** Fond inversé, bord blanc 4 pt, échelle 1,08. Ombre seulement sur l’élément focalisé. */
+/**
+ * Fond inversé, bord blanc 4 pt, échelle 1,08. Ombre seulement sur l’élément focalisé.
+ * L’opacité reste à 1 : un voile à 0,65 faisait passer les hints et le badge Premium sous le contraste.
+ */
 export function tvFocusStyle(on: boolean): ViewStyle {
   const base: ViewStyle = {
-    opacity: on ? 1 : 0.65,
+    opacity: 1,
     borderWidth: 4,
     borderColor: on ? FOCUS_EDGE : 'transparent',
     transform: [{ scale: on ? 1.08 : 1 }],
+    overflow: 'visible',
   };
   if (!on) return base;
   return {

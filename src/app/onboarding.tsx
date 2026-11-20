@@ -1,6 +1,6 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { Image, Platform, ScrollView, View } from 'react-native';
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -182,6 +182,7 @@ export default function Onboarding() {
     );
 
   const last = step === 'done';
+  if (Platform.isTV) return <Redirect href="/tv" />;
   return (
     <View style={{ flex: 1, backgroundColor: b.cream }}>
       <PatternBg style={{ paddingTop: insets.top + 18, paddingBottom: 26, alignItems: 'center' }}>

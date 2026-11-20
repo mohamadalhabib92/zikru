@@ -9,6 +9,7 @@ import { buildQueue } from '@/lib/recitation';
 import { useGlobalRecitation } from '@/lib/recitation-context';
 import { SURAHS } from '@/lib/surahs';
 import { tvAyahType } from '@/lib/tv';
+import { TV_FOCUS_INK, TV_ON_CARD, TV_ON_CARD_MUTED } from '@/lib/tv-surface';
 import { Text } from '@/ui/Text';
 import { fonts, theme as t } from '@/ui/theme';
 import { fontsAreReady } from '@/ui/fonts-ready';
@@ -96,11 +97,11 @@ function SurahBody({ surah }: { surah: number }) {
         <TvFocusable block minHeight={160} label={`${ayah}`}>
           {(on) => (
             <>
-              <Text style={{ color: on ? '#141311' : t.muted, fontSize: 28, fontWeight: '800' }}>
+              <Text style={{ color: on ? TV_FOCUS_INK : TV_ON_CARD_MUTED, fontSize: 28, fontWeight: '800' }}>
                 {ayah}
                 {playingHere === ayah ? ` · ${L('Lecture')}` : ''}
               </Text>
-              <Text style={{ color: on ? '#141311' : t.text, fontSize: type.fontSize, lineHeight: type.lineHeight, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || '…'}</Text>
+              <Text style={{ color: on ? TV_FOCUS_INK : TV_ON_CARD, fontSize: type.fontSize, lineHeight: type.lineHeight, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || '…'}</Text>
             </>
           )}
         </TvFocusable>

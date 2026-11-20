@@ -33,6 +33,7 @@ export default function TvQuranIndex() {
   return (
     <TvPremiumGate feature="quran">
       <TvVirtualList
+        grid
         data={rows}
         keyExtractor={(s) => String(s[0])}
         header={header}

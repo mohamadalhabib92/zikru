@@ -21,6 +21,8 @@ export default function TabsLayout() {
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
   const landscape = sanitizeLandscape(s.landscape);
+  // Avant l’onboarding : sur Apple TV cet arbre ne doit jamais dessiner la barre d’onglets ni l’assistant iPhone.
+  if (Platform.isTV) return <Redirect href="/tv" />;
   if (!ready || !dataReady)
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>

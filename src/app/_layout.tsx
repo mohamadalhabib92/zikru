@@ -1,7 +1,7 @@
 import { Amiri_400Regular, Amiri_700Bold } from '@expo-google-fonts/amiri';
 import { AmiriQuran_400Regular } from '@expo-google-fonts/amiri-quran';
 import { useFonts } from 'expo-font';
-import { router, Stack, usePathname } from 'expo-router';
+import { Redirect, router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
@@ -30,6 +30,7 @@ import { L, useUiCatalog } from '@/lib/l10n';
 import { setFontsReady } from '@/ui/fonts-ready';
 import { useWatchSync } from '@/lib/use-watch-sync';
 import { sanitizeLandscape } from '@/lib/landscapes';
+import { tvLaunchHref } from '@/lib/tv-surface';
 import { AppLandscape } from '@/components/landscape-backdrop';
 import { MacKeys } from '@/components/MacKeys';
 import '@/lib/mac-native';
@@ -75,14 +76,17 @@ function Root() {
   const linkFailed = !!auth.linkError && !auth.session;
   const path = usePathname();
   const onAuth = path === '/auth' || path === '/auth-callback';
+  // Le nom de route initial posé sur Stack est ignoré par Expo Router : sans ce remplacement, Apple TV ouvre les onglets iPhone ou l’onboarding.
+  const tvHome = tvLaunchHref(path, Platform.isTV);
   useEffect(() => {
-    if (!linkFailed || onAuth) return;
+    if (Platform.isTV || !linkFailed || onAuth) return;
     const id = setTimeout(() => router.push('/auth'), 120);
     return () => clearTimeout(id);
   }, [linkFailed]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const r = takePendingRoute();
-    if (r) setTimeout(() => router.push(r as never), 60);
+    if (!r || tvLaunchHref(r, Platform.isTV)) return;
+    setTimeout(() => router.push(r as never), 60);
   }, [scheme]);
   // Catalogue d'interface de la langue choisie (chargé à la demande, pré-caché hors-ligne ; rien pour le français).
   const catReady = useUiCatalog(s.lang);
@@ -93,7 +97,6 @@ function Root() {
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} hidden={Platform.isTV} />
       <VisualEffectsProvider>
       <Stack
-        {...(Platform.isTV ? { initialRouteName: 'tv' as const } : {})}
         screenOptions={{
           headerStyle: { backgroundColor: brand.cream },
           headerTintColor: brand.ink,
@@ -169,6 +172,12 @@ function Root() {
       {Platform.isTV ? null : <MiniPlayer path={path} />}
       <StorageAlert />
       </VisualEffectsProvider>
+      {tvHome ? (
+        <>
+          <Redirect href={tvHome} />
+          <View pointerEvents="auto" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.bg }} />
+        </>
+      ) : null}
     </View>
   );
 }

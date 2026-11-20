@@ -10,6 +10,7 @@ import { TV_AUTOLINK_EXCLUDE, TV_REACT_NATIVE, lockedReactNative, omitReactNativ
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { tv } = await loadLib(['tv'], 'tv');
+const { 'tv-surface': surface } = await loadLib(['tv-surface'], 'tv-surface');
 const require = createRequire(import.meta.url);
 const { compiledFor, patchTvNativeSources, scanTvNativeSources } = require('../scripts/tv-native-patch.cjs');
 const { TVOS_DEPLOYMENT_TARGET, patchPodfileSource, setTargetTvosDeploymentTarget } = require('../plugins/with-tv-pods.js');
@@ -134,13 +135,21 @@ assert.equal(eas.build['production-tv'].ios.credentialsSource, 'remote');
 assert.equal(eas.build.production.ios, undefined);
 assert.equal(eas.cli.appVersionSource, 'remote');
 const tvUi = readFileSync(new URL('../src/components/tv/ui.tsx', import.meta.url), 'utf8');
-assert.match(tvUi, /paddingHorizontal: 90/);
-assert.match(tvUi, /paddingTop: 60/);
-assert.match(tvUi, /paddingBottom: 72/);
+assert.match(tvUi, /paddingHorizontal: TV_PAD_X/);
+assert.match(tvUi, /paddingTop: TV_PAD_TOP/);
+assert.match(tvUi, /paddingBottom: TV_PAD_BOTTOM/);
+assert.match(tvUi, /useWindowDimensions/);
+assert.match(tvUi, /chunkTv/);
+assert.equal(tvUi.includes('Dimensions.get'), false);
+assert.equal(tvUi.includes('#C9D0CB'), false);
+assert.match(tvUi, /color: t\.text/);
+assert.match(tvUi, /TV_ON_CARD/);
+assert.match(tvUi, /overflow: 'visible'/);
 assert.match(tvUi, /TVPressable/);
 const tvPress = readFileSync(new URL('../src/ui/tv-pressable.tsx', import.meta.url), 'utf8');
 assert.match(tvPress, /scale: on \? 1\.08 : 1/);
-assert.match(tvPress, /opacity: on \? 1 : 0\.65/);
+assert.match(tvPress, /opacity: 1/);
+assert.equal(tvPress.includes('0.65'), false);
 assert.match(tvPress, /borderWidth: 4/);
 assert.match(tvPress, /onFocus=/);
 assert.match(tvPress, /onBlur=/);
@@ -155,14 +164,137 @@ const tvLayout = readFileSync(new URL('../src/app/tv/_layout.tsx', import.meta.u
 assert.match(tvLayout, /export function ErrorBoundary/);
 assert.match(tvLayout, /hardwareBackPress/);
 assert.match(tvLayout, /Platform\.isTV/);
+assert.match(tvLayout, /subscribeTvMenu/);
+assert.match(tvLayout, /syncTvMenuKey/);
+assert.match(tvLayout, /tvMenuCaptures/);
+assert.equal(/new\s+(Ctor|TVEventHandler)\s*\(/.test(tvLayout), false);
 const quranList = readFileSync(new URL('../src/app/tv/quran/index.tsx', import.meta.url), 'utf8');
 assert.match(quranList, /TvVirtualList/);
+assert.match(quranList, /grid/);
+const rootLayout = readFileSync(new URL('../src/app/_layout.tsx', import.meta.url), 'utf8');
+assert.equal(rootLayout.includes('initialRouteName'), false);
+assert.match(rootLayout, /tvLaunchHref/);
+assert.match(rootLayout, /<Redirect href=\{tvHome\} \/>/);
+const tabsLayout = readFileSync(new URL('../src/app/(tabs)/_layout.tsx', import.meta.url), 'utf8');
+const tvTabs = tabsLayout.indexOf('if (Platform.isTV) return <Redirect href="/tv" />');
+const onboarded = tabsLayout.indexOf('!s.onboarded');
+assert.ok(tvTabs !== -1 && onboarded !== -1 && tvTabs < onboarded);
+const onboarding = readFileSync(new URL('../src/app/onboarding.tsx', import.meta.url), 'utf8');
+assert.match(onboarding, /if \(Platform\.isTV\) return <Redirect href="\/tv" \/>/);
+const homeTv = readFileSync(new URL('../src/app/tv/index.tsx', import.meta.url), 'utf8');
+assert.match(homeTv, /useTvGrid/);
+assert.equal(homeTv.includes("width: '31%'"), false);
+assert.equal(homeTv.includes('minWidth: 320'), false);
 assert.match(tvPress, /#F6E7B8/);
 const quranIndex = readFileSync(new URL('../src/app/tv/quran/index.tsx', import.meta.url), 'utf8');
 assert.equal(quranIndex.includes("position: 'absolute'"), false);
 const surahScreen = readFileSync(new URL('../src/app/tv/quran/[n].tsx', import.meta.url), 'utf8');
 assert.equal(surahScreen.includes("from 'expo-keep-awake'"), false);
 assert.match(surahScreen, /export function ErrorBoundary/);
+assert.match(surahScreen, /TV_ON_CARD/);
+assert.equal(surahScreen.includes("on ? '#141311' : t.text"), false);
+assert.equal(surahScreen.includes(': t.muted'), false);
+
+assert.equal(surface.TV_PAD_X, 90);
+assert.equal(surface.TV_PAD_TOP, 60);
+assert.equal(surface.TV_PAD_BOTTOM, 72);
+assert.equal(surface.TV_FOCUS_SCALE, 1.08);
+assert.equal(surface.tvLaunchHref('/', false), null);
+assert.equal(surface.tvLaunchHref('/onboarding', false), null);
+assert.equal(surface.tvLaunchHref('/tv', false), null);
+assert.equal(surface.tvLaunchHref('/', true), '/tv');
+assert.equal(surface.tvLaunchHref('', true), '/tv');
+assert.equal(surface.tvLaunchHref('/onboarding', true), '/tv');
+assert.equal(surface.tvLaunchHref('/(tabs)', true), '/tv');
+assert.equal(surface.tvLaunchHref('/quran/1', true), '/tv');
+assert.equal(surface.tvLaunchHref('/tv', true), null);
+assert.equal(surface.tvLaunchHref('/tv/', true), null);
+assert.equal(surface.tvLaunchHref('/tv/quran/2', true), null);
+assert.equal(surface.tvMenuCaptures('/tv'), false);
+assert.equal(surface.tvMenuCaptures('/tv/'), false);
+assert.equal(surface.tvMenuCaptures('/'), false);
+assert.equal(surface.tvMenuCaptures('/tv/join'), true);
+assert.equal(surface.tvMenuCaptures('/tv/quran/18'), true);
+
+const lum = (hex) => {
+  const h = hex.replace('#', '');
+  const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+const ratio = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+for (const [fg, bg, name] of [
+  [surface.TV_ON_CARD, surface.TV_CARD_BG, 'texte sur carte'],
+  [surface.TV_ON_CARD_MUTED, surface.TV_CARD_BG, 'hint sur carte'],
+  [surface.TV_BADGE_ON_CARD, surface.TV_CARD_BG, 'badge sur carte'],
+  [surface.TV_FOCUS_INK, surface.TV_FOCUS_FILL, 'texte focalisé'],
+  [surface.TV_FOCUS_MUTED, surface.TV_FOCUS_FILL, 'hint focalisé'],
+]) {
+  assert.ok(ratio(fg, bg) >= 4.5, `${name} ${ratio(fg, bg).toFixed(2)}`);
+}
+
+for (const width of [1280, 1600, 1920, 2560]) {
+  const grid = surface.tvGrid(width);
+  assert.ok(grid.columns >= 3 && grid.columns <= 4, `${width} → ${grid.columns} colonnes`);
+  assert.equal(surface.focusOverlaps(grid.tileWidth, grid.gap), false, String(width));
+  const used = grid.tileWidth * grid.columns + grid.gap * (grid.columns - 1);
+  assert.ok(used <= grid.contentWidth, `${width} déborde ${used} > ${grid.contentWidth}`);
+  assert.ok(grid.tileWidth >= 280, String(width));
+}
+const narrow = surface.tvGrid(960);
+assert.ok(narrow.columns >= 2, 'un écran étroit ne revient pas à une seule colonne étirée');
+assert.equal(surface.focusOverlaps(narrow.tileWidth, narrow.gap), false);
+const surahs = Array.from({ length: 114 }, (_, i) => i + 1);
+const wideRows = surface.chunkTv(surahs, surface.tvGrid(1920).columns);
+assert.equal(wideRows.length, Math.ceil(114 / 4));
+assert.equal(wideRows[0].length, 4);
+assert.equal(wideRows.at(-1).length, 114 % 4);
+assert.equal(wideRows[0][3].index, 3);
+assert.equal(surface.chunkTv(surahs, 1).length, 114);
+
+let menus = 0;
+let removed = false;
+const listeners = [];
+const modern = {
+  addListener(cb) {
+    listeners.push(cb);
+    return { remove() { removed = true; } };
+  },
+};
+assert.throws(() => new modern(), TypeError);
+const sub = surface.subscribeTvMenu(modern, () => { menus += 1; });
+listeners[0]({ eventType: 'menu' });
+listeners[0]({ eventType: 'select' });
+assert.equal(menus, 1);
+assert.equal(listeners.length, 1);
+sub.remove();
+assert.equal(removed, true);
+
+const broken = { addListener() { throw new TypeError('TVEventHandler is not a constructor'); } };
+assert.doesNotThrow(() => surface.subscribeTvMenu(broken, () => {}).remove());
+function Legacy() {}
+Legacy.prototype.enable = function enable(_cmp, cb) { this.cb = cb; };
+Legacy.prototype.disable = function disable() { this.off = true; };
+const legacy = surface.subscribeTvMenu(Legacy, () => { menus += 1; });
+assert.equal(typeof legacy.remove, 'function');
+legacy.remove();
+
+const control = {
+  enabled: 0,
+  disabled: 0,
+  enableTVMenuKey() { this.enabled += 1; },
+  disableTVMenuKey() { this.disabled += 1; },
+};
+surface.syncTvMenuKey(control, true);
+surface.syncTvMenuKey(control, false);
+surface.syncTvMenuKey(null, true);
+assert.equal(control.enabled, 1);
+assert.equal(control.disabled, 1);
+let backs = 0;
+const gate = surface.createTvMenuGate(() => { backs += 1; });
+assert.equal(gate(true), true);
+assert.equal(gate(true), false);
+assert.equal(gate(false), false);
+assert.equal(backs, 1);
 const recitation = readFileSync(new URL('../src/lib/use-recitation.ts', import.meta.url), 'utf8');
 assert.match(recitation, /const lockScreen = native && !Platform\.isTV/);
 assert.match(recitation, /keepAudioSessionActive: !Platform\.isTV/);

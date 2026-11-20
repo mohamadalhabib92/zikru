@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { View } from 'react-native';
-import { TvButton, TvMuted, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvButton, TvMuted, TvRow, TvScroll, TvTitle, useTvGrid } from '@/components/tv/ui';
 import { usePremium } from '@/lib/premium';
 import { tvFeatureAllowed } from '@/lib/tv';
 import { L } from '@/lib/l10n';
@@ -19,16 +19,17 @@ const TILES: { href: '/tv/quran' | '/tv/prayers' | '/tv/dhikr' | '/tv/ambient' |
 
 export default function TvHome() {
   const premium = usePremium();
+  const grid = useTvGrid();
   return (
     <TvScroll>
       <Text style={{ color: t.accent, fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
       <TvTitle>{L('Zikru')}</TvTitle>
       <TvMuted>{L('Le salon : le Coran, la prière et le dhikr de la famille, sur grand écran.')}</TvMuted>
-      <TvRow>
+      <TvRow gap={grid.gap}>
         {TILES.map((tile, i) => {
           const locked = premium.ready && !tvFeatureAllowed(tile.feature, premium.canCreate);
           return (
-            <View key={tile.href} style={{ width: '31%', minWidth: 320 }}>
+            <View key={tile.href} style={{ width: grid.tileWidth, flexGrow: 0, flexShrink: 0 }}>
               <TvButton
                 block
                 preferred={i === 0}
