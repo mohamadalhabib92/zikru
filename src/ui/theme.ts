@@ -119,14 +119,25 @@ const BRAND_DARK: typeof BRAND_LIGHT = {
 export const brand = { ...BRAND_LIGHT };
 
 let current: Scheme = 'light';
+export type ThemeFinish = 'classic' | 'verre' | 'verre-or';
+let finish: ThemeFinish = 'classic';
 export const currentScheme = () => current;
+export const currentFinish = () => finish;
 export const isDark = () => current === 'dark';
+/** Thème translucide demandé. Le rendu peut retomber sur du plein (réduire la transparence, montre). */
+export const isGlass = () => finish !== 'classic';
 /** Réécrit les jetons en place (idempotent). */
 export function applyScheme(s: Scheme) {
   if (s === current) return;
   current = s;
   Object.assign(theme, s === 'dark' ? DARK : LIGHT);
   Object.assign(brand, s === 'dark' ? BRAND_DARK : BRAND_LIGHT);
+}
+
+/** Clair/sombre inchangé. Le fini (classique ou verre) est lu par les cartes et les boutons. */
+export function applyVisual(s: Scheme, next: ThemeFinish = 'classic') {
+  applyScheme(s);
+  finish = next;
 }
 
 /** Espacements (grille de 4). */

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
 import { LANGS, isReview } from '@/lib/i18n';
 import { getGpsPlace } from '@/lib/location';
@@ -11,6 +11,7 @@ import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { AdhanVoicePicker } from '@/components/AudioPlayer';
 import { NotifSettings } from '@/components/NotifSettings';
 import { useSettings } from '@/lib/settings';
+import { usePremium } from '@/lib/use-premium';
 import { setPendingRoute, takePendingRoute } from '@/ui/appearance';
 import { clearAll, saveJSON } from '@/lib/storage';
 import { consentStore, useConsent } from '@/lib/consent';
@@ -49,6 +50,10 @@ export default function SettingsScreen() {
           setTimeout(() => takePendingRoute(), 2000); // si le thème effectif ne change pas, on oublie la route
         }}
       />
+      <H2>{L('Thème')}</H2>
+      <Muted>{L('Le thème classique reste celui qui est déjà le vôtre. Verre et Verre or sont translucides.')}</Muted>
+      <ThemeFinishPicker />
+      <Spacer h={8} />
       <H2>{tr.language}</H2>
       <Row wrap>
         {LANGS.map((l) => (
@@ -204,5 +209,52 @@ export default function SettingsScreen() {
       <Spacer />
       <Muted>Zikru {Constants.expoConfig?.version ?? '1.0.19'} · {pt.local_footer}</Muted>
     </Screen>
+  );
+}
+
+function ThemeFinishPicker() {
+  const { s, set } = useSettings();
+  const premium = usePremium();
+  const [locked, setLocked] = useState(false);
+  const current = s.themeFinish === 'verre' || s.themeFinish === 'verre-or' ? s.themeFinish : 'classic';
+  const options: { id: 'classic' | 'verre' | 'verre-or'; label: string; swatch: string }[] = [
+    { id: 'classic', label: L('Classique'), swatch: '#0E6B4F' },
+    { id: 'verre', label: L('Verre'), swatch: 'rgba(14,107,79,0.45)' },
+    { id: 'verre-or', label: L('Verre or'), swatch: 'rgba(217,182,92,0.7)' },
+  ];
+  return (
+    <>
+      <Row wrap>
+        {options.map((o) => {
+          const premiumOnly = o.id !== 'classic';
+          const on = current === o.id;
+          return (
+            <Chip
+              key={o.id}
+              label={premiumOnly && !premium.themes ? `${o.label} · ${L('Premium')}` : o.label}
+              active={on}
+              onPress={() => {
+                if (premiumOnly && !premium.themes) {
+                  setLocked(true);
+                  return;
+                }
+                setLocked(false);
+                if (o.id === current) return;
+                setPendingRoute('/settings');
+                set({ themeFinish: o.id });
+                setTimeout(() => takePendingRoute(), 2000);
+              }}
+            />
+          );
+        })}
+      </Row>
+      <Row wrap>
+        {options.map((o) => (
+          <View key={o.id} style={{ width: 36, height: 28, borderRadius: 8, backgroundColor: o.swatch, borderWidth: 1, borderColor: '#E5DFD3' }} />
+        ))}
+      </Row>
+      {locked ? <Muted>{L('Thème Premium. Votre thème actuel est conservé.')}</Muted> : null}
+      {current !== 'classic' && premium.themes ? <Muted>{L('Fond dépoli et boutons en relief. Réduire la transparence du système revient à un fond plein.')}</Muted> : null}
+    </>
   );
 }

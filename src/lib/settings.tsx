@@ -18,6 +18,13 @@ export type Settings = {
   onboarded: boolean;
   /** Apparence : suit le système par défaut. */
   appearance: 'system' | 'light' | 'dark';
+  /**
+   * Habillage. `classic` = le thème déjà livré (clair/sombre).
+   * `verre` et `verre-or` sont les thèmes translucides (Premium) : le choix est
+   * conservé même si le droit n’est pas là, et l’affichage retombe alors sur `classic`.
+   * Absent d’un ancien réglage : classique.
+   */
+  themeFinish?: 'classic' | 'verre' | 'verre-or';
   /** Rappels de prière (notifications web / préférence). */
   reminders: boolean;
   /** Détail des rappels (prières, avant l’adhan, vendredi, adhkar, wird). */

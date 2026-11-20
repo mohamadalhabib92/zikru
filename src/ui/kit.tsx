@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useState, type ComponentProps, type ReactNode } from 'react';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { currentScheme, elevation, theme as t, type Scheme } from './theme';
+import { useVisualEffects } from './effects';
+import { GlassLayers, raisedShadow, useGlassLook } from './glass';
+import { currentFinish, currentScheme, elevation, isDark, isGlass, theme as t, type Scheme } from './theme';
 import { L } from "@/lib/l10n";
 
 const S = () => getStyles();
@@ -14,11 +17,14 @@ export { Ionicons };
 /** Conteneur d'écran défilant, largeur max sur desktop (PWA). */
 export function Screen({ children, scroll = true, padded = true, bg }: { children: ReactNode; scroll?: boolean; padded?: boolean; bg?: string }) {
   const insets = useSafeAreaInsets();
+  const glass = useGlassLook();
+  const wash = currentFinish() === 'verre-or' ? 'rgba(227,190,90,0.28)' : 'rgba(14,107,79,0.16)';
   const inner = (
     <View style={[S().inner, padded && { padding: 20 }, { paddingBottom: 40 + insets.bottom }]}>{children}</View>
   );
   return (
     <View style={[S().screen, bg ? { backgroundColor: bg } : null]}>
+      {glass ? <View pointerEvents="none" style={{ position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: wash, top: -60, right: -70 }} /> : null}
       {scroll ? (
         <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
           {inner}
@@ -59,6 +65,17 @@ export function Eyebrow({ children, style }: { children: ReactNode; style?: Styl
 }
 
 export function Card({ children, style, onPress, accessibilityLabel }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; accessibilityLabel?: string }) {
+  const glass = useGlassLook();
+  if (glass) {
+    const inner = <View style={[{ padding: 16 }, style]}>{children}</View>;
+    if (onPress)
+      return (
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={typeof accessibilityLabel === "string" ? L(accessibilityLabel) : accessibilityLabel} style={({ pressed }) => [{ marginBottom: 12, borderRadius: 18 }, pressed && { opacity: 0.92 }]}>
+          <GlassLayers radius={18}>{inner}</GlassLayers>
+        </Pressable>
+      );
+    return <GlassLayers radius={18} style={[{ marginBottom: 12 }, style]}>{inner}</GlassLayers>;
+  }
   if (onPress) {
     return (
       <Pressable
@@ -108,9 +125,24 @@ export function Button({
   const bg = { primary: t.primary, secondary: t.surfaceAlt, ghost: 'transparent', danger: t.danger }[variant];
   const fg = { primary: t.onPrimary, secondary: t.text, ghost: t.primary, danger: t.surface }[variant];
   const off = disabled || loading;
+  const raised = isGlass() && variant !== 'ghost';
+  const fx = useVisualEffects();
+  const [focused, setFocused] = useState(false);
   return (
     <Pressable
       onPress={off ? undefined : onPress}
+      onPressIn={
+        raised && !off
+          ? () => {
+              if (Platform.OS === 'web' || fx.tv) return;
+              try {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              } catch {}
+            }
+          : undefined
+      }
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       accessibilityRole="button"
       accessibilityLabel={L(accessibilityLabel ?? title)}
       accessibilityState={{ disabled: !!off, busy: !!loading }}
@@ -118,13 +150,17 @@ export function Button({
       style={({ pressed }) => [
         S().btn,
         small && S().btnSmall,
-        { backgroundColor: bg },
+        { backgroundColor: bg, overflow: 'hidden' },
         variant === 'ghost' && { borderWidth: 1, borderColor: t.border },
-        pressed && !off && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+        raised && raisedShadow(pressed && !off, fx.motion),
+        !raised && pressed && !off && fx.motion && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+        !raised && pressed && !off && !fx.motion && { opacity: 0.85 },
+        focused && fx.tv && { borderWidth: 3, borderColor: isDark() ? '#E3BE5A' : '#9C7A22' },
         off && { opacity: 0.45 },
         style,
       ]}
     >
+      {raised ? <View pointerEvents="none" style={{ position: 'absolute', top: 1, left: 12, right: 12, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.28)' }} /> : null}
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (

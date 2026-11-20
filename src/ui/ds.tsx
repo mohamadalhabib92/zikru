@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, Easing, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from '@/ui/Text';
 import Svg, { Circle } from 'react-native-svg';
+import { useVisualEffects } from './effects';
 import { Ionicons, type IconName } from './kit';
 import { alpha, brand as b, elevation } from './theme';
 import { L } from '@/lib/l10n';
@@ -155,10 +156,13 @@ export function Skeleton({ w = '100%', h = 14, r = 8, style }: { w?: number | `$
 
 /** Apparition douce (fondu + léger glissement). */
 export function FadeIn({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: StyleProp<ViewStyle> }) {
-  const [v] = useState(() => new Animated.Value(0));
+  const fx = useVisualEffects();
+  const [v] = useState(() => new Animated.Value(fx.motion ? 0 : 1));
   useEffect(() => {
+    if (!fx.motion) return;
     Animated.timing(v, { toValue: 1, duration: 320, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
-  }, [v, delay]);
+  }, [v, delay, fx.motion]);
+  if (!fx.motion) return <View style={style}>{children}</View>;
   return <Animated.View style={[{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }, style]}>{children}</Animated.View>;
 }
 

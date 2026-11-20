@@ -3,11 +3,30 @@
  * Règles : textes arabes couramment diffusés dans la tariqa ; traductions françaises / anglaises
  * indicatives, rédigées pour l'app (marquées comme telles). Références vérifiables uniquement
  * (sourate:verset, recueil + numéro de hadith). En cas de divergence, l'enseignement du muqaddam prime.
+ *
+ * Chaque formule et chaque étape porte `review: 'à vérifier'` tant que Mohamed ne l’a pas relue.
+ * Les sources et les TODO sont dans `tijani-sources.ts`. L’arabe n’est pas réécrit quand les
+ * pages publiées divergent.
  */
 
 import { FATIHA_AR, FATIHA_EN, FATIHA_FR, FATIHA_TR } from './fatiha';
+import { A_VERIFIER, COUNT_TODOS, SOURCES, type CitedSource } from './tijani-sources';
 
-export type Formula = { id: string; title: string; ar: string; tr: string; fr: string; en: string; note?: string; indicative?: boolean };
+export { A_VERIFIER, type CitedSource };
+
+export type Formula = {
+  id: string;
+  title: string;
+  ar: string;
+  tr: string;
+  fr: string;
+  en: string;
+  note?: string;
+  indicative?: boolean;
+  review: typeof A_VERIFIER;
+  sources: CitedSource[];
+  todos?: string[];
+};
 
 export const FORMULAS: Record<string, Formula> = {
   fatiha: {
@@ -18,6 +37,9 @@ export const FORMULAS: Record<string, Formula> = {
     fr: FATIHA_FR,
     en: FATIHA_EN,
     note: 'Ouverture par la Fatiha (1×) après l’intention, telle que couramment décrite. Ordre à valider par un muqaddam : suivez l’enseignement reçu.',
+    review: A_VERIFIER,
+    sources: SOURCES.fatiha,
+    todos: [COUNT_TODOS.fatihaOrder],
   },
   istighfar: {
     id: 'istighfar',
@@ -26,6 +48,8 @@ export const FORMULAS: Record<string, Formula> = {
     tr: 'Astaghfiru-llāh',
     fr: 'Je demande pardon à Allah.',
     en: 'I seek forgiveness from Allah.',
+    review: A_VERIFIER,
+    sources: SOURCES.istighfar,
   },
   istighfarWazifa: {
     id: 'istighfarWazifa',
@@ -34,6 +58,9 @@ export const FORMULAS: Record<string, Formula> = {
     tr: 'Astaghfiru-llāha-l-ʿaẓīma-lladhī lā ilāha illā huwa-l-ḥayya-l-qayyūm',
     fr: 'Je demande pardon à Allah, l’Immense, en dehors de qui il n’y a pas de divinité, le Vivant, Celui qui subsiste par Lui-même.',
     en: 'I seek forgiveness from Allah the Magnificent, besides whom there is no god, the Ever-Living, the Self-Subsisting.',
+    review: A_VERIFIER,
+    sources: SOURCES.istighfarWazifa,
+    todos: ['TODO : accusatif الْحَيَّ الْقَيُّومَ (app) ou nominatif الْحَيُّ الْقَيُّومُ. Non tranché.'],
   },
   fatih: {
     id: 'fatih',
@@ -43,6 +70,9 @@ export const FORMULAS: Record<string, Formula> = {
     fr: 'Ô Allah, prie sur notre maître Muhammad, celui qui a ouvert ce qui était fermé, le sceau de ce qui a précédé, celui qui fait triompher la vérité par la vérité, le guide vers Ta voie droite, ainsi que sur sa famille, selon la juste mesure de son rang immense.',
     en: 'O Allah, send blessings upon our master Muhammad, the opener of what was closed, the seal of what preceded, the helper of truth by truth, the guide to Your straight path, and upon his family, according to the true measure of his immense rank.',
     indicative: true,
+    review: A_VERIFIER,
+    sources: SOURCES.fatih,
+    todos: ['TODO : مُحَمَّدٍ + وَالْهَادِي (app, tidjaniyyah.net) ou مُحَمَّدِ + الْهَادِي (Wikipedia citant Tariqa Tijaniyya). Arabe inchangé.'],
   },
   hailala: {
     id: 'hailala',
@@ -51,6 +81,9 @@ export const FORMULAS: Record<string, Formula> = {
     tr: 'Lā ilāha illā-llāh',
     fr: 'Il n’y a de divinité qu’Allah.',
     en: 'There is no god but Allah.',
+    review: A_VERIFIER,
+    sources: SOURCES.hailala,
+    todos: [COUNT_TODOS.haylalaNumbers],
   },
   closing: {
     id: 'closing',
@@ -59,6 +92,9 @@ export const FORMULAS: Record<string, Formula> = {
     tr: 'Sayyidunā Muḥammadun rasūlu-llāh, ʿalayhi salāmu-llāh',
     fr: 'Notre maître Muhammad est le Messager d’Allah, que la paix d’Allah soit sur lui.',
     en: 'Our master Muhammad is the Messenger of Allah, upon him be the peace of Allah.',
+    review: A_VERIFIER,
+    sources: SOURCES.closing,
+    todos: ['TODO : « Muhammadun Rasulullah » (Lazim, tidjaniya.com) ou « Sayyiduna Muhammadun… » (Haylala, même page). L’arabe de l’app garde سَيِّدُنَا.'],
   },
   jawhara: {
     id: 'jawhara',
@@ -69,20 +105,34 @@ export const FORMULAS: Record<string, Formula> = {
     en: 'O Allah, send blessings and peace upon the source of divine mercy, the realised ruby encompassing the centre of understandings and meanings, the light of the created worlds, the Adamic one, possessor of the divine truth… (indicative, abridged translation).',
     note: 'Se récite en état de pureté rituelle par l’eau (wudu). En cas de tayammum, elle est remplacée par 20 Salat al-Fatih, selon ce qui est couramment enseigné.',
     indicative: true,
+    review: A_VERIFIER,
+    sources: SOURCES.jawhara,
+    todos: [
+      COUNT_TODOS.jawharaEleven,
+      'TODO : الْحَائِطَ (app) / الْحَائِطِ (transcription archive.org). الْأَقْوَمِ + الْأَسْقَمِ (app, pray.islamic.network) / الْأَقْدَمِ + الْأَقْوَمِ (Sa‘adat haqa’iq). Arabe inchangé.',
+    ],
   },
 };
 
-export type Step = { formula: keyof typeof FORMULAS; count: number; extra?: string };
+export type Step = {
+  formula: keyof typeof FORMULAS;
+  count: number;
+  extra?: string;
+  review: typeof A_VERIFIER;
+  /** Vrai : pas de total obligatoire (Haylala). `count` vaut alors 0. */
+  uncounted?: boolean;
+  todos?: string[];
+};
 
 export const WIRD: { title: string; when: string; steps: Step[] } = {
   title: 'Wird (lazim)',
   when: 'Deux fois par jour : le matin (après la prière de l’aube) et le soir (après la prière de ‘Asr), selon ce qui est couramment décrit.',
   steps: [
-    { formula: 'fatiha', count: 1 },
-    { formula: 'istighfar', count: 100 },
-    { formula: 'fatih', count: 100 },
-    { formula: 'hailala', count: 100, extra: 'La centième est suivie de la formule de clôture.' },
-    { formula: 'closing', count: 1 },
+    { formula: 'fatiha', count: 1, review: A_VERIFIER, todos: [COUNT_TODOS.fatihaOrder] },
+    { formula: 'istighfar', count: 100, review: A_VERIFIER },
+    { formula: 'fatih', count: 100, review: A_VERIFIER },
+    { formula: 'hailala', count: 100, extra: 'La centième est suivie de la formule de clôture.', review: A_VERIFIER },
+    { formula: 'closing', count: 1, review: A_VERIFIER },
   ],
 };
 
@@ -90,11 +140,11 @@ export const WAZIFA: { title: string; when: string; steps: Step[] } = {
   title: 'Wazifa',
   when: 'Une fois par jour au minimum (matin ou soir), de préférence en groupe, selon ce qui est couramment décrit.',
   steps: [
-    { formula: 'fatiha', count: 1 },
-    { formula: 'istighfarWazifa', count: 30 },
-    { formula: 'fatih', count: 50 },
-    { formula: 'hailala', count: 100 },
-    { formula: 'jawhara', count: 12 },
+    { formula: 'fatiha', count: 1, review: A_VERIFIER, todos: [COUNT_TODOS.fatihaOrder] },
+    { formula: 'istighfarWazifa', count: 30, review: A_VERIFIER },
+    { formula: 'fatih', count: 50, review: A_VERIFIER },
+    { formula: 'hailala', count: 100, review: A_VERIFIER },
+    { formula: 'jawhara', count: 12, review: A_VERIFIER, todos: [COUNT_TODOS.jawharaEleven] },
   ],
 };
 
@@ -175,7 +225,19 @@ export const practiceDoneKey = (day: string, id: string) => `${day}-${id}-f`;
 export const FATIHA_ORDER_FLAG = 'Ordre à valider par un muqaddam : Al-Fatiha (1×) placée en première étape du wird, de la wazifa et de la hailala du vendredi.';
 
 /** Présentation des trois pratiques (écran Programme Tijaniyya). */
-export type Practice = { id: 'wird' | 'wazifa' | 'hailala'; ar: string; name: string; timing: string; timingAr: string; desc: string; steps: Step[]; uncounted?: boolean };
+export type Practice = {
+  id: 'wird' | 'wazifa' | 'hailala';
+  ar: string;
+  name: string;
+  timing: string;
+  timingAr: string;
+  desc: string;
+  steps: Step[];
+  uncounted?: boolean;
+  review: typeof A_VERIFIER;
+  sources: CitedSource[];
+  todos?: string[];
+};
 export const PRACTICES: Practice[] = [
   {
     id: 'wird',
@@ -185,6 +247,9 @@ export const PRACTICES: Practice[] = [
     timingAr: 'بعد الفجر وبعد العصر',
     desc: 'Le wird obligatoire du tijani, récité deux fois par jour : le matin (après la prière de l’aube, jusqu’à la mi-journée) et le soir (après ‘Asr, jusqu’à ‘Isha), selon ce qui est couramment enseigné. C’est l’engagement central de la voie.',
     steps: WIRD.steps,
+    review: A_VERIFIER,
+    sources: [...SOURCES.istighfar, ...SOURCES.fatih, ...SOURCES.hailala, ...SOURCES.closing],
+    todos: [COUNT_TODOS.lazimNoJawhara, COUNT_TODOS.fatihaOrder],
   },
   {
     id: 'wazifa',
@@ -194,6 +259,9 @@ export const PRACTICES: Practice[] = [
     timingAr: 'مرة في اليوم صباحاً أو مساءً',
     desc: 'La wazifa se récite au moins une fois par jour, de préférence en groupe (halqa) et en état de pureté rituelle, souvent après ‘Asr ou après Maghrib. Elle contient la Jawharat al-Kamal.',
     steps: WAZIFA.steps,
+    review: A_VERIFIER,
+    sources: [...SOURCES.istighfarWazifa, ...SOURCES.fatih, ...SOURCES.hailala, ...SOURCES.jawhara],
+    todos: [COUNT_TODOS.jawharaEleven, COUNT_TODOS.fatihaOrder],
   },
   {
     id: 'hailala',
@@ -203,12 +271,62 @@ export const PRACTICES: Practice[] = [
     timingAr: 'يوم الجمعة من العصر إلى المغرب',
     desc: HAILALA_FRIDAY.text,
     steps: [
-      { formula: 'fatiha', count: 1 },
-      { formula: 'hailala', count: 0, extra: 'Sans compter précisément, jusqu’au coucher du soleil.' },
+      { formula: 'fatiha', count: 1, review: A_VERIFIER, todos: [COUNT_TODOS.fatihaOrder] },
+      {
+        formula: 'hailala',
+        count: 0,
+        extra: 'Sans nombre fixé : de l’Asr au Maghrib. Les totaux 1000, 1200 et 1600 sont cités ailleurs et ne sont pas imposés ici.',
+        review: A_VERIFIER,
+        uncounted: true,
+        todos: [COUNT_TODOS.haylalaNumbers],
+      },
     ],
     uncounted: true,
+    review: A_VERIFIER,
+    sources: [...SOURCES.hailala, ...SOURCES.closing],
+    todos: [COUNT_TODOS.haylalaNumbers, COUNT_TODOS.fatihaOrder],
   },
 ];
+
+/** Trous de relecture : vide si chaque entrée a son drapeau, sa source, son arabe et les nombres publiés. */
+export function reviewIssues(): string[] {
+  const bad: string[] = [];
+  for (const f of Object.values(FORMULAS)) {
+    if (f.review !== A_VERIFIER) bad.push(`formule ${f.id} : drapeau`);
+    if (!f.ar.trim()) bad.push(`formule ${f.id} : arabe vide`);
+    if (!f.tr.trim() || !f.fr.trim()) bad.push(`formule ${f.id} : translittération ou français`);
+    if (!f.sources.length) bad.push(`formule ${f.id} : source`);
+    if (f.sources.some((s) => !s.title.trim() || !s.ref.trim() || !s.note.trim())) bad.push(`formule ${f.id} : source incomplète`);
+  }
+  const stepCount = (id: Practice['id'], formula: keyof typeof FORMULAS) => PRACTICES.find((p) => p.id === id)?.steps.find((s) => s.formula === formula)?.count;
+  if (stepCount('wird', 'istighfar') !== 100) bad.push('lazim istighfar');
+  if (stepCount('wird', 'fatih') !== 100) bad.push('lazim fatih');
+  if (stepCount('wird', 'hailala') !== 100) bad.push('lazim tahlil');
+  if (stepCount('wird', 'closing') !== 1) bad.push('lazim clôture');
+  if (stepCount('wazifa', 'istighfarWazifa') !== 30) bad.push('wazifa istighfar');
+  if (stepCount('wazifa', 'fatih') !== 50) bad.push('wazifa fatih');
+  if (stepCount('wazifa', 'hailala') !== 100) bad.push('wazifa tahlil');
+  if (stepCount('wazifa', 'jawhara') !== 12) bad.push('wazifa jawhara');
+  if (PRACTICES.some((p) => p.id === 'wird' && p.steps.some((s) => s.formula === 'jawhara'))) bad.push('jawhara dans le lazim');
+  for (const p of PRACTICES) {
+    if (p.review !== A_VERIFIER) bad.push(`${p.id} : drapeau`);
+    if (!p.sources.length) bad.push(`${p.id} : source`);
+    if (!p.steps.length) bad.push(`${p.id} : étapes`);
+    for (const s of p.steps) {
+      if (s.review !== A_VERIFIER) bad.push(`${p.id}/${s.formula} : drapeau`);
+      if (!FORMULAS[s.formula]) bad.push(`${p.id}/${String(s.formula)} : formule`);
+      if (s.uncounted && s.count !== 0) bad.push(`${p.id}/${String(s.formula)} : sans nombre mais count ≠ 0`);
+    }
+  }
+  const hay = PRACTICES.find((p) => p.id === 'hailala');
+  if (!hay?.steps.some((s) => s.formula === 'hailala' && s.uncounted)) bad.push('haylala sans étape libre');
+  if (!hay?.todos?.some((t) => t.includes('1000'))) bad.push('haylala : TODO des nombres');
+  const jaw = PRACTICES.find((p) => p.id === 'wazifa')?.steps.find((s) => s.formula === 'jawhara');
+  if (!jaw?.todos?.some((t) => t.includes('11'))) bad.push('jawhara : TODO ×11');
+  if (!FORMULAS.fatih.todos?.some((t) => t.includes('مُحَمَّدِ'))) bad.push('fatih : TODO de graphie');
+  if (!FORMULAS.jawhara.todos?.some((t) => t.includes('الْأَقْدَمِ'))) bad.push('jawhara : TODO de graphie');
+  return bad;
+}
 
 export const SHAYKH = {
   ar: 'الشيخ أحمد بن محمد التجاني',
