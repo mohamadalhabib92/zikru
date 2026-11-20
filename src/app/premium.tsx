@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, View } from 'react-native';
+import { Linking, Platform, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { usePremium } from '@/lib/premium';
 import { L } from '@/lib/l10n';
+import { webCheckoutStatus } from '@/lib/web-checkout';
 import { Button, Card, H1, Muted, Notice, Screen, Spacer } from '@/ui/kit';
 
 const EULA = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
@@ -39,7 +40,17 @@ export default function PremiumScreen() {
         <Muted>{L('Rejoindre avec une invitation ou une demande acceptée reste gratuit, comme les horaires, la qibla, le Coran, l’adhan, le tasbih et les zikrs déjà inclus.')}</Muted>
       </Card>
       <Spacer />
-      {p.payments ? (
+      {Platform.OS === 'web' ? (
+        <Notice
+          tone="info"
+          title={L('Paiement sur le web')}
+          text={
+            webCheckoutStatus().enabled
+              ? L('Le paiement web est préparé, mais aucune clé n’est branchée. Aucun montant ne peut être débité depuis le navigateur.')
+              : L('Sur le web, l’achat Premium n’est pas activé. Il s’achète dans l’application iPhone. La discussion, rejoindre un groupe et le compteur restent gratuits.')
+          }
+        />
+      ) : p.payments ? (
         <Muted>{p.price ? p.price : L('Le prix s’affiche depuis l’App Store, dans votre devise. Il n’est pas écrit dans l’application.')}</Muted>
       ) : (
         <Notice tone="info" title={L('Zikru Premium')} text={L('Premium s’achète dans l’application iOS. Aucun paiement n’est proposé sur le web.')} />

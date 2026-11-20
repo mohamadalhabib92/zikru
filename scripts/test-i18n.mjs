@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs';
 import { loadLib } from './load-lib.mjs';
 import { extractDeep, walk } from './i18n-scan.mjs';
 
-const { i18n, 'ui-cat/en': UEN, 'ui-cat/ar': UAR, 'ui-cat/de': UDE, 'ui-strings-bien-etre': UBE, 'ui-strings-ramadan': URA, 'ui-strings-chat': UCH, 'ui-strings-call': UCA, 'ui-strings-premium': UPR } = await loadLib(
-  ['i18n', 'ui-cat/en', 'ui-cat/ar', 'ui-cat/de', 'ui-strings-bien-etre', 'ui-strings-ramadan', 'ui-strings-chat', 'ui-strings-call', 'ui-strings-premium'],
+const { i18n, 'ui-cat/en': UEN, 'ui-cat/ar': UAR, 'ui-cat/de': UDE, 'ui-strings-bien-etre': UBE, 'ui-strings-ramadan': URA, 'ui-strings-chat': UCH, 'ui-strings-call': UCA, 'ui-strings-premium': UPR, 'ui-strings-web': UWEB } = await loadLib(
+  ['i18n', 'ui-cat/en', 'ui-cat/ar', 'ui-cat/de', 'ui-strings-bien-etre', 'ui-strings-ramadan', 'ui-strings-chat', 'ui-strings-call', 'ui-strings-premium', 'ui-strings-web'],
   'i18n',
 );
 // Catalogue principal reconstitué [en, ar, de] (un fichier par langue depuis la passe 6).
@@ -49,7 +49,7 @@ for (const code of Object.keys(i18n.DICTS)) {
 assert.equal('songs' in fr && 'sec_songs' in fr, true);
 
 // 2) Catalogue : chaque entrée a en + ar (arabe en écriture arabe), mêmes variables {…}.
-const CAT = { ...UBE.UI_STRINGS_BIEN_ETRE, ...URA.UI_STRINGS_RAMADAN, ...UCH.UI_STRINGS_CHAT, ...UCA.UI_STRINGS_CALL, ...U.UI_STRINGS, ...UPR.UI_STRINGS_PREMIUM };
+const CAT = { ...UBE.UI_STRINGS_BIEN_ETRE, ...URA.UI_STRINGS_RAMADAN, ...UCH.UI_STRINGS_CHAT, ...UCA.UI_STRINGS_CALL, ...U.UI_STRINGS, ...UPR.UI_STRINGS_PREMIUM, ...UWEB.UI_STRINGS_WEB };
 let deN = 0;
 const vars = (s) => (s.match(/\{\w+\}/g) ?? []).sort().join();
 for (const [k, [en, ar, de]] of Object.entries(CAT)) {

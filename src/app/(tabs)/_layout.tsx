@@ -7,6 +7,7 @@ import { useDataReady } from '@/lib/data';
 import { usePrayerReminders } from '@/lib/reminders';
 import { useWidgetSync } from '@/lib/widget-sync';
 import { useShortcuts } from '@/lib/use-shortcuts';
+import { isRTL } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 import { theme as t } from '@/ui/theme';
 import { sanitizeLandscape } from '@/lib/landscapes';
@@ -20,6 +21,7 @@ export default function TabsLayout() {
   const { width } = useWindowDimensions();
   // iPad paysage / grand iPad / ordinateur : barre latérale ; iPhone, iPad portrait et Split View étroit : onglets en bas.
   const sidebar = hasSidebar(width);
+  const rtl = isRTL(s.lang);
   const landscape = sanitizeLandscape(s.landscape);
   // Avant l’onboarding : sur Apple TV cet arbre ne doit jamais dessiner la barre d’onglets ni l’assistant iPhone.
   if (Platform.isTV) return <Redirect href="/tv" />;
@@ -41,7 +43,7 @@ export default function TabsLayout() {
         headerTintColor: t.text,
         headerTitleStyle: { fontWeight: '700', fontSize: 17 },
         headerShadowVisible: false,
-        tabBarPosition: sidebar ? 'left' : 'bottom',
+        tabBarPosition: sidebar ? (rtl ? 'right' : 'left') : 'bottom',
         tabBarLabelPosition: sidebar ? 'beside-icon' : undefined,
         tabBarStyle: sidebar
           ? { backgroundColor: t.surface, borderColor: t.border, minWidth: SIDEBAR_WIDTH, width: SIDEBAR_WIDTH, paddingTop: 24 }

@@ -54,7 +54,8 @@ export default function Downloads() {
         <View style={{ backgroundColor: b.paper, borderRadius: 18, borderWidth: 1, borderColor: b.line, padding: 14, gap: 4 }}>
           <Text style={{ color: b.ink, fontWeight: '800', fontSize: 16 }}>{L('Espace utilisé : {n}', { n: fmt(totalBytes(m)) })}</Text>
           <Text style={{ color: b.inkMuted, fontSize: 13 }}>{free != null ? L('Espace libre sur l’appareil : {n}', { n: fmt(free) }) : L('Espace libre : inconnu sur ce navigateur')}</Text>
-          {Platform.OS === 'web' ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>Sur le web, l’écoute hors ligne fonctionne dans l’app installée (PWA) ; le navigateur peut libérer cet espace s’il en manque.</Text> : null}
+          {Platform.OS === 'web' ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('Sur le web, l’écoute hors ligne fonctionne dans l’app installée (PWA) ; le navigateur peut libérer cet espace s’il en manque.')}</Text> : null}
+          {Platform.OS === 'web' ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('Le texte arabe du Coran est inclus dans l’application et reste lisible hors ligne une fois la page installée.')}</Text> : null}
         </View>
 
         {/* Récitateur */}

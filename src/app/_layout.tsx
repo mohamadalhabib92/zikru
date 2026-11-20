@@ -33,6 +33,7 @@ import { sanitizeLandscape } from '@/lib/landscapes';
 import { tvLaunchHref } from '@/lib/tv-surface';
 import { AppLandscape } from '@/components/landscape-backdrop';
 import { MacKeys } from '@/components/MacKeys';
+import { WebKeys } from '@/components/WebKeys';
 import '@/lib/mac-native';
 
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
@@ -169,6 +170,7 @@ function Root() {
         <Stack.Screen name="tijani-guide" options={{ title: L("Récitation guidée") }} />
       </Stack>
       <MacKeys />
+      <WebKeys />
       {Platform.isTV ? null : <MiniPlayer path={path} />}
       <StorageAlert />
       </VisualEffectsProvider>

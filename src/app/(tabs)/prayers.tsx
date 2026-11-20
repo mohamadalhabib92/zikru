@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { AudioPlayer } from '@/components/AudioPlayer';
@@ -104,6 +104,11 @@ export default function Prayers() {
             );
           })}
         </View>
+        {Platform.OS === 'web' ? (
+          <Text style={{ color: b.inkMuted, fontSize: 13, marginTop: 12, lineHeight: 19 }}>
+            {L('L’adhan automatique dépend du navigateur : il peut être bloqué tant que la page n’a pas été ouverte par un geste. Le bouton d’écoute, lui, joue la voix choisie.')}
+          </Text>
+        ) : null}
         <Spacer h={16} />
         <LCard>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
