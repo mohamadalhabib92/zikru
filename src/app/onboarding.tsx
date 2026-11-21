@@ -8,7 +8,9 @@ import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
 import { asrForSchool, useMadhab } from '@/lib/madhab';
 import { pickableLangs } from '@/lib/i18n';
 import { privacyText } from '@/lib/privacy-text';
-import { getGpsPlace } from '@/lib/location';
+import { GpsHint } from '@/components/GpsHint';
+import { readGpsPlace } from '@/lib/location';
+import type { GpsFailure } from '@/lib/gps-hint';
 import { CITIES } from '@/lib/prayer';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
@@ -68,7 +70,7 @@ export default function Onboarding() {
   const steps: StepId[] = ['lang', 'madhab', 'place', ...(remindersSupported() ? (['notif'] as StepId[]) : []), 'ble', 'done'];
   const [i, setI] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [gpsErr, setGpsErr] = useState(false);
+  const [gpsErr, setGpsErr] = useState<GpsFailure | null>(null);
   const step = steps[i];
   const next = () => {
     tapHaptic('select');
@@ -114,16 +116,16 @@ export default function Onboarding() {
           loading={busy}
           onPress={async () => {
             setBusy(true);
-            setGpsErr(false);
-            const p = await getGpsPlace();
+            setGpsErr(null);
+            const p = await readGpsPlace();
             setBusy(false);
-            if (p) {
-              set({ place: p });
+            if (p.ok) {
+              set({ place: p.place });
               next();
-            } else setGpsErr(true);
+            } else setGpsErr(p.reason);
           }}
         />
-        {gpsErr ? <Text style={{ color: b.rust, marginTop: 8, textAlign: 'center' }}>Localisation indisponible — choisissez une ville.</Text> : null}
+        <GpsHint reason={gpsErr} />
         <Text style={{ color: b.inkMuted, marginTop: 8, textAlign: 'center', fontSize: 13 }}>{privacyText(s.lang).location_note}</Text>
         <Text style={{ color: b.inkMuted, marginTop: 16, marginBottom: 8, fontWeight: '600' }}>{tr.choose_city}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

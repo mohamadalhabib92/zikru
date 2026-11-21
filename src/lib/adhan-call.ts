@@ -3,6 +3,7 @@
  * ou quand l’utilisateur l’ouvre. Ne fait rien pour les autres rappels.
  */
 import { useEffect } from 'react';
+import { claimAdhanSlot, releaseAdhanSlot } from './adhan-slot';
 import { playAdhanSource, type AdhanMeta } from './adhan-playback';
 import { payloadPlaysAdhan, type AdhanSource } from './adhan-voices';
 import { selectedAdhanVoice } from './audio';
@@ -32,15 +33,14 @@ export function useBindAdhanPlayback() {
 /** Une même notification ne lance pas l’adhan deux fois de suite (réception + ouverture). */
 export async function maybePlayScheduledAdhan(id: string, data: unknown): Promise<void> {
   if (!payloadPlaysAdhan(data)) return;
-  const now = Date.now();
-  const prev = id ? recent.get(id) : undefined;
-  if (prev != null && now - prev < 20_000) return;
-  if (id) recent.set(id, now);
   const next = current();
+  // Voix pas encore prête, ou lecture déjà lancée : on ne consomme le créneau que si la lecture part.
+  if (!claimAdhanSlot(id, Date.now(), recent, next != null)) return;
   if (!next) return;
   try {
     await playAdhanSource(next.source, next.meta, { restart: true });
   } catch {
-    // fichier ou réseau manquant : la notification reste, l’app ne plante pas
+    // fichier ou réseau manquant : la notification reste, et un nouvel appui peut réessayer
+    releaseAdhanSlot(id, recent);
   }
 }

@@ -11,9 +11,10 @@ import { useAuth } from '@/lib/community/auth';
 import { useCommunity } from '@/lib/community/sync';
 import { Badge, Button, Card, Chip, Field, H2, Ionicons, Muted, Notice, Row, Segmented, Spacer, Toggle } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
-import { L } from '@/lib/l10n';
+import { uiLang, L } from '@/lib/l10n';
+import { formatCount, formatDate } from '@/lib/locale-format';
 
-export const fmt = (n: number) => n.toLocaleString('fr-CH');
+export const fmt = (n: number) => formatCount(n, uiLang());
 
 /** Confirmation (Alert natif, window.confirm sur le web). */
 export function confirmAsk(title: string, text: string, ok: string, onOk: () => void) {
@@ -347,7 +348,7 @@ export function InvitePanel({ scope, scopeId, scopeName, roles }: { scope: api.S
                   <Muted style={{ fontSize: 12 }}>Code visible seulement sur l’appareil qui l’a créé</Muted>
                 )}
                 <Muted style={{ fontSize: 12 }}>
-                  {roleFr(i.role)} · {i.uses}/{i.max_uses} · {L('jusqu’au {d}', { d: new Date(i.expires_at).toLocaleDateString('fr-CH') })}
+                  {roleFr(i.role)} · {i.uses}/{i.max_uses} · {L('jusqu’au {d}', { d: formatDate(new Date(i.expires_at), uiLang()) })}
                 </Muted>
               </View>
               {i.code ? <Button small variant="ghost" icon="share-outline" title="Partager" onPress={() => share(i.code as string)} /> : null}

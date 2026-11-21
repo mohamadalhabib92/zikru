@@ -12,7 +12,8 @@ import { useZikrs } from '@/lib/zikrs';
 import { Ionicons, type IconName } from '@/ui/kit';
 import { LMuted } from '@/ui/light';
 import { brand as b, onColor } from '@/ui/theme';
-import { L } from '@/lib/l10n';
+import { uiLang, L } from '@/lib/l10n';
+import { formatCount } from '@/lib/locale-format';
 
 const SYSC = {
   get mashriqi() {
@@ -22,7 +23,7 @@ const SYSC = {
     return b.goldDeep;
   },
 };
-export const fmt = (n: number) => n.toLocaleString('fr-CH');
+export const fmt = (n: number) => formatCount(n, uiLang());
 
 /** Bouton clair (thème crème). */
 export function LBtn({ icon, label, onPress, active, color = b.green, solid, disabled }: { icon?: IconName; label: string; onPress: () => void; active?: boolean; color?: string; solid?: boolean; disabled?: boolean }) {

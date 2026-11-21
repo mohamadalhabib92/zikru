@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { GPS_TIMEOUT_MS, type GpsFailure } from './gps-hint';
 import type { Place } from './prayer';
 
 type LocationMod = typeof import('expo-location');
@@ -6,22 +7,52 @@ type LocationMod = typeof import('expo-location');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Location: LocationMod | null = Platform.isTV ? null : (require('expo-location') as LocationMod);
 
-/** Position GPS (avec permission). Renvoie null en cas de refus : l'app garde la dernière position connue. */
-export async function getGpsPlace(): Promise<Place | null> {
-  if (!Location) return null;
+export type GpsRead = { ok: true; place: Place } | { ok: false; reason: GpsFailure };
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), ms);
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(null);
+      },
+    );
+  });
+}
+
+/**
+ * Position GPS. Refus, absence de signal ou délai dépassé : la dernière ville reste en place.
+ * Les coordonnées sont arrondies (~110 m) et ne quittent pas l’appareil.
+ */
+export async function readGpsPlace(): Promise<GpsRead> {
+  if (!Location) return { ok: false, reason: 'unavailable' };
   try {
     const perm = await Location.requestForegroundPermissionsAsync();
-    if (perm.status !== 'granted') return null;
-    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    if (perm.status !== 'granted') return { ok: false, reason: 'denied' };
+    const pos = await withTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }), GPS_TIMEOUT_MS);
+    if (!pos) return { ok: false, reason: 'unavailable' };
     return {
-      // ≈ 110 m : largement suffisant pour les horaires et la qibla, et reste sur l'appareil.
-      lat: Math.round(pos.coords.latitude * 1e3) / 1e3,
-      lng: Math.round(pos.coords.longitude * 1e3) / 1e3,
-      label: `GPS ${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)}`,
-      source: 'gps',
-      updatedAt: new Date().toISOString(),
+      ok: true,
+      place: {
+        lat: Math.round(pos.coords.latitude * 1e3) / 1e3,
+        lng: Math.round(pos.coords.longitude * 1e3) / 1e3,
+        label: `GPS ${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)}`,
+        source: 'gps',
+        updatedAt: new Date().toISOString(),
+      },
     };
   } catch {
-    return null;
+    return { ok: false, reason: 'unavailable' };
   }
+}
+
+/** Position GPS, ou null si elle n’est pas disponible. L’app garde alors la dernière position connue. */
+export async function getGpsPlace(): Promise<Place | null> {
+  const r = await readGpsPlace();
+  return r.ok ? r.place : null;
 }

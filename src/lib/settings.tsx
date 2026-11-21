@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { DICTS, type Dict, type Lang } from './i18n';
-import { DEFAULT_PLACE, DEFAULT_PRAYER_OPTS, type MethodKey, type Place, type PrayerOpts } from './prayer';
+import { DEFAULT_PLACE, DEFAULT_PRAYER_OPTS, isUsablePlace, type MethodKey, type Place, type PrayerOpts } from './prayer';
 import { resolveDefaultMethod } from './app-placeholders';
 import { usePersistentState } from './storage';
 import { setUiLang, UiLangContext } from './l10n';
@@ -58,7 +58,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [s, setS, ready] = usePersistentState<Settings>('settings', DEFAULTS);
   const prayerKey = JSON.stringify(s.prayer ?? null);
   const prayer = useMemo(() => mergePrayer(s.prayer), [prayerKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const merged = { ...DEFAULTS, ...s, landscape: sanitizeLandscape(s.landscape), notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers }, quiet: { ...DEFAULT_QUIET, ...s.notif?.quiet } }, prayer };
+  const rawPlace = { ...DEFAULT_PLACE, ...(s.place ?? {}) };
+  // Affichage seulement : la clé « settings » n’est pas réécrite. Un lieu illisible retombe sur Lausanne (exemple).
+  const place = isUsablePlace(rawPlace) ? rawPlace : DEFAULT_PLACE;
+  const merged = { ...DEFAULTS, ...s, place, landscape: sanitizeLandscape(s.landscape), notif: { ...DEFAULT_NOTIF, ...s.notif, prayers: { ...DEFAULT_NOTIF.prayers, ...s.notif?.prayers }, quiet: { ...DEFAULT_QUIET, ...s.notif?.quiet } }, prayer };
   setUiLang(merged.lang);
   setHijriCalendar(merged.hijriCalendar);
   return (

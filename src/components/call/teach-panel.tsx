@@ -122,8 +122,10 @@ function Chip({ plate, hizb, page }: { plate: ReturnType<typeof teachPlate>; hiz
 function QuranBody({ board, plate, size }: { board: QuranBoard; plate: ReturnType<typeof teachPlate>; size: number }) {
   const [lines, setLines] = useState<Line[]>([]);
   const held = useRef(board);
-  held.current = board;
   const sig = `${board.start}:${board.end}`;
+  useEffect(() => {
+    held.current = board;
+  }, [board]);
   useEffect(() => {
     let on = true;
     const current = held.current;

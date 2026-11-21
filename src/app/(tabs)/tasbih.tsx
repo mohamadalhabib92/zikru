@@ -16,6 +16,7 @@ import { Arabic } from '@/ui/light';
 import { brand as b, isGlass, theme as t } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 import { uid } from '@/lib/storage';
+import { formatCount, formatSessionSpan } from '@/lib/locale-format';
 import { closeSession, groupSessions, resetCount, switchDhikr } from '@/lib/tasbih-core';
 
 /** Bague clavier : les touches comptent tant que l’écran du compteur est ouvert. */
@@ -171,25 +172,23 @@ export default function TasbihScreen() {
       <Spacer h={12} />
       <ReadingPlate on={plated}>
       <H2>{tr.history}</H2>
-      <Muted>Total : {tasbih.total + (tasbih.externalTotal ?? 0)}</Muted>
+      <Muted>Total : {formatCount(tasbih.total + (tasbih.externalTotal ?? 0), s.lang)}</Muted>
       {history.length === 0 ? <Muted>{tr.no_history}</Muted> : null}
       </ReadingPlate>
       {history.length === 0 ? null : (
-        history.slice(0, 20).map((s) => {
-          const c = content.find((x) => x.id === s.dhikrId);
-          const end = new Date(s.at).toLocaleString('fr-CH');
-          const start = s.start && s.start !== s.at ? new Date(s.start).toLocaleString('fr-CH') : null;
-          const when = start ? (start.slice(0, 10) === end.slice(0, 10) ? `${start} – ${end.slice(-8)}` : `${start} – ${end}`) : end;
+        history.slice(0, 20).map((session) => {
+          const c = content.find((x) => x.id === session.dhikrId);
+          const when = formatSessionSpan(session.start, session.at, s.lang);
           return (
-            <Card key={s.id} style={{ marginBottom: 8, paddingVertical: 12 }}>
+            <Card key={session.id} style={{ marginBottom: 8, paddingVertical: 12 }}>
               <Row style={{ justifyContent: 'space-between' }}>
-                <Text style={{ color: t.text, fontWeight: '600' }}>{c?.transliteration ?? s.dhikrId}</Text>
-                <Text style={{ color: t.primary, fontWeight: '700' }}>{s.count}</Text>
+                <Text style={{ color: t.text, fontWeight: '600' }}>{c?.transliteration ?? session.dhikrId}</Text>
+                <Text style={{ color: t.primary, fontWeight: '700' }}>{formatCount(session.count, s.lang)}</Text>
               </Row>
               <Muted>
                 {when}
-                {s.source && s.source !== 'manuel' ? ` · ${s.source === 'bluetooth' ? L('compteur Bluetooth') : s.source === 'watch' ? 'Apple Watch' : L('mixte ({n} via compteur)', { n: s.deviceCount ?? 0 })}` : ''}
-                {(s.parts ?? 1) > 1 ? ` · ${L('{n} enregistrements regroupés', { n: s.parts ?? 1 })}` : ''}
+                {session.source && session.source !== 'manuel' ? ` · ${session.source === 'bluetooth' ? L('compteur Bluetooth') : session.source === 'watch' ? 'Apple Watch' : L('mixte ({n} via compteur)', { n: session.deviceCount ?? 0 })}` : ''}
+                {(session.parts ?? 1) > 1 ? ` · ${L('{n} enregistrements regroupés', { n: session.parts ?? 1 })}` : ''}
               </Muted>
             </Card>
           );

@@ -3,7 +3,7 @@ import { AmiriQuran_400Regular } from '@expo-google-fonts/amiri-quran';
 import { useFonts } from 'expo-font';
 import { Redirect, router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/community/auth';
@@ -13,6 +13,7 @@ import { DispenseProvider } from '@/lib/dispense-context';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
+import { Text } from '@/ui/Text';
 import { applyVisual, brand, glassSolidColor, isGlass, theme as t, type Scheme, type ThemeFinish } from '@/ui/theme';
 import { VisualEffectsProvider } from '@/ui/effects';
 import { takePendingRoute } from '@/ui/appearance';
@@ -64,14 +65,9 @@ function Root() {
     document.documentElement.dir = rtl ? 'rtl' : 'ltr';
   }, [s.lang, rtl]);
   const [fontsLoaded] = useFonts({ Amiri_400Regular, Amiri_700Bold, AmiriQuran_400Regular });
-  const [fontTimeout, setFontTimeout] = useState(false);
   useEffect(() => {
     setFontsReady(fontsLoaded);
   }, [fontsLoaded]);
-  useEffect(() => {
-    const id = setTimeout(() => setFontTimeout(true), 8000);
-    return () => clearTimeout(id);
-  }, []);
   // Lien de connexion refusé (expiré, déjà utilisé) arrivé sur n'importe quelle page : écran de connexion avec « Renvoyer un lien ».
   const auth = useAuth();
   const linkFailed = !!auth.linkError && !auth.session;
@@ -91,7 +87,16 @@ function Root() {
   }, [scheme]);
   // Catalogue d'interface de la langue choisie (chargé à la demande, pré-caché hors-ligne ; rien pour le français).
   const catReady = useUiCatalog(s.lang);
-  if ((!fontsLoaded && !fontTimeout) || !catReady) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
+  // Amiri se charge en arrière-plan : le texte arabe utilise d’abord la police du système (fonts-ready).
+  // On n’attend que le catalogue d’interface, avec le nom de l’app visible tout de suite.
+  if (!catReady) {
+    return (
+      <View accessibilityRole="progressbar" accessibilityLabel={L('Chargement')} style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+        <Text maxFontSizeMultiplier={1.6} style={{ color: t.text, fontSize: 32, fontWeight: '800' }}>Zikru</Text>
+        <Text style={{ color: t.muted }}>{L('Chargement')}</Text>
+      </View>
+    );
+  }
   return (
     <View key={`${scheme}-${finish}`} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <AppLandscape id={landscape} />

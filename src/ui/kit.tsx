@@ -10,7 +10,8 @@ import { sanitizeLandscape } from '@/lib/landscapes';
 import { useVisualEffects } from './effects';
 import { GlassLayers, raisedShadow, useGlassLook } from './glass';
 import { currentFinish, currentScheme, elevation, isDark, isGlass, space, theme as t, type as typo, type Scheme } from './theme';
-import { L } from "@/lib/l10n";
+import { isRTL } from '@/lib/i18n';
+import { L, useUiLang } from "@/lib/l10n";
 import { isIosAppOnMac } from '@/lib/mac';
 import { KbInput } from './keyboard-done';
 
@@ -149,14 +150,14 @@ export function Button({
     <Pressable
       onPress={off ? undefined : onPress}
       onPressIn={
-        raised && !off
-          ? () => {
+        off
+          ? undefined
+          : () => {
               if (Platform.OS === 'web' || fx.tv || !Haptics || isIosAppOnMac()) return;
               try {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               } catch {}
             }
-          : undefined
       }
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
@@ -215,6 +216,8 @@ export function IconButton({ icon, onPress, label, color = t.text, size = 22 }: 
 
 export function Chip({ label, active, onPress, color }: { label: string; active?: boolean; onPress?: () => void; color?: string }) {
   const c = color ?? t.primary;
+  const glass = isGlass();
+  const fx = useVisualEffects();
   return (
     <Pressable
       onPress={onPress}
@@ -226,6 +229,7 @@ export function Chip({ label, active, onPress, color }: { label: string; active?
         return [
           S().chip,
           { borderColor: active ? c : t.border, backgroundColor: active ? c : 'transparent' },
+          glass && active && !fx.tv && raisedShadow(!!pressed, fx.motion),
           pressed && { opacity: 0.8 },
           (hovered || focused) && !active && { borderColor: c },
         ];
@@ -269,6 +273,8 @@ export function Field({ label, hint, error, style, ...props }: TextInputProps & 
 
 /** Sélecteur segmenté (ex. TVA Oui / Non). */
 export function Segmented<T extends string | number>({ options, value, onChange, label }: { options: { label: string; value: T }[]; value: T; onChange: (v: T) => void; label?: string }) {
+  const glass = isGlass();
+  const fx = useVisualEffects();
   return (
     <View style={{ marginBottom: 14 }}>
       {label ? <Text style={S().label}>{label}</Text> : null}
@@ -282,7 +288,7 @@ export function Segmented<T extends string | number>({ options, value, onChange,
               accessibilityRole="radio"
               accessibilityLabel={o.label}
               accessibilityState={{ checked: on }} aria-checked={on}
-              style={[S().segItem, on && { backgroundColor: t.surface, ...shadow(1) }]}
+              style={[S().segItem, on && { backgroundColor: t.surface, ...(glass && !fx.tv ? raisedShadow(false, fx.motion) : shadow(1)) }]}
             >
               <Text maxFontSizeMultiplier={1.3} numberOfLines={2} style={{ color: on ? t.text : t.muted, fontWeight: on ? '700' : '500', fontSize: 14, textAlign: 'center' }}>{o.label}</Text>
             </Pressable>
@@ -342,6 +348,7 @@ export function Notice({ tone = 'info', title, text, icon }: { tone?: 'info' | '
 }
 
 export function ListItem({ title, subtitle, right, icon, onPress }: { title: string; subtitle?: string; right?: ReactNode; icon?: IconName; onPress?: () => void }) {
+  const rtl = isRTL(useUiLang());
   return (
     <Pressable
       onPress={onPress}
@@ -366,7 +373,7 @@ export function ListItem({ title, subtitle, right, icon, onPress }: { title: str
         ) : null}
       </View>
       {right}
-      {onPress ? <Ionicons name="chevron-forward" size={18} color={t.muted} /> : null}
+      {onPress ? <Ionicons name={rtl ? 'chevron-back' : 'chevron-forward'} size={18} color={t.muted} /> : null}
     </Pressable>
   );
 }
