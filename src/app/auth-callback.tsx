@@ -1,8 +1,9 @@
-import { router, Stack } from 'expo-router';
+import { Redirect, router, Stack } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { afterLoginRoute } from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
+import { tvMustLeaveAuth } from '@/lib/tv-surface';
 import { Muted, Screen, Spacer } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
@@ -15,6 +16,10 @@ import { L } from '@/lib/l10n';
 export default function AuthCallback() {
   const auth = useAuth();
   useEffect(() => {
+    if (tvMustLeaveAuth('/auth-callback', Platform.isTV)) {
+      router.replace('/tv');
+      return;
+    }
     if (auth.session) {
       void afterLoginRoute().then((r) => router.replace(r as '/community'));
       return;
@@ -28,6 +33,7 @@ export default function AuthCallback() {
     const id = setTimeout(() => router.replace('/auth'), 6000);
     return () => clearTimeout(id);
   }, [auth.session, auth.linkError, auth.ready, auth.enabled]);
+  if (tvMustLeaveAuth('/auth-callback', Platform.isTV)) return <Redirect href="/tv" />;
   return (
     <Screen>
       <Stack.Screen options={{ title: L('Connexion') }} />

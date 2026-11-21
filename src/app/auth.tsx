@@ -1,6 +1,7 @@
-import { router, Stack } from 'expo-router';
+import { Redirect, router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { tvMustLeaveAuth } from '@/lib/tv-surface';
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { afterLoginRoute } from '@/lib/community/api';
@@ -28,6 +29,7 @@ export default function AuthScreen() {
   const [err, setErr] = useState<string | null>(null);
   const [cool, setCool] = useState(0);
   useEffect(() => {
+    if (tvMustLeaveAuth('/auth', Platform.isTV)) return;
     if (auth.session) void afterLoginRoute().then((r) => router.replace(r as '/community'));
   }, [auth.session]);
   useEffect(() => {
@@ -50,6 +52,7 @@ export default function AuthScreen() {
       setBusy(false);
     }
   };
+  if (tvMustLeaveAuth('/auth', Platform.isTV)) return <Redirect href="/tv" />;
   return (
     <Screen>
       <Stack.Screen options={{ title: L("Connexion") }} />

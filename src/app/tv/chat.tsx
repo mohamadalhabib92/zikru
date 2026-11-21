@@ -8,6 +8,7 @@ import { chatBackend, type ChatBackend } from '@/lib/community/chat-api';
 import { applyIncoming, type ChatMessage } from '@/lib/community/chat-core';
 import { uid } from '@/lib/storage';
 import { L } from '@/lib/l10n';
+import '@/lib/ui-strings-tv';
 
 const PRESETS: { kind: 'salam' | 'bravo' | 'dua'; body: string }[] = [
   { kind: 'salam', body: 'As-salamu alaykum' },
@@ -86,10 +87,10 @@ export default function TvChat() {
     return (
       <TvScroll>
         <TvTitle>{L('Discussion')}</TvTitle>
-        <TvMuted>{L('La discussion est gratuite. Connectez-vous pour la lire.')}</TvMuted>
+        <TvMuted>{L('La discussion familiale demande un compte. Le Coran, les horaires et le compteur restent ouverts.')}</TvMuted>
         <TvRow>
-          <TvButton preferred label={L('Rejoindre')} onPress={() => router.push('/tv/join')} />
-          <TvBack />
+          <TvBack preferred />
+          <TvButton label={L('Se connecter')} onPress={() => router.push('/tv/join')} />
         </TvRow>
       </TvScroll>
     );

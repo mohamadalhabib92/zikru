@@ -4,7 +4,7 @@
  * promesse de chiffrement de bout en bout : Signal / OpenMLS = phase 3). Le serveur décide de tout (RLS).
  */
 import * as Clipboard from 'expo-clipboard';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { AppState, FlatList, KeyboardAvoidingView, Platform, Text as RNText, TextInput, View } from 'react-native';
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
@@ -38,6 +38,7 @@ import {
   type TimelineItem,
 } from '@/lib/community/chat-core';
 import { useAuth } from '@/lib/community/auth';
+import { tvMustLeaveAuth } from '@/lib/tv-surface';
 import { L, useUiLang } from '@/lib/l10n';
 import { useMiniPlayerInset } from '@/lib/recitation-context';
 import { Button, Card, Chip, IconButton, Ionicons, Muted, Notice, Row } from '@/ui/kit';
@@ -280,6 +281,7 @@ export default function Discussion() {
   };
 
   // ---------- Écrans d'attente ----------
+  if (tvMustLeaveAuth('/discussion', Platform.isTV)) return <Redirect href="/tv" />;
   if (!be?.demo && auth.enabled && auth.ready && !auth.userId) {
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, padding: 20 }}>

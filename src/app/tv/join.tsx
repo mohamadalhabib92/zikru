@@ -5,6 +5,7 @@ import { TvBack, TvButton, TvField, TvMuted, TvScroll, TvTitle } from '@/compone
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { L } from '@/lib/l10n';
+import '@/lib/ui-strings-tv';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
 
@@ -58,6 +59,7 @@ export default function TvJoin() {
   return (
     <TvScroll>
       <TvTitle>{L('Rejoindre')}</TvTitle>
+      <TvMuted>{L('Le code de famille demande un compte. Le reste du salon s’ouvre sans connexion.')}</TvMuted>
       <TvMuted>{L('Rejoindre une famille ne demande pas Premium. Le code vient d’un parent, sur iPhone.')}</TvMuted>
       {!auth.session ? (
         <View style={{ marginTop: 18, gap: 16 }}>

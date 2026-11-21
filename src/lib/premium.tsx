@@ -14,7 +14,6 @@ import {
   canCreatePremiumContent,
   emptyPremiumRecord,
   grantServerGrandfather,
-  isPremiumActive,
   isUserCreatedLocalGroup,
   observeLocalPremium,
   parsePremiumRecord,
@@ -133,22 +132,23 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     return check.owned === true;
   }, [apply]);
 
-  const tvStoreBoot = useRef(false);
   useEffect(() => {
     if (!ready) return;
-    // Apple TV : le même Apple ID. getAvailablePurchases est souvent vide tant que
-    // StoreKit n’a pas synchronisé l’achat universel. Une seule restauration au démarrage.
-    const syncTvPurchase = Platform.isTV && premiumStore.payments && !tvStoreBoot.current && !isPremiumActive(recordRef.current);
-    if (syncTvPurchase) {
-      tvStoreBoot.current = true;
-      void restore();
-    } else void reverify();
+    // Apple TV : pas de restorePurchases au lancement. AppStore.sync ouvre la feuille
+    // système « demande de connexion ». La revérification silencieuse (reçus déjà
+    // sur l’appareil) reste. La restauration explicite est le bouton du salon.
+    // L’iPhone garde le prix, la revérification, et le retour au premier plan.
+    if (Platform.isTV) {
+      void reverify();
+      return;
+    }
+    void reverify();
     void premiumStore.loadPrice().then(setPrice);
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') void reverify();
     });
     return () => sub.remove();
-  }, [ready, reverify, restore, recordRef]);
+  }, [ready, reverify]);
 
   const buy = useCallback(async () => {
     if (!premiumStore.payments) return;

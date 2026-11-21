@@ -3,9 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { TvBack, TvButton, TvColumn, TvMuted, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
+import { useData } from '@/lib/data';
 import { getSupabase } from '@/lib/supabase';
-import { goalTotal, kidsCount, mergeCounts, rowsFromSession, sessionTotal, type TvCountRow } from '@/lib/tv';
+import { goalTotal, kidsCount, mergeCounts, rowsFromSession, sessionTotal, tvCountIsLocal, type TvCountRow } from '@/lib/tv';
 import { L } from '@/lib/l10n';
+import '@/lib/ui-strings-tv';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
 
@@ -14,6 +16,7 @@ type Family = { id: string; name: string };
 /** Compteur du salon : sessions en direct (mêmes lignes que l’iPhone) et totaux d’objectifs. */
 export function FamilyBoard({ kids }: { kids?: boolean }) {
   const auth = useAuth();
+  const local = useData();
   const [families, setFamilies] = useState<Family[] | null>(null);
   const [familyId, setFamilyId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -121,45 +124,45 @@ export function FamilyBoard({ kids }: { kids?: boolean }) {
     return () => clearInterval(id);
   }, [sessionId, userId, live, auth.displayName]);
 
+  const localCount = tvCountIsLocal(live, !!auth.session);
   const tap = () => {
-    if (!live || !userId) return;
-    const next = mine.current + 1;
-    rememberMine(next);
-    setRows((cur) => mergeCounts(cur, [{ userId, name: auth.displayName || 'Salon', count: next }]));
+    if (!localCount && userId) {
+      const next = mine.current + 1;
+      rememberMine(next);
+      setRows((cur) => mergeCounts(cur, [{ userId, name: auth.displayName || 'Salon', count: next }]));
+      return;
+    }
+    local.increment();
   };
   const total = sessionTotal(rows, userId ? { userId, count: mineCount } : null);
-  const shown = kids ? Math.max(kidsCount(rows, userId), mineCount) : total;
+  const shown = localCount ? local.tasbih.count : kids ? Math.max(kidsCount(rows, userId), mineCount) : total;
   const family = families?.find((f) => f.id === familyId);
-
-  if (!auth.session) {
-    return (
-      <TvScroll>
-        <TvTitle>{kids ? L('Enfants') : L('Dhikr en famille')}</TvTitle>
-        <TvMuted>{L('Connectez-vous, ou rejoignez la famille avec un code. Cela reste gratuit.')}</TvMuted>
-        <TvRow>
-          <TvButton preferred label={L('Rejoindre')} onPress={() => router.push('/tv/join')} />
-          <TvBack />
-        </TvRow>
-      </TvScroll>
-    );
-  }
 
   return (
     <TvScroll>
       <TvTitle>{family?.name || (kids ? L('Enfants') : L('Dhikr en famille'))}</TvTitle>
-      {title ? <TvMuted>{title}</TvMuted> : null}
+      {title && !localCount ? <TvMuted>{title}</TvMuted> : null}
       {err ? <TvMuted>{err}</TvMuted> : null}
       <Text style={{ color: t.text, fontSize: 140, lineHeight: 168, fontWeight: '800', marginTop: 12, fontVariant: ['tabular-nums'] }}>{shown}</Text>
-      <TvMuted>{kids ? L('Seulement votre compte. Les autres ne s’affichent pas.') : live ? L('En direct, avec les téléphones et les anneaux de la famille.') : L('Aucun dhikr en direct. Le total des objectifs communs est à côté.')}</TvMuted>
-      {!kids && !live ? <Text style={{ color: t.accent, fontSize: 40, marginTop: 10 }}>{goals}</Text> : null}
+      <TvMuted>
+        {kids
+          ? L('Seulement votre compte. Les autres ne s’affichent pas.')
+          : localCount
+            ? auth.session
+              ? L('Aucun dhikr en direct. Le total des objectifs communs est à côté.')
+              : L('Compteur de ce téléviseur, sans compte. Rejoindre une famille reste possible, et facultatif.')
+            : L('En direct, avec les téléphones et les anneaux de la famille.')}
+      </TvMuted>
+      {!kids && !live && !!auth.session ? <Text style={{ color: t.accent, fontSize: 40, marginTop: 10 }}>{goals}</Text> : null}
       <TvRow>
-        {live ? <TvButton preferred label={L('Compter un dhikr')} onPress={tap} /> : null}
+        <TvButton preferred label={L('Compter un dhikr')} onPress={tap} />
+        {!kids && !auth.session ? <TvButton label={L('Rejoindre')} onPress={() => router.push('/tv/join')} /> : null}
         {(families ?? []).map((f) => (
           <TvButton key={f.id} label={f.name} onPress={() => setFamilyId(f.id)} />
         ))}
-        <TvBack preferred={!live} />
+        <TvBack />
       </TvRow>
-      {!kids ? (
+      {!kids && !localCount ? (
         <TvColumn>
           {rows.map((r) => (
             <TvButton key={r.userId} block label={`${r.name} · ${r.count}`} onPress={() => {}} />

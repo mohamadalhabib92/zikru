@@ -1,6 +1,7 @@
-import { router, useFocusEffect } from 'expo-router';
+import { Redirect, router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { tvMustLeaveAuth } from '@/lib/tv-surface';
 import { Text } from '@/ui/Text';
 import { ClassesHome } from '@/components/community/classes';
 import { LocalGroups } from '@/components/LocalGroups';
@@ -22,6 +23,7 @@ import { L } from '@/lib/l10n';
 export default function Community() {
   const auth = useAuth();
   const [showLocal, setShowLocal] = useState(false);
+  if (tvMustLeaveAuth('/community', Platform.isTV)) return <Redirect href="/tv" />;
   if (!auth.enabled || !auth.session) {
     return (
       <Screen>

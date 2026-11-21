@@ -1,6 +1,8 @@
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { Text } from '@/ui/Text';
+import { tvMustLeaveAuth } from '@/lib/tv-surface';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
 import { Button, Card, Field, H1, H2, Muted, Notice, Screen, Spacer, Toggle } from '@/ui/kit';
@@ -35,6 +37,7 @@ export default function Join() {
       .catch((e) => setErr(api.frError(e)));
   }, [auth.session, code]);
 
+  if (tvMustLeaveAuth('/join', Platform.isTV)) return <Redirect href="/tv" />;
   if (!auth.session) {
     return (
       <Screen>

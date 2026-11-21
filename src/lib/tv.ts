@@ -61,6 +61,14 @@ export function tvPremiumActive(record: PremiumRecord | null, serverEntitlement?
   return isPremiumActive(record) || serverGrantsPremium(serverEntitlement);
 }
 
+/**
+ * Compteur du salon : la session familiale seulement quand elle est en direct
+ * et qu’un compte est déjà là. Sinon le compteur local, sans demande de connexion.
+ */
+export function tvCountIsLocal(live: boolean, signedIn: boolean): boolean {
+  return !(live && signedIn);
+}
+
 /** Corps du verset : plus le texte est court, plus le glyphe est grand, jamais sous le plancher. */
 export function tvAyahType(text: string): { fontSize: number; lineHeight: number } {
   const n = [...(text ?? '')].length;

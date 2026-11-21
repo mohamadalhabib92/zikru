@@ -48,6 +48,15 @@ export function tvLaunchHref(path: string, isTV: boolean): '/tv' | null {
   return '/tv';
 }
 
+/** Écrans iPhone qui exigent un compte. Sur Apple TV ils ne s’affichent pas : retour au salon. `/tv/join` n’en fait pas partie. */
+const TV_AUTH_WALLS = ['/auth', '/auth-callback', '/onboarding', '/community', '/join', '/discussion'];
+
+export function tvMustLeaveAuth(path: string, isTV: boolean): boolean {
+  if (!isTV) return false;
+  const p = normalizeTvPath(path);
+  return TV_AUTH_WALLS.some((wall) => p === wall || p.startsWith(`${wall}/`));
+}
+
 /** Vrai seulement hors de l’accueil `/tv`, là où Menu doit revenir en arrière. */
 export function tvMenuCaptures(path: string): boolean {
   return normalizeTvPath(path).startsWith('/tv/');
