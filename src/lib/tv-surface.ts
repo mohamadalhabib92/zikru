@@ -18,6 +18,28 @@ export const TV_FOCUS_INK = '#141311';
 export const TV_FOCUS_MUTED = '#4A4336';
 export const TV_BADGE_ON_CARD = '#F0D48A';
 
+/** Bouton du salon : assez large pour un label, lisible à 3 mètres. */
+export const TV_BUTTON_MIN_WIDTH = 120;
+export const TV_BUTTON_LABEL_SIZE = 34;
+export const TV_BUTTON_HINT_SIZE = 28;
+
+/**
+ * Colonne du texte d’un bouton.
+ * `flex: 1` (flexBasis 0) dans une rangée sans largeur fixe réduit le label à 0 pt :
+ * on ne voit plus que la pastille de padding. Réservé aux tuiles qui ont déjà une largeur.
+ */
+export function tvButtonLabelBox(block: boolean): { flexGrow: number; flexShrink: number; flexBasis: 'auto' } {
+  return block
+    ? { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' }
+    : { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' };
+}
+
+/** Couleurs du texte. Au focus, titre et sous-titre sont la même encre foncée sur le fond clair. */
+export function tvButtonInk(focused: boolean): { ink: string; hint: string; badge: string } {
+  if (focused) return { ink: TV_FOCUS_INK, hint: TV_FOCUS_INK, badge: TV_FOCUS_INK };
+  return { ink: TV_ON_CARD, hint: TV_ON_CARD_MUTED, badge: TV_BADGE_ON_CARD };
+}
+
 export type TvGrid = {
   columns: number;
   gap: number;

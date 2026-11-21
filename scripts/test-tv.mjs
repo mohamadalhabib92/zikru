@@ -185,6 +185,37 @@ assert.match(quranList, /<TvBack \/>/);
 assert.match(tvUi, /TVFocusGuideView style=\{\{ flex: 1, backgroundColor: t\.bg \}\}>\s*<FlatList/);
 assert.match(tvUi, /style=\{\{ flex: 1 \}\}/);
 assert.match(tvUi, /contentContainerStyle=\{\[tvPad, \{ flexGrow: 1 \}\]\}/);
+assert.equal(surface.TV_BUTTON_MIN_WIDTH >= 120, true);
+assert.equal(surface.TV_BUTTON_LABEL_SIZE >= 28, true);
+assert.equal(surface.TV_BUTTON_HINT_SIZE >= 28, true);
+const loose = surface.tvButtonLabelBox(false);
+assert.equal(loose.flexGrow, 0);
+assert.equal(loose.flexBasis, 'auto');
+assert.notEqual(loose.flexBasis, 0);
+const tile = surface.tvButtonLabelBox(true);
+assert.equal(tile.flexGrow, 1);
+assert.equal(tile.flexBasis, 'auto');
+const restInk = surface.tvButtonInk(false);
+const focusInk = surface.tvButtonInk(true);
+assert.equal(restInk.ink, surface.TV_ON_CARD);
+assert.equal(focusInk.ink, surface.TV_FOCUS_INK);
+assert.equal(focusInk.hint, surface.TV_FOCUS_INK);
+function hexContrast(a, b) {
+  const lum = (hex) => {
+    const h = hex.replace('#', '');
+    const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const x = lum(a);
+  const y = lum(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+assert.ok(hexContrast(restInk.ink, surface.TV_CARD_BG) >= 4.5, 'label au repos');
+assert.ok(hexContrast(restInk.hint, surface.TV_CARD_BG) >= 4.5, 'sous-titre au repos');
+assert.ok(hexContrast(focusInk.ink, surface.TV_FOCUS_FILL) >= 4.5, 'label au focus');
+assert.ok(hexContrast(focusInk.hint, surface.TV_FOCUS_FILL) >= 4.5, 'sous-titre au focus');
+assert.match(tvUi, /tvButtonLabelBox/);
+assert.equal(tvUi.includes('<View style={{ flex: 1 }}>'), false);
 const rootLayout = readFileSync(new URL('../src/app/_layout.tsx', import.meta.url), 'utf8');
 assert.equal(rootLayout.includes('initialRouteName'), false);
 assert.match(rootLayout, /tvLaunchHref/);

@@ -5,15 +5,18 @@ import { usePremium } from '@/lib/premium';
 import { useFeatureFlags } from '@/lib/use-premium';
 import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive, type TvFeatureId } from '@/lib/tv';
 import {
-  TV_BADGE_ON_CARD,
   TV_CARD_BG,
   TV_FOCUS_INK,
-  TV_FOCUS_MUTED,
   TV_ON_CARD,
   TV_ON_CARD_MUTED,
+  TV_BUTTON_HINT_SIZE,
+  TV_BUTTON_LABEL_SIZE,
+  TV_BUTTON_MIN_WIDTH,
   TV_PAD_BOTTOM,
   TV_PAD_TOP,
   TV_PAD_X,
+  tvButtonInk,
+  tvButtonLabelBox,
   chunkTv,
   tvGrid,
   tvRowGap,
@@ -219,9 +222,11 @@ export function TvMuted({ children }: { children: ReactNode }) {
   return <Text style={{ color: t.muted, fontSize: 28, lineHeight: 38, marginTop: 10 }}>{children}</Text>;
 }
 
-function chrome(minHeight: number): React.ComponentProps<typeof View>['style'] {
+function chrome(minHeight: number, block?: boolean): React.ComponentProps<typeof View>['style'] {
   return {
     minHeight,
+    minWidth: TV_BUTTON_MIN_WIDTH,
+    alignSelf: block ? 'stretch' : 'flex-start',
     borderRadius: 22,
     paddingHorizontal: 28,
     paddingVertical: 20,
@@ -271,7 +276,7 @@ export function TvFocusable({
         }}
         onBlur={() => setHot(false)}
         onPress={onPress}
-        style={chrome(minHeight)}
+        style={chrome(minHeight, block)}
       >
         {(state) => {
           const on = isFocused(state) || hot;
@@ -312,18 +317,16 @@ export function TvButton({
   return (
     <TvFocusable preferred={preferred} onPress={onPress} block={block} minHeight={132} label={hint ? `${label}. ${hint}` : label}>
       {(on) => {
-        const ink = on ? TV_FOCUS_INK : TV_ON_CARD;
-        const sub = on ? TV_FOCUS_MUTED : TV_ON_CARD_MUTED;
-        const badgeInk = on ? TV_FOCUS_INK : TV_BADGE_ON_CARD;
+        const colors = tvButtonInk(on);
         return (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: ink, fontSize: 34, fontWeight: '800' }}>{label}</Text>
-              {hint ? <Text style={{ color: sub, fontSize: 24, marginTop: 6 }}>{hint}</Text> : null}
-              {badge ? <Text style={{ color: badgeInk, fontSize: 22, fontWeight: '800', marginTop: 8 }}>{badge}</Text> : null}
-              {locked ? <Text style={{ color: badgeInk, fontSize: 22, fontWeight: '800', marginTop: 8 }}>{L('Zikru Premium')}</Text> : null}
+            <View style={tvButtonLabelBox(!!block)}>
+              <Text allowFontScaling={false} style={{ color: colors.ink, fontSize: TV_BUTTON_LABEL_SIZE, fontWeight: '800' }}>{label}</Text>
+              {hint ? <Text allowFontScaling={false} style={{ color: colors.hint, fontSize: TV_BUTTON_HINT_SIZE, marginTop: 6 }}>{hint}</Text> : null}
+              {badge ? <Text allowFontScaling={false} style={{ color: colors.badge, fontSize: TV_BUTTON_HINT_SIZE, fontWeight: '800', marginTop: 8 }}>{badge}</Text> : null}
+              {locked ? <Text allowFontScaling={false} style={{ color: colors.badge, fontSize: TV_BUTTON_HINT_SIZE, fontWeight: '800', marginTop: 8 }}>{L('Zikru Premium')}</Text> : null}
             </View>
-            {aside ? <Text style={{ color: ink, fontSize: 40, fontFamily: asideFont }}>{aside}</Text> : null}
+            {aside ? <Text allowFontScaling={false} style={{ color: colors.ink, fontSize: 40, fontFamily: asideFont }}>{aside}</Text> : null}
           </View>
         );
       }}
