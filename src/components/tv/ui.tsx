@@ -183,28 +183,30 @@ export function TvVirtualList<T>({
   const rows = useMemo(() => chunkTv(data, columns), [data, columns]);
   return (
     <FocusScope>
-      <FlatList
-        key={grid ? `tv-grid-${columns}` : 'tv-list'}
-        data={rows}
-        keyExtractor={(row) => row.map((cell) => keyExtractor(cell.item, cell.index)).join('\u0000')}
-        renderItem={({ item: row }) => (
-          <View style={{ flexDirection: 'row', gap, marginBottom: gap, overflow: 'visible' }}>
-            {row.map((cell) => (
-              <View key={keyExtractor(cell.item, cell.index)} style={{ width: columns > 1 ? spec.tileWidth : '100%', flexGrow: 0, flexShrink: 0, overflow: 'visible' }}>
-                {renderItem(cell.item)}
-              </View>
-            ))}
-          </View>
-        )}
-        ListHeaderComponent={header ? <>{header}</> : undefined}
-        style={{ flex: 1, backgroundColor: t.bg }}
-        contentContainerStyle={tvPad}
-        removeClippedSubviews={false}
-        initialNumToRender={8}
-        maxToRenderPerBatch={6}
-        windowSize={5}
-        keyboardShouldPersistTaps="handled"
-      />
+      <TVFocusGuideView style={{ flex: 1, backgroundColor: t.bg }}>
+        <FlatList
+          key={grid ? `tv-grid-${columns}` : 'tv-list'}
+          data={rows}
+          keyExtractor={(row) => row.map((cell) => keyExtractor(cell.item, cell.index)).join('\u0000')}
+          renderItem={({ item: row }) => (
+            <View style={{ flexDirection: 'row', gap, marginBottom: gap, overflow: 'visible' }}>
+              {row.map((cell) => (
+                <View key={keyExtractor(cell.item, cell.index)} style={{ width: columns > 1 ? spec.tileWidth : '100%', flexGrow: 0, flexShrink: 0, overflow: 'visible' }}>
+                  {renderItem(cell.item)}
+                </View>
+              ))}
+            </View>
+          )}
+          ListHeaderComponent={header ? <>{header}</> : undefined}
+          style={{ flex: 1 }}
+          contentContainerStyle={[tvPad, { flexGrow: 1 }]}
+          removeClippedSubviews={false}
+          initialNumToRender={8}
+          maxToRenderPerBatch={6}
+          windowSize={5}
+          keyboardShouldPersistTaps="handled"
+        />
+      </TVFocusGuideView>
     </FocusScope>
   );
 }

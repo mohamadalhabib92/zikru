@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { TvButton, TvMuted, TvPremiumGate, TvRow, TvTitle, TvVirtualList } from '@/components/tv/ui';
+import { TvBack, TvButton, TvMuted, TvPremiumGate, TvRow, TvTitle, TvVirtualList } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { SURAHS } from '@/lib/surahs';
 import { fonts } from '@/ui/theme';
@@ -25,6 +25,7 @@ export default function TvQuranIndex() {
           {['', '1', '18', '36', '67', '112'].map((n, i) => (
             <TvButton key={n || 'all'} preferred={i === 0} label={n ? `${n}` : L('Toutes')} onPress={() => setQ(n)} />
           ))}
+          <TvBack />
         </TvRow>
       </>
     ),
