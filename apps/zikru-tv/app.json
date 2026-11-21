@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Zikru",
+    "slug": "zikru-tv",
+    "scheme": "zikru-tv",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "icon": "../../assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "description": "Zikru sur Apple TV — horaires, Coran, adhan et dhikr, en lecture.",
+    "ios": {
+      "bundleIdentifier": "com.vibecode.zikru-76mpdv",
+      "appleTeamId": "Y9XF9RY2BU",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "fr"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      ["@react-native-tvos/config-tv", { "isTV": true }],
+      ["expo-audio", { "microphonePermission": false, "recordAudioAndroid": false }]
+    ],
+    "owner": "habib548",
+    "extra": {
+      "router": {}
+    }
+  }
+}
