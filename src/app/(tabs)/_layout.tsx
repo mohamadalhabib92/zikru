@@ -11,6 +11,7 @@ import { isRTL } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 import { GlassFill } from '@/ui/glass';
 import { useVisualEffects } from '@/ui/effects';
+import { L } from '@/lib/l10n';
 import { glassSolidColor, isGlass, theme as t } from '@/ui/theme';
 import { sanitizeLandscape } from '@/lib/landscapes';
 
@@ -31,7 +32,7 @@ export default function TabsLayout() {
   if (Platform.isTV) return <Redirect href="/tv" />;
   if (!ready || !dataReady)
     return (
-      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
+      <View accessibilityRole="progressbar" accessibilityLabel={L('Chargement')} style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={t.primary} />
       </View>
     );

@@ -50,13 +50,13 @@ export default function Prayers() {
         <Text style={{ color: b.gold, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 }}>{tr.next_prayer.toUpperCase()}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '800', letterSpacing: -0.5 }}>{tr[next.key]}</Text>
+            <Text maxFontSizeMultiplier={2} style={{ color: b.heroText, fontSize: 34, fontWeight: '800', letterSpacing: -0.5 }}>{tr[next.key]}</Text>
             <Arabic size={24} style={{ color: b.gold, textAlign: 'left', lineHeight: 38 }}>
               {AR_NAMES[next.key]}
             </Arabic>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
+            <Text maxFontSizeMultiplier={1.8} style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
             <Text style={{ color: b.gold, fontWeight: '700' }}>
               {tr.in} {countdown(next.time.getTime() - now.getTime())}
             </Text>
@@ -96,10 +96,15 @@ export default function Prayers() {
           {rows.map((p) => {
             const hi = p.state === 'current' || p.state === 'next';
             return (
-              <View key={p.key} style={{ width: '31%', flexGrow: 1, borderRadius: 14, padding: 10, alignItems: 'center', backgroundColor: hi ? b.gold : b.paper, borderWidth: 1, borderColor: hi ? b.goldDeep : b.line }}>
+              <View
+                key={p.key}
+                accessible
+                accessibilityLabel={`${tr[p.key]}, ${hhmm(p.time)}, ${stateLabel[p.state]}`}
+                style={{ width: '31%', flexGrow: 1, minHeight: 72, borderRadius: 14, padding: 10, alignItems: 'center', backgroundColor: hi ? b.gold : b.paper, borderWidth: 1, borderColor: hi ? b.goldDeep : b.line }}
+              >
                 <Ionicons name={ICONS[p.key] as 'sunny'} size={18} color={hi ? '#13261F' : b.goldDeep} />
-                <Text style={{ color: hi ? '#13261F' : b.ink, fontWeight: '800', marginTop: 4 }}>{tr[p.key]}</Text>
-                <Text style={{ color: hi ? '#13261F' : b.ink, fontVariant: ['tabular-nums'] }}>{hhmm(p.time)}</Text>
+                <Text maxFontSizeMultiplier={2} numberOfLines={2} style={{ color: hi ? '#13261F' : b.ink, fontWeight: '800', marginTop: 4, textAlign: 'center' }}>{tr[p.key]}</Text>
+                <Text maxFontSizeMultiplier={2} style={{ color: hi ? '#13261F' : b.ink, fontVariant: ['tabular-nums'] }}>{hhmm(p.time)}</Text>
               </View>
             );
           })}

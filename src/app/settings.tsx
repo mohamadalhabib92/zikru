@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
 import { needsReview, pickableLangs } from '@/lib/i18n';
-import { getGpsPlace } from '@/lib/location';
+import { GpsHint } from '@/components/GpsHint';
+import type { GpsFailure } from '@/lib/gps-hint';
+import { readGpsPlace } from '@/lib/location';
 import { CITIES, METHODS, type MethodKey } from '@/lib/prayer';
 import Constants from 'expo-constants';
 import { SCHOOLS, SCHOOL_LABEL, type School } from '@/lib/fiqh-rulings';
@@ -36,7 +38,7 @@ export default function SettingsScreen() {
   const { s, set, t: tr } = useSettings();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [gpsErr, setGpsErr] = useState(false);
+  const [gpsErr, setGpsErr] = useState<GpsFailure | null>(null);
   const [fiqh, setFiqhRaw] = useMadhab();
   const setFiqh = (m: School) => {
     setFiqhRaw(m);
@@ -138,13 +140,14 @@ export default function SettingsScreen() {
         loading={busy}
         onPress={async () => {
           setBusy(true);
-          const p = await getGpsPlace();
+          setGpsErr(null);
+          const p = await readGpsPlace();
           setBusy(false);
-          setGpsErr(!p);
-          if (p) set({ place: p });
+          if (p.ok) set({ place: p.place });
+          else setGpsErr(p.reason);
         }}
       />
-      {gpsErr ? <Muted>Position refusée ou indisponible — choisissez une ville ci-dessous.</Muted> : null}
+      <GpsHint reason={gpsErr} />
       <Spacer h={8} />
       <Row wrap>
         {CITIES.map((c) => (

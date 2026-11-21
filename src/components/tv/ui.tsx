@@ -101,7 +101,9 @@ export function TvScreen({ children }: { children: ReactNode }) {
 export function TvScroll({ children, pinEnd, transparent }: { children: ReactNode; pinEnd?: boolean; transparent?: boolean }) {
   const { height: screenH } = useWindowDimensions();
   const screenHRef = useRef(screenH);
-  screenHRef.current = screenH;
+  useEffect(() => {
+    screenHRef.current = screenH;
+  }, [screenH]);
   const ref = useRef<{ scrollTo: (options: { y: number; animated?: boolean }) => void } | null>(null);
   const offset = useRef(0);
   const lastScroll = useRef(0);
