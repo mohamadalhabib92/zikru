@@ -19,3 +19,14 @@ npm-debug.*
 .env
 .env.*
 !.env.example
+# Clés Android / comptes de service Google Play et Google Cloud.
+# Le JSON téléchargé porte souvent un nom imprévisible : le déposer dans secrets/ ou hors du dépôt.
+*.keystore
+*service-account*.json
+*serviceAccount*.json
+*service_account*.json
+pc-api-*.json
+# Nom par défaut téléchargé depuis Google Cloud : « projet-<12 hex>.json ».
+*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].json
+*-[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F].json
+secrets/
