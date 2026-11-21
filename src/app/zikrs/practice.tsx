@@ -7,7 +7,7 @@ import { LBtn, fmt } from '@/components/zikr/parts';
 import { useData } from '@/lib/data';
 import { uid } from '@/lib/storage';
 import { closeSession, type Tasbih } from '@/lib/tasbih-core';
-import { advance, dayKey, itemAbjad, markDone, progress, type PracticeState, type Zikr } from '@/lib/zikr';
+import { applyPracticeTaps, countOf, dayKey, itemAbjad, markDone, progress, resumePractice, type PracticeLedger, type PracticeState, type Zikr } from '@/lib/zikr';
 import { useZikrs } from '@/lib/zikrs';
 import { FATIHA_EN, isFatiha, withFatiha } from '@/lib/fatiha';
 import { useSettings } from '@/lib/settings';
@@ -49,6 +49,7 @@ export default function Practice() {
   // Al-Fatiha 1× en première étape (réglage, actif par défaut) ; la composition enregistrée n’est pas modifiée.
   const z = useMemo(() => (stored ? { ...stored, items: withFatiha(stored.items, fatihaOn) } : undefined), [stored, fatihaOn]);
   const [st, setSt] = useState<PracticeState>({ step: 0, count: 0 });
+  const ledgerRef = useRef<PracticeLedger>({ counts: {} });
   const [finished, setFinished] = useState(false);
   const zRef = useRef<Zikr | undefined>(z);
   useEffect(() => {
@@ -100,7 +101,17 @@ export default function Practice() {
     const known = content.some((c) => c.id === tasbih.dhikrId);
     prev.current = known ? { dhikrId: tasbih.dhikrId, target: tasbih.target } : { dhikrId: 'subhanallah', target: 33 };
     lastTotal.current = tasbih.total;
-    setTasbih((t) => aim(closeSession(t, uid('s'), now()), 0));
+    const led = resumePractice(z.items, z.practice);
+    ledgerRef.current = led;
+    const step = Math.max(0, z.items.findIndex((it) => it.id === led.focus));
+    const count = led.focus ? countOf(led, led.focus) : 0;
+    const view = { step: z.items.length ? step : 0, count };
+    stRef.current = view;
+    setSt(view);
+    const allDone = z.items.length > 0 && z.items.every((it) => countOf(led, it.id) >= it.reps);
+    finishedRef.current = allDone;
+    setFinished(allDone);
+    setTasbih((t) => aim(closeSession(t, uid('s'), now()), view.step, view.count));
   }, [z?.id, dr]);
 
   // Sortie : enregistre l’étape entamée et rétablit le dhikr précédent.
@@ -123,37 +134,22 @@ export default function Practice() {
     lastTotal.current = tasbih.total;
     const zz = zRef.current;
     if (d <= 0 || finishedRef.current || !zz) return;
-    const r = advance(zz.items, stRef.current, d);
-    stRef.current = r.state;
-    setSt(r.state);
-    if (r.completed.length) {
-      setTasbih((t) => {
-        let x = t;
-        let dev = t.deviceCount ?? 0;
-        const at = now();
-        for (const k of r.completed) {
-          const reps = zz.items[k].reps;
-          const dk = Math.min(dev, reps);
-          dev -= dk;
-          x = closeSession(
-            {
-              ...x,
-              count: reps,
-              deviceCount: dk,
-              dhikrId: label(k),
-              target: reps,
-            },
-            uid('s'),
-            at,
-          );
-        }
-        return aim({ ...x, deviceCount: dev }, r.state.step, r.state.count);
-      });
+    const r = applyPracticeTaps(zz.items, ledgerRef.current, d);
+    ledgerRef.current = r.ledger;
+    const step = Math.max(0, zz.items.findIndex((it) => it.id === r.ledger.focus));
+    const view = { step: zz.items.length ? step : 0, count: r.ledger.focus ? countOf(r.ledger, r.ledger.focus) : 0 };
+    stRef.current = view;
+    setSt(view);
+    update(zz.id, (y) => ({ ...y, practice: r.ledger }));
+    if (r.completedId) {
+      const k = zz.items.findIndex((it) => it.id === r.completedId);
+      setTasbih((t) => aim(closeSession({ ...t, count: countOf(r.ledger, r.completedId!), dhikrId: label(k), target: zz.items[k]?.reps ?? t.target }, uid('s'), now()), view.step, view.count));
     }
-    if (r.finished) {
+    const allDone = zz.items.length > 0 && zz.items.every((it) => countOf(r.ledger, it.id) >= it.reps);
+    if (allDone && !finishedRef.current) {
       finishedRef.current = true;
       setFinished(true);
-      update(zz.id, (y) => markDone(y));
+      update(zz.id, (y) => markDone({ ...y, practice: r.ledger }));
     }
   }, [tasbih.total]);
 
@@ -161,15 +157,27 @@ export default function Practice() {
     const zz = zRef.current;
     if (!zz) return;
     const next = Math.min(zz.items.length - 1, stRef.current.step + 1);
-    stRef.current = { step: next, count: 0 };
+    const id = zz.items[next]?.id;
+    if (!id) return;
+    ledgerRef.current = { counts: ledgerRef.current.counts, focus: id };
+    const count = countOf(ledgerRef.current, id);
+    stRef.current = { step: next, count };
     setSt(stRef.current);
-    setTasbih((t) => aim(closeSession(t, uid('s'), now()), next));
+    update(zz.id, (y) => ({ ...y, practice: ledgerRef.current }));
+    setTasbih((t) => aim(closeSession(t, uid('s'), now()), next, count));
   };
   const back = () => {
+    const zz = zRef.current;
+    if (!zz) return;
     const p = Math.max(0, stRef.current.step - 1);
-    stRef.current = { step: p, count: 0 };
+    const id = zz.items[p]?.id;
+    if (!id) return;
+    ledgerRef.current = { counts: ledgerRef.current.counts, focus: id };
+    const count = countOf(ledgerRef.current, id);
+    stRef.current = { step: p, count };
     setSt(stRef.current);
-    setTasbih((t) => aim(closeSession(t, uid('s'), now()), p));
+    update(zz.id, (y) => ({ ...y, practice: ledgerRef.current }));
+    setTasbih((t) => aim(closeSession(t, uid('s'), now()), p, count));
   };
   const restart = () => {
     finishedRef.current = false;

@@ -1,0 +1,6 @@
+{
+  "counts": { "step-a": 33, "step-b": 0 },
+  "dirty": ["step-a"],
+  "clientNote": "synthetic",
+  "attemptIds": ["p-1"]
+}

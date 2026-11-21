@@ -18,7 +18,7 @@ function emit(rel) {
   writeFileSync(out, ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
   return out;
 }
-for (const r of ['tasbih-core', 'tasbih-log', 'durable', 'tasbih-store', 'ble/core', 'community/queue', 'shared-state']) emit(r);
+for (const r of ['tasbih-core', 'tasbih-log', 'durable', 'preserve', 'tasbih-store', 'ble/core', 'community/queue', 'shared-state']) emit(r);
 // stockage simulé pour shared-state.ts
 writeFileSync(
   join(dir, 'storage.mjs'),
@@ -371,7 +371,7 @@ test('saut de valeur en cours de connexion : accepté s’il est physiquement po
 // ------------------------------------------------------------------ file des contributions (M3)
 test('file des contributions : regroupement sans perte, envois en cours intacts', () => {
   const rows = [];
-  for (let k = 0; k < 1500; k++) rows.push({ goal_id: k % 2 ? 'g1' : 'g2', count: 1, source: 'manuel', client_id: 'c' + k, member_id: null });
+  for (let k = 0; k < 1500; k++) rows.push({ goal_id: k % 2 ? 'g1' : 'g2', count: 1, source: 'manuel', client_id: 'c' + k, member_id: null, attempt: 0 });
   let id = 0;
   const out = coalesceQueue(rows, new Set(['c0', 'c1']), () => 'n' + id++);
   assert.equal(out.reduce((a, r) => a + r.count, 0), 1500, 'aucun appui perdu');

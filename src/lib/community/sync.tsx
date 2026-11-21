@@ -7,15 +7,15 @@
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
-import { uid, usePersistentState } from '../storage';
+import { flushStorage, uid, usePersistentState } from '../storage';
 import type { ClickSource } from '../tasbih-core';
 import { allSharingModes, insertContributions, type ContributionRow, type ScopeType, type SharingMode } from './api';
 import { useAuth } from './auth';
 import { onClicks } from './clicks';
-import { coalesceQueue } from './queue';
+import { ackAttempts, autoShareTargets, classifyContributionError, coalesceQueue, partitionByOwner, sealAttempts, shareAllowsSend, type OutboxRow } from './queue';
 
-export type GoalLink = { goalId: string; title: string; scope: ScopeType; scopeId: string; scopeName: string; memberId?: string | null };
-type Queued = ContributionRow & { tries?: number };
+export type GoalLink = { goalId: string; title: string; scope: ScopeType; scopeId: string; scopeName: string; memberId?: string | null; focused?: boolean };
+type Queued = ContributionRow & OutboxRow & { tries?: number };
 type Ctx = {
   links: GoalLink[];
   isLinked: (goalId: string) => boolean;
@@ -46,7 +46,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   type Src = ContributionRow['source'];
-  const acc = useRef<Map<string, { goalId: string; n: number; source: Src; memberId?: string | null }>>(new Map());
+  const acc = useRef<Map<string, { goalId: string; n: number; source: Src; memberId?: string | null; owner: string }>>(new Map());
+  const modesLoaded = useRef(false);
   const linksRef = useRef(links);
   const modesRef = useRef(modes);
   const queueRef = useRef(queue);
@@ -62,14 +63,16 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   queueRef.current = queue;
 
   const refreshModes = useCallback(async () => {
+    modesLoaded.current = false;
     if (!userId) return;
     try {
       const rows = await allSharingModes(userId);
       const m: Record<string, SharingMode> = {};
       for (const r of rows) m[(r.family_id ?? r.circle_id) as string] = r.mode;
+      modesLoaded.current = true;
       setModes(m);
     } catch {
-      // hors-ligne
+      modesLoaded.current = false;
     }
   }, [userId]);
   useEffect(() => {
@@ -90,7 +93,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
         let n = v.n;
         while (n > 0) {
           const c = Math.min(n, 100000);
-          rows.push({ goal_id: v.goalId, count: c, source: v.source, client_id: uid('c-'), member_id: v.memberId ?? null });
+          rows.push({ goal_id: v.goalId, count: c, source: v.source, client_id: uid('c-'), member_id: v.memberId ?? null, attempt: 0, owner: v.owner });
           n -= c;
         }
       }
@@ -110,43 +113,50 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const flush = useCallback(async () => {
     stash();
     if (!userId || busy.current || !queueRef.current.length) return;
+    const owned = partitionByOwner(queueRef.current, userId);
+    if (!owned.mine.length) return;
     busy.current = true;
-    const batch = queueRef.current.slice(0, 200);
-    for (const b of batch) inflight.current.add(b.client_id);
+    const batch = owned.mine.slice(0, 200);
+    const ids = batch.map((b) => b.client_id);
+    queueRef.current = sealAttempts(queueRef.current, ids);
+    setQueue(queueRef.current);
+    for (const id of ids) inflight.current.add(id);
     try {
+      // L'écriture locale du gel part avant le réseau : un arrêt ici laisse l'identifiant et le nombre intacts.
+      const frozen = await flushStorage('community-queue');
+      if (!frozen) {
+        setSyncError('Les contributions restent sur cet appareil et seront renvoyées. Rien n’a été effacé.');
+        return;
+      }
       await insertContributions(
         userId,
-        batch.map(({ tries: _t, ...r }) => r),
+        batch.map((r) => ({ goal_id: r.goal_id, count: r.count, source: r.source, client_id: r.client_id, member_id: r.member_id ?? null })),
       );
-      const sent = new Set(batch.map((b) => b.client_id));
-      queueRef.current = queueRef.current.filter((r) => !sent.has(r.client_id));
+      queueRef.current = ackAttempts(queueRef.current, ids);
       setQueue(queueRef.current);
       setLastSync(Date.now());
       setSyncError(null);
     } catch (e) {
-      const m = (e as Error).message ?? '';
-      if (/row-level security|violates|check constraint/i.test(m)) {
-        // Objectif atteint, archivé ou accès retiré : on écarte ces lignes et on délie l'objectif.
-        const bad = new Set(batch.map((b) => b.goal_id));
-        queueRef.current = queueRef.current.filter((r) => !bad.has(r.goal_id));
+      if (classifyContributionError(e) === 'already-stored') {
+        queueRef.current = ackAttempts(queueRef.current, ids);
         setQueue(queueRef.current);
-        setLinks((ls) => ls.filter((l) => !bad.has(l.goalId)));
-        setSyncError('Un objectif n’accepte plus de contributions (atteint ou retiré) : il a été délié.');
+        setSyncError(null);
       } else {
-        setSyncError('Hors-ligne : les contributions seront envoyées plus tard.');
+        // La ligne gelée reste. On ne détache pas l'objectif : le nombre local n'est pas effacé.
+        setSyncError('Les contributions restent sur cet appareil et seront renvoyées. Rien n’a été effacé.');
       }
     } finally {
       busy.current = false;
       inflight.current.clear();
     }
-  }, [userId, setQueue, setLinks, stash]);
+  }, [userId, setQueue, stash]);
   const flushRef = useRef(flush);
   flushRef.current = flush;
 
-  const add = (goalId: string, n: number, source: Src, memberId?: string | null) => {
-    const key = memberId ? `${goalId}|${memberId}` : goalId;
+  const add = (goalId: string, n: number, source: Src, memberId: string | null | undefined, owner: string) => {
+    const key = `${owner}|${memberId ? `${goalId}|${memberId}` : goalId}`;
     const cur = acc.current.get(key);
-    acc.current.set(key, { goalId, n: (cur?.n ?? 0) + n, source: cur && cur.source !== source ? 'manuel' : source, memberId });
+    acc.current.set(key, { goalId, n: (cur?.n ?? 0) + n, source: cur && cur.source !== source ? 'manuel' : source, memberId, owner });
     if (!stashTimer.current) stashTimer.current = setTimeout(() => stashRef.current(), STASH_MS);
   };
 
@@ -155,9 +165,9 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
     () =>
       onClicks((n, source: ClickSource) => {
         if (!userId) return;
-        for (const l of linksRef.current) {
-          if (modesRef.current[l.scopeId] === 'nothing') continue;
-          add(l.goalId, n, source, l.memberId);
+        for (const l of autoShareTargets(linksRef.current)) {
+          if (!shareAllowsSend(modesRef.current[l.scopeId], modesLoaded.current)) continue;
+          add(l.goalId, n, source, l.memberId, userId);
         }
       }),
     [userId],
@@ -178,11 +188,11 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const value: Ctx = {
     links,
     isLinked: (g) => links.some((l) => l.goalId === g),
-    link: (l) => setLinks((ls) => [...ls.filter((x) => x.goalId !== l.goalId), l]),
+    link: (l) => setLinks((ls) => [...ls.filter((x) => x.goalId !== l.goalId).map((x) => ({ ...x, focused: false })), { ...l, focused: true }]),
     unlink: (g) => setLinks((ls) => ls.filter((x) => x.goalId !== g)),
     contribute: (goalId, n, source = 'manuel', memberId) => {
-      if (!(n > 0)) return;
-      add(goalId, n, source, memberId);
+      if (!(n > 0) || !userId) return;
+      add(goalId, n, source, memberId, userId);
       void flushRef.current();
     },
     pending: queue.reduce((a, r) => a + r.count, 0),

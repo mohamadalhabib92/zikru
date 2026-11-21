@@ -110,6 +110,28 @@ await test('page publique public/privacy/index.html à jour (npm run privacy:htm
   assert.equal(readFileSync(PRIVACY_HTML_PATH, 'utf8'), await policyHtml(), 'régénérer avec npm run privacy:html');
 });
 
+await test('cette branche ne décrit pas LiveKit : le code ne l’appelle pas', () => {
+  const files = [];
+  const walk = (d) => {
+    for (const f of readdirSync(d)) {
+      const p = join(d, f);
+      if (statSync(p).isDirectory()) {
+        if (f === 'node_modules' || f === '.git') continue;
+        walk(p);
+      } else if (/\.(tsx?|mjs|html)$/.test(f)) files.push(p);
+    }
+  };
+  walk(join(root, 'src'));
+  walk(join(root, 'public'));
+  for (const f of files) {
+    assert.equal(/livekit/i.test(readFileSync(f, 'utf8')), false, f);
+  }
+  const fr = JSON.stringify(POLICY.fr);
+  assert.match(fr, /chiffrés en transit/);
+  assert.match(fr, /pas encore chiffrés de bout en bout/);
+  assert.match(fr, /ne sont pas encore chiffrés de bout en bout/);
+});
+
 await test('aucune affirmation fausse restante (« aucune donnée envoyée »), aucun géocodage distant', () => {
   const files = [];
   const walk = (d) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else if (/\.(tsx?|json|html|md)$/.test(f)) files.push(p); } };

@@ -1,0 +1,4 @@
+[
+  { "goal_id": "g-old", "count": 11, "source": "manuel", "client_id": "already-maybe-sent", "member_id": null },
+  { "goal_id": "g-old", "count": 2, "source": "manuel", "client_id": "open-new", "member_id": null, "attempt": 0 }
+]
