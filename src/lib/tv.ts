@@ -31,6 +31,8 @@ export const TV_FEATURES = {
   join: { premium: false },
   chat: { premium: false },
   quran: { premium: false },
+  /** Mémorisation (hifz) : gratuite sur iPhone, donc gratuite ici. */
+  hifz: { premium: false },
   aqida: { premium: false },
   prayers: { premium: false },
   adhan: { premium: false },

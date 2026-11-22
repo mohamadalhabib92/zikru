@@ -9,8 +9,9 @@ import { chunkTv } from '@/lib/tv-surface';
 import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
 
-const TILES: { href: '/tv/quran' | '/tv/aqida' | '/tv/prayers' | '/tv/dhikr' | '/tv/ambient' | '/tv/kids' | '/tv/join' | '/tv/chat'; label: string; hint: string; feature: 'quran' | 'aqida' | 'prayers' | 'dhikr' | 'ambient' | 'kids' | 'join' | 'chat' }[] = [
+const TILES: { href: '/tv/quran' | '/tv/hifz' | '/tv/aqida' | '/tv/prayers' | '/tv/dhikr' | '/tv/ambient' | '/tv/kids' | '/tv/join' | '/tv/chat'; label: string; hint: string; feature: 'quran' | 'hifz' | 'aqida' | 'prayers' | 'dhikr' | 'ambient' | 'kids' | 'join' | 'chat' }[] = [
   { href: '/tv/quran', label: 'Coran', hint: 'Grand texte et récitation', feature: 'quran' },
+  { href: '/tv/hifz', label: 'Mémorisation', hint: 'Hifz : masquer, répéter, réviser', feature: 'hifz' },
   { href: '/tv/aqida', label: 'Aqida (Ibn ʿĀshir)', hint: 'ʿAqīda ashʿarite, selon le matn d’Ibn ʿĀshir', feature: 'aqida' },
   { href: '/tv/prayers', label: 'Prières', hint: 'Horaires et adhan', feature: 'prayers' },
   { href: '/tv/dhikr', label: 'Dhikr en famille', hint: 'Compteur partagé', feature: 'dhikr' },
