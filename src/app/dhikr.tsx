@@ -4,6 +4,7 @@ import { approvedOnly } from '@/lib/content';
 import { useData } from '@/lib/data';
 import { resetCount, switchDhikr } from '@/lib/tasbih-core';
 import { isPending } from '@/lib/i18n';
+import { showExampleMarks } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { Badge, Button, Card, Empty, Eyebrow, Muted, Notice, Row, Screen, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
@@ -22,7 +23,7 @@ export default function Dhikr() {
       <Eyebrow>{tr.dhikr_title}</Eyebrow>
       {isPending(s.lang) ? <Notice tone="warning" title={tr.translation_pending} text="Interface affichée en français en attendant." /> : null}
       <Spacer h={8} />
-      {items.some((i) => i.seedExample) ? <Notice tone="info" title="Contenu d’exemple" text="Formules d’amorçage à faire valider par un référent avant publication." icon="flask-outline" /> : null}
+      {showExampleMarks() && items.some((i) => i.seedExample) ? <Notice tone="info" title="Contenu d’exemple" text="Formules d’amorçage à faire valider par un référent avant publication." icon="flask-outline" /> : null}
       <Spacer h={8} />
       {items.length === 0 ? <Empty icon="book-outline" title={tr.no_content} /> : null}
       {items.map((i) => {
@@ -40,7 +41,7 @@ export default function Dhikr() {
               <Muted style={{ flex: 1 }}>
                 {tr.source} : {i.source}
               </Muted>
-              {i.seedExample ? <Badge label="Exemple" tone="info" /> : null}
+              {showExampleMarks() && i.seedExample ? <Badge label="Exemple" tone="info" /> : null}
             </Row>
             <Spacer h={8} />
             <Button

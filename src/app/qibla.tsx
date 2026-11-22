@@ -8,6 +8,7 @@ import type { GpsFailure } from '@/lib/gps-hint';
 import { readGpsPlace } from '@/lib/location';
 import { compassPoints, formatCount } from '@/lib/locale-format';
 import { distanceToKaabaKm, qiblaBearing } from '@/lib/prayer';
+import { examplePlaceMark } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { HeroHeader, IconBadge, tapHaptic, useLayout } from '@/ui/ds';
 import { Button, Card, Muted, Notice, Screen, Spacer } from '@/ui/kit';
@@ -92,7 +93,7 @@ export default function Qibla() {
             <Text style={{ color: b.heroMuted, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' }}>{tr.qibla_title}</Text>
             <Text style={{ color: b.heroText, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>
               {s.place.label}
-              {s.place.source === 'example' ? ' (exemple)' : ''}
+              {examplePlaceMark(s.place.source)}
             </Text>
           </View>
           <Text style={{ color: b.heroText, fontFamily: 'Amiri_700Bold', fontSize: 22 }}>القبلة</Text>

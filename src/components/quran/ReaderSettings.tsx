@@ -12,6 +12,7 @@ import { fonts } from '@/ui/theme';
 import { THEMES, type Pal } from './palette';
 import { QChoice, QLabel, QStepper, Sheet } from './Sheet';
 import { NuraniText } from './NuraniText';
+import { editionFetchAllowed } from '@/lib/release-content';
 import { L } from '@/lib/l10n';
 import { arLang } from '@/ui/ar-lang';
 
@@ -73,7 +74,7 @@ export function ReaderSettings({ visible, onClose, pal }: { visible: boolean; on
       <QChoice options={[{ label: 'Serré', value: 1.8 }, { label: 'Normal', value: 2.1 }, { label: 'Aéré', value: 2.5 }]} value={p.lineH} onChange={(v) => patch({ lineH: v })} pal={pal} />
       <QLabel pal={pal}>AFFICHAGE</QLabel>
       <Row label="Traduction" value={p.showTr} onChange={(v) => patch({ showTr: v })} pal={pal} />
-      <Row label="Translittération" value={p.showTl} onChange={(v) => patch({ showTl: v })} pal={pal} hint="Lecture phonétique latine (aide, pas un substitut à l’arabe)" />
+      {editionFetchAllowed('en.transliteration') ? <Row label="Translittération" value={p.showTl} onChange={(v) => patch({ showTl: v })} pal={pal} hint="Lecture phonétique latine (aide, pas un substitut à l’arabe)" /> : null}
       <Row label="Écran toujours allumé" value={p.keepAwake} onChange={(v) => patch({ keepAwake: v })} pal={pal} hint="Pendant la lecture uniquement" />
       <Row label="Suivre la récitation" value={p.follow} onChange={(v) => patch({ follow: v })} pal={pal} hint="Défile jusqu’au verset récité" />
       <Row label="Lettres lumineuses" value={p.nurani} onChange={(v) => patch({ nurani: v })} pal={pal} hint="Les 14 lettres des ouvertures de sourates, en doré discret" />

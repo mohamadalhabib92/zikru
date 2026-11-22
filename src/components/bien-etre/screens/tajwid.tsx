@@ -9,6 +9,7 @@ import { rng, words } from '@/lib/learn-games';
 import { gIndex } from '@/lib/quran-nav';
 import { usePersistentState } from '@/lib/storage';
 import { SURAHS } from '@/lib/surahs';
+import { tajwidSourceVisible } from '@/lib/release-content';
 import { aligned, colouredWordQuiz, definitionQuiz, GROUP_COLOR, GROUP_LABEL, GROUPS, groupOf, LESSONS, TAJWID_REVIEW_NOTE, TAJWID_SOURCES, type RuleGroup, type Seg } from '@/lib/tajwid';
 import { arLang } from '@/ui/ar-lang';
 import { FadeIn } from '@/ui/ds';
@@ -108,7 +109,7 @@ export default function Tajwid() {
 
       <Text accessibilityRole="header" style={{ color: b.ink, fontWeight: '900', fontSize: 16, marginTop: 6 }}>Sources et licences</Text>
       <Text style={{ color: b.inkMuted, fontSize: 12, lineHeight: 18 }}>{L('Exemples tirés du texte Tanzil Uthmani embarqué. Mushaf coloré : en attente de la licence des données tajwid.')}</Text>
-      {TAJWID_SOURCES.map((s) => (
+      {TAJWID_SOURCES.filter((s) => tajwidSourceVisible(s.id)).map((s) => (
         <Text key={s.id} style={{ color: b.inkMuted, fontSize: 12, lineHeight: 18 }}>{`• ${s.name} — ${s.licence}`}</Text>
       ))}
     </BEScreen>

@@ -4,6 +4,7 @@
  * Chaque sourate téléchargée est mise en cache sur l'appareil → relecture hors-ligne.
  */
 import { editionFor, isQuranEncId, quranEncKeyOf, type QuranEdition } from './quran-licenses';
+import { editionFetchAllowed } from './release-content';
 import { fetchQuranEncSurah } from './quran-enc';
 import { loadJSON, saveCacheJSON } from './storage';
 
@@ -26,6 +27,7 @@ export function stripBasmala(t: string): string {
 }
 
 export async function getSurah(n: number, edition: string): Promise<SurahText> {
+  if (!editionFetchAllowed(edition)) throw new Error('licence non confirmée');
   const key = `quran3-${n}-${edition}`;
   const cached = await loadJSON<SurahText | null>(key, null);
   if (cached?.ayahs?.length) return cached;

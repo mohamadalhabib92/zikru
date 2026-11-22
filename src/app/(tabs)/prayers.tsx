@@ -9,6 +9,7 @@ import { SkyArc } from '@/components/zikru/SkyArc';
 import { dayKey as dk, useGrowth } from '@/lib/growth';
 import { formatHijri } from '@/lib/hijri';
 import { AR_NAMES, computeDay, countdown, hhmm, METHODS, withStates, type PrayerKey, type PrayerState } from '@/lib/prayer';
+import { examplePlaceMark } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { Button, Ionicons, Screen, Spacer } from '@/ui/kit';
 import { Arabic, LCard, LMuted, LTitle } from '@/ui/light';
@@ -64,7 +65,7 @@ export default function Prayers() {
         </View>
         <Text style={{ color: b.heroMuted, marginTop: 10, fontSize: 13 }}>
           {greg} · <Text style={{ color: b.gold }}>{formatHijri(now, s.lang, s.hijriOffset)}</Text> · {s.place.label}
-          {s.place.source === 'example' ? ' (exemple)' : ''}
+          {examplePlaceMark(s.place.source)}
         </Text>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
           {[

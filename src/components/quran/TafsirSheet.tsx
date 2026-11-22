@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { getTafsir, TAFSIRS } from '@/lib/quran-reader-data';
+import { tafsirAllowed } from '@/lib/release-content';
 import { shared, useShared } from '@/lib/shared-state';
 import { SURAHS } from '@/lib/surahs';
 import type { Pal } from './palette';
@@ -13,28 +14,31 @@ const tafsirChoice = shared<string>('qr-tafsir', 'muyassar');
 /** Tafsir du verset, à la demande (mis en cache après la première lecture). */
 export function TafsirSheet({ verse, onClose, pal, arabic }: { verse: { s: number; a: number } | null; onClose: () => void; pal: Pal; arabic?: string }) {
   const [id, setId] = useShared(tafsirChoice);
+  const offered = TAFSIRS.filter((x) => tafsirAllowed(x.id));
+  const shownId = offered.some((x) => x.id === id) ? id : (offered[0]?.id ?? id);
   const [txtSlot, setTxtSlot] = useState<{ key: string; txt: string | null; err: boolean } | null>(null);
   const [n, setN] = useState(0);
-  const verseKey = verse ? `${verse.s}:${verse.a}:${id}:${n}` : '';
+  const verseKey = verse ? `${verse.s}:${verse.a}:${shownId}:${n}` : '';
   const txt = txtSlot && txtSlot.key === verseKey ? txtSlot.txt : null;
   const err = !!(txtSlot && txtSlot.key === verseKey && txtSlot.err);
   useEffect(() => {
     if (!verse) return;
     let alive = true;
-    const key = `${verse.s}:${verse.a}:${id}:${n}`;
-    getTafsir(id, verse.s, verse.a)
+    const key = `${verse.s}:${verse.a}:${shownId}:${n}`;
+    getTafsir(shownId, verse.s, verse.a)
       .then((t) => alive && setTxtSlot({ key, txt: t, err: false }))
       .catch(() => alive && setTxtSlot({ key, txt: null, err: true }));
     return () => {
       alive = false;
     };
-  }, [verse, id, n]);
+  }, [verse, shownId, n]);
   if (!verse) return null;
-  const t = TAFSIRS.find((x) => x.id === id) ?? TAFSIRS[0];
+  const t = offered.find((x) => x.id === shownId) ?? offered[0];
+  if (!t) return null;
   const rtl = t.lang === 'ar';
   return (
     <Sheet visible onClose={onClose} pal={pal} title={`${L('Tafsir')} · ${SURAHS[verse.s - 1][2]} ${verse.s}:${verse.a}`} subtitle={t.name}>
-      <QChoice options={TAFSIRS.map((x) => ({ label: x.name.replace(/^Tafsir /, ''), value: x.id }))} value={id} onChange={setId} pal={pal} />
+      <QChoice options={offered.map((x) => ({ label: x.name.replace(/^Tafsir /, ''), value: x.id }))} value={shownId} onChange={setId} pal={pal} />
       {arabic ? <Text style={{ color: pal.ink, fontSize: 20, lineHeight: 40, textAlign: 'right', writingDirection: 'rtl', marginTop: 14, fontFamily: 'AmiriQuran_400Regular' }}>{arabic}</Text> : null}
       <View style={{ backgroundColor: pal.card, borderRadius: 16, borderWidth: 1, borderColor: pal.line, padding: 14, marginTop: 12, minHeight: 120, justifyContent: 'center' }}>
         {txt ? (

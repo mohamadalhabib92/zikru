@@ -11,6 +11,7 @@ import { privacyText } from '@/lib/privacy-text';
 import { GpsHint } from '@/components/GpsHint';
 import { readGpsPlace } from '@/lib/location';
 import type { GpsFailure } from '@/lib/gps-hint';
+import { examplePlaceMark } from '@/lib/release-content';
 import { CITIES } from '@/lib/prayer';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
 import { useSettings } from '@/lib/settings';
@@ -177,8 +178,7 @@ export default function Onboarding() {
       <>
         <Title icon="checkmark-done" title={tr.onb_done} sub={tr.onb_done_sub} />
         <Text style={{ color: b.inkMuted, textAlign: 'center' }}>
-          {s.place.label}
-          {s.place.source === 'example' ? ' (exemple)' : ''} · {schoolName(madhab)} · {tr.offline_ready}
+          {s.place.label}{examplePlaceMark(s.place.source)} · {schoolName(madhab)} · {tr.offline_ready}
         </Text>
       </>
     );

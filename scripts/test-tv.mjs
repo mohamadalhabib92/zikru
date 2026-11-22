@@ -130,9 +130,10 @@ assert.equal(patched.expo.autolinking.exclude.includes('expo-audio'), false);
 assert.equal(patched.expo.autolinking.exclude.includes('expo-iap'), false);
 
 const eas = JSON.parse(readFileSync(new URL('../eas.json', import.meta.url), 'utf8'));
-assert.equal(eas.build.production.env, undefined);
+assert.deepEqual(eas.build.production.env, { EXPO_PUBLIC_STORE_RELEASE: '1' });
 assert.equal(eas.build.production.autoIncrement, true);
 assert.equal(eas.build['production-tv'].env.EXPO_TV, '1');
+assert.equal(eas.build['production-tv'].env.EXPO_PUBLIC_STORE_RELEASE, '1');
 assert.equal(eas.build['production-tv'].env.EXPO_NO_CAPABILITY_SYNC, '1');
 assert.equal(eas.build['production-tv'].env.RCT_USE_PREBUILT_RNCORE, '0');
 assert.ok(TV_AUTOLINK_EXCLUDE.includes('@livekit/react-native-expo-plugin'));

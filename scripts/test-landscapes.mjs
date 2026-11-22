@@ -10,7 +10,7 @@ import { loadLib } from './load-lib.mjs';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { landscapes: L } = await loadLib(['landscapes'], 'landscapes');
 
-const themeSrc = readFileSync(join(root, 'src/ui/theme.ts'), 'utf8').replace(/^import \{ Platform[^\n]*\n/m, "const Platform = { OS: 'ios' };\n");
+const themeSrc = readFileSync(join(root, 'src/ui/theme.ts'), 'utf8').replace(/^import \{ Platform[^\n]*\n/m, "const Platform = { OS: 'ios' };\n").replace(/^import \{ fontFamilyAllowed \}[^\n]*\n/m, "const fontFamilyAllowed = (family) => !/kfgqpc|qpc|uthmanic|qurancomplex|king\\s*fahd/i.test(family || '');\n");
 const themeOut = ts.transpileModule(themeSrc, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText;
 const themeFile = join(root, 'node_modules', '.cache', `zikru-theme-land-${process.pid}.mjs`);
 const { writeFileSync, mkdirSync } = await import('node:fs');

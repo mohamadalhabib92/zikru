@@ -5,6 +5,7 @@ import { approvedOnly } from '@/lib/content';
 import { METHODS } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { QURAN_TEXT_SOURCE, RECITATION_SOURCE, TRANSLATION_SOURCES } from '@/lib/quran-licenses';
+import { showExampleMarks, storeRelease } from '@/lib/release-content';
 import { Body, Card, H1, H2, Muted, Notice, Screen, Spacer } from '@/ui/kit';
 
 export default function Sources() {
@@ -12,6 +13,8 @@ export default function Sources() {
   const { content } = useData();
   const tests = runHijriSelfTests();
   const ok = tests.filter((x) => x.ok).length;
+  const limitsFull = 'Zikru est un outil d’aide. Les horaires et la date hégirienne sont des calculs ; en cas de doute, référez-vous à votre mosquée ou à une autorité religieuse locale. Les contenus marqués « Exemple » doivent être validés par un référent avant publication.';
+  const limits = showExampleMarks() ? limitsFull : limitsFull.split('. ').slice(0, -1).join('. ') + '.';
   return (
     <Screen>
       <H1>Sources & Méthodologie</H1>
@@ -48,7 +51,7 @@ export default function Sources() {
         <Body>Lecture en écriture uthmanie (riwaya Hafs ‘an ‘Asim) : Tanzil Quran Text (Uthmani, version 1.1), © Tanzil Project, CC BY 3.0, reproduit sans modification. Découpage en juz’, hizb, quarts, pages du mushaf de Médine (604) et sajdas : métadonnées Tanzil (CC BY 3.0).</Body>
         <Muted>Police : Amiri Quran (Khaled Hosny), licence SIL Open Font License 1.1.</Muted>
         <Muted>Récitations diffusées verset par verset à l’écoute, jamais incluses dans l’app : EveryAyah.com, avec secours cdn.islamic.network (Islamic Network). Les droits des récitations appartiennent à leurs récitateurs et éditeurs. Les récitateurs Warsh sont proposés en audio ; le texte affiché reste celui de Hafs (aucun texte Warsh sous licence libre vérifiée n’est intégré).</Muted>
-        <Muted>Translittération et tafsirs (At-Tafsir al-Muyassar, Jalalayn) : api.alquran.cloud ; Tafsir as-Sa‘di et Ibn Kathir abrégé : api.quran.com. Chargés à la demande ; un tafsir est une explication humaine, pas le texte révélé.</Muted>
+        {storeRelease() ? null : <Muted>Translittération et tafsirs (At-Tafsir al-Muyassar, Jalalayn) : api.alquran.cloud ; Tafsir as-Sa‘di et Ibn Kathir abrégé : api.quran.com. Chargés à la demande ; un tafsir est une explication humaine, pas le texte révélé.</Muted>}
         <Muted>Mémorisation : répétition espacée SM-2 (P. Wozniak, 1987) organisée en sabaq, sabqi et manzil. Toutes vos données (marque-pages, notes, khatma, mémorisation) restent sur l’appareil.</Muted>
       </Card>
       <Spacer />
@@ -75,7 +78,7 @@ export default function Sources() {
         <Muted>Traductions approuvées : aucune pour le moment (liste à fournir).</Muted>
       </Card>
       <Spacer />
-      <Notice tone="warning" title="Limites et responsabilité" text="Zikru est un outil d’aide. Les horaires et la date hégirienne sont des calculs ; en cas de doute, référez-vous à votre mosquée ou à une autorité religieuse locale. Les contenus marqués « Exemple » doivent être validés par un référent avant publication." />
+      <Notice tone="warning" title="Limites et responsabilité" text={limits} />
     </Screen>
   );
 }

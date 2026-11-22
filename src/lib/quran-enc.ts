@@ -3,6 +3,7 @@
  * Le texte renvoyé par l’API n’est pas reformulé. Les notes (`footnotes`) sont conservées
  * après le sens, séparées par U+2028, pour tenir dans le cache « une ligne par verset ».
  */
+import { editionFetchAllowed } from './release-content';
 import { SURAHS } from './surahs';
 
 const API = 'https://quranenc.com/api/v1';
@@ -29,6 +30,7 @@ export function splitAyah(stored: string): { text: string; notes?: string } {
 }
 
 export async function fetchQuranEncSurah(key: string, sura: number): Promise<string[]> {
+  if (!editionFetchAllowed(`qe:${key}`)) throw new Error('licence non confirmée');
   const r = await fetch(`${API}/translation/sura/${key}/${sura}`);
   if (!r.ok) throw new Error(`quranenc ${key} ${sura} ${r.status}`);
   const j = (await r.json()) as { result?: Row[] };

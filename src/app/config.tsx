@@ -1,10 +1,13 @@
+import { Redirect } from 'expo-router';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, backendConfigured } from '@/lib/backend';
+import { storeRelease } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { Badge, Body, Card, H1, ListItem, Muted, Notice, Screen, Spacer } from '@/ui/kit';
 
-/** Écran « Configuration manquante » : explicite, jamais de crash silencieux. */
+/** Écran « Configuration manquante » : explicite en développement, inatteignable dans la version App Store. */
 export default function Config() {
   const { t: tr } = useSettings();
+  if (storeRelease()) return <Redirect href="/settings" />;
   return (
     <Screen>
       <H1>{backendConfigured ? 'Synchronisation' : tr.config_missing}</H1>

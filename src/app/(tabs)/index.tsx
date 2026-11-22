@@ -17,6 +17,7 @@ import { isKahfTime } from '@/lib/kahf';
 import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } from '@/lib/prayer';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { periodFor, PERIODS, REFLECTIONS } from '@/lib/reflections';
+import { showExampleMarks } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { useConsent } from '@/lib/consent';
 import { canFetchWeather, canSendToAI, undecided } from '@/lib/privacy';
@@ -561,7 +562,7 @@ export default function Home() {
         <LCard onPress={go('/settings')} label="Régler mon lieu" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: b.goldSoft, borderColor: b.goldSoft }}>
           <IconBadge icon="location" color={b.goldDeep} />
           <View style={{ flex: 1 }}>
-            <Text style={{ color: b.ink, fontWeight: '800' }}>{tr.example_location}</Text>
+            <Text style={{ color: b.ink, fontWeight: '800' }}>{showExampleMarks() ? tr.example_location : tr.choose_city}</Text>
             <LMuted>Pour des horaires et une qibla exacts.</LMuted>
           </View>
         </LCard>

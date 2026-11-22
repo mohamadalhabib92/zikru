@@ -28,6 +28,7 @@ import { MiniPlayer } from '@/components/quran/MiniPlayer';
 import { RecitationProvider } from '@/lib/recitation-context';
 import { AudioPrefetch } from '@/components/AudioOffline';
 import { L, useUiCatalog } from '@/lib/l10n';
+import { storeRelease } from '@/lib/release-content';
 import { setFontsReady } from '@/ui/fonts-ready';
 import { useWatchSync } from '@/lib/use-watch-sync';
 import { sanitizeLandscape } from '@/lib/landscapes';
@@ -130,7 +131,7 @@ function Root() {
         <Stack.Screen name="kahf" options={{ title: tr.kahf }} />
         <Stack.Screen name="songs" options={{ title: tr.songs }} />
         <Stack.Screen name="community" options={{ title: tr.community }} />
-        <Stack.Screen name="config" options={{ title: tr.config_missing }} />
+        <Stack.Screen name="config" options={{ title: storeRelease() ? L('Réglages') : tr.config_missing }} />
         <Stack.Screen name="content-admin" options={{ title: tr.content_admin }} />
         <Stack.Screen name="audit" options={{ title: tr.audit }} />
         <Stack.Screen name="validation" options={{ title: L("Validation savante") }} />

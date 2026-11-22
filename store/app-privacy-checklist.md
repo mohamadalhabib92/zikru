@@ -1,17 +1,33 @@
-# Zikru 1.0.24 — réponses « App Privacy » (App Store Connect), « Data safety » (Google Play) et classification par âge
+# Zikru 1.0.30 — réponses « App Privacy » (App Store Connect), « Data safety » (Google Play) et classification par âge
 
-Source de vérité : `src/lib/privacy-policy.ts` (politique publiée sur https://mohamadalhabib92.github.io/zikru/privacy/).
-Ces réponses décrivent le comportement **réel** de la version 1.0.24. À mettre à jour à chaque nouveau flux de données.
+Source de vérité : `src/lib/privacy-policy.ts` (politique publiée sur https://mohamadalhabib92.github.io/zikru/privacy/, version 1.0.30, 10 novembre 2026).
+Ces réponses décrivent le comportement **réel** de la version 1.0.30, y compris l’iPhone, l’iPad, le Mac (app iPad sur Apple Silicon), l’Apple Watch embarquée et l’Apple TV (tvOS, même fiche `6773032754`).
 
 Faits techniques qui fondent les réponses :
-- Horaires de prière, qibla, hégirien, tasbih, Coran, rappels : calculés et stockés **sur l’appareil** (aucun envoi).
-- Météo (facultative, consentement explicite) : position **arrondie à 0,1°** (≈ 10 km) envoyée à Open-Meteo (OpenMeteo GmbH, Suisse). Pas d’identifiant. Le nom de ville est trouvé localement (BigDataCloud supprimé).
-- Compte (facultatif, uniquement pour Communauté / Famille) : Supabase, hébergement Zurich (eu-central-2). E-mail, nom affiché, identifiant de compte, familles/cercles, messages d’encouragement, objectifs partagés, séances de dhikr partagées, agenda familial, contrôles parentaux. Suppression du compte dans l’app.
-- Bilal (IA, facultatif, consentement explicite) : texte des messages → fonction Supabase (Zurich) → Anthropic (États-Unis). L’identifiant de compte sert au quota et **n’est pas transmis** au fournisseur ; la conversation n’est pas enregistrée sur notre serveur (reste sur l’appareil).
-- Bluetooth : lecture des appuis du compteur, en local. Notifications : planifiées en local, pas de push serveur.
-- Achat Premium à vie : traité par Apple (plus tard Google Play). Zikru ne reçoit pas la carte. L’identifiant de produit et de transaction restent sur l’appareil ; le reçu n’est pas envoyé aux serveurs Zikru dans cette version. Pas de pistage.
+
+- Horaires, qibla, hégirien, tasbih, texte arabe du Coran (Tanzil, dans l’app), Pickthall, rappels : sur l’appareil. Aucun envoi.
+- Météo (facultative, consentement) : position **arrondie à 0,1°** (≈ 10 km) envoyée à Open-Meteo (OpenMeteo GmbH, Bürglen, Suisse ; serveurs en Europe et en Amérique du Nord). Pas d’identifiant. Le nom de ville est calculé sur l’appareil. Journaux Open-Meteo : 90 jours, selon eux.
+- Compte (facultatif, Communauté / Famille / Bilal) : Supabase Inc. (États-Unis, sous-traitant), base à Zurich (`eu-central-2`). E-mail (code à usage unique), nom affiché, identifiant, familles, cercles, messages d’encouragement, objectifs, séances, agenda, contrôles parentaux. Suppression du compte dans l’app.
+- Messages et séances : chiffrés **en transit**, pas encore de bout en bout. Liens refusés, filtre d’insultes graves. Un enfant n’écrit par défaut qu’à ses parents.
+- Signalement et blocage : un signalement envoie à l’équipe (mohamadalhabib@live.com) une copie du contenu, l’identifiant du compte, le motif et la précision. La personne signalée n’est pas prévenue. Conservation : 365 jours après traitement.
+- Appels de groupe (audio / vidéo, quand ils sont ouverts) : serveur **LiveKit que nous hébergeons en Europe** (pas un nuage LiveKit aux États-Unis). La ville exacte sera écrite dans la politique à l’ouverture du service. Le serveur reçoit l’identifiant, le nom affiché et l’adresse IP le temps de l’appel. Son et image : chiffrés en transit, pas encore de bout en bout, **non enregistrés**. Zikru ne garde qu’une trace technique (heure, groupe, vidéo oui/non), 30 jours.
+- Bilal (facultatif, consentement) : messages → fonction Supabase (Zurich) → Anthropic PBC (États-Unis, Claude). L’identifiant sert au quota et **n’est pas transmis** à Anthropic. Le contenu n’est pas enregistré sur nos serveurs. Anthropic : suppression en principe sous 30 jours, pas d’entraînement.
+- Contenus et CDN, seulement quand la personne ouvre la fonction. Aucun identifiant de compte :
+  - `api.alquran.cloud` — traductions encore proposées (Hamidullah) et tafsirs encore proposés (Jalalayn, as-Sa‘di).
+  - `api.quran.com` — tafsir as-Sa‘di.
+  - `quranenc.com` — **non contacté** dans le build App Store (`EXPO_PUBLIC_STORE_RELEASE=1`) tant que la licence n’est pas confirmée.
+  - `everyayah.com`, secours `cdn.islamic.network` — récitation verset par verset, après l’ouverture, Wi-Fi sauf réglage contraire. Pas dans la sauvegarde iCloud.
+  - `cdn.mp3quran.net` — audio de la sourate al-Kahf, cité, lu à la demande.
+  - `upload.wikimedia.org` — voix d’adhan qui ne sont pas déjà dans l’app. L’écran verrouillé n’utilise que le son court embarqué.
+  - GitHub Pages (GitHub Inc., États-Unis) — site et PWA, journaux techniques dont l’adresse IP.
+- Apple Watch : WatchConnectivity avec l’iPhone. Compteurs et libellés restent sur les appareils. Pas de serveur de plus.
+- Apple TV : mêmes serveurs facultatifs que le téléphone (compte, LiveKit, CDN de contenu). Pas de collecte propre à la télé.
+- Bluetooth : appuis du compteur, en local. Notifications : locales, pas de push serveur (`enableRemoteNotifications: false`).
+- Achat Premium à vie : Apple (plus tard Google Play). Zikru ne reçoit pas la carte. L’identifiant de produit et de transaction **restent sur l’appareil**. Le reçu n’est pas envoyé aux serveurs Zikru. Ce n’est donc pas une donnée « collectée » au sens Apple (elle ne quitte pas l’appareil).
 - Aucune publicité, aucun SDK d’analyse ou de crash, aucun IDFA/AAID, aucune revente.
-- Contact pour les demandes liées aux données (accès, rectification, suppression, opposition) : **mohamadalhabib@live.com** (politique section 1 et droits, fr/en/ar ; page d’assistance). Réponse sous 30 jours. À reporter dans Google Play › Data safety / fiche (adresse e-mail de contact) et dans App Store Connect si demandé.
+- Contact données : **mohamadalhabib@live.com**. Réponse sous 30 jours.
+
+Écart corrigé par rapport à la fiche 1.0.24 : l’historique d’achat n’est plus déclaré collecté (il ne quitte pas l’appareil, comme le dit déjà la politique §13). Le son et l’image des appels LiveKit, les signalements, la montre et la télé sont maintenant nommés. `quranenc.com` reste nommé, avec la précision qu’il n’est pas appelé dans le build App Store.
 
 ---
 
@@ -19,75 +35,88 @@ Faits techniques qui fondent les réponses :
 
 **« Do you or your third-party partners collect data from this app? » → Yes**
 
-Pour **chaque** type ci-dessous : Purpose = **App Functionality** uniquement. Tracking = **No**.
-Ne cocher **aucun** autre usage (pas Third-Party Advertising, Developer’s Advertising, Analytics, Product Personalization, Other).
+Pour **chaque** type : Purpose = **App Functionality** uniquement. Tracking = **No**.
 
 | Catégorie Apple | Type | Collecté ? | Linked to the user? | Tracking | Pourquoi |
 |---|---|---|---|---|---|
 | Contact Info | **Email Address** | Oui | **Yes** | No | Connexion par code (compte facultatif) |
-| Contact Info | **Name** | Oui | **Yes** | No | Nom affiché dans Famille / Cercles |
+| Contact Info | **Name** | Oui | **Yes** | No | Nom affiché dans Famille / Cercles, et pendant un appel |
 | Contact Info | Phone, Physical Address, Other | Non | — | — | |
-| Location | **Coarse Location** | Oui | **No** | No | Météo, position arrondie ≈ 10 km envoyée à Open-Meteo sans identifiant |
-| Location | Precise Location | **Non** | — | — | Le GPS précis reste sur l’appareil (horaires, qibla) |
-| Sensitive Info | **Sensitive Info** | Oui | **Yes** | No | Appartenance à une famille / un cercle de dhikr et pratique partagée = conviction religieuse |
-| User Content | **Emails or Text Messages** | Oui | **Yes** | No | Messages d’encouragement entre membres ; messages envoyés à Bilal |
-| User Content | **Other User Content** | Oui | **Yes** | No | Objectifs partagés, séances et compteurs de dhikr partagés, agenda familial, noms de famille/cercle |
-| User Content | Photos/Videos, Audio, Gameplay, Customer Support | Non | — | — | |
-| Identifiers | **User ID** | Oui | **Yes** | No | Identifiant du compte Supabase |
-| Identifiers | Device ID | **Non** | — | — | Aucun IDFA/IDFV collecté (l’ID Bluetooth du compteur reste local) |
-| Purchases | **Purchase History** | Oui | **No** | No | Achat Premium à vie (StoreKit). Identifiant de produit et de transaction gardés sur l’appareil. Pas de carte. Reçu non envoyé aux serveurs Zikru dans cette version. Pas lié au compte Zikru. |
+| Location | **Coarse Location** | Oui | **No** | No | Météo, ≈ 10 km, Open-Meteo, sans identifiant |
+| Location | Precise Location | **Non** | — | — | Le GPS précis reste sur l’appareil (horaires, qibla). La montre et la télé n’ajoutent pas de position. |
+| Sensitive Info | **Sensitive Info** | Oui | **Yes** | No | Appartenance à une famille / un cercle et pratique partagée |
+| User Content | **Emails or Text Messages** | Oui | **Yes** | No | Encouragements, messages à Bilal, texte d’un signalement |
+| User Content | **Audio Data** | Oui | **Yes** | No | Appel LiveKit. Temps réel, non enregistré. Lié au compte le temps de l’appel. |
+| User Content | **Photos or Videos** | Oui | **Yes** | No | Vidéo d’un appel, seulement si la personne l’ouvre. Non enregistrée. |
+| User Content | **Other User Content** | Oui | **Yes** | No | Objectifs, séances, agenda, noms de famille/cercle, copie du contenu signalé |
+| User Content | Gameplay, Customer Support | Non | — | — | |
+| Identifiers | **User ID** | Oui | **Yes** | No | Identifiant Supabase. Aussi envoyé à LiveKit le temps de l’appel. Pas à Anthropic. |
+| Identifiers | Device ID | **Non** | — | — | Pas d’IDFA. L’identifiant Bluetooth du compteur reste local. |
+| Purchases | Purchase History | **Non** | — | — | Reçu StoreKit gardé sur l’appareil, non envoyé à Zikru. |
 | Health & Fitness, Financial Info, Contacts, Browsing History, Search History, Usage Data, Diagnostics, Other Data | — | **Non** | — | — | |
 
 Notes :
-- « Linked » = Yes pour tout ce qui passe par le compte (l’e-mail l’identifie). Les messages Bilal sont rattachés au compte côté quota : on déclare donc *Linked* par prudence.
-- « Tracking » = No partout : aucune donnée n’est combinée avec des données de tiers à des fins publicitaires ni partagée avec un courtier. Ne pas afficher la demande ATT.
+- « Tracking » = No partout. Ne pas afficher ATT.
 - Privacy Policy URL : `https://mohamadalhabib92.github.io/zikru/privacy/`
-- Le manifeste `ios.privacyManifests.NSPrivacyCollectedDataTypes` de `app.json` déclare ces types (EmailAddress, Name, UserID, CoarseLocation, EmailsOrTextMessages, OtherUserContent, SensitiveInfo, PurchaseHistory), Tracking = false, but = AppFunctionality. PurchaseHistory : Linked = false.
+- Le manifeste `ios.privacyManifests.NSPrivacyCollectedDataTypes` de `app.json` déclare EmailAddress, Name, UserID, CoarseLocation, EmailsOrTextMessages, AudioData, PhotosorVideos, OtherUserContent, SensitiveInfo. Tracking = false, but = AppFunctionality. PurchaseHistory n’y est plus : le reçu ne quitte pas l’appareil.
+- Les CDN de contenu reçoivent l’adresse IP et l’élément demandé, comme un site web. Apple ne demande pas une ligne « IP » séparée pour ça. Aucun identifiant de compte ne leur est joint.
 
 ## 2. Google Play Console → Data safety
 
 **Questions générales**
 - Does your app collect or share any of the required user data types? → **Yes**
-- Is all of the user data collected by your app encrypted in transit? → **Yes** (HTTPS/TLS partout)
-- Do you provide a way for users to request that their data is deleted? → **Yes** — dans l’app (Réglages › Confidentialité › Supprimer mon compte) ; URL de demande : `https://mohamadalhabib92.github.io/zikru/privacy/#fr-retention`
-- Account creation : « My app allows users to create an account » → méthode : **Email + OTP** ; compte **facultatif**.
+- Is all of the user data collected by your app encrypted in transit? → **Yes** (HTTPS/TLS, LiveKit en transit)
+- Do you provide a way for users to request that their data is deleted? → **Yes** — dans l’app ; URL : `https://mohamadalhabib92.github.io/zikru/privacy/#fr-retention`
+- Account creation : **Email + OTP**, compte **facultatif**.
 
-**Types de données** (pour chacun : Collected = Yes, Shared = **No**¹, Processed ephemerally = selon tableau, Required/Optional = **Optional**, Purpose = **App functionality** uniquement)
+**Types** (Collected = Yes, Shared = **No**¹, Required/Optional = **Optional**, Purpose = **App functionality**)
 
 | Catégorie Play | Type | Ephemeral ? | Remarque |
 |---|---|---|---|
-| Location | **Approximate location** | **Yes** | Météo, arrondie ≈ 10 km, non stockée par nous |
+| Location | **Approximate location** | **Yes** | Météo, ≈ 10 km |
 | Location | Precise location | — **Non collecté** | Reste sur l’appareil |
 | Personal info | **Name** | No | Nom affiché |
 | Personal info | **Email address** | No | Compte |
 | Personal info | **User IDs** | No | ID de compte |
-| Personal info | **Religious or political beliefs** | No | Appartenance famille/cercle, pratique partagée |
-| Messages | **Other in-app messages** | No | Encouragements entre membres ; messages à Bilal (ces derniers sont éphémères côté serveur) |
-| App activity | **Other user-generated content** | No | Objectifs, séances partagées, agenda familial |
-| App activity | In-app search history | — **Non collecté** | Recherche Coran locale |
-| Financial info | **Purchase history** | No | Achat Premium à vie. Apple / Google encaissent. Pas de carte chez Zikru. Le reçu n’est pas envoyé à nos serveurs dans cette version. |
+| Personal info | **Religious or political beliefs** | No | Famille / cercle, pratique partagée |
+| Messages | **Other in-app messages** | No | Encouragements, Bilal (éphémère côté serveur), signalements |
+| Audio | **Voice or sound recordings** | **Yes** | Appel LiveKit, non enregistré |
+| Photos and videos | **Photos** / **Videos** | **Yes** | Vidéo d’appel seulement si elle est ouverte, non enregistrée |
+| App activity | **Other user-generated content** | No | Objectifs, séances, agenda, contenu signalé |
+| Financial info | Purchase history | — **Non collecté** | Apple / Google encaissent. Le reçu ne va pas sur nos serveurs. |
 | Device or other IDs | — | — **Non collecté** | |
-| App info and performance (crash logs, diagnostics) | — | — **Non collecté** | Aucun SDK |
+| App info and performance | — | — **Non collecté** | Aucun SDK |
 
-¹ **Shared = No** : au sens de Google, le transfert à un prestataire qui traite pour notre compte (Supabase, Anthropic, Open-Meteo) n’est pas un « partage ». Si Google l’exige pour Bilal, cocher *Shared → Other in-app messages → App functionality*.
+¹ **Shared = No** au sens Google : Supabase, Anthropic, Open-Meteo et le LiveKit que nous hébergeons traitent pour notre compte. Si Google l’exige pour Bilal ou LiveKit, cocher *Shared → App functionality*.
 
-## 3. Classification par âge (nouveau questionnaire Apple, depuis juillet 2025)
+## 3. Classification par âge
 
-L’app contient désormais : messagerie entre membres (encouragements), contenus générés par les utilisateurs (noms de cercles, règles, objectifs), un assistant IA conversationnel (Bilal) et un mode Famille avec contrôles parentaux.
+L’app a une messagerie entre membres, des contenus déposés par les utilisateurs (noms, règles, objectifs, messages), un signalement, un blocage, un filtre d’insultes, un assistant IA (Bilal) et un mode Famille.
 
-Réponses recommandées :
-- Violence, contenu sexuel/nudité, grossièretés, horreur, drogues/alcool/tabac, jeux d’argent, concours, contenu médical : **None**.
-- **Messaging and Chat** : **Yes** (encouragements entre membres d’une famille ou d’un cercle).
+Réponses :
+- Violence, sexe/nudité, grossièretés, horreur, drogues, jeux d’argent, concours, contenu médical : **None**.
+- **Messaging and Chat** : **Yes**.
 - **User-Generated Content** : **Yes**.
-- **Social Media** (« social networking ») : No (pas de profil public ni de fil ouvert ; communautés sur invitation).
+- **Social Media** : No (pas de profil public ni de fil ouvert ; invitation).
 - **Advertising** : No.
-- **Unrestricted Web Access** : No (liens externes vers des sources uniquement).
-- **Parental Controls** : **Yes** (mode Famille).
+- **Unrestricted Web Access** : No.
+- **Parental Controls** : **Yes**.
 - **Age Assurance** : No.
-- Assistant IA / chatbot : le déclarer dans la question sur le contenu généré (Bilal est cadré par un prompt religieux, sans contenu mature).
 
-Classification attendue : **13+** (messagerie + UGC sans modération complète). Pour viser **9+** il faudrait que la messagerie soit limitée aux membres invités **et** que signalement/blocage soient en place (P6).
+**Recommandé : 13+.**
 
-⚠️ **Guideline 1.2 (UGC)** : Apple exige pour toute app avec UGC/messagerie : (a) un filtre ou une modération, (b) un moyen de **signaler** un contenu, (c) un moyen de **bloquer** un utilisateur abusif, (d) un contact publié. Ces éléments ne sont **pas encore** dans l’app → **P6 obligatoire avant d’activer la Communauté en production**, sinon risque de refus 1.2.
+Pourquoi pas 4+ ni 9+ : des personnes peuvent s’écrire et déposer du texte. Apple classe ce couple messagerie + contenu d’utilisateurs en 13+, même lorsque le cercle est sur invitation. Les contrôles parentaux et le fait qu’un enfant n’écrit qu’à ses parents ne descendent pas la note à 9+ tant que la messagerie existe pour les adultes du cercle.
 
-Google Play → IARC : répondre « Users can interact/exchange content » = **Yes** ; « Shares user location with other users » = No ; « Digital purchases » = **Yes** (achat unique à vie `ch.mohamadba.zikru.premium.lifetime`, pas encore soumis : le produit Play se crée plus tard, même identifiant).
+Pourquoi pas 16+ ni 18+ : pas de violence, pas de contenu sexuel, pas de jeux d’argent, pas de web ouvert. Bilal est cadré, sans contenu mature, et demande un consentement.
+
+Guideline 1.2 : filtre, signalement, blocage et contact publié (mohamadalhabib@live.com) sont décrits dans la politique 1.0.30 et présents dans l’app. Ça ne change pas le 13+.
+
+Google Play → IARC : « Users can interact » = **Yes** ; « Shares location with other users » = No ; « Digital purchases » = **Yes** (`ch.mohamadba.zikru.premium.lifetime`, produit Play pas encore créé).
+
+## 4. Montre, télé, Mac
+
+| Surface | Donnée en plus ? |
+|---|---|
+| Apple Watch | Non. Compteur et libellés passent par WatchConnectivity. Pas de LiveKit, pas de météo, pas de compte sur la montre. |
+| Apple TV | Non, au-delà de ce tableau. Le salon peut ouvrir le Coran (CDN audio), un groupe et la discussion (Supabase, LiveKit si un appel est lancé). |
+| Mac Apple Silicon | Même binaire iPad. Mêmes réponses. La boussole et le Bluetooth dépendent du Mac. |

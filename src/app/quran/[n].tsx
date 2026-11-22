@@ -24,6 +24,7 @@ import { useGlobalRecitation } from '@/lib/recitation-context';
 import { Ionicons } from '@/ui/kit';
 import { alpha, fonts } from '@/ui/theme';
 import { fontsAreReady, subscribeFonts } from '@/ui/fonts-ready';
+import { editionFetchAllowed } from '@/lib/release-content';
 import { L } from '@/lib/l10n';
 import { subscribeReaderKeys } from '@/lib/web-keys';
 import { arLang } from '@/ui/ar-lang';
@@ -152,7 +153,8 @@ export default function SurahReader() {
   const pal = useMemo(() => readerPalette(p.theme), [p.theme]);
   const quranFont = useSyncExternalStore(subscribeFonts, fontsAreReady, () => false) ? fonts.quran : undefined;
   const tr = useEdition(n, trId.id, p.showTr);
-  const tl = useEdition(n, 'en.transliteration', p.showTl);
+  const tlOn = p.showTl && editionFetchAllowed('en.transliteration');
+  const tl = useEdition(n, 'en.transliteration', tlOn);
   const [settings, setSettings] = useState(false);
   const [top, setTop] = useState(startA);
   useReaderKeepAwake(p.keepAwake);
@@ -200,8 +202,8 @@ export default function SurahReader() {
   }, []);
   useEffect(() => {
     if (n < 114 && p.showTr) void surahEdition(n + 1, trId.id);
-    if (n < 114 && p.showTl) void surahEdition(n + 1, 'en.transliteration');
-  }, [n, p.showTr, p.showTl, trId.id]);
+    if (n < 114 && tlOn) void surahEdition(n + 1, 'en.transliteration');
+  }, [n, p.showTr, tlOn, trId.id]);
   useEffect(() => {
     preferSurah(p.reciter, n);
   }, [p.reciter, n]);
@@ -392,7 +394,7 @@ export default function SurahReader() {
                 {n < 114 ? <QBtn label={`${SURAHS[n][2]} →`} onPress={() => router.replace(`/quran/${n + 1}`)} pal={pal} /> : null}
               </View>
               <Text style={{ color: pal.muted, fontSize: 11, textAlign: 'center' }}>
-                {`${L('Texte : Tanzil (uthmani, CC BY 3.0) · Traduction : {t} via alquran.cloud', { t: trId.label })}${p.showTl ? L(' · Translittération : alquran.cloud') : ''} · ${L('Touchez un verset pour ses actions')}`}
+                {`${L('Texte : Tanzil (uthmani, CC BY 3.0) · Traduction : {t} via alquran.cloud', { t: trId.label })}${tlOn ? L(' · Translittération : alquran.cloud') : ''} · ${L('Touchez un verset pour ses actions')}`}
               </Text>
             </View>
           }

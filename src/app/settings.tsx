@@ -3,6 +3,7 @@ import { umalquraAvailable } from '@/lib/hijri';
 import { useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { backendConfigured } from '@/lib/backend';
+import { examplePlaceMark, storeRelease } from '@/lib/release-content';
 import { needsReview, pickableLangs } from '@/lib/i18n';
 import { GpsHint } from '@/components/GpsHint';
 import type { GpsFailure } from '@/lib/gps-hint';
@@ -130,7 +131,7 @@ export default function SettingsScreen() {
       <H2>{tr.location}</H2>
       <Muted>
         {s.place.label}
-        {s.place.source === 'example' ? ' (exemple)' : ''} · {s.place.lat.toFixed(3)}, {s.place.lng.toFixed(3)}
+        {examplePlaceMark(s.place.source)} · {s.place.lat.toFixed(3)}, {s.place.lng.toFixed(3)}
       </Muted>
       <Muted>{pt.location_note}</Muted>
       <Spacer h={8} />
@@ -281,8 +282,8 @@ export default function SettingsScreen() {
         <Divider />
         <ListItem title={tr.ring} subtitle={L('Compteur, journal des trames')} icon="bluetooth-outline" onPress={() => router.push('/ring')} />
         <Divider />
-        <ListItem title="Synchronisation (Supabase)" icon="cloud-outline" right={<Badge label={backendConfigured ? 'Configuré' : tr.config_missing} tone={backendConfigured ? 'success' : 'warning'} />} onPress={() => router.push('/config')} />
-        <Divider />
+        {storeRelease() ? null : <ListItem title="Synchronisation (Supabase)" icon="cloud-outline" right={<Badge label={backendConfigured ? 'Configuré' : tr.config_missing} tone={backendConfigured ? 'success' : 'warning'} />} onPress={() => router.push('/config')} />}
+        {storeRelease() ? null : <Divider />}
         <ListItem title={tr.content_admin} icon="git-pull-request-outline" onPress={() => router.push('/content-admin')} />
         <Divider />
         <ListItem title={tr.audit} icon="clipboard-outline" onPress={() => router.push('/audit')} />

@@ -1,4 +1,5 @@
 import { Platform, type ViewStyle } from 'react-native';
+import { fontFamilyAllowed } from '../lib/release-content';
 
 /**
  * Système de design Zikru (1.0.19) — un seul thème premium, clair ou sombre.
@@ -152,11 +153,11 @@ export function applyVisual(s: Scheme, next: ThemeFinish = 'classic') {
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 40 } as const;
 /** Rayons. */
 export const radius = { sm: 10, md: 14, lg: 18, xl: 24, pill: 999 } as const;
-/** Typographie : police système (SF Pro sur iOS, toutes graisses + Dynamic Type) ; Amiri pour l'arabe. */
+/** Typographie : police système (SF Pro sur iOS, toutes graisses + Dynamic Type) ; Amiri pour l'arabe. Une police KFGQPC ne passe pas la porte App Store. */
 export const fonts = {
   arabic: 'Amiri_400Regular',
   arabicBold: 'Amiri_700Bold',
-  quran: 'AmiriQuran_400Regular',
+  quran: fontFamilyAllowed('AmiriQuran_400Regular') ? 'AmiriQuran_400Regular' : 'Amiri_400Regular',
 } as const;
 /** Cible tactile minimale (44 pt). */
 export const hit = 44;
