@@ -14,10 +14,8 @@ export function StorageAlert() {
   const issues = useSyncExternalStore(storageIssues.subscribe, storageIssues.get, storageIssues.get);
   const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(false);
-  const [hot, setHot] = useState(false);
   const tv = Platform.isTV;
   const [arm, setArm] = useState(tv);
-  const focused = tv && hot;
   useEffect(() => {
     if (!arm) return;
     const id = setTimeout(() => setArm(false), 700);
@@ -44,26 +42,22 @@ export function StorageAlert() {
             accessibilityRole="button"
             disabled={busy}
             hasTVPreferredFocus={arm}
-            onFocus={() => setHot(true)}
-            onBlur={() => setHot(false)}
             onPress={() => {
               setBusy(true);
               void storageIssues.retry().finally(() => setBusy(false));
             }}
-            style={[{ backgroundColor: '#fff', borderRadius: 10, minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }, tv ? { minHeight: 72, paddingHorizontal: 22, backgroundColor: focused ? '#F6E7B8' : 'rgba(255,255,255,0.72)', borderWidth: 6, borderColor: focused ? '#FFFFFF' : 'transparent', transform: [{ scale: focused ? 1.08 : 1 }] } : null]}
+            style={[{ backgroundColor: '#fff', borderRadius: 10, minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }, tv ? { height: 72, paddingHorizontal: 22, backgroundColor: '#1A2420', borderRadius: 18 } : null]}
           >
-            <Text style={{ color: focused ? '#141311' : '#7a2e12', fontWeight: '800', fontSize: tv ? 28 : undefined }}>{busy ? L('Essai…') : L('Réessayer')}</Text>
+            <Text style={{ color: tv ? '#F4F1EA' : '#7a2e12', fontWeight: '800', fontSize: tv ? 28 : undefined }}>{busy ? L('Essai…') : L('Réessayer')}</Text>
           </Pressable>
         ) : (
           <Pressable
             accessibilityRole="button"
             hasTVPreferredFocus={arm}
-            onFocus={() => setHot(true)}
-            onBlur={() => setHot(false)}
             onPress={() => issues.filter((i) => i.op === 'read').forEach((i) => storageIssues.dismissFull(i.key))}
-            style={[{ backgroundColor: '#fff', borderRadius: 10, minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }, tv ? { minHeight: 72, paddingHorizontal: 22, backgroundColor: focused ? '#F6E7B8' : 'rgba(255,255,255,0.72)', borderWidth: 6, borderColor: focused ? '#FFFFFF' : 'transparent', transform: [{ scale: focused ? 1.08 : 1 }] } : null]}
+            style={[{ backgroundColor: '#fff', borderRadius: 10, minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }, tv ? { height: 72, paddingHorizontal: 22, backgroundColor: '#1A2420', borderRadius: 18 } : null]}
           >
-            <Text style={{ color: focused ? '#141311' : '#7a2e12', fontWeight: '800', fontSize: tv ? 28 : undefined }}>{L('Compris')}</Text>
+            <Text style={{ color: tv ? '#F4F1EA' : '#7a2e12', fontWeight: '800', fontSize: tv ? 28 : undefined }}>{L('Compris')}</Text>
           </Pressable>
         )}
       </View>

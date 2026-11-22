@@ -2,16 +2,15 @@ import { useLocalSearchParams } from 'expo-router';
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useTvKeepAwake } from '@/components/tv/keep-awake';
-import { TvBack, TvButton, TvFocusable, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle, useTvFrame } from '@/components/tv/ui';
+import { TvBack, TvButton, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle, useTvFrame } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { BASMALA_UTHMANI, loadSurahUthmani } from '@/lib/quran-reader-data';
 import { buildQueue } from '@/lib/recitation';
 import { useGlobalRecitation } from '@/lib/recitation-context';
 import { SURAHS } from '@/lib/surahs';
-import { tvAyahType } from '@/lib/tv';
-import { TV_FOCUS_INK, TV_ON_CARD, TV_ON_CARD_MUTED } from '@/lib/tv-surface';
+import { TV_ON_CARD } from '@/lib/tv-surface';
 import { Text } from '@/ui/Text';
-import { fonts, theme as t } from '@/ui/theme';
+import { fonts } from '@/ui/theme';
 import { fontsAreReady } from '@/ui/fonts-ready';
 
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -82,8 +81,8 @@ function SurahBody({ surah }: { surah: number }) {
   const ayah = Math.min(count, Math.max(1, picked ?? playingHere ?? 1));
   const text = ayahs?.[ayah - 1] ?? '';
   const waiting = ayahs == null && !err;
-  const type = tvAyahType(text);
   const showBasmala = surah !== 1 && surah !== 9;
+  const verseWidth = Math.max(640, frame.width - 180);
   const play = () => {
     if (!ayahs) return;
     const verses = ayahs.map((_, i) => [surah, i + 1] as [number, number]).slice(ayah - 1);
@@ -92,25 +91,18 @@ function SurahBody({ surah }: { surah: number }) {
     void rec.start(buildQueue(verses), 0, false).catch(() => setErr(L('La récitation n’a pas pu démarrer.')));
   };
   return (
-    <View style={{ flex: 1, width: frame.width, height: frame.height }}>
-    <TvScroll>
-      <TvTitle>{meta ? `${meta[0]}. ${meta[2]}` : L('Sourate')}</TvTitle>
+    <View style={{ flex: 1, width: frame.width, height: frame.height, backgroundColor: '#10211C', paddingHorizontal: 90, paddingTop: 36 }}>
+      <Text style={{ color: TV_ON_CARD, fontSize: 48, fontWeight: '800', height: 64 }}>{meta ? `${meta[0]}. ${meta[2]}` : L('Sourate')}</Text>
       {waiting ? <Text style={{ color: TV_ON_CARD, fontSize: 34, lineHeight: 46, marginTop: 16 }}>{L('Chargement…')}</Text> : null}
       {showBasmala && !waiting ? (
-        <Text style={{ color: t.accent, fontSize: 48, lineHeight: 86, textAlign: 'right', marginTop: 12, fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{BASMALA_UTHMANI}</Text>
+        <Text style={{ color: TV_ON_CARD, fontSize: 36, lineHeight: 64, textAlign: 'center', width: verseWidth, fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{BASMALA_UTHMANI}</Text>
       ) : null}
-      <View style={{ marginTop: 18 }}>
-        <TvFocusable block minHeight={160} label={`${ayah}`}>
-          {(on) => (
-            <>
-              <Text style={{ color: on ? TV_FOCUS_INK : TV_ON_CARD_MUTED, fontSize: 28, fontWeight: '800' }}>
-                {ayah}
-                {playingHere === ayah ? ` · ${L('Lecture')}` : ''}
-              </Text>
-              <Text style={{ color: on ? TV_FOCUS_INK : TV_ON_CARD, fontSize: type.fontSize, lineHeight: type.lineHeight, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || (waiting ? '' : '…')}</Text>
-            </>
-          )}
-        </TvFocusable>
+      <View style={{ flex: 1, width: verseWidth, justifyContent: 'center' }}>
+        <Text style={{ color: TV_ON_CARD, fontSize: 28, fontWeight: '800', textAlign: 'center', marginBottom: 18 }}>
+          {ayah}
+          {playingHere === ayah ? ` · ${L('Lecture')}` : ''}
+        </Text>
+        <Text style={{ color: TV_ON_CARD, fontSize: 60, lineHeight: 108, textAlign: 'center', width: verseWidth, fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || (waiting ? '' : '…')}</Text>
       </View>
       {err ? <TvMuted>{err}</TvMuted> : null}
       <TvRow>
@@ -120,7 +112,6 @@ function SurahBody({ surah }: { surah: number }) {
         <TvButton label={L('Arrêter')} onPress={() => rec.stop()} />
         <TvBack />
       </TvRow>
-    </TvScroll>
     </View>
   );
 }

@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font';
 import { Redirect, router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { AppState, Platform, Pressable, useColorScheme, View } from 'react-native';
+import { AppState, Platform, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/community/auth';
 import { CommunityProvider } from '@/lib/community/sync';
@@ -14,6 +14,7 @@ import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { Text } from '@/ui/Text';
+import { TVPressable } from '@/ui/tv-pressable';
 import { applyVisual, brand, glassSolidColor, isGlass, theme as t, type Scheme, type ThemeFinish } from '@/ui/theme';
 import { VisualEffectsProvider } from '@/ui/effects';
 import { takePendingRoute } from '@/ui/appearance';
@@ -65,9 +66,9 @@ function TvHomeGate({ active }: { active: boolean }) {
     <View pointerEvents="auto" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#10211C', paddingHorizontal: 90, paddingTop: 80, justifyContent: 'center' }}>
       <Text style={{ color: '#F4F1EA', fontSize: 56, fontWeight: '800' }}>{L('Zikru')}</Text>
       <Text style={{ color: '#F4F1EA', fontSize: 32, lineHeight: 44, marginTop: 18 }}>{L('Retour')}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={L('Retour')} onPress={() => router.replace('/tv')} style={{ alignSelf: 'flex-start', marginTop: 28, minHeight: 88, minWidth: 220, borderRadius: 22, backgroundColor: '#F6E7B8', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 }}>
-        <Text style={{ color: '#141311', fontSize: 34, fontWeight: '800' }}>{L('Retour')}</Text>
-      </Pressable>
+      <TVPressable hasTVPreferredFocus accessibilityRole="button" accessibilityLabel={L('Retour')} onPress={() => router.replace('/tv')} style={{ alignSelf: 'flex-start', marginTop: 28, height: 88, minWidth: 280, borderRadius: 22, backgroundColor: '#1A2420', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 }}>
+        <Text style={{ color: '#F4F1EA', fontSize: 34, fontWeight: '800' }}>{L('Retour')}</Text>
+      </TVPressable>
     </View>
   );
 }

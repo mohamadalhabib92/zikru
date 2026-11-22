@@ -1,17 +1,17 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useTvFrame } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { loadTvSurahCatalog, paintTvSurahPage, TV_SURAH_BG, TV_SURAH_INK, TV_SURAH_ROW, type TvSurahCatalog } from '@/lib/tv-quran-catalog';
 import { Text } from '@/ui/Text';
+import { TVPressable } from '@/ui/tv-pressable';
 
 /**
  * Build 15 : le titre s’affichait, pas les lignes ni Retour.
- * Les 114 noms sont déjà dans le JavaScript (le sous-titre « choisissez » le prouve :
- * la branche « catalogue vide » n’a pas tourné). Les contrôles étaient dans un guide
- * de focus, sans hauteur en points : tvOS leur donnait 0 et ne dessinait qu’un trait.
- * Ici chaque contrôle a une hauteur fixe. Le Coran de la télé n’est pas payant.
+ * Les 114 noms sont déjà dans le JavaScript. Les contrôles n’avaient pas de hauteur.
+ * Ici chaque contrôle a une hauteur fixe et le focus partagé du salon.
+ * Le Coran de la télé n’est pas payant.
  */
 const BUTTON = {
   height: TV_SURAH_ROW,
@@ -50,7 +50,7 @@ export default function TvQuranIndex() {
         <Text style={{ color: '#F6E7B8', fontSize: 26, lineHeight: 34, height: 70 }}>{catalog.message}</Text>
       ) : null}
       {board.rows.map((row) => (
-        <Pressable
+        <TVPressable
           key={row.n}
           hasTVPreferredFocus={row.preferred && phase === 'ready'}
           accessibilityRole="button"
@@ -67,23 +67,36 @@ export default function TvQuranIndex() {
           }}
         >
           <Text style={{ color: row.color, fontSize: 32, fontWeight: '800' }}>{row.label}</Text>
-        </Pressable>
+        </TVPressable>
       ))}
       <View style={{ flexDirection: 'row', height: TV_SURAH_ROW, marginTop: 8, alignItems: 'center' }}>
-        <Pressable accessibilityRole="button" onPress={() => setPage((p) => Math.max(0, p - 1))} style={BUTTON}>
+        <TVPressable
+          accessibilityRole="button"
+          onPress={() => setPage((p) => Math.max(0, p - 1))}
+          style={BUTTON}
+        >
           <Text style={{ color: TV_SURAH_INK, fontSize: 28, fontWeight: '800' }}>{L('Page précédente')}</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" onPress={() => setPage((p) => Math.min(board.pages - 1, p + 1))} style={BUTTON}>
+        </TVPressable>
+        <TVPressable
+          accessibilityRole="button"
+          onPress={() => setPage((p) => Math.min(board.pages - 1, p + 1))}
+          style={BUTTON}
+        >
           <Text style={{ color: TV_SURAH_INK, fontSize: 28, fontWeight: '800' }}>{L('Page suivante')}</Text>
-        </Pressable>
+        </TVPressable>
         {phase === 'error' ? (
-          <Pressable accessibilityRole="button" onPress={retry} style={BUTTON}>
+          <TVPressable accessibilityRole="button" onPress={retry} style={BUTTON}>
             <Text style={{ color: TV_SURAH_INK, fontSize: 28, fontWeight: '800' }}>{L('Réessayer')}</Text>
-          </Pressable>
+          </TVPressable>
         ) : null}
-        <Pressable accessibilityRole="button" hasTVPreferredFocus={phase !== 'ready'} onPress={() => router.back()} style={BUTTON}>
+        <TVPressable
+          accessibilityRole="button"
+          hasTVPreferredFocus={phase !== 'ready'}
+          onPress={() => router.back()}
+          style={BUTTON}
+        >
           <Text style={{ color: TV_SURAH_INK, fontSize: 28, fontWeight: '800' }}>{L('Retour')}</Text>
-        </Pressable>
+        </TVPressable>
         <Text style={{ color: TV_SURAH_INK, fontSize: 26 }}>{board.page + 1} / {board.pages}</Text>
       </View>
     </View>
