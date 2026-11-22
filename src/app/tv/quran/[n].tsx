@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useTvKeepAwake } from '@/components/tv/keep-awake';
-import { TvBack, TvButton, TvFocusable, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvBack, TvButton, TvFocusable, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle, useTvFrame } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { BASMALA_UTHMANI, loadSurahUthmani } from '@/lib/quran-reader-data';
 import { buildQueue } from '@/lib/recitation';
@@ -56,6 +56,7 @@ function SurahCrash({ message, onRetry }: { message: string; onRetry: () => void
 
 function SurahBody({ surah }: { surah: number }) {
   useTvKeepAwake('zikru-tv-quran');
+  const frame = useTvFrame();
   const meta = SURAHS[surah - 1];
   const rec = useGlobalRecitation();
   const [ayahs, setAyahs] = useState<string[] | null>(null);
@@ -91,6 +92,7 @@ function SurahBody({ surah }: { surah: number }) {
     void rec.start(buildQueue(verses), 0, false).catch(() => setErr(L('La récitation n’a pas pu démarrer.')));
   };
   return (
+    <View style={{ flex: 1, width: frame.width, height: frame.height }}>
     <TvScroll>
       <TvTitle>{meta ? `${meta[0]}. ${meta[2]}` : L('Sourate')}</TvTitle>
       {waiting ? <Text style={{ color: TV_ON_CARD, fontSize: 34, lineHeight: 46, marginTop: 16 }}>{L('Chargement…')}</Text> : null}
@@ -119,5 +121,6 @@ function SurahBody({ surah }: { surah: number }) {
         <TvBack />
       </TvRow>
     </TvScroll>
+    </View>
   );
 }

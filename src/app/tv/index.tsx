@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { TvButton, TvMuted, TvRow, TvScroll, useTvGrid } from '@/components/tv/ui';
+import { TvButton, TvMuted, TvRow, TvScroll, useTvFrame, useTvGrid } from '@/components/tv/ui';
 import { usePremium } from '@/lib/premium';
 import { useFeatureFlags } from '@/lib/use-premium';
 import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive } from '@/lib/tv';
@@ -26,8 +26,9 @@ export default function TvHome() {
   const [restored, setRestored] = useState<boolean | null>(null);
   const entitled = tvPremiumActive(premium.record, flags.serverPremium ? { plan: 'premium' } : null);
   const grid = useTvGrid();
+  const frame = useTvFrame();
   return (
-    <View style={{ flex: 1, minHeight: 720, backgroundColor: '#10211C' }}>
+    <View style={{ flex: 1, width: frame.width, height: frame.height, minHeight: frame.height, backgroundColor: '#10211C' }}>
     <View style={{ paddingHorizontal: 90, paddingTop: 48 }}>
       <Text style={{ color: '#F4F1EA', fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
       <Text style={{ color: '#F4F1EA', fontSize: 56, fontWeight: '800' }}>{L('Zikru')}</Text>

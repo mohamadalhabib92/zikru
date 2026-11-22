@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
-import { TvBack, TvFocusable, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
+import { TvBack, TvFocusable, TvMuted, TvPremiumGate, TvRow, TvScroll, TvTitle, useTvFrame } from '@/components/tv/ui';
 import { AQIDA_SCHOLAR_FLAG, AQIDA_SECTIONS, aqidaVerse, sectionAttributes } from '@/lib/aqida-murshid';
 import { CONTENT_LOCALES, resolveSlot, type ContentLocale } from '@/lib/religious-locale';
 import { TV_ARABIC_MIN } from '@/lib/tv';
@@ -19,8 +19,10 @@ export default function TvAqidaSection() {
   const section = AQIDA_SECTIONS.find((s) => s.id === id) ?? AQIDA_SECTIONS[0];
   const font = fontsAreReady() ? fonts.quran : undefined;
   const attrs = sectionAttributes(section.id);
+  const frame = useTvFrame();
   return (
     <TvPremiumGate feature="aqida">
+      <View style={{ flex: 1, width: frame.width, height: frame.height }}>
       <TvScroll>
         <TvTitle>{L(section.title)}</TvTitle>
         <TvMuted>{L('Aqida (Ibn ʿĀshir)')}</TvMuted>
@@ -62,6 +64,7 @@ export default function TvAqidaSection() {
           <TvBack />
         </TvRow>
       </TvScroll>
+      </View>
     </TvPremiumGate>
   );
 }

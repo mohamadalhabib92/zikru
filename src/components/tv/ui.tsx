@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ElementRef, type ReactNode } from 'react';
 import * as ReactNative from 'react-native';
+import { tvFrame } from '@/lib/tv-frame';
 import { usePremium } from '@/lib/premium';
 import { useFeatureFlags } from '@/lib/use-premium';
 import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive, type TvFeatureId } from '@/lib/tv';
@@ -28,7 +29,7 @@ import { useVisualEffects } from '@/ui/effects';
 import { currentFinish, isGlass, theme as t } from '@/ui/theme';
 import { TVPressable, tvFocusStyle } from '@/ui/tv-pressable';
 
-const { FlatList, ScrollView, TextInput, View, useWindowDimensions } = ReactNative;
+const { Platform, ScrollView, TextInput, View, useWindowDimensions } = ReactNative;
 type ViewProps = ComponentProps<typeof View>;
 type TvFieldProps = ComponentProps<typeof TextInput>;
 /** Les vues d’habillage ne doivent pas prendre le focus : sinon la télé allume une pastille blanche sans le texte. */
@@ -40,14 +41,20 @@ const inert = { isTVSelectable: false } as ViewProps;
  */
 export const tvPad = { paddingHorizontal: TV_PAD_X, paddingTop: TV_PAD_TOP, paddingBottom: TV_PAD_BOTTOM };
 
+/** Fenêtre réelle. Sur Apple TV un rapport portrait est remis en 16:9. */
+export function useTvFrame(): { width: number; height: number } {
+  const { width, height } = useWindowDimensions();
+  return tvFrame(width, height, Platform.isTV);
+}
+
 /** Grille du salon pour la largeur réelle de la fenêtre (pas une mesure figée au chargement). */
 export function useTvGrid(opts?: { minColumns?: number; maxColumns?: number; minTile?: number }): TvGrid & { screenWidth: number; screenHeight: number } {
-  const { width, height } = useWindowDimensions();
+  const frame = useTvFrame();
   const minColumns = opts?.minColumns;
   const maxColumns = opts?.maxColumns;
   const minTile = opts?.minTile;
-  const measuredW = width > 0 ? width : 1920;
-  const measuredH = height > 0 ? height : 1080;
+  const measuredW = frame.width;
+  const measuredH = frame.height;
   return useMemo(
     () => ({ ...tvGrid(measuredW, { minColumns, maxColumns, minTile }), screenWidth: measuredW, screenHeight: measuredH }),
     [measuredW, measuredH, minColumns, maxColumns, minTile],
@@ -135,14 +142,15 @@ export function TvScroll({ children, pinEnd, transparent }: { children: ReactNod
       ref.current?.scrollTo({ y: next, animated: false });
     });
   }, []);
+  const frame = useTvFrame();
   return (
     <FocusScope>
       <ScrollFocus.Provider value={ensure}>
-        <TVFocusGuideView style={{ flex: 1 }}>
+        <TVFocusGuideView style={{ flex: 1, width: frame.width, height: frame.height }}>
           <ScrollView
             ref={setRef}
-            style={{ flex: 1, backgroundColor: transparent ? 'transparent' : t.bg }}
-            contentContainerStyle={[tvPad, pinEnd ? { flexGrow: 1, justifyContent: 'flex-end' } : { flexGrow: 1 }]}
+            style={{ flex: 1, width: frame.width, height: frame.height, backgroundColor: transparent ? 'transparent' : t.bg }}
+            contentContainerStyle={[tvPad, { width: frame.width }, pinEnd ? { flexGrow: 1, justifyContent: 'flex-end' } : { flexGrow: 1 }]}
             keyboardShouldPersistTaps="handled"
             scrollEventThrottle={16}
             onScroll={(e) => {
@@ -168,7 +176,10 @@ export function TvColumn({ children }: { children: ReactNode }) {
   return <TVFocusGuideView style={{ marginTop: 18, gap: 24, overflow: 'visible' }}>{children}</TVFocusGuideView>;
 }
 
-/** Liste virtualisée. `removeClippedSubviews` reste faux : le découpage fait perdre le focus tvOS. */
+/**
+ * Liste du salon. Pas de FlatList : sur tvOS la liste virtualisée dans un guide de focus
+ * mesure souvent une hauteur 0 et n’affiche aucune ligne (ni en-tête, ni Retour).
+ */
 export function TvVirtualList<T>({
   data,
   keyExtractor,
@@ -180,39 +191,31 @@ export function TvVirtualList<T>({
   keyExtractor: (item: T, index: number) => string;
   renderItem: (item: T) => ReactNode;
   header?: ReactNode;
-  /** Plusieurs colonnes selon la largeur (liste des sourates). Sans ça, une seule colonne pleine largeur. */
+  /** Plusieurs colonnes selon la largeur. Sans ça, une seule colonne pleine largeur. */
   grid?: boolean;
 }) {
+  const frame = useTvFrame();
   const spec = useTvGrid();
   const columns = grid ? spec.columns : 1;
   const gap = grid ? spec.gap : 24;
   const rows = useMemo(() => chunkTv(data, columns), [data, columns]);
+  const tileW = columns > 1 ? spec.tileWidth : Math.max(280, frame.width - TV_PAD_X * 2);
   return (
-    <View style={{ flex: 1, minHeight: spec.screenHeight, backgroundColor: t.bg }} {...inert}>
+    <View style={{ flex: 1, width: frame.width, height: frame.height, minHeight: frame.height, backgroundColor: t.bg }} {...inert}>
     <FocusScope>
-      <TVFocusGuideView style={{ flex: 1, backgroundColor: t.bg }}>
-        <FlatList
-          key={grid ? `tv-grid-${columns}` : 'tv-list'}
-          data={rows}
-          keyExtractor={(row) => row.map((cell) => keyExtractor(cell.item, cell.index)).join('\u0000')}
-          renderItem={({ item: row }) => (
-            <View style={{ flexDirection: 'row', gap, marginBottom: gap, overflow: 'visible' }}>
+      <TVFocusGuideView style={{ flex: 1, width: frame.width, height: frame.height, backgroundColor: t.bg }}>
+        <ScrollView style={{ flex: 1, width: frame.width, height: frame.height }} contentContainerStyle={[tvPad, { width: frame.width, flexGrow: 1 }]}>
+          {header}
+          {rows.map((row) => (
+            <View key={row.map((cell) => keyExtractor(cell.item, cell.index)).join('\u0000')} style={{ flexDirection: 'row', gap, marginBottom: gap, width: frame.width - TV_PAD_X * 2, overflow: 'visible' }}>
               {row.map((cell) => (
-                <View key={keyExtractor(cell.item, cell.index)} style={{ width: columns > 1 ? spec.tileWidth : '100%', flexGrow: 0, flexShrink: 0, overflow: 'visible' }}>
+                <View key={keyExtractor(cell.item, cell.index)} style={{ width: tileW, minWidth: tileW, minHeight: 132, flexGrow: 0, flexShrink: 0, overflow: 'visible' }}>
                   {renderItem(cell.item)}
                 </View>
               ))}
             </View>
-          )}
-          ListHeaderComponent={header ? <>{header}</> : undefined}
-          style={{ flex: 1 }}
-          contentContainerStyle={[tvPad, { flexGrow: 1 }]}
-          removeClippedSubviews={false}
-          initialNumToRender={8}
-          maxToRenderPerBatch={6}
-          windowSize={5}
-          keyboardShouldPersistTaps="handled"
-        />
+          ))}
+        </ScrollView>
       </TVFocusGuideView>
     </FocusScope>
     </View>
