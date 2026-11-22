@@ -194,6 +194,7 @@ export const CAT: Record<string, string> = {
   "Après le salam": "After the salam",
   "Après ‘Isha": "After ‘Isha",
   "Après… (ex. Après la prière d’Isha)": "After… (e.g. After the Isha prayer)",
+  "Aqida (Ibn ʿĀshir)": "Aqida (Ibn ʿĀshir)",
   "Arabe": "Arabic",
   "Arabe seul": "Arabic only",
   "Archiver": "Archive",

@@ -31,6 +31,7 @@ export const TV_FEATURES = {
   join: { premium: false },
   chat: { premium: false },
   quran: { premium: false },
+  aqida: { premium: false },
   prayers: { premium: false },
   adhan: { premium: false },
   dhikr: { premium: false },

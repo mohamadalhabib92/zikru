@@ -36,6 +36,7 @@ export default function Read() {
     {
       title: 'Savoir',
       items: [
+        { icon: 'book', title: 'Aqida (Ibn ʿĀshir)', sub: 'Ce que l’on doit croire d’Allah', href: '/fiqh-aqida', color: b.brown },
         { icon: 'library', title: 'Hadiths', sub: 'Collection choisie et référencée', href: '/hadiths', color: b.indigo },
         { icon: 'scale', title: 'Fiqh', sub: 'Maliki & Shafi‘i', href: '/fiqh', color: b.rust },
         { icon: 'construct', title: tr.sahw, sub: 'Prosternation de l’oubli', href: '/sahw', color: b.rust },

@@ -43,6 +43,7 @@ const SECTIONS: { title: string; kw: string; href: Href; icon: IconName }[] = [
   { title: 'Sourate al-Kahf', kw: 'kahf vendredi jumua', href: '/kahf', icon: 'headset' },
   { title: 'Hadiths', kw: 'hadith sunna', href: '/hadiths', icon: 'library' },
   { title: 'Fiqh', kw: 'fiqh maliki shafii jurisprudence', href: '/fiqh', icon: 'scale' },
+  { title: 'Aqida (Ibn ʿĀshir)', kw: 'aqida ashari asharite ibn ashir murshid croire allah', href: '/fiqh-aqida', icon: 'book' },
   { title: 'Réglages', kw: 'reglages parametres langue theme sombre clair', href: '/settings', icon: 'settings' },
   { title: 'Compteur Bluetooth', kw: 'bluetooth bague ring compteur', href: '/ring', icon: 'bluetooth' },
   { title: 'Mes zikrs', kw: 'mes zikrs composer', href: '/zikrs', icon: 'albums' },
