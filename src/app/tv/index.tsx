@@ -1,14 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { TvButton, TvMuted, TvRow, TvScroll, TvTitle, useTvGrid } from '@/components/tv/ui';
+import { TvButton, TvMuted, TvRow, TvScroll, useTvGrid } from '@/components/tv/ui';
 import { usePremium } from '@/lib/premium';
 import { useFeatureFlags } from '@/lib/use-premium';
 import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive } from '@/lib/tv';
 import { chunkTv } from '@/lib/tv-surface';
 import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
-import { theme as t } from '@/ui/theme';
 
 const TILES: { href: '/tv/quran' | '/tv/aqida' | '/tv/prayers' | '/tv/dhikr' | '/tv/ambient' | '/tv/kids' | '/tv/join' | '/tv/chat'; label: string; hint: string; feature: 'quran' | 'aqida' | 'prayers' | 'dhikr' | 'ambient' | 'kids' | 'join' | 'chat' }[] = [
   { href: '/tv/quran', label: 'Coran', hint: 'Grand texte et récitation', feature: 'quran' },
@@ -28,9 +27,12 @@ export default function TvHome() {
   const entitled = tvPremiumActive(premium.record, flags.serverPremium ? { plan: 'premium' } : null);
   const grid = useTvGrid();
   return (
+    <View style={{ flex: 1, minHeight: 720, backgroundColor: '#10211C' }}>
+    <View style={{ paddingHorizontal: 90, paddingTop: 48 }}>
+      <Text style={{ color: '#F4F1EA', fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
+      <Text style={{ color: '#F4F1EA', fontSize: 56, fontWeight: '800' }}>{L('Zikru')}</Text>
+    </View>
     <TvScroll>
-      <Text style={{ color: t.accent, fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
-      <TvTitle>{L('Zikru')}</TvTitle>
       <TvMuted>{L('Le salon : le Coran, la prière et le dhikr de la famille, sur grand écran.')}</TvMuted>
       {chunkTv(TILES, grid.columns).map((row) => (
         <TvRow key={row.map((cell) => cell.item.href).join('-')} gap={grid.gap}>
@@ -64,5 +66,6 @@ export default function TvHome() {
         </>
       ) : null}
     </TvScroll>
+    </View>
   );
 }

@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font';
 import { Redirect, router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform, useColorScheme, View } from 'react-native';
+import { AppState, Platform, Pressable, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/community/auth';
 import { CommunityProvider } from '@/lib/community/sync';
@@ -41,6 +41,35 @@ import '@/lib/mac-native';
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
   return <ErrorScreen error={error} retry={() => void retry()} />;
+}
+
+/**
+ * Tant que la route n’est pas /tv, on ne laisse pas l’écran iPhone visible.
+ * Un simple voile sans texte restait après « Sign in with Apple » (StoreKit) :
+ * la redirection vers /tv ne se terminait pas tant que la feuille système était ouverte,
+ * et l’écran restait une couleur vide. Ici le salon est redemandé, y compris au retour
+ * au premier plan, et le voile affiche un titre et Retour.
+ */
+function TvHomeGate({ active }: { active: boolean }) {
+  useEffect(() => {
+    if (!active) return;
+    const go = () => router.replace('/tv');
+    go();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') go();
+    });
+    return () => sub.remove();
+  }, [active]);
+  if (!active) return null;
+  return (
+    <View pointerEvents="auto" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#10211C', paddingHorizontal: 90, paddingTop: 80, justifyContent: 'center' }}>
+      <Text style={{ color: '#F4F1EA', fontSize: 56, fontWeight: '800' }}>{L('Zikru')}</Text>
+      <Text style={{ color: '#F4F1EA', fontSize: 32, lineHeight: 44, marginTop: 18 }}>{L('Retour')}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={L('Retour')} onPress={() => router.replace('/tv')} style={{ alignSelf: 'flex-start', marginTop: 28, minHeight: 88, minWidth: 220, borderRadius: 22, backgroundColor: '#F6E7B8', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 }}>
+        <Text style={{ color: '#141311', fontSize: 34, fontWeight: '800' }}>{L('Retour')}</Text>
+      </Pressable>
+    </View>
+  );
 }
 
 function Root() {
@@ -183,7 +212,7 @@ function Root() {
       {tvHome ? (
         <>
           <Redirect href={tvHome} />
-          <View pointerEvents="auto" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.bg }} />
+          <TvHomeGate active />
         </>
       ) : null}
     </View>

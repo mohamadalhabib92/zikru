@@ -64,6 +64,11 @@ export function isTvRoute(path: string): boolean {
  * reste `/`, donc l’iPhone (onglets ou onboarding). Sur Apple TV on remplace par `/tv`.
  * Sur iPhone, toujours `null` : aucune route n’est forcée.
  */
+/** Après une connexion, l’Apple TV reste sur le salon. Une route iPhone (Communauté, invitation) laisserait un écran vide. */
+export function routeAfterAuth(isTV: boolean, phoneRoute: string): string {
+  return isTV ? '/tv' : phoneRoute;
+}
+
 export function tvLaunchHref(path: string, isTV: boolean): '/tv' | null {
   if (!isTV) return null;
   if (isTvRoute(path)) return null;

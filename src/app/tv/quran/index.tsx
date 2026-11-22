@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { TvBack, TvButton, TvMuted, TvPremiumGate, TvRow, TvTitle, TvVirtualList } from '@/components/tv/ui';
+import { View } from 'react-native';
+import { TvBack, TvButton, TvMuted, TvPremiumGate, TvRow, TvVirtualList } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { SURAHS } from '@/lib/surahs';
 import { fonts } from '@/ui/theme';
+import { Text } from '@/ui/Text';
 import { fontsAreReady } from '@/ui/fonts-ready';
 
 type Surah = (typeof SURAHS)[number];
@@ -18,20 +20,30 @@ export default function TvQuranIndex() {
   const font = fontsAreReady() ? fonts.quran : undefined;
   const header = useMemo(
     () => (
-      <>
-        <TvTitle>{L('Coran')}</TvTitle>
-        <TvMuted>{L('Choisissez une sourate. Le texte est celui déjà dans l’application. La récitation vient des mêmes sources.')}</TvMuted>
-        <TvRow>
-          {['', '1', '18', '36', '67', '112'].map((n, i) => (
-            <TvButton key={n || 'all'} preferred={i === 0} label={n ? `${n}` : L('Toutes')} onPress={() => setQ(n)} />
-          ))}
-          <TvBack />
-        </TvRow>
-      </>
+      <TvRow>
+        {['', '1', '18', '36', '67', '112'].map((n, i) => (
+          <TvButton key={n || 'all'} preferred={i === 0} label={n ? `${n}` : L('Toutes')} onPress={() => setQ(n)} />
+        ))}
+        <TvBack />
+      </TvRow>
     ),
     [],
   );
+  const missing = SURAHS.length === 0;
   return (
+    <View style={{ flex: 1, minHeight: 720, backgroundColor: '#10211C' }}>
+      <View style={{ paddingHorizontal: 90, paddingTop: 60 }}>
+        <Text style={{ color: '#F4F1EA', fontSize: 56, fontWeight: '800' }}>{L('Coran')}</Text>
+        {missing ? (
+          <>
+            <TvMuted>{L('Le texte de cette sourate n’a pas pu être ouvert.')}</TvMuted>
+            <TvBack />
+          </>
+        ) : (
+          <TvMuted>{L('Choisissez une sourate. Le texte est celui déjà dans l’application. La récitation vient des mêmes sources.')}</TvMuted>
+        )}
+      </View>
+      {missing ? null : (
     <TvPremiumGate feature="quran">
       <TvVirtualList
         grid
@@ -50,5 +62,7 @@ export default function TvQuranIndex() {
         )}
       />
     </TvPremiumGate>
+      )}
+    </View>
   );
 }
