@@ -5,6 +5,7 @@ import { TvButton, TvMuted, TvRow, TvScroll, TvTitle, useTvGrid } from '@/compon
 import { usePremium } from '@/lib/premium';
 import { useFeatureFlags } from '@/lib/use-premium';
 import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive } from '@/lib/tv';
+import { chunkTv } from '@/lib/tv-surface';
 import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
@@ -31,27 +32,32 @@ export default function TvHome() {
       <Text style={{ color: t.accent, fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
       <TvTitle>{L('Zikru')}</TvTitle>
       <TvMuted>{L('Le salon : le Coran, la prière et le dhikr de la famille, sur grand écran.')}</TvMuted>
-      <TvRow gap={grid.gap}>
-        {TILES.map((tile, i) => {
-          const locked = TV_FEATURES[tile.feature].premium && premium.ready && !tvFeatureAllowed(tile.feature, entitled, premium.payments);
-          return (
-            <View key={tile.href} style={{ width: grid.tileWidth, flexGrow: 0, flexShrink: 0 }}>
-              <TvButton
-                block
-                preferred={i === 0}
-                label={L(tile.label)}
-                hint={L(tile.hint)}
-                locked={locked}
-                onPress={() => router.push(tile.href)}
-              />
-            </View>
-          );
-        })}
-      </TvRow>
+      {chunkTv(TILES, grid.columns).map((row) => (
+        <TvRow key={row.map((cell) => cell.item.href).join('-')} gap={grid.gap}>
+          {row.map((cell) => {
+            const tile = cell.item;
+            const locked = TV_FEATURES[tile.feature].premium && premium.ready && !tvFeatureAllowed(tile.feature, entitled, premium.payments);
+            return (
+              <View key={tile.href} style={{ width: grid.tileWidth, minWidth: grid.tileWidth, maxWidth: grid.tileWidth, flexBasis: grid.tileWidth, flexGrow: 0, flexShrink: 0 }}>
+                <TvButton
+                  block
+                  preferred={cell.index === 0}
+                  label={L(tile.label)}
+                  hint={L(tile.hint)}
+                  locked={locked}
+                  onPress={() => router.push(tile.href)}
+                />
+              </View>
+            );
+          })}
+        </TvRow>
+      ))}
       {!entitled ? (
         <>
           <TvRow>
-            <TvButton label={L('Restaurer les achats')} hint={L('Même identifiant Apple que sur iPhone')} onPress={() => void premium.restore().then(setRestored)} />
+            <View style={{ width: Math.max(grid.tileWidth, 420), flexGrow: 0, flexShrink: 0 }}>
+              <TvButton block label={L('Restaurer les achats')} hint={L('Même identifiant Apple que sur iPhone')} onPress={() => void premium.restore().then(setRestored)} />
+            </View>
           </TvRow>
           {restored === false && premium.phase !== 'offline' ? <TvMuted>{L('Aucun achat Premium à restaurer pour ce compte Apple.')}</TvMuted> : null}
           {premium.phase === 'offline' ? <TvMuted>{L('Pas de connexion. Réessayez quand vous serez en ligne.')}</TvMuted> : null}

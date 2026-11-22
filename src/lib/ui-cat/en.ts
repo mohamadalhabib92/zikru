@@ -443,6 +443,8 @@ export const CAT: Record<string, string> = {
   "Code reçu": "Code received",
   "Code visible seulement sur l’appareil qui l’a créé": "Code only visible on the device that created it",
   "Code à 6 chiffres": "6-digit code",
+  "Ce champ est le code à 6 chiffres de l’e-mail. Le code de la famille se saisit après la connexion.": "This field is the 6-digit code from the email. The family code is entered after you sign in.",
+  "D’abord le code à 6 chiffres envoyé par e-mail. Le code de la famille, dix caractères, vient ensuite d’un parent sur iPhone.": "First, the 6-digit code sent by email. The family code, ten characters, comes next from a parent on iPhone.",
   "Cohérence · tafakkur · jeux · tajwid": "Coherence · tafakkur · games · tajwid",
   "Collection choisie et référencée": "Selected, referenced collection",
   "Collection choisie · références vérifiables": "Selected collection · verifiable references",

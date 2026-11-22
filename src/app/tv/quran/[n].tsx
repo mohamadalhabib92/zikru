@@ -65,7 +65,9 @@ function SurahBody({ surah }: { surah: number }) {
     let live = true;
     loadSurahUthmani(surah)
       .then((rows) => {
-        if (live) setAyahs(rows);
+        if (!live) return;
+        if (!rows?.length) setErr(L('Le texte de cette sourate n’a pas pu être ouvert.'));
+        else setAyahs(rows);
       })
       .catch(() => {
         if (live) setErr(L('Le texte de cette sourate n’a pas pu être ouvert.'));
@@ -78,6 +80,7 @@ function SurahBody({ surah }: { surah: number }) {
   const count = ayahs?.length ?? meta?.[4] ?? 1;
   const ayah = Math.min(count, Math.max(1, picked ?? playingHere ?? 1));
   const text = ayahs?.[ayah - 1] ?? '';
+  const waiting = ayahs == null && !err;
   const type = tvAyahType(text);
   const showBasmala = surah !== 1 && surah !== 9;
   const play = () => {
@@ -90,7 +93,8 @@ function SurahBody({ surah }: { surah: number }) {
   return (
     <TvScroll>
       <TvTitle>{meta ? `${meta[0]}. ${meta[2]}` : L('Sourate')}</TvTitle>
-      {showBasmala ? (
+      {waiting ? <Text style={{ color: TV_ON_CARD, fontSize: 34, lineHeight: 46, marginTop: 16 }}>{L('Chargement…')}</Text> : null}
+      {showBasmala && !waiting ? (
         <Text style={{ color: t.accent, fontSize: 48, lineHeight: 86, textAlign: 'right', marginTop: 12, fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{BASMALA_UTHMANI}</Text>
       ) : null}
       <View style={{ marginTop: 18 }}>
@@ -101,7 +105,7 @@ function SurahBody({ surah }: { surah: number }) {
                 {ayah}
                 {playingHere === ayah ? ` · ${L('Lecture')}` : ''}
               </Text>
-              <Text style={{ color: on ? TV_FOCUS_INK : TV_ON_CARD, fontSize: type.fontSize, lineHeight: type.lineHeight, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || '…'}</Text>
+              <Text style={{ color: on ? TV_FOCUS_INK : TV_ON_CARD, fontSize: type.fontSize, lineHeight: type.lineHeight, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{text || (waiting ? '' : '…')}</Text>
             </>
           )}
         </TvFocusable>

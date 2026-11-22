@@ -61,6 +61,7 @@ function TvInner({ style, children, onFocus, onBlur, tvPlain: _plain, ...rest }:
         const on = isOn(state as PressState, hot);
         return [userStyle(style, state as PressState), tvFocusStyle(on)];
       }}
+      {...(Platform.isTV ? { tvParallaxProperties: { enabled: false } } : {})}
     >
       {(state) => {
         const on = isOn(state as PressState, hot);

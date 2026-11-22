@@ -30,6 +30,9 @@ import { TVPressable, tvFocusStyle } from '@/ui/tv-pressable';
 
 const { FlatList, ScrollView, TextInput, View, useWindowDimensions } = ReactNative;
 type ViewProps = ComponentProps<typeof View>;
+type TvFieldProps = ComponentProps<typeof TextInput>;
+/** Les vues d’habillage ne doivent pas prendre le focus : sinon la télé allume une pastille blanche sans le texte. */
+const inert = { isTVSelectable: false } as ViewProps;
 
 /**
  * Marge d’overscan Apple TV à 1920×1080 : 90 pt sur les côtés, 60 pt en haut.
@@ -185,6 +188,7 @@ export function TvVirtualList<T>({
   const gap = grid ? spec.gap : 24;
   const rows = useMemo(() => chunkTv(data, columns), [data, columns]);
   return (
+    <View style={{ flex: 1, minHeight: spec.screenHeight, backgroundColor: t.bg }} {...inert}>
     <FocusScope>
       <TVFocusGuideView style={{ flex: 1, backgroundColor: t.bg }}>
         <FlatList
@@ -211,6 +215,7 @@ export function TvVirtualList<T>({
         />
       </TVFocusGuideView>
     </FocusScope>
+    </View>
   );
 }
 
@@ -264,7 +269,7 @@ export function TvFocusable({
   const fx = useVisualEffects();
   const relief = isGlass() && fx.blur;
   return (
-    <View ref={box} collapsable={false} style={{ flexGrow: block ? 1 : undefined, width: block ? '100%' : undefined, overflow: 'visible' }}>
+    <View ref={box} collapsable={false} {...inert} style={{ flexGrow: block ? 1 : undefined, width: block ? '100%' : undefined, overflow: 'visible' }}>
       <TVPressable
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -321,8 +326,8 @@ export function TvButton({
         return (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
             <View style={tvButtonLabelBox(!!block)}>
-              <Text allowFontScaling={false} style={{ color: colors.ink, fontSize: TV_BUTTON_LABEL_SIZE, fontWeight: '800' }}>{label}</Text>
-              {hint ? <Text allowFontScaling={false} style={{ color: colors.hint, fontSize: TV_BUTTON_HINT_SIZE, marginTop: 6 }}>{hint}</Text> : null}
+              <Text allowFontScaling={false} numberOfLines={2} style={{ color: colors.ink, fontSize: TV_BUTTON_LABEL_SIZE, fontWeight: '800', width: '100%' }}>{label}</Text>
+              {hint ? <Text allowFontScaling={false} numberOfLines={2} style={{ color: colors.hint, fontSize: TV_BUTTON_HINT_SIZE, marginTop: 6, width: '100%' }}>{hint}</Text> : null}
               {badge ? <Text allowFontScaling={false} style={{ color: colors.badge, fontSize: TV_BUTTON_HINT_SIZE, fontWeight: '800', marginTop: 8 }}>{badge}</Text> : null}
               {locked ? <Text allowFontScaling={false} style={{ color: colors.badge, fontSize: TV_BUTTON_HINT_SIZE, fontWeight: '800', marginTop: 8 }}>{L('Zikru Premium')}</Text> : null}
             </View>
@@ -340,12 +345,18 @@ export function TvField({
   onChange,
   preferred,
   autoCapitalize = 'none',
+  keyboardType = 'default',
+  maxLength,
+  secureTextEntry,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   preferred?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: TvFieldProps['keyboardType'];
+  maxLength?: number;
+  secureTextEntry?: boolean;
 }) {
   const arm = useArmedPreferred(preferred);
   const [hot, setHot] = useState(false);
@@ -363,6 +374,10 @@ export function TvField({
           onChangeText={onChange}
           hasTVPreferredFocus={arm}
           autoCapitalize={autoCapitalize}
+          autoCorrect={false}
+          keyboardType={keyboardType}
+          maxLength={maxLength}
+          secureTextEntry={secureTextEntry}
           placeholderTextColor={TV_ON_CARD_MUTED}
           onFocus={() => {
             setHot(true);
