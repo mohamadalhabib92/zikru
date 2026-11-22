@@ -159,6 +159,17 @@ do $$ declare n int; begin
   perform public.set_group_muted('circle', tests.get('circle')::uuid, true);
   assert (select muted from public.group_unread() where scope_id = tests.get('circle')::uuid), 'sourdine enregistrée';
   assert (select count(*) from public.group_prefs) = 1, 'M ne voit que ses préférences';
+end $$;
+-- clock_timestamp() peut coïncider à la microseconde : le message juste après
+-- l’envoi de X a alors created_at = last_read_at et disparaît du compte (`>`).
+reset role;
+update public.group_messages
+   set created_at = clock_timestamp()
+ where circle_id = tests.get('circle')::uuid
+   and sender_id is distinct from tests.get('u_X')::uuid
+   and deleted_at is null;
+set role authenticated;
+do $$ declare n int; begin
   perform tests.as_user('X');
   select unread into n from public.group_unread() where scope_id = tests.get('circle')::uuid;
   assert n = 3, 'X : ses propres messages ne comptent pas ; écrire vaut lecture, obtenu ' || n;
