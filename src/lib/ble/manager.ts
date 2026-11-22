@@ -213,7 +213,12 @@ class BleCounterManager {
       this.subs.delete(f);
     };
   };
+  /**
+   * Un seul écouteur. Un second branchement remplace le premier :
+   * deux abonnements feraient compter chaque appui deux fois.
+   */
   onClicks(f: ClickListener) {
+    this.clickSubs.clear();
     this.clickSubs.add(f);
     return () => {
       this.clickSubs.delete(f);

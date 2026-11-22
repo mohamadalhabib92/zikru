@@ -284,8 +284,20 @@ export function plausibleJump(d: number, elapsedMs: number): number {
   return Math.min(d, allowed);
 }
 export const BASELINE_GRACE_MS = 1500;
-/** Deux trames identiques d'impulsion reçues à moins de DUP_WINDOW_MS sont une double livraison (pas deux appuis). */
-export const DUP_WINDOW_MS = 25;
+/**
+ * Deux notifications identiques à moins de 150 ms sont la même pression
+ * (double livraison GATT, appui puis relâchement). Ce n’est pas un deuxième zikr.
+ */
+export const TAP_DEBOUNCE_MS = 150;
+/** Ancien nom, conservé pour les tests qui parlaient de la fenêtre courte. */
+export const DUP_WINDOW_MS = TAP_DEBOUNCE_MS;
+/**
+ * Même trame revenue 1,0 à 2,8 s après un appui déjà compté : paquet de suivi
+ * (battement, accusé, seconde notification). Trop régulier pour un doigt,
+ * trop tard pour le filtre de 150 ms. La récitation suivante (~9 s) reste comptée.
+ */
+export const FOLLOWUP_MIN_MS = 1000;
+export const FOLLOWUP_MAX_MS = 2800;
 /**
  * Saut immédiatement acceptable : tout écart positif jusqu'à ABSOLUTE_ACCEPT.
  * Le temps d'arrivée ne compte pas : une notification en retard porte déjà le total de la bague.
@@ -320,6 +332,8 @@ export class ClickDecoder {
    * Tant que la valeur ne bouge jamais, chaque notification est un appui, comme un doigt.
    */
   private sawDelta = false;
+  /** Dernier appui vraiment compté (pas la référence de connexion). */
+  private lastTapAt = 0;
   /** Diagnostic : dernière décision du décodeur pour une valeur inattendue. */
   lastEvent: 'attente' | 'confirmé' | 'parasite' | 'doublon' | 'impulsion' | null = null;
   constructor(
@@ -358,6 +372,20 @@ export class ClickDecoder {
     if (max < Number.MAX_SAFE_INTEGER && prev >= max - 5 && v <= 5) return v + max + 1 - prev;
     return null;
   }
+  /** Même trame trop proche, ou paquet de suivi ~2 s après : pas un nouvel appui. */
+  private repeatOfLastTap(now: number): boolean {
+    if (!(this.lastTapAt > 0)) return false;
+    const gap = now - this.lastTapAt;
+    if (gap > 0 && gap < TAP_DEBOUNCE_MS) {
+      this.lastEvent = 'doublon';
+      return true;
+    }
+    if (gap >= FOLLOWUP_MIN_MS && gap <= FOLLOWUP_MAX_MS) {
+      this.lastEvent = 'parasite';
+      return true;
+    }
+    return false;
+  }
   private accept(v: number, now: number, n: number): number {
     this.last = v;
     this.lastAt = now;
@@ -374,7 +402,9 @@ export class ClickDecoder {
         // classée à tort comme compteur absolu, souvent parce que son nom contient « zikr »).
         // Une trame illisible au milieu d’un vrai compteur reste ignorée.
         if (this.last != null) return 0;
+        if (this.repeatOfLastTap(now)) return 0;
         this.lastEvent = 'impulsion';
+        this.lastTapAt = now;
         return 1;
       }
       const prev = this.last;
@@ -394,8 +424,10 @@ export class ClickDecoder {
       // est un appui. Dès que le total a bougé une fois, une répétition redevient un doublon.
       if (v === prev && !this.sawDelta && this.pending == null) {
         if (now - this.subscribedAt < BASELINE_GRACE_MS) return 0;
+        if (this.repeatOfLastTap(now)) return 0;
         this.lastEvent = 'impulsion';
         this.lastAt = now;
+        this.lastTapAt = now;
         return 1;
       }
       const p = this.pending;
@@ -431,7 +463,9 @@ export class ClickDecoder {
     // Une bague « delta » renvoie la même trame à chaque appui. Chaque notification compte.
     // (Une double inscription GATT est évitée à l'abonnement, pas en jetant des appuis.)
     const hex = toHex(b);
+    if (this.lastPulse && hex === this.lastPulse.hex && this.repeatOfLastTap(now)) return 0;
     this.lastPulse = { hex, at: now };
+    this.lastTapAt = now;
     if (this.mapping.pressSignature) return hex === this.mapping.pressSignature ? 1 : 0;
     const per = Math.max(1, this.mapping.notifsPerClick ?? 1);
     this.pulses++;

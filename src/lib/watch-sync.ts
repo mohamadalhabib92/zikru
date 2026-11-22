@@ -13,6 +13,13 @@ import type { Tasbih, TasbihSession } from './tasbih-core';
 import { recordClicks, type TasbihDoc } from './tasbih-log';
 
 export const WATCH_COUNTER_IS_FREE = true as const;
+/**
+ * La montre renvoie ses séances ~2 s après un mouvement (scheduleSend).
+ * Un +1 arrivé dans cette fenêtre, juste après un appui déjà fait sur le téléphone
+ * (bague, doigt, clavier), est l’écho de cet appui : on le note sans le recompter.
+ */
+export const WATCH_ECHO_MIN_MS = 400;
+export const WATCH_ECHO_MAX_MS = 3500;
 export const WATCH_PROTOCOL = 1;
 /** Au-delà, on retire des étapes en partant de la fin. Le texte arabe d’une étape n’est pas coupé. */
 export const CATALOG_JSON_MAX = 60_000;
@@ -246,11 +253,33 @@ function sameZikr(doc: TasbihDoc, s: WatchSession): boolean {
   return s.zikrId === doc.t.dhikrId || (s.alias != null && s.alias === doc.t.dhikrId);
 }
 
+function lastLocalClick(doc: TasbihDoc): { at: number; zikrId: string } | null {
+  for (let i = doc.log.length - 1; i >= 0; i--) {
+    const e = doc.log[i];
+    if (e.s === 'watch') continue;
+    if (typeof e.a === 'number' && typeof e.d === 'string') return { at: e.a, zikrId: e.d };
+  }
+  return null;
+}
+
+/**
+ * +1 montre, même zikr, arrivé 0,4 à 3,5 s après un appui déjà compté sur le téléphone.
+ * C’est le délai fixe d’envoi de la montre, pas une nouvelle pression.
+ */
+export function isPhoneEcho(doc: TasbihDoc, session: WatchSession, receivedAt: number, applied = 0): boolean {
+  const delta = session.count - applied;
+  if (delta !== 1 || !sameZikr(doc, session)) return false;
+  const last = lastLocalClick(doc);
+  if (!last || (last.zikrId !== doc.t.dhikrId && last.zikrId !== session.zikrId)) return false;
+  const gap = receivedAt - last.at;
+  return gap >= WATCH_ECHO_MIN_MS && gap <= WATCH_ECHO_MAX_MS;
+}
+
 /**
  * Fusionne des séances montre dans le document. Ne perd pas les appuis déjà là.
  * Ne compte pas deux fois le même identifiant.
  */
-export function mergeWatchSessions(doc: TasbihDoc, incoming: unknown[], makeId: () => string): MergeResult {
+export function mergeWatchSessions(doc: TasbihDoc, incoming: unknown[], makeId: () => string, receivedAt = Date.now()): MergeResult {
   let meta = watchMetaOf(doc, makeId);
   if (doc.t.count < meta.live) meta = { ...meta, live: doc.t.count };
   let working = doc;
@@ -263,6 +292,10 @@ export function mergeWatchSessions(doc: TasbihDoc, incoming: unknown[], makeId: 
     if (s.origin !== 'watch') continue;
     const prev = meta.applied[s.id] ?? 0;
     if (s.count <= prev) continue;
+    if (isPhoneEcho(working, s, receivedAt, prev)) {
+      meta = { ...meta, applied: { ...meta.applied, [s.id]: s.count } };
+      continue;
+    }
     const delta = s.count - prev;
     const loggedBefore = meta.logged[s.id] ?? 0;
     const wasForeign = meta.foreign.some((f) => f.id === s.id);
