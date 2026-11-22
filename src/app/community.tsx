@@ -30,7 +30,7 @@ export default function Community() {
         {auth.enabled ? (
           <Card>
             <H2>Se connecter</H2>
-            <Muted>Un code à 6 chiffres vous est envoyé par e-mail. Aucun mot de passe.</Muted>
+            <Muted>Le code reçu par e-mail. Aucun mot de passe.</Muted>
             <Spacer h={8} />
             <Button icon="mail-outline" title="Continuer avec mon e-mail" onPress={() => router.push('/auth')} />
           </Card>

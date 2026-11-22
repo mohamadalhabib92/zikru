@@ -4,13 +4,13 @@ import { View } from 'react-native';
 import { TvBack, TvButton, TvField, TvMuted, TvScroll, TvTitle } from '@/components/tv/ui';
 import * as api from '@/lib/community/api';
 import { useAuth } from '@/lib/community/auth';
-import { EMAIL_OTP_LENGTH, INVITE_CODE_LENGTH, emailOtpDigits, inviteCode, looksLikeInviteCode } from '@/lib/join-codes';
+import { EMAIL_OTP_MAX, INVITE_CODE_LENGTH, emailOtpAccepted, emailOtpDigits, inviteCode, looksLikeInviteCode } from '@/lib/join-codes';
 import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
 import { theme as t } from '@/ui/theme';
 
 /**
- * Deux étapes. Le code à 6 chiffres vient de l’e-mail (Supabase, type email).
+ * Deux étapes. Le code reçu par e-mail (Supabase, type email, 6 à 8 chiffres).
  * Le code à 10 caractères vient d’un parent, sur iPhone. On ne les saisit jamais dans le même champ.
  */
 export default function TvJoin() {
@@ -37,12 +37,12 @@ export default function TvJoin() {
   const verify = async () => {
     setErr(null);
     if (looksLikeInviteCode(otp)) {
-      setErr(L('Ce champ est le code à 6 chiffres de l’e-mail. Le code de la famille se saisit après la connexion.'));
+      setErr(L('Ce champ est le code reçu par e-mail. Le code de la famille se saisit après la connexion.'));
       return;
     }
     const digits = emailOtpDigits(otp);
-    if (digits.length < EMAIL_OTP_LENGTH) {
-      setErr(L('Code à 6 chiffres'));
+    if (!emailOtpAccepted(digits)) {
+      setErr(L('Saisissez le code reçu par e-mail.'));
       return;
     }
     try {
@@ -82,12 +82,12 @@ export default function TvJoin() {
       <TvTitle>{L('Rejoindre')}</TvTitle>
       {!auth.session ? (
         <View style={{ marginTop: 18, gap: 16 }}>
-          <TvMuted>{L('D’abord le code à 6 chiffres envoyé par e-mail. Le code de la famille, dix caractères, vient ensuite d’un parent sur iPhone.')}</TvMuted>
+          <TvMuted>{L('D’abord le code reçu par e-mail. Le code de la famille, dix caractères, vient ensuite d’un parent sur iPhone.')}</TvMuted>
           <TvField label={L('E-mail')} value={email} onChange={setEmail} preferred keyboardType="email-address" />
           <TvButton label={L('Recevoir un code')} onPress={() => void send()} />
           {sent ? (
             <>
-              <TvField label={L('Code à 6 chiffres')} value={otp} onChange={(v) => setOtp(emailOtpDigits(v))} keyboardType="number-pad" maxLength={EMAIL_OTP_LENGTH} />
+              <TvField label={L('Code reçu par e-mail')} value={otp} onChange={(v) => setOtp(emailOtpDigits(v))} keyboardType="number-pad" maxLength={EMAIL_OTP_MAX} />
               <TvButton label={L('Se connecter')} onPress={() => void verify()} />
             </>
           ) : null}

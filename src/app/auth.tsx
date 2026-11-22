@@ -4,6 +4,7 @@ import { Platform, View } from 'react-native';
 import { TVPressable as Pressable } from '@/ui/tv-pressable';
 import { Text } from '@/ui/Text';
 import { afterLoginRoute } from '@/lib/community/api';
+import { EMAIL_OTP_MAX, emailOtpAccepted, emailOtpDigits } from '@/lib/join-codes';
 import { routeAfterAuth } from '@/lib/tv-surface';
 import { useAuth } from '@/lib/community/auth';
 import { useConsent } from '@/lib/consent';
@@ -105,27 +106,27 @@ export default function AuthScreen() {
           <Button title="Recevoir un code" icon="mail-outline" disabled={!valid || !agreed} loading={busy} onPress={send} />
         ) : (
           <>
-            <Notice tone="success" title="E-mail envoyé" text="Saisissez ici le code à 6 chiffres de l’e-mail : c’est le plus sûr. Le lien marche aussi, s’il est ouvert sur cet appareil dans l’heure. Pensez aux indésirables." />
+            <Notice tone="success" title="E-mail envoyé" text="Saisissez le code reçu par e-mail : c’est le plus sûr. Le lien marche aussi, s’il est ouvert sur cet appareil dans l’heure. Pensez aux indésirables." />
             <Spacer h={8} />
             <Field
-              label="Code à 6 chiffres"
+              label="Code reçu par e-mail"
               keyboardType="number-pad"
               autoComplete="one-time-code"
               textContentType="oneTimeCode"
-              maxLength={10}
+              maxLength={EMAIL_OTP_MAX}
               value={code}
-              onChangeText={setCode}
+              onChangeText={(v) => setCode(emailOtpDigits(v))}
             />
             <Button
               title="Valider"
               icon="checkmark"
-              disabled={!agreed || code.replace(/\D/g, '').length < 6}
+              disabled={!agreed || !emailOtpAccepted(code)}
               loading={busy}
               onPress={async () => {
                 setBusy(true);
                 setErr(null);
                 try {
-                  await auth.verifyCode(email, code);
+                  await auth.verifyCode(email, emailOtpDigits(code));
                 } catch (e) {
                   setErr((e as Error).message);
                 } finally {

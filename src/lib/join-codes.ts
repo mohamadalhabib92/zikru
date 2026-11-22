@@ -1,13 +1,23 @@
 /** Deux codes différents. Ne pas les mélanger. */
 
-/** Code envoyé par e-mail (Supabase `verifyOtp` type `email`). Six chiffres. */
-export const EMAIL_OTP_LENGTH = 6;
+/**
+ * Code envoyé par e-mail (Supabase `verifyOtp`, type `email`).
+ * Le projet est à 8 chiffres ; on accepte 6 à 8 pour suivre le réglage sans le figer.
+ */
+export const EMAIL_OTP_MIN = 6;
+export const EMAIL_OTP_MAX = 8;
 /** Code d’invitation créé sur l’iPhone (`private.gen_code` : 10 caractères). */
 export const INVITE_CODE_LENGTH = 10;
 
-/** Garde uniquement les chiffres, au plus 6. */
+/** Chiffres seuls, espaces retirés, au plus 8. */
 export function emailOtpDigits(raw: string): string {
-  return raw.replace(/\D/g, '').slice(0, EMAIL_OTP_LENGTH);
+  return raw.trim().replace(/\D/g, '').slice(0, EMAIL_OTP_MAX);
+}
+
+/** Assez long pour être envoyé à Supabase, pas plus que le maximum du champ. */
+export function emailOtpAccepted(raw: string): boolean {
+  const n = emailOtpDigits(raw).length;
+  return n >= EMAIL_OTP_MIN && n <= EMAIL_OTP_MAX;
 }
 
 /** Code famille : majuscules, lettres et chiffres, 10 maximum. */
