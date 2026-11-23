@@ -47,6 +47,7 @@ src/app/qibla.tsx
 src/app/quran/[n].tsx
 src/app/quran/bookmarks.tsx
 src/app/quran/hifz-session.tsx
+src/app/quran/hifz-recall.tsx
 src/app/quran/hifz.tsx
 src/app/quran/index.tsx
 src/app/quran/khatma.tsx
