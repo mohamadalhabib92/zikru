@@ -1,8 +1,9 @@
 import { router, Stack, usePathname } from 'expo-router';
 import { Component, useEffect, type ReactNode } from 'react';
-import { BackHandler, Platform } from 'react-native';
-import { TvButton, TvMuted, TvRow, TvScroll, TvTitle } from '@/components/tv/ui';
+import { BackHandler, Platform, View } from 'react-native';
+import { TvButton, TvRow } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
+import { Text } from '@/ui/Text';
 import { createTvMenuGate, subscribeTvMenu, syncTvMenuKey, tvMenuCaptures } from '@/lib/tv-surface';
 
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -11,14 +12,14 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Pro
 
 export function TvRecovery({ message, onRetry }: { message?: string; onRetry?: () => void }) {
   return (
-    <TvScroll>
-      <TvTitle>{L('Zikru a été interrompu')}</TvTitle>
-      <TvMuted>{message || L('Une erreur est survenue. Vous pouvez réessayer ou revenir à l’accueil.')}</TvMuted>
+    <View style={{ flex: 1, backgroundColor: '#10211C', paddingHorizontal: 90, paddingTop: 80 }}>
+      <Text style={{ color: '#F4F1EA', fontSize: 48, fontWeight: '800' }}>{L('Zikru a été interrompu')}</Text>
+      <Text style={{ color: '#F4F1EA', fontSize: 30, lineHeight: 42, marginTop: 16 }}>{message || L('Une erreur est survenue. Vous pouvez réessayer ou revenir à l’accueil.')}</Text>
       <TvRow>
         {onRetry ? <TvButton preferred label={L('Réessayer')} onPress={onRetry} /> : null}
-        <TvButton preferred={!onRetry} label={L('Accueil')} onPress={() => router.replace('/tv')} />
+        <TvButton preferred={!onRetry} label={L('Retour')} onPress={() => router.replace('/tv')} />
       </TvRow>
-    </TvScroll>
+    </View>
   );
 }
 

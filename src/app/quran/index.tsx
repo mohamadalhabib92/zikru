@@ -17,6 +17,7 @@ import { SURAHS } from '@/lib/surahs';
 import { FadeIn, Grid, HeroHeader, ProgressBar, Tile, useLayout } from '@/ui/ds';
 import { Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
+import { editionFetchAllowed } from '@/lib/release-content';
 import { L } from '@/lib/l10n';
 import { arLang } from '@/ui/ar-lang';
 
@@ -187,7 +188,7 @@ export default function QuranHub() {
               {h.tr ? <Text style={{ color: b.inkMuted, fontSize: 13 }} numberOfLines={2}>{h.tr}</Text> : null}
             </Pressable>
           ))}
-          {verseHits && verseHits.phonetic === false && !/[\u0600-\u06FF]/.test(q) ? (
+          {editionFetchAllowed(TRANSLIT_EDITION) && verseHits && verseHits.phonetic === false && !/[\u0600-\u06FF]/.test(q) ? (
             <Pressable accessibilityRole="button" disabled={tlState === 'busy'} onPress={getTranslit} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: b.line, backgroundColor: b.paper }}>
               {tlState === 'busy' ? <ActivityIndicator color={b.green} /> : <Ionicons name="mic-outline" size={18} color={b.green} />}
               <Text style={{ color: b.ink, fontSize: 13, flex: 1 }}>

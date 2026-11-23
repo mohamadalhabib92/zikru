@@ -3,6 +3,8 @@ import { Text } from '@/ui/Text';
 import { GoalsLink } from '@/components/GoalsLink';
 import { PatternBg } from '@/components/zikru/Pattern';
 import { useData } from '@/lib/data';
+import { formatCount, formatDate } from '@/lib/locale-format';
+import { useSettings } from '@/lib/settings';
 import { bestStreak, dayKey, LEVELS, levelFor, streak, useGrowth } from '@/lib/growth';
 import { useDispense } from '@/lib/dispense-context';
 import { Ionicons, Screen, type IconName } from '@/ui/kit';
@@ -11,7 +13,10 @@ import { alpha, brand as b } from '@/ui/theme';
 import { L } from '@/lib/l10n';
 
 export default function Journey() {
+  const { s } = useSettings();
   const { tasbih } = useData();
+  const n = (v: number) => formatCount(v, s.lang);
+  const day = (d: Date, opts?: Intl.DateTimeFormatOptions) => formatDate(d, s.lang, opts);
   const g = useGrowth();
   const total = tasbih.total;
   const lvl = levelFor(total);
@@ -49,19 +54,19 @@ export default function Journey() {
         <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900' }}>
           {lvl.name} · {lvl.fr}
         </Text>
-        <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{total.toLocaleString('fr-CH')} dhikr au total</Text>
+        <Text maxFontSizeMultiplier={2} style={{ color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{n(total)} dhikr au total</Text>
         <View style={{ height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.2)', marginTop: 12, overflow: 'hidden' }}>
           <View style={{ width: `${Math.round(lvl.progress * 100)}%`, height: '100%', backgroundColor: b.gold }} />
         </View>
         <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6, fontSize: 12 }}>
-          {lvl.next ? L('{n} dhikr avant {name} ({fr})', { n: (lvl.next.min - total).toLocaleString('fr-CH'), name: lvl.next.name, fr: L(lvl.next.fr) }) : 'Palier maximal atteint — al-hamdu lillah'}
+          {lvl.next ? L('{n} dhikr avant {name} ({fr})', { n: n(lvl.next.min - total), name: lvl.next.name, fr: L(lvl.next.fr) }) : 'Palier maximal atteint — al-hamdu lillah'}
         </Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
         <GoalsLink />
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
           {[
-            { l: 'Aujourd’hui', v: today.toLocaleString('fr-CH'), i: 'today' as IconName, c: b.green },
+            { l: 'Aujourd’hui', v: n(today), i: 'today' as IconName, c: b.green },
             { l: 'Série', v: `${cur} j`, i: 'flame' as IconName, c: b.rust },
             { l: 'Record', v: `${best} j`, i: 'trophy' as IconName, c: b.goldDeep },
           ].map((x) => (
@@ -75,12 +80,12 @@ export default function Journey() {
 
         <LCard>
           <LTitle>7 derniers jours</LTitle>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 110, gap: 8, marginTop: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', minHeight: 110, gap: 8, marginTop: 10 }}>
             {week.map((x) => (
               <View key={x.d.toISOString()} style={{ flex: 1, alignItems: 'center' }}>
                 <Text style={{ color: b.inkMuted, fontSize: 10 }}>{x.v || ''}</Text>
                 <View style={{ width: '70%', height: Math.max(4, (x.v / max) * 80), borderRadius: 6, backgroundColor: x.v ? b.greenSoft : b.line }} />
-                <Text style={{ color: b.inkMuted, fontSize: 11, marginTop: 4 }}>{x.d.toLocaleDateString('fr-CH', { weekday: 'narrow' })}</Text>
+                <Text maxFontSizeMultiplier={2} style={{ color: b.inkMuted, fontSize: 11, marginTop: 4 }}>{day(x.d, { weekday: 'narrow' })}</Text>
               </View>
             ))}
           </View>
@@ -90,11 +95,11 @@ export default function Journey() {
           <LTitle>30 derniers jours</LTitle>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
             {month.map((x) => (
-              <View key={x.d.toISOString()} accessibilityLabel={L('{d} : {n} dhikr', { d: x.d.toLocaleDateString('fr-CH'), n: x.v })} style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: x.v === 0 ? b.line : x.v < 100 ? alpha(b.green, 0.35) : x.v < 500 ? alpha(b.green, 0.65) : b.green }} />
+              <View key={x.d.toISOString()} accessibilityLabel={L('{d} : {n} dhikr', { d: day(x.d), n: x.v })} style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: x.v === 0 ? b.line : x.v < 100 ? alpha(b.green, 0.35) : x.v < 500 ? alpha(b.green, 0.65) : b.green }} />
             ))}
           </View>
           <LMuted style={{ marginTop: 8 }}>
-            {monthSum.toLocaleString('fr-CH')} dhikr · {monthActive} jours actifs sur 30
+            {n(monthSum)} dhikr · {monthActive} jours actifs sur 30
           </LMuted>
         </LCard>
 
@@ -116,7 +121,7 @@ export default function Journey() {
               <Text style={{ color: b.ink, fontWeight: i === lvl.index - 1 ? '900' : '600', flex: 1 }}>
                 {i + 1}. {l.name} — {l.fr}
               </Text>
-              <LMuted>{l.min.toLocaleString('fr-CH')}</LMuted>
+              <LMuted>{n(l.min)}</LMuted>
             </View>
           ))}
         </LCard>

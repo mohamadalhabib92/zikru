@@ -13,6 +13,7 @@ import { isIosAppOnMac } from '@/lib/mac';
 import { keepPhoto, ocrSupport, recognizeText } from '@/lib/ocr';
 import { quranEditionLang } from '@/lib/i18n';
 import { translationFor } from '@/lib/quran';
+import { editionFetchAllowed } from '@/lib/release-content';
 import { normAr } from '@/lib/ar-norm';
 import { loadQuranIndex, matchQuran, type MatchResult, type QuranProposal } from '@/lib/quran-match';
 import { surahEdition } from '@/lib/quran-reader-data';
@@ -52,7 +53,7 @@ function useVerseExtras(p: QuranProposal | null, lang: string) {
     if (!p) return;
     let alive = true;
     const pick = (l: string[] | null) => (l ? l.slice(p.a - 1, p.b).join(' ') : undefined);
-    Promise.all([surahEdition(p.s, ed.id).catch(() => null), surahEdition(p.s, 'en.transliteration').catch(() => null)]).then(([t, tl]) => {
+    Promise.all([surahEdition(p.s, ed.id).catch(() => null), editionFetchAllowed('en.transliteration') ? surahEdition(p.s, 'en.transliteration').catch(() => null) : Promise.resolve(null)]).then(([t, tl]) => {
       if (alive) setSt({ key, tr: pick(t), tl: pick(tl), label: ed.label });
     });
     return () => {

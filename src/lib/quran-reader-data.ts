@@ -5,6 +5,7 @@
 import { stripBasmala } from './quran';
 import { fetchQuranEncSurah } from './quran-enc';
 import { isQuranEncId, quranEncKeyOf } from './quran-licenses';
+import { editionFetchAllowed, tafsirAllowed } from './release-content';
 import { cachedTranslation } from './quran-offline';
 import { fromIndex, OFFSETS, TOTAL_AYAHS } from './quran-nav';
 import { loadSurahRaw, peekSurahRaw, preloadSurahRaw } from './quran-sura/load';
@@ -69,6 +70,7 @@ export function surahEdition(n: number, ed: string): Promise<string[] | null> {
   const k = `${n}-${ed}`;
   if (!mem.has(k)) {
     const p = (async () => {
+      if (!editionFetchAllowed(ed)) return null;
       const own = await loadJSON<string[] | null>(`qtr-${n}-${ed}`, null);
       if (own?.length) return own;
       if (ed === 'en.pickthall') {
@@ -127,6 +129,7 @@ const decode = (s: string) =>
 
 /** Tafsir d’un verset (mis en cache après la première lecture). */
 export async function getTafsir(id: string, s: number, a: number): Promise<string> {
+  if (!tafsirAllowed(id)) throw new Error('licence non confirmée');
   const key = `tafsir-${id}-${s}-${a}`;
   const c = await loadJSON<string | null>(key, null);
   if (c) return c;

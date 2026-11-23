@@ -4,7 +4,7 @@
  * Les marges d’overscan sont les mêmes que `tvPad` (90 / 60 / 72).
  */
 
-export const TV_FOCUS_SCALE = 1.08;
+export const TV_FOCUS_SCALE = 1.05;
 export const TV_PAD_X = 90;
 export const TV_PAD_TOP = 60;
 export const TV_PAD_BOTTOM = 72;
@@ -13,10 +13,73 @@ export const TV_PAD_BOTTOM = 72;
 export const TV_CARD_BG = '#1A2420';
 export const TV_ON_CARD = '#F4F1EA';
 export const TV_ON_CARD_MUTED = '#D7E0DA';
-export const TV_FOCUS_FILL = '#F6E7B8';
-export const TV_FOCUS_INK = '#141311';
+export const TV_FOCUS_FILL = '#F4EBD9';
+export const TV_FOCUS_INK = '#0E2A22';
+export const TV_FOCUS_BORDER = '#C8875A';
+export const TV_FOCUS_BORDER_WIDTH = 3;
 export const TV_FOCUS_MUTED = '#4A4336';
 export const TV_BADGE_ON_CARD = '#F0D48A';
+
+/** Bouton du salon : assez large pour un label, lisible à 3 mètres. */
+export const TV_BUTTON_MIN_WIDTH = 120;
+export const TV_BUTTON_LABEL_SIZE = 34;
+export const TV_BUTTON_HINT_SIZE = 28;
+
+/**
+ * Colonne du texte d’un bouton.
+ * `flex: 1` (flexBasis 0) dans une rangée sans largeur fixe réduit le label à 0 pt :
+ * on ne voit plus que la pastille de padding. Réservé aux tuiles qui ont déjà une largeur.
+ */
+export function tvButtonLabelBox(block: boolean): { flexGrow: number; flexShrink: number; flexBasis: 'auto' } {
+  return block
+    ? { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' }
+    : { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' };
+}
+
+/** Couleurs du texte. Au focus, titre et sous-titre sont la même encre foncée sur le fond clair. */
+export function tvButtonInk(focused: boolean): { ink: string; hint: string; badge: string } {
+  if (focused) return { ink: TV_FOCUS_INK, hint: TV_FOCUS_INK, badge: TV_FOCUS_INK };
+  return { ink: TV_ON_CARD, hint: TV_ON_CARD_MUTED, badge: TV_BADGE_ON_CARD };
+}
+
+export type TvFocusChrome = {
+  backgroundColor?: string;
+  borderColor: string;
+  borderWidth: number;
+  scale: number;
+  shadowColor: string;
+  shadowOpacity: number;
+  shadowRadius: number;
+  shadowOffsetY: number;
+  color: string;
+};
+
+/** Style unique du focus tvOS. Au repos, le fond reste celui de la carte sombre. */
+export function tvFocusChrome(on: boolean): TvFocusChrome {
+  if (!on) {
+    return {
+      borderColor: 'transparent',
+      borderWidth: TV_FOCUS_BORDER_WIDTH,
+      scale: 1,
+      shadowColor: 'transparent',
+      shadowOpacity: 0,
+      shadowRadius: 0,
+      shadowOffsetY: 0,
+      color: TV_ON_CARD,
+    };
+  }
+  return {
+    backgroundColor: TV_FOCUS_FILL,
+    borderColor: TV_FOCUS_BORDER,
+    borderWidth: TV_FOCUS_BORDER_WIDTH,
+    scale: TV_FOCUS_SCALE,
+    shadowColor: TV_FOCUS_INK,
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffsetY: 4,
+    color: TV_FOCUS_INK,
+  };
+}
 
 export type TvGrid = {
   columns: number;
@@ -42,6 +105,11 @@ export function isTvRoute(path: string): boolean {
  * reste `/`, donc l’iPhone (onglets ou onboarding). Sur Apple TV on remplace par `/tv`.
  * Sur iPhone, toujours `null` : aucune route n’est forcée.
  */
+/** Après une connexion, l’Apple TV reste sur le salon. Une route iPhone (Communauté, invitation) laisserait un écran vide. */
+export function routeAfterAuth(isTV: boolean, phoneRoute: string): string {
+  return isTV ? '/tv' : phoneRoute;
+}
+
 export function tvLaunchHref(path: string, isTV: boolean): '/tv' | null {
   if (!isTV) return null;
   if (isTvRoute(path)) return null;

@@ -6,6 +6,7 @@ import { SURAHS } from './surahs';
 import { stripBasmala } from './quran';
 import { fetchQuranEncQuran } from './quran-enc';
 import { isQuranEncId, quranEncKeyOf } from './quran-licenses';
+import { editionFetchAllowed } from './release-content';
 import { readText, writeText } from './text-cache';
 import { hasArabic, normAr } from './ar-norm';
 import { tlKey, tlMatch } from './translit-norm';
@@ -62,8 +63,9 @@ export function loadArabic() {
 const trMem: Record<string, Promise<string[] | null> | undefined> = {};
 const trKey = (ed: string) => `quran-tr-${ed}`;
 
-/** Traduction en cache local (null si jamais téléchargée). */
+/** Traduction en cache local (null si jamais téléchargée, ou si l’édition est masquée). Le fichier n’est pas effacé. */
 export function cachedTranslation(edition: string): Promise<string[] | null> {
+  if (!editionFetchAllowed(edition)) return Promise.resolve(null);
   if (!trMem[edition])
     trMem[edition] = readText(trKey(edition)).then(async (t) => {
       const lines = t ? t.split('\n') : null;
@@ -82,6 +84,7 @@ export function cachedTranslation(edition: string): Promise<string[] | null> {
 
 /** Télécharge la traduction complète (une requête), la compacte (1 ligne / verset) et la garde. */
 export async function downloadTranslation(edition: string): Promise<string[]> {
+  if (!editionFetchAllowed(edition)) throw new Error('licence non confirmée');
   const have = await cachedTranslation(edition);
   if (have) return have;
   const lines = isQuranEncId(edition)

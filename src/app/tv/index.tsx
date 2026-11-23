@@ -1,16 +1,18 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { TvButton, TvMuted, TvRow, TvScroll, TvTitle, useTvGrid } from '@/components/tv/ui';
+import { TvButton, TvMuted, TvRow, TvScroll, useTvFrame, useTvGrid } from '@/components/tv/ui';
 import { usePremium } from '@/lib/premium';
 import { useFeatureFlags } from '@/lib/use-premium';
 import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive } from '@/lib/tv';
+import { chunkTv } from '@/lib/tv-surface';
 import { L } from '@/lib/l10n';
 import { Text } from '@/ui/Text';
-import { theme as t } from '@/ui/theme';
 
-const TILES: { href: '/tv/quran' | '/tv/prayers' | '/tv/dhikr' | '/tv/ambient' | '/tv/kids' | '/tv/join' | '/tv/chat'; label: string; hint: string; feature: 'quran' | 'prayers' | 'dhikr' | 'ambient' | 'kids' | 'join' | 'chat' }[] = [
+const TILES: { href: '/tv/quran' | '/tv/hifz' | '/tv/aqida' | '/tv/prayers' | '/tv/dhikr' | '/tv/ambient' | '/tv/kids' | '/tv/join' | '/tv/chat'; label: string; hint: string; feature: 'quran' | 'hifz' | 'aqida' | 'prayers' | 'dhikr' | 'ambient' | 'kids' | 'join' | 'chat' }[] = [
   { href: '/tv/quran', label: 'Coran', hint: 'Grand texte et récitation', feature: 'quran' },
+  { href: '/tv/hifz', label: 'Mémorisation', hint: 'Hifz : masquer, répéter, réviser', feature: 'hifz' },
+  { href: '/tv/aqida', label: 'Aqida (Ibn ʿĀshir)', hint: 'ʿAqīda ashʿarite, selon le matn d’Ibn ʿĀshir', feature: 'aqida' },
   { href: '/tv/prayers', label: 'Prières', hint: 'Horaires et adhan', feature: 'prayers' },
   { href: '/tv/dhikr', label: 'Dhikr en famille', hint: 'Compteur partagé', feature: 'dhikr' },
   { href: '/tv/ambient', label: 'Ambiance', hint: 'Paysage du salon', feature: 'ambient' },
@@ -25,37 +27,47 @@ export default function TvHome() {
   const [restored, setRestored] = useState<boolean | null>(null);
   const entitled = tvPremiumActive(premium.record, flags.serverPremium ? { plan: 'premium' } : null);
   const grid = useTvGrid();
+  const frame = useTvFrame();
   return (
+    <View style={{ flex: 1, width: frame.width, height: frame.height, minHeight: frame.height, backgroundColor: '#10211C' }}>
+    <View style={{ paddingHorizontal: 90, paddingTop: 48 }}>
+      <Text style={{ color: '#F4F1EA', fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
+      <Text style={{ color: '#F4F1EA', fontSize: 56, fontWeight: '800' }}>{L('Zikru')}</Text>
+    </View>
     <TvScroll>
-      <Text style={{ color: t.accent, fontSize: 28, fontWeight: '800', letterSpacing: 1.6 }}>ZIKRU</Text>
-      <TvTitle>{L('Zikru')}</TvTitle>
       <TvMuted>{L('Le salon : le Coran, la prière et le dhikr de la famille, sur grand écran.')}</TvMuted>
-      <TvRow gap={grid.gap}>
-        {TILES.map((tile, i) => {
-          const locked = TV_FEATURES[tile.feature].premium && premium.ready && !tvFeatureAllowed(tile.feature, entitled, premium.payments);
-          return (
-            <View key={tile.href} style={{ width: grid.tileWidth, flexGrow: 0, flexShrink: 0 }}>
-              <TvButton
-                block
-                preferred={i === 0}
-                label={L(tile.label)}
-                hint={L(tile.hint)}
-                locked={locked}
-                onPress={() => router.push(tile.href)}
-              />
-            </View>
-          );
-        })}
-      </TvRow>
+      {chunkTv(TILES, grid.columns).map((row) => (
+        <TvRow key={row.map((cell) => cell.item.href).join('-')} gap={grid.gap}>
+          {row.map((cell) => {
+            const tile = cell.item;
+            const locked = TV_FEATURES[tile.feature].premium && premium.ready && !tvFeatureAllowed(tile.feature, entitled, premium.payments);
+            return (
+              <View key={tile.href} style={{ width: grid.tileWidth, minWidth: grid.tileWidth, maxWidth: grid.tileWidth, flexBasis: grid.tileWidth, flexGrow: 0, flexShrink: 0 }}>
+                <TvButton
+                  block
+                  preferred={cell.index === 0}
+                  label={L(tile.label)}
+                  hint={L(tile.hint)}
+                  locked={locked}
+                  onPress={() => router.push(tile.href)}
+                />
+              </View>
+            );
+          })}
+        </TvRow>
+      ))}
       {!entitled ? (
         <>
           <TvRow>
-            <TvButton label={L('Restaurer les achats')} hint={L('Même identifiant Apple que sur iPhone')} onPress={() => void premium.restore().then(setRestored)} />
+            <View style={{ width: Math.max(grid.tileWidth, 420), flexGrow: 0, flexShrink: 0 }}>
+              <TvButton block label={L('Restaurer les achats')} hint={L('Même identifiant Apple que sur iPhone')} onPress={() => void premium.restore().then(setRestored)} />
+            </View>
           </TvRow>
           {restored === false && premium.phase !== 'offline' ? <TvMuted>{L('Aucun achat Premium à restaurer pour ce compte Apple.')}</TvMuted> : null}
           {premium.phase === 'offline' ? <TvMuted>{L('Pas de connexion. Réessayez quand vous serez en ligne.')}</TvMuted> : null}
         </>
       ) : null}
     </TvScroll>
+    </View>
   );
 }

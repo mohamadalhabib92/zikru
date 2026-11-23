@@ -1,6 +1,6 @@
 # Zikru sur tous les écrans
 
-Ce texte est pour Mohamed. Il dit où l’application peut vivre, ce qui marche déjà, et dans quel ordre avancer. La première version publique laisse de côté l’Apple Watch et l’Apple TV. La cible, elle, est plus large : iPhone, iPad, Mac, Android, le site web, et plus tard la télévision.
+Ce texte est pour Mohamed. Il dit où l’application peut vivre, ce qui marche déjà, et dans quel ordre avancer. La cible est iPhone, iPad, Mac, Android, le site web, l’Apple Watch et l’Apple TV. Le Mac, c’est l’app iPad sur Apple Silicon. L’Apple TV, c’est une version tvOS de la même fiche App Store Connect `6773032754`, pas une deuxième app.
 
 Rien ici ne lance un build, une soumission, ni une migration sur le serveur en ligne.
 
@@ -30,7 +30,9 @@ Limites de ce Mac : pas de fenêtre redimensionnée comme une app Mac, le Blueto
 
 ## Apple TV
 
-Expo 58, dans ce dépôt, n’a pas de cible tvOS. `react-native-tvos` est une branche à part de React Native, pas un plugin qu’on ajoute à cette app. Un jour, un plugin Expo TV pourra exister. Aujourd’hui, l’Apple TV serait **une autre application**, avec son propre enregistrement App Store Connect (plateforme tvOS, pas une case de l’app iPhone).
+L’Apple TV est une version **tvOS** du même projet, profil EAS `production-tv`, projet Expo `zikru-tv`. Elle se soumet sur la **même fiche** App Store Connect que l’iPhone : `ascAppId` `6773032754` (`eas.json`, bloc `submit.production-tv`). Ce n’est pas une deuxième app, et ce n’est pas une case « Mac ». Le binaire téléphone et le binaire télé sont deux builds ; la fiche est la même.
+
+Le salon (`src/app/tv`) ouvre déjà le Coran, l’Aqida, les horaires, le dhikr en famille, l’ambiance, les enfants, rejoindre un groupe et la discussion. La télécommande utilise les composants TV (liste pleine hauteur, boutons dont le texte reste lisible, bouton Retour).
 
 Ce qui a du sens sur une télé, avec la télécommande :
 
@@ -45,7 +47,7 @@ Ce qui n’a pas de sens, ou pas de matériel :
 - la qibla précise (pas de boussole) ;
 - un appel vidéo face à la caméra du téléphone.
 
-Ampleur : un projet natif séparé, une navigation à la télécommande, et seulement une partie des écrans. À faire après le téléphone, le Mac simple, Android et le site.
+Ce qui reste n’est pas un nouveau projet : des essais sur une vraie télé, les captures tvOS, et les fonctions qui n’ont pas de sens sans boussole, caméra ou bague.
 
 ## Android
 
@@ -83,7 +85,7 @@ Le site actuel **est** l’application (PWA) plus la page confidentialité. Il n
 | Texte du Coran (Hafs) | Marche | Marche | Marche | Marche | Gros travail |
 | Écoute du Coran | Marche | Marche | Marche | Marche (hors ligne plus fragile) | Gros travail |
 | Widgets | iPhone / iPad | Non | Prévu dans le code | Sans objet | Sans objet |
-| Achat Premium | StoreKit, sur l’appareil | Même achat que l’iPad | Play Billing prévu, compte Play absent | Pas d’achat Apple. Voir plus bas. | Autre fiche, plus tard |
+| Achat Premium | StoreKit, sur l’appareil | Même achat que l’iPad | Play Billing prévu, compte Play absent | Pas d’achat Apple. Voir plus bas. | Même fiche `6773032754` ; le salon laisse gratuits le Coran, l’Aqida, les horaires et le dhikr |
 | Page vitrine (accueil, fonctions, aide) | Sans objet | Sans objet | Sans objet | Petit travail, Pages gratuit | Sans objet |
 
 « Marche dans le code » veut dire : le même source vise cette plateforme, aucun binaire public n’a été produit dans cette étape.
@@ -109,7 +111,7 @@ L’ampleur est la taille du changement, pas un calendrier.
 3. **Un seul Premium sur le serveur.** Vérifier les reçus Apple, Google et, pour le site seulement, Stripe. Écrire `user_entitlements`. Tant que ce n’est pas fait, le droit reste sur l’appareil et le web ne peut pas vendre.
 4. **Vitrine.** Une page d’accueil, les fonctions, l’aide, à côté de la PWA déjà sur GitHub Pages. Pas de lien depuis l’app iPhone vers un prix Stripe.
 5. **Trous du web qui comptent.** L’OCR reste « coller le texte ». Les appels web existent si le navigateur a WebRTC. Le Bluetooth n’y sera pas.
-6. **Apple TV en dernier**, application séparée, seulement compteur, écoute et lecture en grand.
+6. **Apple TV**, version tvOS déjà dans le dépôt, même fiche `6773032754`. Il reste les essais sur une vraie télé et les captures, pas une nouvelle fiche.
 
 ## Annexe technique
 
@@ -121,4 +123,5 @@ L’ampleur est la taille du changement, pas un calendrier.
 - Appels : `@livekit/react-native` et WebRTC. Sur le web, `callsSupported()` regarde `RTCPeerConnection`.
 - Droit serveur : `user_entitlements`, `private.may_create_groups`, `payments_enabled` faux. Sources qui comptent sans ce drapeau : `manual`, `promo`, `grandfather`. `storekit` et `play` attendent le drapeau.
 - Pages : `.github/workflows/pages.yml`, branche `main` seulement.
-- Apple TV : aucune dépendance tvOS dans `package.json`. Ne pas ajouter `react-native-tvos` dans cette app Expo.
+- Apple TV : profil `production-tv`, `EXPO_TV=1`, même `ascAppId` `6773032754`. `react-native-tvos` n’est pas une dépendance du binaire iPhone ; le prebuild télé l’utilise seulement quand `EXPO_TV=1`.
+- Mac : pas de projet Catalyst. C’est l’app iPad (`supportsTablet: true`) cochée pour les Mac Apple Silicon, même achat Premium.

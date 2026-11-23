@@ -84,6 +84,22 @@ test('canal direct : message si la montre est joignable, file sinon', () => {
   assert.equal(W.liveChannel(false), 'queued');
 });
 
+test('écho ~2 s après la bague : le +1 de la montre n’est pas recompté', () => {
+  let doc = L.recordClicks(L.newDoc('phone'), 1, 'bluetooth', 10_000).doc;
+  assert.equal(doc.t.count, 1);
+  const echo = W.mergeWatchSessions(doc, [session({ id: 'echo-1', count: 1, at: 10_100 })], () => 'p', 12_000);
+  assert.equal(echo.added, 0, 'arrivée 2 s après l’appui téléphone');
+  assert.equal(echo.doc.t.count, 1);
+  const replay = W.mergeWatchSessions(echo.doc, [session({ id: 'echo-1', count: 1, at: 10_100 })], () => 'p', 20_000);
+  assert.equal(replay.added, 0, 'le même total relu plus tard ne compte pas');
+  assert.equal(replay.doc.t.count, 1);
+  const real = W.mergeWatchSessions(replay.doc, [session({ id: 'echo-1', count: 2, at: 30_000 })], () => 'p', 30_000);
+  assert.equal(real.added, 1, 'un vrai appui montre au-delà de l’écho est gardé');
+  assert.equal(real.doc.t.count, 2);
+  const burst = W.mergeWatchSessions(doc, [session({ id: 'crown', count: 5, at: 12_000 })], () => 'p', 12_000);
+  assert.equal(burst.added, 5, 'une rafale n’est pas un écho de +1');
+});
+
 test('clic de bague : le total renvoyé à la montre n’est pas recompté, un second passage montre non plus', () => {
   let doc = L.recordClicks(L.newDoc('phone'), 1, 'bluetooth', 1).doc;
   const sent = W.syncPhoneSession(doc, 10, () => 'p-ring');

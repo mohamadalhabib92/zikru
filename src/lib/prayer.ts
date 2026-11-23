@@ -73,8 +73,20 @@ export const CITIES: Place[] = [
 ];
 export const DEFAULT_PLACE: Place = { ...CITIES[0], source: 'example' };
 
+/** Coordonnées utilisables. Un lieu illisible (stockage abîmé) ne doit pas faire planter les horaires. */
+export function isUsablePlace(place: { lat?: unknown; lng?: unknown } | null | undefined): place is Place {
+  const lat = place?.lat;
+  const lng = place?.lng;
+  return typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+}
+
+function placeOrDefault(place: Place): Place {
+  return isUsablePlace(place) ? place : DEFAULT_PLACE;
+}
+
 export function computeDay(date: Date, place: Place, method: MethodKey, madhab: 'shafi' | 'hanafi', opts?: PrayerOpts): PrayerRow[] {
-  const coords = new Coordinates(place.lat, place.lng);
+  const here = placeOrDefault(place);
+  const coords = new Coordinates(here.lat, here.lng);
   const key = isMethodKey(method) ? method : 'MuslimWorldLeague';
   const custom = CUSTOM[key];
   const params = custom ? new CalculationParameters('Other', custom.fajr, custom.isha) : CalculationMethod[key as Exclude<MethodKey, 'UOIF'>]();
@@ -114,12 +126,14 @@ export function withStates<T extends { key: PrayerKey; time: Date }>(list: T[], 
 }
 
 export function qiblaBearing(place: Place): number {
-  return Qibla(new Coordinates(place.lat, place.lng));
+  const here = placeOrDefault(place);
+  return Qibla(new Coordinates(here.lat, here.lng));
 }
 
 export function distanceToKaabaKm(place: Place): number {
+  const here = placeOrDefault(place);
   const R = 6371;
-  const [la1, lo1, la2, lo2] = [place.lat, place.lng, 21.4225, 39.8262].map((d) => (d * Math.PI) / 180);
+  const [la1, lo1, la2, lo2] = [here.lat, here.lng, 21.4225, 39.8262].map((d) => (d * Math.PI) / 180);
   const a = Math.sin((la2 - la1) / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin((lo2 - lo1) / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
@@ -129,6 +143,26 @@ export function countdown(ms: number): string {
   const m = Math.max(0, Math.round(ms / 60000));
   const h = Math.floor(m / 60);
   return h > 0 ? `${h} h ${String(m % 60).padStart(2, '0')}` : `${m} min`;
+}
+
+/** Sous deux minutes, l’accueil iPhone rafraîchit chaque seconde. Au-delà, toutes les 30 s. */
+export function prayerClockTick(ms: number): number {
+  return ms <= 120_000 ? 1000 : 30_000;
+}
+
+/**
+ * Temps restant avant la prochaine prière, avec l’unité.
+ * Sous une minute : les secondes (le compte arrondi en minutes affichait « 0 min »).
+ */
+export function countdownClock(ms: number): string {
+  const sec = Math.max(0, Math.ceil(ms / 1000));
+  if (sec >= 3600) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return `${h} h ${String(m).padStart(2, '0')} min`;
+  }
+  if (sec >= 60) return `${Math.floor(sec / 60)} min`;
+  return `${sec} s`;
 }
 
 export const AR_NAMES: Record<PrayerKey, string> = { fajr: 'الفجر', sunrise: 'الشروق', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };

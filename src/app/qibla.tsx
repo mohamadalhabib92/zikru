@@ -3,8 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import Svg, { Circle, Defs, G, Line, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
-import { getGpsPlace } from '@/lib/location';
+import { GpsHint } from '@/components/GpsHint';
+import type { GpsFailure } from '@/lib/gps-hint';
+import { readGpsPlace } from '@/lib/location';
+import { compassPoints, formatCount } from '@/lib/locale-format';
 import { distanceToKaabaKm, qiblaBearing } from '@/lib/prayer';
+import { examplePlaceMark } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { HeroHeader, IconBadge, tapHaptic, useLayout } from '@/ui/ds';
 import { Button, Card, Muted, Notice, Screen, Spacer } from '@/ui/kit';
@@ -60,6 +64,7 @@ export default function Qibla() {
   const heading = h?.deg ?? null;
   const { width } = useLayout();
   const [busy, setBusy] = useState(false);
+  const [gpsErr, setGpsErr] = useState<GpsFailure | null>(null);
   const bearing = qiblaBearing(s.place);
   const km = Math.round(distanceToKaabaKm(s.place));
   const rot = heading == null ? 0 : -heading;
@@ -88,7 +93,7 @@ export default function Qibla() {
             <Text style={{ color: b.heroMuted, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' }}>{tr.qibla_title}</Text>
             <Text style={{ color: b.heroText, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>
               {s.place.label}
-              {s.place.source === 'example' ? ' (exemple)' : ''}
+              {examplePlaceMark(s.place.source)}
             </Text>
           </View>
           <Text style={{ color: b.heroText, fontFamily: 'Amiri_700Bold', fontSize: 22 }}>القبلة</Text>
@@ -99,13 +104,22 @@ export default function Qibla() {
             <Text style={{ color: b.heroMuted, fontSize: 13 }}>{tr.qibla_from_north}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ color: b.heroText, fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] }}>{`${km.toLocaleString('fr-CH')} km`}</Text>
+            <Text maxFontSizeMultiplier={1.8} style={{ color: b.heroText, fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] }}>{`${formatCount(km, s.lang)} km`}</Text>
             <Text style={{ color: b.heroMuted, fontSize: 13 }}>{tr.distance_mecca}</Text>
           </View>
         </View>
       </HeroHeader>
       <Spacer h={20} />
-      <View style={{ alignItems: 'center' }} accessible accessibilityLabel={L('{t} {n} degrés {f}', { t: tr.qibla_title, n: Math.round(bearing), f: tr.qibla_from_north })}>
+      <View
+        style={{ alignItems: 'center' }}
+        accessible
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={
+          heading == null
+            ? L('{t} {n} degrés {f}', { t: tr.qibla_title, n: Math.round(bearing), f: tr.qibla_from_north })
+            : `${tr.qibla_title}, ${Math.round(bearing)}°. ${aligned ? tr.qibla_aligned : `${tr.qibla_turn} ${Math.round(Math.abs(diff))}° ${diff > 0 ? tr.qibla_right : tr.qibla_left}`}`
+        }
+      >
         <View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: b.paper }, elevation(2)]}>
           <Svg width={size} height={size} viewBox="-160 -160 320 320">
             <Defs>
@@ -120,7 +134,7 @@ export default function Qibla() {
               {Array.from({ length: 72 }, (_, i) => (
                 <Line key={i} x1={0} y1={-140} x2={0} y2={i % 18 === 0 ? -122 : i % 2 === 0 ? -130 : -134} stroke={i % 18 === 0 ? b.ink : b.inkMuted} strokeWidth={i % 18 === 0 ? 2.5 : 1} rotation={i * 5} />
               ))}
-              {['N', 'E', 'S', 'O'].map((c, i) => (
+              {compassPoints(s.lang).map((c, i) => (
                 <SvgText key={c} x={0} y={-100} fill={c === 'N' ? t.danger : b.ink} fontSize={18} fontWeight="800" textAnchor="middle" rotation={i * 90}>
                   {c}
                 </SvgText>
@@ -174,7 +188,7 @@ export default function Qibla() {
           <View style={{ flex: 1 }}>
             <Muted>{tr.last_position}</Muted>
             <Text style={{ color: b.ink, fontSize: 16, fontWeight: '700', marginTop: 2 }}>{s.place.label}</Text>
-            <Muted>{`${s.place.lat.toFixed(4)}, ${s.place.lng.toFixed(4)} · ${tr.distance_kaaba} : ${km.toLocaleString('fr-CH')} km`}</Muted>
+            <Muted>{`${s.place.lat.toFixed(4)}, ${s.place.lng.toFixed(4)} · ${tr.distance_kaaba} : ${formatCount(km, s.lang)} km`}</Muted>
           </View>
         </View>
         <Spacer />
@@ -185,11 +199,14 @@ export default function Qibla() {
           loading={busy}
           onPress={async () => {
             setBusy(true);
-            const p = await getGpsPlace();
+            setGpsErr(null);
+            const p = await readGpsPlace();
             setBusy(false);
-            if (p) set({ place: p });
+            if (p.ok) set({ place: p.place });
+            else setGpsErr(p.reason);
           }}
         />
+        <GpsHint reason={gpsErr} />
       </Card>
     </Screen>
   );

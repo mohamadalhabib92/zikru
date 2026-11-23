@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const src = readFileSync(join(root, 'src/ui/theme.ts'), 'utf8').replace(/^import \{ Platform[^\n]*\n/m, "const Platform = { OS: 'ios' };\n");
+const src = readFileSync(join(root, 'src/ui/theme.ts'), 'utf8').replace(/^import \{ Platform[^\n]*\n/m, "const Platform = { OS: 'ios' };\n").replace(/^import \{ fontFamilyAllowed \}[^\n]*\n/m, "const fontFamilyAllowed = (family) => !/kfgqpc|qpc|uthmanic|qurancomplex|king\\s*fahd/i.test(family || '');\n");
 const out = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText;
 const dir = join(root, 'node_modules', '.cache');
 mkdirSync(dir, { recursive: true });

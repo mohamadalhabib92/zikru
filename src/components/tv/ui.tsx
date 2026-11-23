@@ -1,19 +1,23 @@
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ElementRef, type ReactNode } from 'react';
 import * as ReactNative from 'react-native';
+import { tvFrame } from '@/lib/tv-frame';
 import { usePremium } from '@/lib/premium';
 import { useFeatureFlags } from '@/lib/use-premium';
 import { TV_FEATURES, tvFeatureAllowed, tvPremiumActive, type TvFeatureId } from '@/lib/tv';
 import {
-  TV_BADGE_ON_CARD,
   TV_CARD_BG,
   TV_FOCUS_INK,
-  TV_FOCUS_MUTED,
   TV_ON_CARD,
   TV_ON_CARD_MUTED,
+  TV_BUTTON_HINT_SIZE,
+  TV_BUTTON_LABEL_SIZE,
+  TV_BUTTON_MIN_WIDTH,
   TV_PAD_BOTTOM,
   TV_PAD_TOP,
   TV_PAD_X,
+  tvButtonInk,
+  tvButtonLabelBox,
   chunkTv,
   tvGrid,
   tvRowGap,
@@ -25,8 +29,11 @@ import { useVisualEffects } from '@/ui/effects';
 import { currentFinish, isGlass, theme as t } from '@/ui/theme';
 import { TVPressable, tvFocusStyle } from '@/ui/tv-pressable';
 
-const { FlatList, ScrollView, TextInput, View, useWindowDimensions } = ReactNative;
+const { Platform, ScrollView, TextInput, View, useWindowDimensions } = ReactNative;
 type ViewProps = ComponentProps<typeof View>;
+type TvFieldProps = ComponentProps<typeof TextInput>;
+/** Les vues d’habillage ne doivent pas prendre le focus : sinon la télé allume une pastille blanche sans le texte. */
+const inert = { isTVSelectable: false } as ViewProps;
 
 /**
  * Marge d’overscan Apple TV à 1920×1080 : 90 pt sur les côtés, 60 pt en haut.
@@ -34,14 +41,20 @@ type ViewProps = ComponentProps<typeof View>;
  */
 export const tvPad = { paddingHorizontal: TV_PAD_X, paddingTop: TV_PAD_TOP, paddingBottom: TV_PAD_BOTTOM };
 
+/** Fenêtre réelle. Sur Apple TV un rapport portrait est remis en 16:9. */
+export function useTvFrame(): { width: number; height: number } {
+  const { width, height } = useWindowDimensions();
+  return tvFrame(width, height, Platform.isTV);
+}
+
 /** Grille du salon pour la largeur réelle de la fenêtre (pas une mesure figée au chargement). */
 export function useTvGrid(opts?: { minColumns?: number; maxColumns?: number; minTile?: number }): TvGrid & { screenWidth: number; screenHeight: number } {
-  const { width, height } = useWindowDimensions();
+  const frame = useTvFrame();
   const minColumns = opts?.minColumns;
   const maxColumns = opts?.maxColumns;
   const minTile = opts?.minTile;
-  const measuredW = width > 0 ? width : 1920;
-  const measuredH = height > 0 ? height : 1080;
+  const measuredW = frame.width;
+  const measuredH = frame.height;
   return useMemo(
     () => ({ ...tvGrid(measuredW, { minColumns, maxColumns, minTile }), screenWidth: measuredW, screenHeight: measuredH }),
     [measuredW, measuredH, minColumns, maxColumns, minTile],
@@ -101,7 +114,9 @@ export function TvScreen({ children }: { children: ReactNode }) {
 export function TvScroll({ children, pinEnd, transparent }: { children: ReactNode; pinEnd?: boolean; transparent?: boolean }) {
   const { height: screenH } = useWindowDimensions();
   const screenHRef = useRef(screenH);
-  screenHRef.current = screenH;
+  useEffect(() => {
+    screenHRef.current = screenH;
+  }, [screenH]);
   const ref = useRef<{ scrollTo: (options: { y: number; animated?: boolean }) => void } | null>(null);
   const offset = useRef(0);
   const lastScroll = useRef(0);
@@ -127,14 +142,15 @@ export function TvScroll({ children, pinEnd, transparent }: { children: ReactNod
       ref.current?.scrollTo({ y: next, animated: false });
     });
   }, []);
+  const frame = useTvFrame();
   return (
     <FocusScope>
       <ScrollFocus.Provider value={ensure}>
-        <TVFocusGuideView style={{ flex: 1 }}>
+        <TVFocusGuideView style={{ flex: 1, width: frame.width, height: frame.height }}>
           <ScrollView
             ref={setRef}
-            style={{ flex: 1, backgroundColor: transparent ? 'transparent' : t.bg }}
-            contentContainerStyle={[tvPad, pinEnd ? { flexGrow: 1, justifyContent: 'flex-end' } : { flexGrow: 1 }]}
+            style={{ flex: 1, width: frame.width, height: frame.height, backgroundColor: transparent ? 'transparent' : t.bg }}
+            contentContainerStyle={[tvPad, { width: frame.width }, pinEnd ? { flexGrow: 1, justifyContent: 'flex-end' } : { flexGrow: 1 }]}
             keyboardShouldPersistTaps="handled"
             scrollEventThrottle={16}
             onScroll={(e) => {
@@ -160,7 +176,10 @@ export function TvColumn({ children }: { children: ReactNode }) {
   return <TVFocusGuideView style={{ marginTop: 18, gap: 24, overflow: 'visible' }}>{children}</TVFocusGuideView>;
 }
 
-/** Liste virtualisée. `removeClippedSubviews` reste faux : le découpage fait perdre le focus tvOS. */
+/**
+ * Liste du salon. Pas de FlatList : sur tvOS la liste virtualisée dans un guide de focus
+ * mesure souvent une hauteur 0 et n’affiche aucune ligne (ni en-tête, ni Retour).
+ */
 export function TvVirtualList<T>({
   data,
   keyExtractor,
@@ -172,38 +191,34 @@ export function TvVirtualList<T>({
   keyExtractor: (item: T, index: number) => string;
   renderItem: (item: T) => ReactNode;
   header?: ReactNode;
-  /** Plusieurs colonnes selon la largeur (liste des sourates). Sans ça, une seule colonne pleine largeur. */
+  /** Plusieurs colonnes selon la largeur. Sans ça, une seule colonne pleine largeur. */
   grid?: boolean;
 }) {
+  const frame = useTvFrame();
   const spec = useTvGrid();
   const columns = grid ? spec.columns : 1;
   const gap = grid ? spec.gap : 24;
   const rows = useMemo(() => chunkTv(data, columns), [data, columns]);
+  const tileW = columns > 1 ? spec.tileWidth : Math.max(280, frame.width - TV_PAD_X * 2);
   return (
+    <View style={{ flex: 1, width: frame.width, height: frame.height, minHeight: frame.height, backgroundColor: t.bg }} {...inert}>
     <FocusScope>
-      <FlatList
-        key={grid ? `tv-grid-${columns}` : 'tv-list'}
-        data={rows}
-        keyExtractor={(row) => row.map((cell) => keyExtractor(cell.item, cell.index)).join('\u0000')}
-        renderItem={({ item: row }) => (
-          <View style={{ flexDirection: 'row', gap, marginBottom: gap, overflow: 'visible' }}>
-            {row.map((cell) => (
-              <View key={keyExtractor(cell.item, cell.index)} style={{ width: columns > 1 ? spec.tileWidth : '100%', flexGrow: 0, flexShrink: 0, overflow: 'visible' }}>
-                {renderItem(cell.item)}
-              </View>
-            ))}
-          </View>
-        )}
-        ListHeaderComponent={header ? <>{header}</> : undefined}
-        style={{ flex: 1, backgroundColor: t.bg }}
-        contentContainerStyle={tvPad}
-        removeClippedSubviews={false}
-        initialNumToRender={8}
-        maxToRenderPerBatch={6}
-        windowSize={5}
-        keyboardShouldPersistTaps="handled"
-      />
+      <TVFocusGuideView style={{ flex: 1, width: frame.width, height: frame.height, backgroundColor: t.bg }}>
+        <ScrollView style={{ flex: 1, width: frame.width, height: frame.height }} contentContainerStyle={[tvPad, { width: frame.width, flexGrow: 1 }]}>
+          {header}
+          {rows.map((row) => (
+            <View key={row.map((cell) => keyExtractor(cell.item, cell.index)).join('\u0000')} style={{ flexDirection: 'row', gap, marginBottom: gap, width: frame.width - TV_PAD_X * 2, overflow: 'visible' }}>
+              {row.map((cell) => (
+                <View key={keyExtractor(cell.item, cell.index)} style={{ width: tileW, minWidth: tileW, minHeight: 132, flexGrow: 0, flexShrink: 0, overflow: 'visible' }}>
+                  {renderItem(cell.item)}
+                </View>
+              ))}
+            </View>
+          ))}
+        </ScrollView>
+      </TVFocusGuideView>
     </FocusScope>
+    </View>
   );
 }
 
@@ -215,9 +230,11 @@ export function TvMuted({ children }: { children: ReactNode }) {
   return <Text style={{ color: t.muted, fontSize: 28, lineHeight: 38, marginTop: 10 }}>{children}</Text>;
 }
 
-function chrome(minHeight: number): React.ComponentProps<typeof View>['style'] {
+function chrome(minHeight: number, block?: boolean): React.ComponentProps<typeof View>['style'] {
   return {
     minHeight,
+    minWidth: TV_BUTTON_MIN_WIDTH,
+    alignSelf: block ? 'stretch' : 'flex-start',
     borderRadius: 22,
     paddingHorizontal: 28,
     paddingVertical: 20,
@@ -255,7 +272,7 @@ export function TvFocusable({
   const fx = useVisualEffects();
   const relief = isGlass() && fx.blur;
   return (
-    <View ref={box} collapsable={false} style={{ flexGrow: block ? 1 : undefined, width: block ? '100%' : undefined, overflow: 'visible' }}>
+    <View ref={box} collapsable={false} {...inert} style={{ flexGrow: block ? 1 : undefined, width: block ? '100%' : undefined, overflow: 'visible' }}>
       <TVPressable
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -267,7 +284,7 @@ export function TvFocusable({
         }}
         onBlur={() => setHot(false)}
         onPress={onPress}
-        style={chrome(minHeight)}
+        style={chrome(minHeight, block)}
       >
         {(state) => {
           const on = isFocused(state) || hot;
@@ -308,18 +325,16 @@ export function TvButton({
   return (
     <TvFocusable preferred={preferred} onPress={onPress} block={block} minHeight={132} label={hint ? `${label}. ${hint}` : label}>
       {(on) => {
-        const ink = on ? TV_FOCUS_INK : TV_ON_CARD;
-        const sub = on ? TV_FOCUS_MUTED : TV_ON_CARD_MUTED;
-        const badgeInk = on ? TV_FOCUS_INK : TV_BADGE_ON_CARD;
+        const colors = tvButtonInk(on);
         return (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: ink, fontSize: 34, fontWeight: '800' }}>{label}</Text>
-              {hint ? <Text style={{ color: sub, fontSize: 24, marginTop: 6 }}>{hint}</Text> : null}
-              {badge ? <Text style={{ color: badgeInk, fontSize: 22, fontWeight: '800', marginTop: 8 }}>{badge}</Text> : null}
-              {locked ? <Text style={{ color: badgeInk, fontSize: 22, fontWeight: '800', marginTop: 8 }}>{L('Zikru Premium')}</Text> : null}
+            <View style={tvButtonLabelBox(!!block)}>
+              <Text allowFontScaling={false} numberOfLines={2} style={{ color: colors.ink, fontSize: TV_BUTTON_LABEL_SIZE, fontWeight: '800', width: '100%' }}>{label}</Text>
+              {hint ? <Text allowFontScaling={false} numberOfLines={2} style={{ color: colors.hint, fontSize: TV_BUTTON_HINT_SIZE, marginTop: 6, width: '100%' }}>{hint}</Text> : null}
+              {badge ? <Text allowFontScaling={false} style={{ color: colors.badge, fontSize: TV_BUTTON_HINT_SIZE, fontWeight: '800', marginTop: 8 }}>{badge}</Text> : null}
+              {locked ? <Text allowFontScaling={false} style={{ color: colors.badge, fontSize: TV_BUTTON_HINT_SIZE, fontWeight: '800', marginTop: 8 }}>{L('Zikru Premium')}</Text> : null}
             </View>
-            {aside ? <Text style={{ color: ink, fontSize: 40, fontFamily: asideFont }}>{aside}</Text> : null}
+            {aside ? <Text allowFontScaling={false} style={{ color: colors.ink, fontSize: 40, fontFamily: asideFont }}>{aside}</Text> : null}
           </View>
         );
       }}
@@ -333,12 +348,18 @@ export function TvField({
   onChange,
   preferred,
   autoCapitalize = 'none',
+  keyboardType = 'default',
+  maxLength,
+  secureTextEntry,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   preferred?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: TvFieldProps['keyboardType'];
+  maxLength?: number;
+  secureTextEntry?: boolean;
 }) {
   const arm = useArmedPreferred(preferred);
   const [hot, setHot] = useState(false);
@@ -356,6 +377,10 @@ export function TvField({
           onChangeText={onChange}
           hasTVPreferredFocus={arm}
           autoCapitalize={autoCapitalize}
+          autoCorrect={false}
+          keyboardType={keyboardType}
+          maxLength={maxLength}
+          secureTextEntry={secureTextEntry}
           placeholderTextColor={TV_ON_CARD_MUTED}
           onFocus={() => {
             setHot(true);

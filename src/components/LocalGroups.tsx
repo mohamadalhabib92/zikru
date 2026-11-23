@@ -6,7 +6,8 @@ import { uid, usePersistentState } from '@/lib/storage';
 import { router } from 'expo-router';
 import { Badge, Button, Card, Field, H2, IconButton, Muted, Notice, Row, Spacer } from '@/ui/kit';
 import { theme as t } from '@/ui/theme';
-import { L } from '@/lib/l10n';
+import { uiLang, L } from '@/lib/l10n';
+import { formatCount, formatDateTime } from '@/lib/locale-format';
 
 type Entry = { by: string; n: number; at: number };
 type Group = { id: string; name: string; formula: string; goal: number; entries: Entry[]; createdAt: number };
@@ -73,7 +74,7 @@ export function LocalGroups() {
               <View style={{ width: `${pct * 100}%`, height: 10, backgroundColor: pct >= 1 ? t.success : t.primary, borderRadius: 5 }} />
             </View>
             <Text style={{ color: t.text, fontSize: 22, fontWeight: '800', marginTop: 8 }}>
-              {n.toLocaleString('fr-CH')} <Text style={{ color: t.muted, fontSize: 14, fontWeight: '400' }}>/ {g.goal.toLocaleString('fr-CH')}</Text>
+              {formatCount(n, uiLang())} <Text style={{ color: t.muted, fontSize: 14, fontWeight: '400' }}>/ {formatCount(g.goal, uiLang())}</Text>
             </Text>
             {isOpen ? (
               <View style={{ marginTop: 10 }}>
@@ -99,12 +100,12 @@ export function LocalGroups() {
                 <Muted>{people.length ? L('Contributions saisies : {p}', { p: people.join(', ') }) : 'Aucune contribution pour l’instant.'}</Muted>
                 {g.entries.slice(0, 5).map((e, i) => (
                   <Muted key={i} style={{ fontSize: 12 }}>
-                    {new Date(e.at).toLocaleString('fr-CH', { dateStyle: 'short', timeStyle: 'short' })} · {e.by} +{e.n}
+                    {formatDateTime(new Date(e.at), uiLang())} · {e.by} +{formatCount(e.n, uiLang())}
                   </Muted>
                 ))}
                 <Spacer h={8} />
                 <Row gap={8}>
-                  <Button small icon="share-outline" title="Partager l’avancée" variant="secondary" onPress={() => void Share.share({ message: `${g.name} : ${n.toLocaleString('fr-CH')} / ${g.goal.toLocaleString('fr-CH')}${g.formula ? ` (${g.formula})` : ''} — Zikru` }).catch(() => {})} />
+                  <Button small icon="share-outline" title="Partager l’avancée" variant="secondary" onPress={() => void Share.share({ message: `${g.name} : ${formatCount(n, uiLang())} / ${formatCount(g.goal, uiLang())}${g.formula ? ` (${g.formula})` : ''} — Zikru` }).catch(() => {})} />
                   {g.entries.length ? (
                     <IconButton icon="arrow-undo-outline" color={t.muted} label="Annuler la dernière contribution" onPress={() => setGroups(groups.map((x) => (x.id === g.id ? { ...x, entries: x.entries.slice(1) } : x)))} />
                   ) : null}

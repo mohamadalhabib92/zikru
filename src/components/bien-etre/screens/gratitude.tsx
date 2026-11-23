@@ -12,6 +12,7 @@ import { alpha, brand as b } from '@/ui/theme';
 import { usePersistentState } from '@/lib/storage';
 import { useSettings } from '@/lib/settings';
 import { approvedOnly, SEED_CONTENT } from '@/lib/content';
+import { showExampleMarks } from '@/lib/release-content';
 import { DEFAULT_NOTIF } from '@/lib/notify-plan';
 import { L, useUiLang } from '@/lib/l10n';
 import {
@@ -79,7 +80,7 @@ function Hamd() {
       {d.transliteration ? <RNText style={{ color: b.inkMuted, fontStyle: 'italic' }}>{d.transliteration}</RNText> : null}
       <Text style={{ color: b.inkMuted, fontSize: 12, textAlign: 'center' }}>{L('Source : {r}', { r: d.source })}</Text>
       <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {d.seedExample ? <Badge tone="info" label="Exemple · à valider" /> : null}
+        {showExampleMarks() && d.seedExample ? <Badge tone="info" label="Exemple · à valider" /> : null}
         <Badge tone="warning" label="Référence pour ce contexte à compléter" />
       </View>
     </View>

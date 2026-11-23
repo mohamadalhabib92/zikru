@@ -14,9 +14,10 @@ import { dayKey, streak, useGrowth } from '@/lib/growth';
 import { useDispense } from '@/lib/dispense-context';
 import { formatHijri } from '@/lib/hijri';
 import { isKahfTime } from '@/lib/kahf';
-import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } from '@/lib/prayer';
+import { AR_NAMES, computeDay, countdownClock, hhmm, prayerClockTick, withStates, type PrayerKey } from '@/lib/prayer';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { periodFor, PERIODS, REFLECTIONS } from '@/lib/reflections';
+import { showExampleMarks } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { useConsent } from '@/lib/consent';
 import { canFetchWeather, canSendToAI, undecided } from '@/lib/privacy';
@@ -37,7 +38,7 @@ import { Container, FadeIn, Grid, IconBadge, ProgressRing, SectionHeader, Skelet
 import { Ionicons, type IconName } from '@/ui/kit';
 import { Arabic, LCard, LMuted } from '@/ui/light';
 import { alpha, brand as b } from '@/ui/theme';
-import { UI_LOCALE } from '@/lib/i18n';
+import { isRTL, UI_LOCALE } from '@/lib/i18n';
 import { L, useUiLang } from '@/lib/l10n';
 import { duaView, quranDuaView } from '@/lib/i18n-content';
 let aiUnavailable = false; // évite d'appeler la fonction à chaque rendu si l'IA n'est pas configurée
@@ -49,6 +50,7 @@ const dayOfYear = (d: Date) => Math.floor((d.getTime() - new Date(d.getFullYear(
 export default function Home() {
   const { s, t: tr } = useSettings();
   const uiL = useUiLang();
+  const rtl = isRTL(uiL);
   const { tasbih, content } = useData();
   const { zikrs, create } = useZikrs();
   const premium = usePremium();
@@ -73,34 +75,40 @@ export default function Home() {
   const weatherOk = canFetchWeather(consent, consentReady);
   const pt = privacyText(s.lang);
 
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(id);
-  }, []);
   const weatherKey = weatherOk ? `${s.place.lat},${s.place.lng},${s.place.label}` : '';
-  const [weatherSlot, setWeatherSlot] = useState<{ key: string; w: Weather | null; err: boolean } | null>(null);
-  const weather = weatherKey && weatherSlot?.key === weatherKey ? weatherSlot.w : null;
-  const wErr = weatherKey !== '' && weatherSlot?.key === weatherKey && weatherSlot.err;
+  const [weatherTry, setWeatherTry] = useState(0);
+  const [weatherSlot, setWeatherSlot] = useState<{ key: string; try: number; w: Weather | null; err: boolean } | null>(null);
+  // Tant que la réponse ne correspond pas à la ville ou à la tentative en cours, on affiche le squelette.
+  const weatherFresh = weatherKey !== '' && weatherSlot?.key === weatherKey && weatherSlot.try === weatherTry;
+  const weather = weatherFresh ? weatherSlot.w : null;
+  const wErr = weatherFresh && weatherSlot.err;
   useEffect(() => {
     if (!weatherOk) {
       return;
     }
     let alive = true;
     const key = weatherKey;
+    const attempt = weatherTry;
     // Météo seulement après consentement explicite ; la position envoyée est arrondie (~10 km).
     getWeather(s.place.lat, s.place.lng, s.place.label)
-      .then((w) => alive && setWeatherSlot({ key, w, err: false }))
-      .catch(() => alive && setWeatherSlot({ key, w: null, err: true }));
+      .then((w) => alive && setWeatherSlot({ key, try: attempt, w, err: false }))
+      .catch(() => alive && setWeatherSlot({ key, try: attempt, w: null, err: true }));
     return () => {
       alive = false;
     };
-  }, [weatherOk, weatherKey, s.place.lat, s.place.lng, s.place.label]);
+  }, [weatherOk, weatherKey, s.place.lat, s.place.lng, s.place.label, weatherTry]);
 
   const { next, list, maghrib } = useMemo(() => {
     const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
     const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { next: withStates(today, now, tomorrow[0].time).next, list: today, maghrib: today.find((x) => x.key === 'maghrib')?.time };
   }, [now, s.place, s.method, s.madhab, s.prayer]);
+  const leftMs = next.time.getTime() - now.getTime();
+  const tickMs = prayerClockTick(leftMs);
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), tickMs);
+    return () => clearInterval(id);
+  }, [tickMs]);
 
   const period = periodFor(now);
   const pool = REFLECTIONS[period];
@@ -184,7 +192,7 @@ export default function Home() {
     <FadeIn>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${tr.next_prayer} : ${tr[next.key]} ${hhmm(next.time)}, ${tr.in} ${countdown(next.time.getTime() - now.getTime())}`}
+        accessibilityLabel={`${tr.next_prayer} : ${tr[next.key]} ${hhmm(next.time)}, ${tr.in} ${countdownClock(leftMs)}`}
         onPress={go('/prayers')}
         style={({ pressed }) => ({ backgroundColor: b.hero, borderRadius: 24, overflow: 'hidden', transform: [{ scale: pressed ? 0.99 : 1 }] })}
       >
@@ -192,8 +200,8 @@ export default function Home() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: b.gold, fontSize: 11, fontWeight: '800', letterSpacing: 1.4 }}>{tr.next_prayer.toUpperCase()}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 2 }}>
-                <Text style={{ color: b.heroText, fontSize: 30, fontWeight: '800', letterSpacing: -0.5 }}>{tr[next.key]}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 2, flexWrap: 'wrap' }}>
+                <Text maxFontSizeMultiplier={2} style={{ color: b.heroText, fontSize: 30, fontWeight: '800', letterSpacing: -0.5, flexShrink: 1 }}>{tr[next.key]}</Text>
                 <Arabic size={22} style={{ color: b.gold, textAlign: 'left', lineHeight: 34 }}>
                   {AR_NAMES[next.key]}
                 </Arabic>
@@ -202,11 +210,11 @@ export default function Home() {
                 <Ionicons name="location-outline" size={13} color={b.heroMuted} /> {s.place.label}
               </Text>
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
+            <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+              <Text maxFontSizeMultiplier={1.8} style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
               <View style={{ backgroundColor: alpha(b.gold, 0.18), borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
-                <Text style={{ color: '#E2C171', fontWeight: '800', fontSize: 13 }}>{/* passe 6 : or éclairci, 5:1 sur le ciel du hero (b.gold = 4,4) */}
-                  {tr.in} {"\u2066" + countdown(next.time.getTime() - now.getTime()) + "\u2069"}
+                <Text style={{ color: '#E2C171', fontWeight: '800', fontSize: 16, fontVariant: ['tabular-nums'] }}>{/* passe 6 : or éclairci, 5:1 sur le ciel du hero (b.gold = 4,4) */}
+                  {tr.in} {"\u2066" + countdownClock(leftMs) + "\u2069"}
                 </Text>
               </View>
             </View>
@@ -220,7 +228,7 @@ export default function Home() {
             const done = prayedToday.includes(k);
             const isNext = next.key === k;
             return (
-              <View key={k} style={{ alignItems: 'center', gap: 4, minWidth: 48 }} accessibilityLabel={`${tr[k]} ${done ? '✓' : ''}`}>
+              <View key={k} accessible accessibilityLabel={`${tr[k]}, ${done ? L('priée') : isNext ? tr.next_prayer : ''}`} style={{ alignItems: 'center', gap: 4, minWidth: 48 }}>
                 <View
                   style={{
                     width: 26,
@@ -416,7 +424,7 @@ export default function Home() {
             <Text style={{ color: b.ink, fontWeight: '800', fontSize: 15 }}>Composez votre premier zikr</Text>
             <LMuted>Assemblez Noms d’Allah, du‘as, versets et salawat, avec le calcul abjad.</LMuted>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+          <Ionicons name={rtl ? 'chevron-back' : 'chevron-forward'} size={18} color={b.inkMuted} />
         </LCard>
       )}
     </FadeIn>
@@ -493,7 +501,7 @@ export default function Home() {
             <Text style={{ color: b.ink, fontWeight: '800' }}>Jumu‘a mubaraka</Text>
             <LMuted>Pensez à la sourate al-Kahf et à multiplier les salawat.</LMuted>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+          <Ionicons name={rtl ? 'chevron-back' : 'chevron-forward'} size={18} color={b.inkMuted} />
         </LCard>
       ) : null}
       <SectionHeader title={PERIODS[period].title} action="Parler avec Bilal" onAction={go('/bilal')} />
@@ -538,7 +546,12 @@ export default function Home() {
               </LMuted>
             </>
           ) : wErr ? (
-            <LMuted>Météo indisponible hors ligne</LMuted>
+            <View style={{ gap: 4 }}>
+              <LMuted>Météo indisponible hors ligne</LMuted>
+              <Pressable accessibilityRole="button" accessibilityLabel={L('Réessayer')} onPress={() => setWeatherTry((n) => n + 1)} hitSlop={8} style={{ alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' }}>
+                <Text style={{ color: b.green, fontWeight: '700' }}>{L('Réessayer')}</Text>
+              </Pressable>
+            </View>
           ) : (
             <View style={{ gap: 6 }}>
               <Skeleton w={120} h={16} />
@@ -551,7 +564,7 @@ export default function Home() {
         <LCard onPress={go('/settings')} label="Régler mon lieu" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: b.goldSoft, borderColor: b.goldSoft }}>
           <IconBadge icon="location" color={b.goldDeep} />
           <View style={{ flex: 1 }}>
-            <Text style={{ color: b.ink, fontWeight: '800' }}>{tr.example_location}</Text>
+            <Text style={{ color: b.ink, fontWeight: '800' }}>{showExampleMarks() ? tr.example_location : tr.choose_city}</Text>
             <LMuted>Pour des horaires et une qibla exacts.</LMuted>
           </View>
         </LCard>

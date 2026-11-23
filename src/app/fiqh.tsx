@@ -32,6 +32,17 @@ export default function Fiqh() {
         <Text style={{ color: 'rgba(255,255,255,0.85)' }}>Les quatre écoles · sources citées</Text>
       </PatternBg>
       <View style={{ padding: 16 }}>
+        <LCard onPress={() => router.push('/fiqh-aqida')} label={L('Aqida (Ibn ʿĀshir)')}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Ionicons name="book" size={22} color={COLOR} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Aqida (Ibn ʿĀshir)')}</Text>
+              <LMuted>{L('Ce que l’on doit croire d’Allah')}</LMuted>
+              <LMuted>{L('ʿAqīda ashʿarite, selon le matn d’Ibn ʿĀshir')}</LMuted>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
+          </View>
+        </LCard>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
           {SCHOOLS.map((s) => (
             <Pill key={s} label={schoolLabel(SCHOOL_LABEL[s], lang)} active={m === s} onPress={() => setM(s)} color={COLOR} />
@@ -98,16 +109,6 @@ export default function Fiqh() {
         })}
         {m === 'maliki' ? (
           <>
-            <LCard onPress={() => router.push('/fiqh-aqida')} label={L('Ce que l’on doit croire d’Allah')}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Ionicons name="book" size={22} color={COLOR} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Ce que l’on doit croire d’Allah')}</Text>
-                  <LMuted>{L('ʿAqīda ashʿarite, selon le matn d’Ibn ʿĀshir')}</LMuted>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={b.inkMuted} />
-              </View>
-            </LCard>
             <LCard onPress={() => router.push('/fiqh-akhdari')} label={L('Matn d’al-Akhdarī')}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Ionicons name="book" size={22} color={COLOR} />

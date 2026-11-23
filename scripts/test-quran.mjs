@@ -11,7 +11,7 @@ const load = (name) => {
     .replace(/import\('\.\/(\w[\w-]*)'\)/g, "import('./$1.mjs')");
   writeFileSync(join(dir, name + '.mjs'), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
 };
-for (const n of ['ar-norm', 'translit-norm', 'surahs', 'quran-text', 'quran-licenses', 'quran-enc', 'quran', 'quran-offline']) load(n);
+for (const n of ['ar-norm', 'translit-norm', 'surahs', 'quran-text', 'release-content', 'quran-licenses', 'quran-enc', 'quran', 'quran-offline']) load(n);
 writeFileSync(join(dir, 'app-placeholders.mjs'), "export const PLACEHOLDERS = { QURAN_TRANSLATIONS_LICENSES: 'YOUR_QURAN_TRANSLATIONS_LICENSES' };");
 writeFileSync(join(dir, 'storage.mjs'), 'export const loadJSON = async (k, f) => f; export const saveJSON = async () => true; export const saveCacheJSON = async () => {};');
 writeFileSync(join(dir, 'text-cache.mjs'), 'const m = new Map(); export const readText = async (k) => m.get(k) ?? null; export const writeText = async (k, v) => { m.set(k, v); };');

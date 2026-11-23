@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { LandscapeBackdrop } from '@/components/landscape-backdrop';
 import { useTvKeepAwake } from '@/components/tv/keep-awake';
-import { TvBack, TvButton, TvFocusable, TvPremiumGate, TvRow, TvScroll } from '@/components/tv/ui';
+import { TvBack, TvButton, TvPremiumGate, TvRow, useTvFrame } from '@/components/tv/ui';
 import { L } from '@/lib/l10n';
 import { LANDSCAPE_IDS, type LandscapeId } from '@/lib/landscapes';
+import { TV_PAD_BOTTOM, TV_PAD_X } from '@/lib/tv-surface';
 import { AR_NAMES, computeDay, hhmm, withStates } from '@/lib/prayer';
 import { useSettings } from '@/lib/settings';
 import { Text } from '@/ui/Text';
@@ -23,6 +24,7 @@ export default function TvAmbient() {
 
 function AmbientBody() {
   useTvKeepAwake('zikru-tv-ambient');
+  const frame = useTvFrame();
   const { s, t: tr } = useSettings();
   const [i, setI] = useState(0);
   const [now, setNow] = useState(() => new Date());
@@ -40,17 +42,14 @@ function AmbientBody() {
   const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
   const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
   const { next } = withStates(today, now, tomorrow[0].time);
+  const cardW = Math.max(320, frame.width - TV_PAD_X * 2);
   return (
-    <View style={{ flex: 1, backgroundColor: '#000' }}>
+    <View style={{ flex: 1, width: frame.width, height: frame.height, backgroundColor: '#000' }}>
       <LandscapeBackdrop id={id} />
-      <TvScroll pinEnd transparent>
-        <View style={{ backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 28, padding: 28 }}>
-          <TvFocusable block minHeight={140} label={DHIKR}>
-            {(on) => (
-              <Text style={{ color: on ? '#141311' : '#F7F4EE', fontSize: 56, lineHeight: 96, textAlign: 'right', fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{DHIKR}</Text>
-            )}
-          </TvFocusable>
-          <Text style={{ color: '#D9B65C', fontSize: 32, marginTop: 18 }}>
+      <View style={{ position: 'absolute', left: 0, top: 0, width: frame.width, height: frame.height, justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: TV_PAD_X, paddingBottom: TV_PAD_BOTTOM }}>
+        <View style={{ width: cardW, maxWidth: cardW, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 28, padding: 28 }}>
+          <Text style={{ color: '#F7F4EE', fontSize: 48, lineHeight: 72, textAlign: 'center', width: cardW - 56, fontFamily: fontsAreReady() ? fonts.quran : undefined }}>{DHIKR}</Text>
+          <Text style={{ color: '#D9B65C', fontSize: 32, marginTop: 18, textAlign: 'center', width: cardW - 56 }}>
             {tr[next.key]} · {hhmm(next.time)} · {AR_NAMES[next.key]}
           </Text>
           <TvRow>
@@ -59,7 +58,7 @@ function AmbientBody() {
             <TvBack />
           </TvRow>
         </View>
-      </TvScroll>
+      </View>
     </View>
   );
 }

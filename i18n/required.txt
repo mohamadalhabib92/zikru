@@ -66,6 +66,7 @@ src/app/zikrs/index.tsx
 src/app/zikrs/practice.tsx
 src/components/AiConsentSheet.tsx
 src/components/AppErrorBoundary.tsx
+src/components/GpsHint.tsx
 src/components/AudioPlayer.tsx
 src/components/BleStatusChip.tsx
 src/components/Hub.tsx

@@ -6,6 +6,7 @@
 import { Children, useContext, type ComponentProps, type ReactNode } from 'react';
 import { Text as RNText, type TextProps } from 'react-native';
 import { translatePiece, useUiLang } from '@/lib/l10n';
+import { TV_FOCUS_INK } from '@/lib/tv-surface';
 import { TvFocusContext } from '@/ui/tv-pressable';
 
 function tr(children: ReactNode, lang: ReturnType<typeof useUiLang>): ReactNode {
@@ -24,7 +25,7 @@ export function Text(props: ComponentProps<typeof RNText>) {
   const { children, accessibilityLabel, style, allowFontScaling, ...rest } = props;
   const label = typeof accessibilityLabel === 'string' ? translatePiece(accessibilityLabel, lang) : accessibilityLabel;
   return (
-    <RNText allowFontScaling={allowFontScaling !== false} accessibilityLabel={label} style={[style, focused ? { color: '#141311' } : null]} {...rest}>
+    <RNText allowFontScaling={allowFontScaling !== false} accessibilityLabel={label} style={[style, focused ? { color: TV_FOCUS_INK } : null]} {...rest}>
       {tr(children, lang)}
     </RNText>
   );

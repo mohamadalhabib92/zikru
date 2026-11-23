@@ -1,7 +1,8 @@
 import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { afterLoginRoute } from '@/lib/community/api';
+import { routeAfterAuth } from '@/lib/tv-surface';
 import { useAuth } from '@/lib/community/auth';
 import { Muted, Screen, Spacer } from '@/ui/kit';
 import { brand as b } from '@/ui/theme';
@@ -16,7 +17,7 @@ export default function AuthCallback() {
   const auth = useAuth();
   useEffect(() => {
     if (auth.session) {
-      void afterLoginRoute().then((r) => router.replace(r as '/community'));
+      void afterLoginRoute().then((r) => router.replace(routeAfterAuth(Platform.isTV, r) as '/community'));
       return;
     }
     if (auth.linkError || !auth.enabled) {

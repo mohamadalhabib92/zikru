@@ -42,7 +42,7 @@ Zikru, votre compagnon spirituel au quotidien.
 Zikru is a daily spiritual companion: offline prayer times calculated on device, qibla compass, persistent tasbih counter with haptics, support for Bluetooth tasbih counters and dhikr rings, sourced dhikr and a Hijri calendar. French, English, German and Arabic interface.
 
 ## Classification par âge
-Voir `store/app-privacy-checklist.md` §3. Recommandé : **13+** — Messaging and Chat = Yes, User-Generated Content = Yes, Parental Controls = Yes (mode Famille), aucune violence, aucun contenu sexuel, pas de jeux d'argent, pas de navigation web non filtrée, pas de publicité. Signalement/blocage (P6) requis par la guideline 1.2 avant d'activer la Communauté en production.
+Voir `store/app-privacy-checklist.md` §3. Recommandé : **13+**. Messaging and Chat = Yes, User-Generated Content = Yes. Le signalement, le blocage et le filtre d’insultes sont dans l’app (politique 1.0.30). Contrôles parentaux = Yes. Aucune violence, aucun contenu sexuel, pas de jeux d’argent, pas de web ouvert, pas de publicité. La messagerie entre membres empêche 4+ et 9+.
 
 ## Confidentialité de l'app (étiquettes « nutrition »)
 Réponses exactes : `store/app-privacy-checklist.md` §1. Résumé :

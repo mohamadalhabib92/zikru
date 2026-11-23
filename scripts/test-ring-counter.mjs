@@ -82,16 +82,20 @@ test('clic de bague, écran compteur ouvert : +1 par clic, y compris en rafale',
   assert.equal(first.zikr, 'subhanallah');
   assert.equal(first.cursor, undefined, 'la valeur figée ne part pas comme curseur');
   let last = shown(store);
+  const start = c.BASELINE_GRACE_MS + 40;
   for (let i = 0; i < 30; i++) {
-    const step = ringNotify(store, decoder, 'ring-1', frame, c.BASELINE_GRACE_MS + 40 + i * 10);
-    assert.equal(step.after, last + 1, `clic rapide ${i}`);
+    const step = ringNotify(store, decoder, 'ring-1', frame, start + (i + 1) * 200);
+    assert.equal(step.after, last + 1, `clic ${i}`);
     last = step.after;
   }
+  assert.equal(shown(store), 31);
+  const ghost = ringNotify(store, decoder, 'ring-1', frame, start + 30 * 200 + 2000);
+  assert.equal(ghost.added, 0, 'paquet identique ~2 s plus tard : pas un appui');
   assert.equal(shown(store), 31);
   const finger = store.addClicks(1, 'manuel');
   assert.equal(finger.added, 1);
   assert.equal(shown(store), 32, 'le doigt continue le même compte');
-  const goal = ringNotify(store, decoder, 'ring-1', frame, c.BASELINE_GRACE_MS + 5000);
+  const goal = ringNotify(store, decoder, 'ring-1', frame, start + 30 * 200 + 9000);
   assert.equal(goal.cycle, true, 'même completion d’objectif que le doigt');
   assert.equal(shown(store), 33);
   assert.equal(store.get().externalTotal ?? 0, 0, 'l’appui n’est pas parti dans le total montre');
@@ -106,7 +110,7 @@ test('trame sans total (profil absolu) : le chiffre affiché avance, le curseur 
   store.set((t) => ({ ...t, dhikrId: 'alhamdulillah', target: 99 }));
   const decoder = new c.ClickDecoder(ABS, c.parseIqibla, 0);
   for (let i = 0; i < 8; i++) {
-    const step = ringNotify(store, decoder, 'ring-2', B(0x01), 1000 + i * 12);
+    const step = ringNotify(store, decoder, 'ring-2', B(0x01), 1000 + i * 200);
     assert.equal(step.after, i + 1);
     assert.equal(step.zikr, 'alhamdulillah');
   }

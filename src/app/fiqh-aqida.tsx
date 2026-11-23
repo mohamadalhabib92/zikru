@@ -21,7 +21,8 @@ export default function AqidaIndex() {
         contentContainerStyle={{ padding: 16, paddingBottom: 40, maxWidth: 760, width: '100%', alignSelf: 'center' }}
         ListHeaderComponent={
           <View style={{ marginBottom: 14, gap: 8 }}>
-            <Text style={{ color: b.ink, fontSize: 22, fontWeight: '900' }}>{L('Ce que l’on doit croire d’Allah')}</Text>
+            <Text style={{ color: b.ink, fontSize: 22, fontWeight: '900' }}>{L('Aqida (Ibn ʿĀshir)')}</Text>
+            <Text style={{ color: b.ink, fontWeight: '700' }}>{L('Ce que l’on doit croire d’Allah')}</Text>
             <Text style={{ color: b.brown, fontWeight: '800' }}>{L('ʿAbd al-Wāḥid ibn ʿĀshir')}</Text>
             <Text style={{ color: b.inkMuted }}>{L('ʿAqīda ashʿarite, selon le matn d’Ibn ʿĀshir')}</Text>
             <Text style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: '800', color: b.brown, backgroundColor: b.goldSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>

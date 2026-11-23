@@ -1,3 +1,5 @@
+import { sourceAllowed } from './release-content';
+
 /**
  * Éditions du sens du Coran. Le texte n’est jamais réécrit ici.
  * Statut `verified` seulement pour Pickthall (domaine public). Tout QuranEnc reste `todo`
@@ -95,11 +97,11 @@ export const QURANENC: Record<string, QuranEdition> = {
   pt: qe('portuguese_nasr', '1.4.1', 'Helmi Nasr', 'Portuguese Translation — Helmi Nasr'),
 };
 
-export function editionFor(lang: string): QuranEdition {
-  if (QURANENC[lang]) return QURANENC[lang];
+export function editionFor(lang: string, release?: boolean): QuranEdition {
+  if (sourceAllowed('quranenc', release) && QURANENC[lang]) return QURANENC[lang];
   if (lang === 'en') return PICKTHALL;
-  if (lang === 'ar') return MUYASSAR;
-  // fr, wo, et toute langue sans édition citée : Hamidullah. Pas de wolof inventé.
+  if (lang === 'ar' && sourceAllowed('kfgqpc-text-font', release)) return MUYASSAR;
+  // fr, wo, et toute langue dont l’édition est masquée : Hamidullah. Pas de wolof inventé.
   return HAMIDULLAH;
 }
 

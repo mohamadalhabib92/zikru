@@ -3,8 +3,8 @@ import { AmiriQuran_400Regular } from '@expo-google-fonts/amiri-quran';
 import { useFonts } from 'expo-font';
 import { Redirect, router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { Platform, useColorScheme, View } from 'react-native';
+import { useEffect } from 'react';
+import { AppState, Platform, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/community/auth';
 import { CommunityProvider } from '@/lib/community/sync';
@@ -13,6 +13,8 @@ import { DispenseProvider } from '@/lib/dispense-context';
 import { setBleLang } from '@/lib/ble/messages';
 import { isRTL } from '@/lib/i18n';
 import { SettingsProvider, useSettings } from '@/lib/settings';
+import { Text } from '@/ui/Text';
+import { TVPressable } from '@/ui/tv-pressable';
 import { applyVisual, brand, glassSolidColor, isGlass, theme as t, type Scheme, type ThemeFinish } from '@/ui/theme';
 import { VisualEffectsProvider } from '@/ui/effects';
 import { takePendingRoute } from '@/ui/appearance';
@@ -27,6 +29,7 @@ import { MiniPlayer } from '@/components/quran/MiniPlayer';
 import { RecitationProvider } from '@/lib/recitation-context';
 import { AudioPrefetch } from '@/components/AudioOffline';
 import { L, useUiCatalog } from '@/lib/l10n';
+import { storeRelease } from '@/lib/release-content';
 import { setFontsReady } from '@/ui/fonts-ready';
 import { useWatchSync } from '@/lib/use-watch-sync';
 import { sanitizeLandscape } from '@/lib/landscapes';
@@ -39,6 +42,35 @@ import '@/lib/mac-native';
 // Écran d'erreur Expo Router pour les erreurs de rendu des routes.
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
   return <ErrorScreen error={error} retry={() => void retry()} />;
+}
+
+/**
+ * Tant que la route n’est pas /tv, on ne laisse pas l’écran iPhone visible.
+ * Un simple voile sans texte restait après « Sign in with Apple » (StoreKit) :
+ * la redirection vers /tv ne se terminait pas tant que la feuille système était ouverte,
+ * et l’écran restait une couleur vide. Ici le salon est redemandé, y compris au retour
+ * au premier plan, et le voile affiche un titre et Retour.
+ */
+function TvHomeGate({ active }: { active: boolean }) {
+  useEffect(() => {
+    if (!active) return;
+    const go = () => router.replace('/tv');
+    go();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') go();
+    });
+    return () => sub.remove();
+  }, [active]);
+  if (!active) return null;
+  return (
+    <View pointerEvents="auto" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#10211C', paddingHorizontal: 90, paddingTop: 80, justifyContent: 'center' }}>
+      <Text style={{ color: '#F4F1EA', fontSize: 56, fontWeight: '800' }}>{L('Zikru')}</Text>
+      <Text style={{ color: '#F4F1EA', fontSize: 32, lineHeight: 44, marginTop: 18 }}>{L('Retour')}</Text>
+      <TVPressable hasTVPreferredFocus accessibilityRole="button" accessibilityLabel={L('Retour')} onPress={() => router.replace('/tv')} style={{ alignSelf: 'flex-start', marginTop: 28, height: 88, minWidth: 280, borderRadius: 22, backgroundColor: '#1A2420', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 }}>
+        <Text style={{ color: '#F4F1EA', fontSize: 34, fontWeight: '800' }}>{L('Retour')}</Text>
+      </TVPressable>
+    </View>
+  );
 }
 
 function Root() {
@@ -64,14 +96,9 @@ function Root() {
     document.documentElement.dir = rtl ? 'rtl' : 'ltr';
   }, [s.lang, rtl]);
   const [fontsLoaded] = useFonts({ Amiri_400Regular, Amiri_700Bold, AmiriQuran_400Regular });
-  const [fontTimeout, setFontTimeout] = useState(false);
   useEffect(() => {
     setFontsReady(fontsLoaded);
   }, [fontsLoaded]);
-  useEffect(() => {
-    const id = setTimeout(() => setFontTimeout(true), 8000);
-    return () => clearTimeout(id);
-  }, []);
   // Lien de connexion refusé (expiré, déjà utilisé) arrivé sur n'importe quelle page : écran de connexion avec « Renvoyer un lien ».
   const auth = useAuth();
   const linkFailed = !!auth.linkError && !auth.session;
@@ -91,7 +118,16 @@ function Root() {
   }, [scheme]);
   // Catalogue d'interface de la langue choisie (chargé à la demande, pré-caché hors-ligne ; rien pour le français).
   const catReady = useUiCatalog(s.lang);
-  if ((!fontsLoaded && !fontTimeout) || !catReady) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
+  // Amiri se charge en arrière-plan : le texte arabe utilise d’abord la police du système (fonts-ready).
+  // On n’attend que le catalogue d’interface, avec le nom de l’app visible tout de suite.
+  if (!catReady) {
+    return (
+      <View accessibilityRole="progressbar" accessibilityLabel={L('Chargement')} style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+        <Text maxFontSizeMultiplier={1.6} style={{ color: t.text, fontSize: 32, fontWeight: '800' }}>Zikru</Text>
+        <Text style={{ color: t.muted }}>{L('Chargement')}</Text>
+      </View>
+    );
+  }
   return (
     <View key={`${scheme}-${finish}`} style={{ flex: 1, backgroundColor: t.bg, direction: rtl ? 'rtl' : 'ltr' }}>
       <AppLandscape id={landscape} />
@@ -125,7 +161,7 @@ function Root() {
         <Stack.Screen name="kahf" options={{ title: tr.kahf }} />
         <Stack.Screen name="songs" options={{ title: tr.songs }} />
         <Stack.Screen name="community" options={{ title: tr.community }} />
-        <Stack.Screen name="config" options={{ title: tr.config_missing }} />
+        <Stack.Screen name="config" options={{ title: storeRelease() ? L('Réglages') : tr.config_missing }} />
         <Stack.Screen name="content-admin" options={{ title: tr.content_admin }} />
         <Stack.Screen name="audit" options={{ title: tr.audit }} />
         <Stack.Screen name="validation" options={{ title: L("Validation savante") }} />
@@ -149,8 +185,8 @@ function Root() {
         <Stack.Screen name="zikrs/practice" options={{ title: L("Pratique") }} />
         <Stack.Screen name="zikrs/import" options={{ title: L("Importer un programme") }} />
         <Stack.Screen name="fiqh" options={{ title: L("Fiqh") }} />
-        <Stack.Screen name="fiqh-aqida" options={{ title: L("Ce que l’on doit croire d’Allah") }} />
-        <Stack.Screen name="fiqh-aqida-read" options={{ title: L("Ce que l’on doit croire d’Allah") }} />
+        <Stack.Screen name="fiqh-aqida" options={{ title: L("Aqida (Ibn ʿĀshir)") }} />
+        <Stack.Screen name="fiqh-aqida-read" options={{ title: L("Aqida (Ibn ʿĀshir)") }} />
         <Stack.Screen name="fiqh-akhdari" options={{ title: L("Matn d’al-Akhdarī") }} />
         <Stack.Screen name="fiqh-akhdari-read" options={{ title: L("Matn d’al-Akhdarī") }} />
         <Stack.Screen name="journey" options={{ title: L("Mon parcours spirituel") }} />
@@ -177,7 +213,7 @@ function Root() {
       {tvHome ? (
         <>
           <Redirect href={tvHome} />
-          <View pointerEvents="auto" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.bg }} />
+          <TvHomeGate active />
         </>
       ) : null}
     </View>

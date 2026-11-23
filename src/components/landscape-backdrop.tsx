@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { APP_LANDSCAPE_SCRIM, LANDSCAPE_PLATE_ALPHA, type LandscapeChoice, type LandscapeId } from '@/lib/landscapes';
+import { tvCoverBox, tvFrame } from '@/lib/tv-frame';
 import { alpha, theme as t } from '@/ui/theme';
 
 /** Une seule image à la fois : les autres fichiers ne sont pas décodés. Aucune animation. */
@@ -29,10 +30,14 @@ export function AppLandscape({ id }: { id: LandscapeChoice }) {
 }
 
 export function LandscapeBackdrop({ id }: { id: LandscapeChoice }) {
+  const { width, height } = useWindowDimensions();
   if (id === 'none') return null;
+  // Fichiers 720×1280. Sans largeur et hauteur en points, tvOS garde le portrait (~608 pt de large).
+  const frame = tvFrame(width, height, Platform.isTV);
+  const box = tvCoverBox(frame.width, frame.height);
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Image accessible={false} source={SOURCES[id]} resizeMode="cover" fadeDuration={0} style={StyleSheet.absoluteFill} />
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, box]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <Image accessible={false} source={SOURCES[id]} resizeMode="cover" fadeDuration={0} style={box} />
     </View>
   );
 }
