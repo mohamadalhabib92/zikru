@@ -179,6 +179,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                 {to < meta[4] ? <QBtn icon="arrow-forward" label="Versets suivants" onPress={() => { const n = Math.min(meta[4], to + 1 + (to - from)); setFrom(to + 1); setTo(n); setGraded(null); started.current = false; }} pal={pal} solid /> : null}
                 <QBtn icon="grid-outline" label="Mémorisation" onPress={() => router.back()} pal={pal} />
+                <QBtn icon="help-circle-outline" label={L('Rappel actif')} onPress={() => router.push({ pathname: '/quran/hifz-recall', params: { keys: verses.map((a) => gIndex(s, a)).join(',') } })} pal={pal} />
               </View>
             </View>
           ) : null}
@@ -236,6 +237,7 @@ function Review({ pal }: { pal: Pal }) {
           {items.length ? L('{n} verset(s) : {e} facile, {m} moyen, {h} difficile. Qu’Allah vous facilite la préservation de Son Livre.', { n: items.length, e: tally.easy, m: tally.medium, h: tally.hard }) : 'Commencez une nouvelle leçon pour alimenter la révision.'}
         </Text>
         <QBtn icon="grid-outline" label="Retour à la mémorisation" onPress={() => router.back()} pal={pal} solid />
+        {items.length ? <QBtn icon="help-circle-outline" label={L('Rappel actif')} onPress={() => router.push({ pathname: '/quran/hifz-recall', params: { keys: items.map((it) => it.k).join(',') } })} pal={pal} /> : null}
       </View>
     );
   const it = items[i];

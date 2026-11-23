@@ -6,8 +6,11 @@ import { Text } from '@/ui/Text';
 import { Sheet, QStepper } from '@/components/quran/Sheet';
 import { readerPalette } from '@/components/quran/palette';
 import { dayKey } from '@/lib/dates';
-import { gIndex, juzRange, OFFSETS, pageOf, pageRange, fromIndex } from '@/lib/quran-nav';
-import { hifzCards } from '@/lib/quran-store';
+import { hifzPlan, hifzStreak } from '@/lib/hifz-wave-store';
+import { deadlineIn, lessonIndexes, markKnownRange, nextLesson, notePractice, practiceCounts, shownStreak } from '@/lib/hifz-wave';
+import { gIndex, juzOfIndex, juzRange, OFFSETS, pageOf, pageRange, fromIndex } from '@/lib/quran-nav';
+import { forgetHifz, hifzCards } from '@/lib/quran-store';
+import { useSettings } from '@/lib/settings';
 import { useShared } from '@/lib/shared-state';
 import { dailyQueue, MATURE, queueSize, rangeStatus, type Status } from '@/lib/srs';
 import { SURAHS } from '@/lib/surahs';
@@ -24,7 +27,10 @@ const STATUS_LABEL: Record<Status, string> = { none: 'Pas commencé', learning: 
 export default function HifzHub() {
   const router = useRouter();
   const { tablet } = useLayout();
-  const [cards, , ready] = useShared(hifzCards);
+  const { s: prefs, set: setPrefs, t: tr } = useSettings();
+  const [cards, setCards, ready] = useShared(hifzCards);
+  const [plan, setPlan, planReady] = useShared(hifzPlan);
+  const [streak, setStreak, streakReady] = useShared(hifzStreak);
   const today = dayKey();
   const q = dailyQueue(cards, today);
   const due = queueSize(q);
@@ -45,7 +51,28 @@ export default function HifzHub() {
   const [placed, setPlaced] = useState(false);
   const [pick, setPick] = useState(false);
   const [view, setView] = useState<'surah' | 'juz'>('surah');
+  const [ask, setAsk] = useState<'forget' | 'known' | null>(null);
+  const [perDay, setPerDay] = useState<3 | 4 | 5>(5);
+  const [horizon, setHorizon] = useState<0 | 30 | 90>(0);
   const pal = readerPalette('auto');
+  const proposed = nextLesson(cards, plan, today, s);
+  const planSig = plan ? `${plan.perDay}|${plan.deadline ?? ''}|${proposed.surah}:${proposed.from}:${proposed.to}` : '';
+  const [sawPlan, setSawPlan] = useState('');
+  if (planReady && plan && sawPlan !== planSig) {
+    setSawPlan(planSig);
+    setPlaced(true);
+    setS(proposed.surah);
+    setFrom(proposed.from);
+    setTo(proposed.to);
+  }
+  if (streakReady && ready && practiceCounts(cards, today)) {
+    const noted = notePractice(streak, today);
+    if (noted.last !== streak?.last || noted.n !== streak?.n) setStreak(noted);
+  }
+  const days = shownStreak(streak, today);
+  const span = lessonIndexes(s, from, to);
+  const lo = span[0] ?? gIndex(s, from);
+  const hi = (span[span.length - 1] ?? lo) + 1;
   if (ready && keys.length && !placed) {
     const lastK = keys.map(Number).sort((a, z) => z - a)[0];
     const n = fromIndex(lastK)[0];
@@ -135,6 +162,74 @@ export default function HifzHub() {
             </View>
           </Pressable>
         </FadeIn>
+
+        <FadeIn delay={80}>
+          <SectionHeader title={L('Rappel actif')} />
+          <View style={{ backgroundColor: b.paper, borderRadius: 20, borderWidth: 1, borderColor: b.line, padding: 16, gap: 10 }}>
+            <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Rappel actif')}</Text>
+            <Text style={{ color: b.inkMuted, fontSize: 13 }}>{days > 0 ? L('{n} jours, sans compte public.', { n: days }) : L('Une pratique aujourd’hui ouvre la série. Un jour manqué ne la casse pas.')}</Text>
+            <Button title={L('Rappel actif')} icon="help-circle-outline" onPress={() => router.push({ pathname: '/quran/hifz-recall', params: { keys: span.join(',') } })} />
+            <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('à vérifier')}</Text>
+          </View>
+        </FadeIn>
+
+        <View>
+          <SectionHeader title={L('Plan local')} />
+          <View style={{ backgroundColor: b.paper, borderRadius: 20, borderWidth: 1, borderColor: b.line, padding: 16, gap: 10 }}>
+            <Text style={{ color: b.inkMuted, fontSize: 13 }}>{L('Le plan ne retire aucune carte.')}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              <Pressable accessibilityRole="button" onPress={() => setPlan({ scope: { kind: 'surah', surah: s }, perDay, deadline: horizon ? deadlineIn(today, horizon) : undefined })} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 17, borderWidth: 1, borderColor: b.line, backgroundColor: b.cream }}>
+                <Text style={{ color: b.ink, fontWeight: '700' }}>{L('Cette sourate')}</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => setPlan({ scope: { kind: 'juz', juz: juzOfIndex(gIndex(s, from)) }, perDay, deadline: horizon ? deadlineIn(today, horizon) : undefined })} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 17, borderWidth: 1, borderColor: b.line, backgroundColor: b.cream }}>
+                <Text style={{ color: b.ink, fontWeight: '700' }}>{L('Ce juz’')}</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => setPlan({ scope: { kind: 'range', from: lo, to: hi - 1 }, perDay, deadline: horizon ? deadlineIn(today, horizon) : undefined })} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 17, borderWidth: 1, borderColor: b.line, backgroundColor: b.cream }}>
+                <Text style={{ color: b.ink, fontWeight: '700' }}>{L('Cette plage')}</Text>
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {([3, 4, 5] as const).map((n) => (
+                <Pressable key={n} accessibilityRole="button" onPress={() => { setPerDay(n); if (plan) setPlan({ ...plan, perDay: n }); }} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 17, borderWidth: 1, borderColor: (plan?.perDay ?? perDay) === n ? b.green : b.line, backgroundColor: b.cream }}>
+                  <Text style={{ color: b.ink, fontWeight: '700' }}>{n === 3 ? L('3 par jour') : n === 4 ? L('4 par jour') : L('5 par jour')}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {([0, 30, 90] as const).map((n) => (
+                <Pressable key={n} accessibilityRole="button" onPress={() => setHorizon(n)} style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 17, borderWidth: 1, borderColor: horizon === n ? b.green : b.line, backgroundColor: b.cream }}>
+                  <Text style={{ color: b.ink, fontWeight: '700' }}>{n === 0 ? L('Sans date but') : L('Dans {n} jours', { n })}</Text>
+                </Pressable>
+              ))}
+            </View>
+            {plan ? <Button title={L('Effacer le plan')} variant="secondary" onPress={() => setPlan(null)} /> : null}
+            <Segmented
+              label={tr.notif_quran}
+              options={[{ label: tr.notif_off, value: 'off' as const }, { label: tr.notif_quran_fajr, value: 'fajr' as const }, { label: tr.notif_quran_isha, value: 'isha' as const }]}
+              value={prefs.notif.quran ?? 'off'}
+              onChange={(v) => setPrefs({ notif: { ...prefs.notif, quran: v } })}
+            />
+            <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('Rappel après le Fajr ou le ‘Isha, coupé par défaut. Le même créneau que la lecture du Coran.')}</Text>
+          </View>
+        </View>
+
+        <View>
+          <SectionHeader title={L('Cette plage')} />
+          <View style={{ backgroundColor: b.paper, borderRadius: 20, borderWidth: 1, borderColor: b.line, padding: 16, gap: 10 }}>
+            {ask ? <Text style={{ color: b.ink }}>{ask === 'forget' ? L('Retirer ces versets du suivi ? Les autres cartes restent.') : L('Marquer cette plage comme déjà mémorisée ? Seuls ces versets passent à 21 jours. Aucun historique inventé.')}</Text> : null}
+            {ask ? (
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Button title={L('Confirmer')} onPress={() => { if (ask === 'forget') forgetHifz(lo, hi); else setCards((c) => markKnownRange(c, lo, hi, today)); setAsk(null); }} />
+                <Button title={L('Annuler')} variant="secondary" onPress={() => setAsk(null)} />
+              </View>
+            ) : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <Button title={L('Retirer du suivi')} variant="secondary" onPress={() => setAsk('forget')} />
+                <Button title={L('Marquer comme déjà mémorisé')} variant="secondary" onPress={() => setAsk('known')} />
+              </View>
+            )}
+          </View>
+        </View>
 
         <View>
           <SectionHeader title="Nouvelle leçon" />

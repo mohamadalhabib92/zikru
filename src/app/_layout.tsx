@@ -170,6 +170,7 @@ function Root() {
         <Stack.Screen name="quran/mushaf" options={{ title: L("Mushaf") }} />
         <Stack.Screen name="quran/hifz" options={{ title: L("Mémorisation") }} />
         <Stack.Screen name="quran/hifz-session" options={{ title: L("Session de mémorisation") }} />
+        <Stack.Screen name="quran/hifz-recall" options={{ title: L("Rappel actif") }} />
         <Stack.Screen name="quran/bookmarks" options={{ title: L("Marque-pages et notes") }} />
         <Stack.Screen name="quran/khatma" options={{ title: L("Khatma") }} />
         <Stack.Screen name="quran/downloads" options={{ title: L("Téléchargements audio") }} />
