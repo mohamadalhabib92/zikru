@@ -8,7 +8,7 @@ import { PatternBg } from '@/components/zikru/Pattern';
 import { SkyArc } from '@/components/zikru/SkyArc';
 import { dayKey as dk, useGrowth } from '@/lib/growth';
 import { formatHijri } from '@/lib/hijri';
-import { AR_NAMES, computeDay, countdown, hhmm, METHODS, withStates, type PrayerKey, type PrayerState } from '@/lib/prayer';
+import { AR_NAMES, computeDay, countdownClock, hhmm, METHODS, prayerClockTick, withStates, type PrayerKey, type PrayerState } from '@/lib/prayer';
 import { examplePlaceMark } from '@/lib/release-content';
 import { useSettings } from '@/lib/settings';
 import { Button, Ionicons, Screen, Spacer } from '@/ui/kit';
@@ -25,15 +25,17 @@ export default function Prayers() {
   const router = useRouter();
   const { tablet } = useLayout({ inTabs: true });
   const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(id);
-  }, []);
   const { rows, next, list } = useMemo(() => {
     const today = computeDay(now, s.place, s.method, s.madhab, s.prayer);
     const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { ...withStates(today, now, tomorrow[0].time), list: today };
   }, [now, s.place, s.method, s.madhab, s.prayer]);
+  const leftMs = next.time.getTime() - now.getTime();
+  const tickMs = prayerClockTick(leftMs);
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), tickMs);
+    return () => clearInterval(id);
+  }, [tickMs]);
 
   let greg = now.toDateString();
   try {
@@ -58,8 +60,8 @@ export default function Prayers() {
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text maxFontSizeMultiplier={1.8} style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
-            <Text style={{ color: b.gold, fontWeight: '700' }}>
-              {tr.in} {countdown(next.time.getTime() - now.getTime())}
+            <Text style={{ color: '#E2C171', fontWeight: '800', fontSize: 16, fontVariant: ['tabular-nums'] }}>
+              {tr.in} {countdownClock(leftMs)}
             </Text>
           </View>
         </View>

@@ -14,7 +14,7 @@ import { dayKey, streak, useGrowth } from '@/lib/growth';
 import { useDispense } from '@/lib/dispense-context';
 import { formatHijri } from '@/lib/hijri';
 import { isKahfTime } from '@/lib/kahf';
-import { AR_NAMES, computeDay, countdown, hhmm, withStates, type PrayerKey } from '@/lib/prayer';
+import { AR_NAMES, computeDay, countdownClock, hhmm, prayerClockTick, withStates, type PrayerKey } from '@/lib/prayer';
 import { QURAN_DUAS } from '@/lib/quran-duas';
 import { periodFor, PERIODS, REFLECTIONS } from '@/lib/reflections';
 import { showExampleMarks } from '@/lib/release-content';
@@ -75,10 +75,6 @@ export default function Home() {
   const weatherOk = canFetchWeather(consent, consentReady);
   const pt = privacyText(s.lang);
 
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(id);
-  }, []);
   const weatherKey = weatherOk ? `${s.place.lat},${s.place.lng},${s.place.label}` : '';
   const [weatherTry, setWeatherTry] = useState(0);
   const [weatherSlot, setWeatherSlot] = useState<{ key: string; try: number; w: Weather | null; err: boolean } | null>(null);
@@ -107,6 +103,12 @@ export default function Home() {
     const tomorrow = computeDay(new Date(now.getTime() + 86400000), s.place, s.method, s.madhab, s.prayer);
     return { next: withStates(today, now, tomorrow[0].time).next, list: today, maghrib: today.find((x) => x.key === 'maghrib')?.time };
   }, [now, s.place, s.method, s.madhab, s.prayer]);
+  const leftMs = next.time.getTime() - now.getTime();
+  const tickMs = prayerClockTick(leftMs);
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), tickMs);
+    return () => clearInterval(id);
+  }, [tickMs]);
 
   const period = periodFor(now);
   const pool = REFLECTIONS[period];
@@ -190,7 +192,7 @@ export default function Home() {
     <FadeIn>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${tr.next_prayer} : ${tr[next.key]} ${hhmm(next.time)}, ${tr.in} ${countdown(next.time.getTime() - now.getTime())}`}
+        accessibilityLabel={`${tr.next_prayer} : ${tr[next.key]} ${hhmm(next.time)}, ${tr.in} ${countdownClock(leftMs)}`}
         onPress={go('/prayers')}
         style={({ pressed }) => ({ backgroundColor: b.hero, borderRadius: 24, overflow: 'hidden', transform: [{ scale: pressed ? 0.99 : 1 }] })}
       >
@@ -211,8 +213,8 @@ export default function Home() {
             <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
               <Text maxFontSizeMultiplier={1.8} style={{ color: b.heroText, fontSize: 34, fontWeight: '300', fontVariant: ['tabular-nums'] }}>{hhmm(next.time)}</Text>
               <View style={{ backgroundColor: alpha(b.gold, 0.18), borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
-                <Text style={{ color: '#E2C171', fontWeight: '800', fontSize: 13 }}>{/* passe 6 : or éclairci, 5:1 sur le ciel du hero (b.gold = 4,4) */}
-                  {tr.in} {"\u2066" + countdown(next.time.getTime() - now.getTime()) + "\u2069"}
+                <Text style={{ color: '#E2C171', fontWeight: '800', fontSize: 16, fontVariant: ['tabular-nums'] }}>{/* passe 6 : or éclairci, 5:1 sur le ciel du hero (b.gold = 4,4) */}
+                  {tr.in} {"\u2066" + countdownClock(leftMs) + "\u2069"}
                 </Text>
               </View>
             </View>

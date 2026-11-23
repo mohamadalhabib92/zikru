@@ -145,4 +145,24 @@ export function countdown(ms: number): string {
   return h > 0 ? `${h} h ${String(m % 60).padStart(2, '0')}` : `${m} min`;
 }
 
+/** Sous deux minutes, l’accueil iPhone rafraîchit chaque seconde. Au-delà, toutes les 30 s. */
+export function prayerClockTick(ms: number): number {
+  return ms <= 120_000 ? 1000 : 30_000;
+}
+
+/**
+ * Temps restant avant la prochaine prière, avec l’unité.
+ * Sous une minute : les secondes (le compte arrondi en minutes affichait « 0 min »).
+ */
+export function countdownClock(ms: number): string {
+  const sec = Math.max(0, Math.ceil(ms / 1000));
+  if (sec >= 3600) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return `${h} h ${String(m).padStart(2, '0')} min`;
+  }
+  if (sec >= 60) return `${Math.floor(sec / 60)} min`;
+  return `${sec} s`;
+}
+
 export const AR_NAMES: Record<PrayerKey, string> = { fajr: 'الفجر', sunrise: 'الشروق', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };

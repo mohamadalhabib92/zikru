@@ -64,4 +64,16 @@ for (const key of [G.GPS_DENIED, G.GPS_UNAVAILABLE, 'Zikru a rencontré une erre
 assert.equal(G.gpsHint('denied'), G.GPS_DENIED);
 assert.equal(G.GPS_TIMEOUT_MS >= 8_000 && G.GPS_TIMEOUT_MS <= 20_000, true);
 
+assert.equal(P.countdown(90 * 60 * 1000), '1 h 30');
+assert.equal(P.countdown(20 * 1000), '0 min');
+assert.equal(P.countdownClock(2 * 3600 * 1000 + 5 * 60 * 1000), '2 h 05 min');
+assert.equal(P.countdownClock(14 * 60 * 1000), '14 min');
+assert.equal(P.countdownClock(45 * 1000), '45 s');
+assert.equal(P.countdownClock(500), '1 s');
+assert.equal(P.countdownClock(0), '0 s');
+assert.equal(P.countdownClock(-5_000), '0 s');
+assert.equal(P.prayerClockTick(121_000), 30_000);
+assert.equal(P.prayerClockTick(120_000), 1000);
+assert.equal(P.prayerClockTick(1_000), 1000);
+
 console.log('test-a-plus OK');
