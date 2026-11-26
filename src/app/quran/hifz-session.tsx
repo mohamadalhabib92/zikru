@@ -122,6 +122,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
               <Text style={{ color: pal.muted, fontSize: 13 }}>{L('{r} · {e}× chaque verset · {p}', { r: reciterById(reciter).name, e: hp.each, p: hp.times ? L('{n}× la plage', { n: hp.times }) : L('en boucle') })}</Text>
             </View>
             <QBtn icon="options-outline" onPress={() => setSettings(true)} pal={pal} a11y="Réglages de répétition" small />
+            <QBtn icon="repeat" a11y="Répéter la récitation" onPress={() => router.push({ pathname: '/quran/hifz-repeat', params: { s: String(s), scope: 'range', from: String(from), to: String(to) } })} pal={pal} small />
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
             <View style={{ gap: 4 }}>
@@ -161,6 +162,7 @@ function Learn({ pal, s, from: f0, to: t0 }: { pal: Pal; s: number; from: number
                   {st !== 'none' ? <Text style={{ color: pal.muted, fontSize: 12 }}>{st === 'memorised' ? '· mémorisé' : st === 'review' ? '· à réviser' : '· en cours'}</Text> : null}
                   <View style={{ flex: 1 }} />
                   {playing ? <Text style={{ color: pal.accent, fontSize: 12, fontWeight: '800' }}>{`${step!.rep}/${hp.each}`}</Text> : null}
+                  <QBtn icon="repeat" a11y="Répéter ce verset" small onPress={() => router.push({ pathname: '/quran/hifz-repeat', params: { s: String(s), scope: 'verse', a: String(a) } })} pal={pal} />
                 </View>
                 <HideText text={all[k]} mode={hp.hide} revealAll={reveal} size={size} lineH={rp.lineH} color={pal.ink} suffix={`۝${arNum(a)}`} />
                 <GradeRow small pal={pal} onGrade={(g) => { startHifz(k, k + 1); gradeVerses([k], g); }} />

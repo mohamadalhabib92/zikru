@@ -65,7 +65,8 @@ export function buildQueue(verses: [number, number][], each = 1, times = 1): Ste
 }
 
 /** Pause après le récitateur : secondes fixes, ou multiple de la durée du verset (pour répéter à voix haute). */
-export type Gap = 0 | 2 | 5 | 'x1' | 'x1.5';
+/** Secondes fixes (0–10 pour la répétition de mémorisation, et les pauses déjà proposées) ou multiple de la durée du verset. */
+export type Gap = number | 'x1' | 'x1.5';
 export const gapMs = (g: Gap, durationSec: number) => (g === 'x1' ? durationSec * 1000 : g === 'x1.5' ? durationSec * 1500 : g * 1000);
 
 /** Nombre de versets de la sourate s (0 si hors limites). */

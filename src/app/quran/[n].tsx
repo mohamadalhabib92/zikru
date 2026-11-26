@@ -326,6 +326,7 @@ export default function SurahReader() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, justifyContent: 'center' }}>
         <QBtn solid icon="play" label="Écouter" onPress={() => playRef.current(1)} pal={pal} />
         <QBtn icon="school-outline" label="Mémoriser" onPress={() => router.push({ pathname: '/quran/hifz-session', params: { s: String(n), from: '1', to: String(Math.min(meta[4], 5)) } })} pal={pal} />
+        <QBtn icon="repeat" label="Répéter la récitation" onPress={() => router.push({ pathname: '/quran/hifz-repeat', params: { s: String(n), scope: 'sura' } })} pal={pal} />
         <QBtn icon="book-outline" label="Mode page" onPress={() => router.push({ pathname: '/quran/mushaf', params: { p: String(pageOf(n, top)) } })} pal={pal} />
       </View>
     </View>

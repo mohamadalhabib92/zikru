@@ -1,0 +1,10 @@
+# Répétition audio de mémorisation (verset, plage, sourate). Interface seulement.
+Répéter la récitation	Repeat the recitation	تكرار التلاوة
+Un verset	One verse	آية واحدة
+Une plage de versets	A range of verses	نطاق من الآيات
+Portée de la répétition	Repeat scope	نطاق التكرار
+Répéter ce verset	Repeat this verse	تكرار هذه الآية
+Verset {i}/{n} · répétition {r}/{e}	Verse {i}/{n} · repetition {r}/{e}	الآية {i}/{n} · التكرار {r}/{e}
+Verset {i}/{n} · répétition ∞	Verse {i}/{n} · repetition ∞	الآية {i}/{n} · التكرار ∞
+Verset {i}/{n} · répétition {r}/{e} · passage {p}	Verse {i}/{n} · repetition {r}/{e} · pass {p}	الآية {i}/{n} · التكرار {r}/{e} · الدورة {p}
+Sans connexion, seuls les versets déjà téléchargés sont lus.	Without a connection, only verses already downloaded are played.	دون اتصال، لا تُقرأ إلا الآيات المنزَّلة مسبقًا.
