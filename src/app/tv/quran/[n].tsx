@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useTvKeepAwake } from '@/components/tv/keep-awake';
@@ -110,6 +110,7 @@ function SurahBody({ surah }: { surah: number }) {
         <TvButton preferred label={rec.playing && playingHere ? L('Pause') : L('Lecture')} onPress={() => (rec.playing && playingHere ? rec.pause() : rec.pos >= 0 && playingHere ? rec.resume() : play())} />
         <TvButton label={L('Verset suivant')} onPress={() => setPicked(Math.min(count, ayah + 1))} />
         <TvButton label={L('Arrêter')} onPress={() => rec.stop()} />
+        <TvButton label={L('Répéter la récitation')} onPress={() => router.push({ pathname: '/tv/hifz/repeat', params: { s: String(surah), scope: 'sura', a: String(ayah) } })} />
         <TvBack />
       </TvRow>
     </View>

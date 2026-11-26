@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { HideText } from '@/components/quran/HideText';
@@ -106,6 +106,7 @@ function Body() {
             <TvButton preferred label={reveal ? L('Masquer') : L('Révéler')} onPress={() => setRevealFor(reveal ? null : k)} />
             <TvButton label={L(hide === 'none' ? 'Texte' : hide === 'first' ? '1er mot' : hide === 'alt' ? '1 sur 2' : 'Masqué')} onPress={() => setHp((v) => ({ ...v, hide: nextTvHide(v.hide as TvHide) }))} />
             <TvButton label={rec.playing ? L('Pause') : L('Répéter')} onPress={() => (rec.playing ? rec.pause() : repeat())} />
+            <TvButton label={L('Répéter la récitation')} onPress={() => router.push({ pathname: '/tv/hifz/repeat', params: { s: String(surah), scope: 'verse', a: String(ayah) } })} />
             <TvButton label={L('Précédent')} onPress={() => setI((n) => Math.max(0, n - 1))} />
             <TvButton label={L('Suivant')} onPress={() => setI((n) => Math.min(keys.length, n + 1))} />
             <TvBack />

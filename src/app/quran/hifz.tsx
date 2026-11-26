@@ -261,6 +261,7 @@ export default function HifzHub() {
               ))}
             </View>
             <Button title={L('Commencer · {s} {a}–{b}', { s: meta[2], a: from, b: to })} icon="play" onPress={() => router.push({ pathname: '/quran/hifz-session', params: { s: String(s), from: String(from), to: String(to) } })} />
+            <Button title={L('Répéter la récitation')} icon="repeat" variant="secondary" onPress={() => router.push({ pathname: '/quran/hifz-repeat', params: { s: String(s), scope: 'range', from: String(from), to: String(to) } })} />
             <Text style={{ color: b.inkMuted, fontSize: 12 }}>Conseil : 3 à 5 versets par jour, récitateur « Al-Husary (Mu‘allim) », puis masquez progressivement le texte.</Text>
           </View>
         </View>

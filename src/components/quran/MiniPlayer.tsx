@@ -17,7 +17,7 @@ import { L } from '@/lib/l10n';
 
 const TAB_ROUTES = new Set(['/', '/prayers', '/tasbih', '/read', '/more']);
 /** Écrans qui ont déjà leur propre barre de lecture. */
-const hiddenOn = (path: string) => /^\/quran\/(\d+|mushaf|hifz-session)$/.test(path) || /^\/(kahf|songs|onboarding)$/.test(path);
+const hiddenOn = (path: string) => /^\/quran\/(\d+|mushaf|hifz-session|hifz-repeat)$/.test(path) || /^\/(kahf|songs|onboarding)$/.test(path);
 
 /** Mini-lecteur persistant : la récitation continue en naviguant ; toucher le titre rouvre la sourate. */
 export function MiniPlayer({ path }: { path: string }) {

@@ -11,6 +11,7 @@
  * - Chaînes d'interface absentes du catalogue paresseux (adhan, file, pratique) : repli sur `UI_STRINGS` pour en / ar.
  */
 import { createContext, useContext, useEffect, useState } from 'react';
+import { repeatUiText } from './hifz-repeat-ui';
 import type { Lang } from './i18n';
 import { UI_STRINGS } from './ui-strings';
 
@@ -90,7 +91,7 @@ function fromUiStrings(fr: string, c: CatLang): string | null {
 /** Cherche la traduction d'une chaîne française (null si absente du catalogue ou langue sans catalogue). */
 export function lookup(fr: string, lang: Lang = cur): string | null {
   const c = catLang(lang);
-  if (!c) return null;
+  if (!c) return repeatUiText(fr, lang) ?? repeatUiText(norm(fr), lang);
   const m = CATS[c];
   let r = m?.[fr] ?? m?.[norm(fr)] ?? null;
   if (r == null) {
@@ -98,6 +99,7 @@ export function lookup(fr: string, lang: Lang = cur): string | null {
     r = e ? (c === 'en' ? e[0] : c === 'ar' ? e[1] : e[2] || null) : null;
   }
   if (r == null) r = fromUiStrings(fr, c);
+  if (r == null) r = repeatUiText(fr, lang) ?? repeatUiText(norm(fr), lang);
   // Suisse alémanique : pas de « ß » (orthographe suisse).
   return r != null && lang === 'de-CH' ? r.replace(/ß/g, 'ss') : r;
 }

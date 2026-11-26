@@ -48,6 +48,11 @@ function Hub() {
           hint={`${meta[2]} ${lesson.from}–${lesson.to}`}
           onPress={() => router.push({ pathname: '/tv/hifz/session', params: { s: String(surah), from: String(lesson.from), to: String(lesson.to) } })}
         />
+        <TvButton
+          label={L('Répéter la récitation')}
+          hint={`${meta[2]} ${lesson.from}–${lesson.to}`}
+          onPress={() => router.push({ pathname: '/tv/hifz/repeat', params: { s: String(surah), scope: 'range', from: String(lesson.from), to: String(lesson.to) } })}
+        />
       </TvRow>
       <TvRow>
         <TvButton label={L('Sourate précédente')} onPress={() => setSurah((n) => (n <= 1 ? 114 : n - 1))} />
