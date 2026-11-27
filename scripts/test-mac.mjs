@@ -32,4 +32,22 @@ assert.equal(on.camera, true);
 assert.equal(on.compass, true);
 
 M.setIosAppOnMac(false);
+
+// Nktub : iPad seulement. iPhone, Mac (« Designed for iPad ») et tvOS restent masqués.
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: true, mac: false }), true, 'iPad');
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: false, mac: false }), false, 'iPhone');
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: true, mac: true }), false, 'Mac, Designed for iPad');
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: false, mac: false }), false, 'tvOS : isPad est faux');
+assert.equal(M.nktubAvailable({ os: 'android', isPad: true, mac: false }), false, 'Android');
+assert.equal(M.nktubAvailable({ os: 'web', isPad: true, mac: false }), false, 'web');
+M.setIosAppOnMac(true);
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: true }), false, 'sans mac explicite, le drapeau Mac compte');
+M.setIosAppOnMac(false);
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: true }), true, 'iPad quand le drapeau Mac est faux');
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: true, mac: false }), true, 'mac: false prime sur le drapeau');
+M.setIosAppOnMac(true);
+assert.equal(M.nktubAvailable({ os: 'ios', isPad: true, mac: false }), true, 'un iPad simulé n’est pas un Mac');
+M.setIosAppOnMac(false);
+assert.equal(typeof M.nktubAvailable(), 'boolean', 'sans env, la lecture de Platform ne jette pas');
+
 console.log('test-mac OK');

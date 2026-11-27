@@ -18,6 +18,7 @@ import { Container, FadeIn, HeroHeader, SectionHeader, useLayout } from '@/ui/ds
 import { Button, Ionicons, Segmented } from '@/ui/kit';
 import { alpha, brand as b, fonts } from '@/ui/theme';
 import { L } from '@/lib/l10n';
+import { nktubAvailable } from '@/lib/mac';
 import { arLang } from '@/ui/ar-lang';
 
 const statusColor = (s: Status) => (s === 'memorised' ? b.green : s === 'review' ? '#D98A2B' : s === 'learning' ? b.gold : b.line);
@@ -168,7 +169,12 @@ export default function HifzHub() {
           <View style={{ backgroundColor: b.paper, borderRadius: 20, borderWidth: 1, borderColor: b.line, padding: 16, gap: 10 }}>
             <Text style={{ color: b.ink, fontWeight: '800' }}>{L('Rappel actif')}</Text>
             <Text style={{ color: b.inkMuted, fontSize: 13 }}>{days > 0 ? L('{n} jours, sans compte public.', { n: days }) : L('Une pratique aujourd’hui ouvre la série. Un jour manqué ne la casse pas.')}</Text>
-            <Button title={L('Rappel actif')} icon="help-circle-outline" onPress={() => router.push({ pathname: '/quran/hifz-recall', params: { keys: span.join(',') } })} />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Button title={L('Rappel actif')} icon="help-circle-outline" onPress={() => router.push({ pathname: '/quran/hifz-recall', params: { keys: span.join(',') } })} />
+              </View>
+              <NktubButton onPress={() => router.push({ pathname: '/quran/hifz-nktub', params: { s: String(s), from: String(from), to: String(to) } })} />
+            </View>
             <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('à vérifier')}</Text>
           </View>
         </FadeIn>
@@ -261,7 +267,13 @@ export default function HifzHub() {
               ))}
             </View>
             <Button title={L('Commencer · {s} {a}–{b}', { s: meta[2], a: from, b: to })} icon="play" onPress={() => router.push({ pathname: '/quran/hifz-session', params: { s: String(s), from: String(from), to: String(to) } })} />
-            <Button title={L('Répéter la récitation')} icon="repeat" variant="secondary" onPress={() => router.push({ pathname: '/quran/hifz-repeat', params: { s: String(s), scope: 'range', from: String(from), to: String(to) } })} />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Button title={L('Répéter la récitation')} icon="repeat" variant="secondary" onPress={() => router.push({ pathname: '/quran/hifz-repeat', params: { s: String(s), scope: 'range', from: String(from), to: String(to) } })} />
+              </View>
+              <NktubButton onPress={() => router.push({ pathname: '/quran/hifz-nktub', params: { s: String(s), from: String(from), to: String(to) } })} />
+            </View>
+            {nktubAvailable() ? <Text style={{ color: b.inkMuted, fontSize: 12 }}>{L('Écrire les versets de mémoire, au crayon ou au doigt.')}</Text> : null}
             <Text style={{ color: b.inkMuted, fontSize: 12 }}>Conseil : 3 à 5 versets par jour, récitateur « Al-Husary (Mu‘allim) », puis masquez progressivement le texte.</Text>
           </View>
         </View>
@@ -317,5 +329,15 @@ export default function HifzHub() {
         })}
       </Sheet>
     </ScrollView>
+  );
+}
+
+/** Entrée Nktub, à côté des autres pratiques. Absente hors iPad. */
+function NktubButton({ onPress }: { onPress: () => void }) {
+  if (!nktubAvailable()) return null;
+  return (
+    <View style={{ flex: 1 }}>
+      <Button title={L('Nktub')} accessibilityLabel="Nktub, écrire les versets de mémoire" icon="pencil-outline" variant="secondary" onPress={onPress} />
+    </View>
   );
 }
